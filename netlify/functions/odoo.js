@@ -1,4 +1,4 @@
-// Netlify Function — Proxy para Odoo API
+// Netlify Function — Proxy para Odoo API usando XML-RPC con API Key
 const ODOO_URL  = 'https://hydratechgroup.odoo.com';
 const ODOO_DB   = 'hydratechgroup';
 const ODOO_USER = 'herber.montes@hydratechgroup.mx';
@@ -12,89 +12,84 @@ exports.handler = async function(event, context) {
     'Content-Type': 'application/json'
   };
 
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers, body: '' };
-  }
-
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
-  }
+  if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
+  if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
 
   try {
     const body = JSON.parse(event.body || '{}');
     const action = body.action || 'search_products';
 
-    // Authenticate with Odoo
-    const authResp = await fetch(`${ODOO_URL}/web/session/authenticate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        jsonrpc: '2.0', method: 'call', id: 1,
-        params: { db: ODOO_DB, login: ODOO_USER, password: ODOO_KEY }
-      })
-    });
-    const authData = await authResp.json();
+    // Step 1: Get UID via XML-RPC common (API key auth)
+    const authXml = `<?xml version="1.0"?>
+<methodCall>
+  <methodName>authenticate</methodName>
+  <params>
+    <param><value><string>${ODOO_DB}</string></value></param>
+    <param><value><string>${ODOO_USER}</string></value></param>
+    <param><value><string>${ODOO_KEY}</string></value></param>
+    <param><value><struct></struct></value></param>
+  </params>
+</methodCall>`;
 
-    if (!authData.result || !authData.result.uid) {
+    const authResp = await fetch(`${ODOO_URL}/xmlrpc/2/common`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml' },
+      body: authXml
+    });
+    const authText = await authResp.text();
+
+    // Parse UID from XML response
+    const uidMatch = authText.match(/<value><int>(\d+)<\/int><\/value>/);
+    if (!uidMatch) {
       return {
         statusCode: 401, headers,
-        body: JSON.stringify({ error: 'Odoo authentication failed', detail: authData.error })
+        body: JSON.stringify({ error: 'Odoo auth failed', detail: authText.substring(0, 200) })
       };
     }
+    const uid = parseInt(uidMatch[1]);
 
-    const cookie = authResp.headers.get('set-cookie') || '';
-    const uid = authData.result.uid;
+    // Step 2: Execute model method via XML-RPC object
+    const query = body.query || '';
+    const execXml = `<?xml version="1.0"?>
+<methodCall>
+  <methodName>execute_kw</methodName>
+  <params>
+    <param><value><string>${ODOO_DB}</string></value></param>
+    <param><value><int>${uid}</int></value></param>
+    <param><value><string>${ODOO_KEY}</string></value></param>
+    <param><value><string>product.product</string></value></param>
+    <param><value><string>search_read</string></value></param>
+    <param><value><array><data>
+      <value><array><data>
+        <value><array><data>
+          <value><string>name</string></value>
+          <value><string>ilike</string></value>
+          <value><string>${query}</string></value>
+        </data></array></value>
+      </data></array></value>
+    </data></array></value></param>
+    <param><value><struct>
+      <member><name>fields</name><value><array><data>
+        <value><string>name</string></value>
+        <value><string>default_code</string></value>
+        <value><string>list_price</string></value>
+        <value><string>qty_available</string></value>
+      </data></array></value></member>
+      <member><name>limit</name><value><int>20</int></value></member>
+    </struct></value></param>
+  </params>
+</methodCall>`;
 
-    // Execute action
-    let odooData;
-
-    if (action === 'search_products') {
-      const query = body.query || '';
-      const resp = await fetch(`${ODOO_URL}/web/dataset/call_kw`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Cookie': cookie },
-        body: JSON.stringify({
-          jsonrpc: '2.0', method: 'call', id: 2,
-          params: {
-            model: 'product.product',
-            method: 'search_read',
-            args: [[['name', 'ilike', query]]],
-            kwargs: {
-              fields: ['name', 'default_code', 'list_price', 'qty_available'],
-              limit: 20
-            }
-          }
-        })
-      });
-      odooData = await resp.json();
-
-    } else if (action === 'get_stock') {
-      const productId = body.product_id;
-      const resp = await fetch(`${ODOO_URL}/web/dataset/call_kw`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Cookie': cookie },
-        body: JSON.stringify({
-          jsonrpc: '2.0', method: 'call', id: 3,
-          params: {
-            model: 'product.product',
-            method: 'search_read',
-            args: [[[' id', '=', productId]]],
-            kwargs: { fields: ['name', 'qty_available', 'list_price'], limit: 1 }
-          }
-        })
-      });
-      odooData = await resp.json();
-
-    } else {
-      return {
-        statusCode: 400, headers,
-        body: JSON.stringify({ error: 'Unknown action: ' + action })
-      };
-    }
+    const execResp = await fetch(`${ODOO_URL}/xmlrpc/2/object`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml' },
+      body: execXml
+    });
+    const execText = await execResp.text();
 
     return {
       statusCode: 200, headers,
-      body: JSON.stringify({ success: true, data: odooData.result, uid })
+      body: JSON.stringify({ success: true, uid, raw: execText.substring(0, 500) })
     };
 
   } catch (err) {
