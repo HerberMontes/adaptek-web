@@ -12,3 +12,4 @@
   from = "/api/odoo"
   to = "/.netlify/functions/odoo"
   status = 200
+  # Deploy v2
