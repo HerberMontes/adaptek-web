@@ -1,0 +1,12 @@
+{
+  "name": "adaptek-web",
+  "version": "1.0.0",
+  "description": "Adaptek - Conectores Hidráulicos",
+  "engines": {
+    "node": "18"
+  }
+}
+
+Clic "Commit changes"
+
+Esto le dice a Netlify que use Node.js 18 para ejecutar las Functions. ¿Lo puedes hacer?Sonnet 4.6 BajoClaude es IA y pue
