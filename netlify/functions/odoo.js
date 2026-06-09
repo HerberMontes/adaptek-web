@@ -764,6 +764,127 @@ exports.handler = async function(event, context) {
       return {statusCode:200, headers, body: JSON.stringify({success:true, passes})};
     }
 
+    // ── BUSCAR PRODUCTO POR CONFIGURADOR ──
+    if (action === 'buscar_por_configurador') {
+      const { tipo, std_a, gen_a, med_a, std_b, gen_b, med_b } = body;
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+
+      // Build AT code pattern to search
+      // AT-[TIPO]-[STD_A]-[GEN_A][MED_A]-[STD_B]-[GEN_B][MED_B]
+      const tipoMap = {'NR':'NR','C90':'C90','C45':'C45','TEE':'TEE','TAP':'TAP'};
+      const tipoCode = tipoMap[tipo] || 'NR';
+      const genA = gen_a === 'M' ? 'M' : 'H';
+      const genB = gen_b === 'M' ? 'M' : 'H';
+
+      // Search for exact match first
+      const atCode = `AT-${tipoCode}-${std_a}-${genA}${med_a}-${std_b}-${genB}${med_b}`;
+      const atCodeRev = `AT-${tipoCode}-${std_b}-${genB}${med_b}-${std_a}-${genA}${med_a}`;
+
+      console.log('Searching AT codes:', atCode, '|', atCodeRev);
+
+      const searchXml = `<value><array><data><value><array><data>
+        <value><array><data>
+          ${xmlStr('default_code')}<value><string>in</string></value>
+          <value><array><data>
+            ${xmlStr(atCode)}
+            ${xmlStr(atCodeRev)}
+          </data></array></value>
+        </data></array></value>
+      </data></array></value></data></array></value>`;
+
+      const searchText = await xmlrpc(uid, 'product.product', 'search_read',
+        searchXml +
+        `<value><struct>
+          <member><name>fields</name><value><array><data>
+            <value><string>id</string></value>
+            <value><string>name</string></value>
+            <value><string>default_code</string></value>
+            <value><string>list_price</string></value>
+            <value><string>qty_available</string></value>
+            <value><string>description_sale</string></value>
+          </data></array></value></member>
+          <member><name>limit</name><value><int>10</int></value></member>
+        </struct></value>`
+      );
+
+      // Parse XML results
+      const products = [];
+      const structRegex = /<struct>([\s\S]*?)<\/struct>/g;
+      let match;
+      while ((match = structRegex.exec(searchText)) !== null) {
+        const struct = match[1];
+        const getStr = (field) => {
+          const m = struct.match(new RegExp('<name>' + field + '<\/name>\s*<value>(?:<string>)?([^<]*)', 'i'));
+          return m ? m[1].trim() : '';
+        };
+        const id = parseInt(getStr('id'));
+        if (id > 0) {
+          const qty = parseFloat(getStr('qty_available')) || 0;
+          products.push({
+            id,
+            name: getStr('name'),
+            at_code: getStr('default_code'),
+            price: parseFloat(getStr('list_price')) || 0,
+            qty_available: qty,
+            description: getStr('description_sale'),
+            status: qty > 0 ? 'stock' : 'fabricado'
+          });
+        }
+      }
+
+      console.log('Products found:', products.length);
+
+      // If no exact match, check if AT code exists in catalog (qty=0 = fabricado)
+      if (products.length === 0) {
+        // Search by partial code
+        const partialXml = `<value><array><data><value><array><data>
+          <value><array><data>
+            ${xmlStr('default_code')}<value><string>like</string></value>
+            ${xmlStr('AT-' + tipoCode + '-' + std_a)}
+          </data></array></value>
+        </data></array></value></data></array></value>`;
+
+        const partialText = await xmlrpc(uid, 'product.product', 'search_read',
+          partialXml + `<value><struct>
+            <member><name>fields</name><value><array><data>
+              <value><string>id</string></value>
+              <value><string>name</string></value>
+              <value><string>default_code</string></value>
+              <value><string>qty_available</string></value>
+            </data></array></value></member>
+            <member><name>limit</name><value><int>5</int></value></member>
+          </struct></value>`
+        );
+
+        const partialMatch = partialText.match(/<value><int>(\d+)<\/int><\/value>/);
+        if (partialMatch) {
+          return {statusCode:200, headers, body: JSON.stringify({
+            success: true,
+            found: false,
+            status: 'fabricacion_nueva',
+            at_code: atCode,
+            message: 'Este conector se puede fabricar bajo pedido'
+          })};
+        }
+
+        return {statusCode:200, headers, body: JSON.stringify({
+          success: true,
+          found: false,
+          status: 'fabricacion_nueva',
+          at_code: atCode,
+          message: 'Este conector se puede fabricar bajo pedido'
+        })};
+      }
+
+      return {statusCode:200, headers, body: JSON.stringify({
+        success: true,
+        found: true,
+        products,
+        at_code: atCode
+      })};
+    }
+
     // ── SEARCH PRODUCTS ──
     if (action === 'search_products') {
       const uid = await odooAuth();
