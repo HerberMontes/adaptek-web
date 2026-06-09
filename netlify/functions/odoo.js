@@ -402,10 +402,10 @@ exports.handler = async function(event, context) {
             const d1 = await r1.json();
             if (d1.places && d1.places.length > 0) {
               const colonias = d1.places.map(p => p['place name']).filter(Boolean).sort();
-              const ciudad = d1.places[0]['place name'] || '';
+              const municipios = [...new Set(d1.places.map(p => p['place name']).filter(Boolean))];
               const estado = d1.places[0].state || '';
               console.log('zippopotam ok:', colonias.length, 'colonias');
-              return {statusCode:200, headers, body: JSON.stringify({success:true, colonias, ciudad, estado})};
+              return {statusCode:200, headers, body: JSON.stringify({success:true, colonias, municipios, ciudad: municipios[0]||'', estado})};
             }
           }
         } catch(e1) { console.log('zippopotam error:', e1.message); }
