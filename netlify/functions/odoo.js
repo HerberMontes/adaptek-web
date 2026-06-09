@@ -6,7 +6,6 @@ const RESEND_KEY = 're_5K17NUmB_8ufhqW5tYTR72dN7gy3ZQJhS';
 const FROM_EMAIL = 'validaciones@adaptekk.com';
 const SITE_URL   = 'https://cheery-fenglisu-0daf09.netlify.app';
 
-// ── Odoo XML-RPC auth ──
 async function odooAuth() {
   const xml = `<?xml version="1.0"?>
 <methodCall><methodName>authenticate</methodName><params>
@@ -23,7 +22,22 @@ async function odooAuth() {
   return m ? parseInt(m[1]) : null;
 }
 
-// ── Odoo XML-RPC execute ──
+function xmlStr(v) {
+  return `<value><string>${String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</string></value>`;
+}
+function xmlInt(v) { return `<value><int>${parseInt(v)||0}</int></value>`; }
+
+// Check if array result is non-empty (has at least one ID)
+function hasResults(xmlText) {
+  // The search result is wrapped in <data>...</data> inside the response
+  // An empty result looks like: <data></data> or <data>\n</data>
+  // A result with IDs looks like: <data><value><int>123</int></value></data>
+  const dataMatch = xmlText.match(/<data>([\s\S]*?)<\/data>/);
+  if (!dataMatch) return false;
+  const dataContent = dataMatch[1].trim();
+  return dataContent.length > 0 && dataContent.includes('<int>');
+}
+
 async function xmlrpc(uid, model, method, argsXml) {
   const xml = `<?xml version="1.0"?>
 <methodCall><methodName>execute_kw</methodName><params>
@@ -41,34 +55,19 @@ async function xmlrpc(uid, model, method, argsXml) {
   return await resp.text();
 }
 
-function xmlStr(v) { return `<value><string>${String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</string></value>`; }
-function xmlInt(v) { return `<value><int>${parseInt(v)||0}</int></value>`; }
-
-// ── Generate 6-digit OTP ──
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// ── Send email via Resend ──
 async function sendEmail(to, subject, html) {
   const resp = await fetch('https://api.resend.com/emails', {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${RESEND_KEY}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      from: `Adaptekk <${FROM_EMAIL}>`,
-      to: [to],
-      subject,
-      html
-    })
+    headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from: `Adaptekk <${FROM_EMAIL}>`, to: [to], subject, html })
   });
   return await resp.json();
 }
 
-// ── OTP store (in-memory, resets on cold start) ──
-// For production use Redis/Netlify Blobs
 const otpStore = {};
 
 exports.handler = async function(event, context) {
@@ -94,7 +93,7 @@ exports.handler = async function(event, context) {
       const uid = await odooAuth();
       if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
 
-      // Check if email already registered in Odoo
+      // Check duplicate email
       const checkText = await xmlrpc(uid, 'res.partner', 'search',
         `<value><array><data><value><array><data>
           <value><array><data>
@@ -102,17 +101,15 @@ exports.handler = async function(event, context) {
           </data></array></value>
         </data></array></value></data></array></value>`
       );
-      const existMatch = checkText.match(/<value><int>(\d+)<\/int><\/value>/);
-      if (existMatch) {
+
+      if (hasResults(checkText)) {
         return {statusCode:200, headers, body: JSON.stringify({success:false, error:'Este correo ya está registrado. ¿Quieres iniciar sesión?'})};
       }
 
-      // Generate OTP
+      // Generate and store OTP
       const otp = generateOTP();
-      const expires = Date.now() + 15 * 60 * 1000; // 15 min
-      otpStore[email] = { otp, expires };
+      otpStore[email] = { otp, expires: Date.now() + 15 * 60 * 1000 };
 
-      // Send verification email
       const emailHtml = `
         <div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;">
           <div style="background:#001F5B;padding:24px;text-align:center;">
@@ -124,20 +121,16 @@ exports.handler = async function(event, context) {
             <div style="background:#f4f8ff;border:2px solid #001F5B;border-radius:10px;padding:24px;text-align:center;margin:24px 0;">
               <span style="font-size:42px;font-weight:900;letter-spacing:12px;color:#001F5B;">${otp}</span>
             </div>
-            <p style="color:#888;font-size:13px;">Este código expira en <strong>15 minutos</strong>. Si no solicitaste este registro, ignora este correo.</p>
+            <p style="color:#888;font-size:13px;">Este código expira en <strong>15 minutos</strong>.</p>
           </div>
-          <div style="background:#f5f5f5;padding:16px;text-align:center;font-size:11px;color:#aaa;">
-            © 2026 Adaptekk S.A. de C.V. — Conecta sin límites
-          </div>
+          <div style="background:#f5f5f5;padding:16px;text-align:center;font-size:11px;color:#aaa;">© 2026 Adaptekk S.A. de C.V. — Conecta sin límites</div>
         </div>`;
 
-      const emailResult = await sendEmail(email, 'Tu código de verificación Adaptekk', emailHtml);
-
-      if (emailResult.id) {
+      const result = await sendEmail(email, 'Tu código de verificación Adaptekk', emailHtml);
+      if (result.id) {
         return {statusCode:200, headers, body: JSON.stringify({success:true, message:'Código enviado a ' + email})};
-      } else {
-        return {statusCode:200, headers, body: JSON.stringify({success:false, error:'No se pudo enviar el correo', detail: emailResult})};
       }
+      return {statusCode:200, headers, body: JSON.stringify({success:false, error:'No se pudo enviar el correo', detail: result})};
     }
 
     // ── VERIFY OTP ──
@@ -150,13 +143,13 @@ exports.handler = async function(event, context) {
         return {statusCode:200, headers, body: JSON.stringify({success:false, error:'Código expirado. Solicita uno nuevo.'})};
       }
       if (stored.otp !== otp) {
-        return {statusCode:200, headers, body: JSON.stringify({success:false, error:'Código incorrecto. Verifica e intenta de nuevo.'})};
+        return {statusCode:200, headers, body: JSON.stringify({success:false, error:'Código incorrecto.'})};
       }
       delete otpStore[email];
-      return {statusCode:200, headers, body: JSON.stringify({success:true, message:'Email verificado correctamente'})};
+      return {statusCode:200, headers, body: JSON.stringify({success:true})};
     }
 
-    // ── CREATE CONTACT IN ODOO ──
+    // ── CREATE CONTACT ──
     if (action === 'create_contact') {
       const { name, email, phone, company, rfc, razon_social, cp_fiscal, regimen_fiscal, email_fiscal } = body;
 
@@ -169,7 +162,7 @@ exports.handler = async function(event, context) {
           <value><array><data>${xmlStr('email')}<value><string>=</string></value>${xmlStr(email)}</data></array></value>
         </data></array></value></data></array></value>`
       );
-      if (checkEmail.match(/<value><int>(\d+)<\/int><\/value>/)) {
+      if (hasResults(checkEmail)) {
         return {statusCode:200, headers, body: JSON.stringify({success:false, error:'Este correo ya está registrado'})};
       }
 
@@ -180,18 +173,17 @@ exports.handler = async function(event, context) {
             <value><array><data>${xmlStr('vat')}<value><string>=</string></value>${xmlStr(rfc)}</data></array></value>
           </data></array></value></data></array></value>`
         );
-        if (checkRFC.match(/<value><int>(\d+)<\/int><\/value>/)) {
+        if (hasResults(checkRFC)) {
           return {statusCode:200, headers, body: JSON.stringify({success:false, error:'Este RFC ya está registrado en Adaptekk'})};
         }
       }
 
-      // Build partner fields
+      // Create partner
       let fields = `<value><struct>
         <member><name>name</name>${xmlStr(razon_social || name)}</member>
         <member><name>email</name>${xmlStr(email)}</member>
         <member><name>phone</name>${xmlStr(phone)}</member>
         <member><name>customer_rank</name>${xmlInt(1)}</member>
-        <member><name>active</name><value><boolean>1</boolean></value></member>
         <member><name>comment</name>${xmlStr('Registro Adaptekk Web | Contacto: ' + name + ' | Estado: Pendiente aprobación')}</member>`;
 
       if (company) fields += `<member><name>company_name</name>${xmlStr(company)}</member>`;
@@ -207,7 +199,7 @@ exports.handler = async function(event, context) {
       const partnerId = idMatch ? parseInt(idMatch[1]) : null;
 
       if (partnerId) {
-        // Send welcome email
+        // Welcome email to client
         const welcomeHtml = `
           <div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;">
             <div style="background:#001F5B;padding:24px;text-align:center;">
@@ -215,45 +207,31 @@ exports.handler = async function(event, context) {
             </div>
             <div style="padding:32px;background:#fff;border:1px solid #eee;">
               <h2 style="color:#001F5B;">¡Bienvenido a Adaptekk, ${name}!</h2>
-              <p style="color:#555;">Tu registro fue recibido exitosamente. Un ejecutivo revisará tu cuenta y te notificará en menos de <strong>24 horas hábiles</strong>.</p>
-              <div style="background:#f4f8ff;border-left:4px solid #001F5B;padding:16px;margin:20px 0;border-radius:4px;">
-                <p style="margin:0;color:#001F5B;font-weight:600;">Mientras tanto puedes:</p>
-                <ul style="color:#555;margin:8px 0 0;">
-                  <li>Explorar nuestro catálogo de conectores</li>
-                  <li>Usar el configurador de conectores hidráulicos</li>
-                  <li>Contactarnos por WhatsApp para cualquier duda</li>
-                </ul>
-              </div>
+              <p style="color:#555;">Tu registro fue recibido. Un ejecutivo revisará tu cuenta en menos de <strong>24 horas hábiles</strong>.</p>
               <a href="${SITE_URL}" style="display:block;background:#C8102E;color:#fff;text-align:center;padding:14px;border-radius:6px;text-decoration:none;font-weight:700;margin-top:20px;">Ir a Adaptekk →</a>
             </div>
-            <div style="background:#f5f5f5;padding:16px;text-align:center;font-size:11px;color:#aaa;">
-              © 2026 Adaptekk S.A. de C.V. — Conecta sin límites
-            </div>
+            <div style="background:#f5f5f5;padding:16px;text-align:center;font-size:11px;color:#aaa;">© 2026 Adaptekk S.A. de C.V.</div>
           </div>`;
-
         await sendEmail(email, '¡Bienvenido a Adaptekk! Tu registro está en revisión', welcomeHtml);
 
-        // Notify admin
+        // Notification to admin
         const adminHtml = `
           <div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;padding:24px;">
-            <h2 style="color:#001F5B;">🆕 Nuevo registro en Adaptekk</h2>
+            <h2 style="color:#001F5B;">🆕 Nuevo registro Adaptekk</h2>
             <table style="width:100%;border-collapse:collapse;">
-              <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#888;width:140px;">Nombre:</td><td style="padding:8px;border-bottom:1px solid #eee;font-weight:600;">${name}</td></tr>
+              <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#888;width:130px;">Nombre:</td><td style="padding:8px;border-bottom:1px solid #eee;font-weight:600;">${name}</td></tr>
               <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#888;">Email:</td><td style="padding:8px;border-bottom:1px solid #eee;">${email}</td></tr>
               <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#888;">Teléfono:</td><td style="padding:8px;border-bottom:1px solid #eee;">${phone||'—'}</td></tr>
               <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#888;">Empresa:</td><td style="padding:8px;border-bottom:1px solid #eee;">${company||'—'}</td></tr>
               <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#888;">RFC:</td><td style="padding:8px;border-bottom:1px solid #eee;">${rfc||'—'}</td></tr>
-              <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#888;">Razón Social:</td><td style="padding:8px;border-bottom:1px solid #eee;">${razon_social||'—'}</td></tr>
               <tr><td style="padding:8px;color:#888;">Odoo ID:</td><td style="padding:8px;font-weight:600;color:#001F5B;">#${partnerId}</td></tr>
             </table>
             <a href="https://hydratechgroup.odoo.com/web#id=${partnerId}&model=res.partner" style="display:block;background:#001F5B;color:#fff;text-align:center;padding:12px;border-radius:6px;text-decoration:none;font-weight:700;margin-top:20px;">Ver en Odoo →</a>
           </div>`;
-
-        await sendEmail('herber.montes@hydratechgroup.mx', '🆕 Nuevo registro Adaptekk — ' + name, adminHtml);
+        await sendEmail('herber.montes@hydratechgroup.mx', '🆕 Nuevo registro — ' + name, adminHtml);
 
         return {statusCode:200, headers, body: JSON.stringify({success:true, partner_id: partnerId})};
       }
-
       return {statusCode:200, headers, body: JSON.stringify({success:false, error:'No se pudo crear el contacto'})};
     }
 
