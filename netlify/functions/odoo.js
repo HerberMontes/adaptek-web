@@ -393,55 +393,69 @@ exports.handler = async function(event, context) {
       }
       try {
         console.log('Buscando CP:', cp);
+        
+        // Combinar resultados de múltiples APIs para mayor cobertura
+        let colonias = new Set();
+        let municipio = '';
+        let estado = '';
 
-        // API: zippopotam (funciona desde servidor)
+        // API 1: COPOMEX — catálogo oficial SEPOMEX actualizado
         try {
-          const r1 = await fetch('https://api.zippopotam.us/mx/' + cp);
-          console.log('zippopotam status:', r1.status);
+          const r1 = await fetch('https://api.copomex.com/query/info_cp/' + cp + '?token=prueba');
           if (r1.ok) {
-            const d1 = await r1.json();
-            if (d1.places && d1.places.length > 0) {
-              const colonias = d1.places.map(p => p['place name']).filter(Boolean).sort();
-              const municipios = [...new Set(d1.places.map(p => p['place name']).filter(Boolean))];
-              const estado = d1.places[0].state || '';
-              console.log('zippopotam ok:', colonias.length, 'colonias');
-              return {statusCode:200, headers, body: JSON.stringify({success:true, colonias, municipios, ciudad: municipios[0]||'', estado})};
+            const text1 = await r1.text();
+            if (!text1.includes('<!DOCTYPE')) {
+              const d1 = JSON.parse(text1);
+              const items = Array.isArray(d1.response) ? d1.response : [d1.response];
+              items.forEach(i => { if(i.asentamiento) colonias.add(i.asentamiento); });
+              if (!municipio && items[0]) municipio = items[0].municipio || '';
+              if (!estado && items[0]) estado = items[0].estado || '';
+              console.log('copomex:', colonias.size, 'colonias');
             }
           }
-        } catch(e1) { console.log('zippopotam error:', e1.message); }
+        } catch(e1) { console.log('copomex err:', e1.message); }
 
-        // API 2: postcodes.io mexico (via proxy)
+        // API 2: zippopotam — complementa con más colonias
         try {
-          const r2 = await fetch('https://us-central1-latam-api.cloudfunctions.net/postalCodes?country=MX&cp=' + cp);
-          console.log('latam-api status:', r2.status);
+          const r2 = await fetch('https://api.zippopotam.us/mx/' + cp);
           if (r2.ok) {
             const d2 = await r2.json();
-            if (d2.colonias && d2.colonias.length > 0) {
-              return {statusCode:200, headers, body: JSON.stringify({
-                success:true, colonias: d2.colonias, ciudad: d2.ciudad||'', estado: d2.estado||''
-              })};
+            if (d2.places) {
+              d2.places.forEach(p => { if(p['place name']) colonias.add(p['place name']); });
+              if (!estado && d2.places[0]) estado = d2.places[0].state || '';
+              console.log('zippopotam:', colonias.size, 'total colonias');
             }
           }
-        } catch(e2) { console.log('latam-api error:', e2.message); }
+        } catch(e2) { console.log('zippopotam err:', e2.message); }
 
-        // API 3: correosdemexico.gob.mx unofficial
+        // API 3: sepomex.icalialabs.com — otra fuente complementaria
         try {
-          const r3 = await fetch('https://api.copomex.com/query/info_cp/' + cp + '?token=prueba');
-          console.log('copomex status:', r3.status);
+          const r3 = await fetch('https://sepomex.icalialabs.com/api/v1/zip_codes?zip_code=' + cp + '&per_page=200');
           if (r3.ok) {
-            const d3 = await r3.json();
-            const items = Array.isArray(d3.response) ? d3.response : [d3.response];
-            if (items && items.length > 0 && items[0].asentamiento) {
-              const colonias = [...new Set(items.map(i => i.asentamiento).filter(Boolean))].sort();
-              const ciudad = items[0].municipio || '';
-              const estado = items[0].estado || '';
-              console.log('copomex ok:', colonias.length);
-              return {statusCode:200, headers, body: JSON.stringify({success:true, colonias, ciudad, estado})};
+            const text3 = await r3.text();
+            if (!text3.includes('<!DOCTYPE')) {
+              const d3 = JSON.parse(text3);
+              (d3.zip_codes || []).forEach(z => { if(z.d_asenta) colonias.add(z.d_asenta); });
+              if (!municipio && d3.zip_codes && d3.zip_codes[0]) municipio = d3.zip_codes[0].d_mnpio || '';
+              if (!estado && d3.zip_codes && d3.zip_codes[0]) estado = d3.zip_codes[0].d_estado || '';
+              console.log('sepomex:', colonias.size, 'total colonias');
             }
           }
-        } catch(e3) { console.log('copomex error:', e3.message); }
+        } catch(e3) { console.log('sepomex err:', e3.message); }
 
-        console.log('Todas las APIs fallaron para CP:', cp);
+        const coloniasArr = [...colonias].sort();
+        console.log('Total colonias combinadas:', coloniasArr.length, '| municipio:', municipio, '| estado:', estado);
+
+        if (coloniasArr.length > 0) {
+          return {statusCode:200, headers, body: JSON.stringify({
+            success: true,
+            colonias: coloniasArr,
+            municipio: municipio,
+            ciudad: municipio,
+            estado: estado
+          })};
+        }
+
         return {statusCode:200, headers, body: JSON.stringify({success:false, error:'CP no encontrado'})};
 
       } catch(err) {
