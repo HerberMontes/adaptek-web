@@ -192,7 +192,10 @@ exports.handler = async function(event, context) {
       if (cp_fiscal)  partnerData.zip    = cp_fiscal;
       if (calle)      partnerData.street = calle + (colonia ? ', ' + colonia : '');
       if (ciudad)     partnerData.city   = ciudad;
-      if (estado)     partnerData.state_name = estado;
+      // state_id requires numeric ID in Odoo — store state in comment instead
+      if (estado) {
+        partnerData.comment = (partnerData.comment || '') + '\nEstado: ' + estado;
+      }
 
       // Build XML struct from object
       let membersXml = '';
