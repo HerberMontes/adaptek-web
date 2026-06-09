@@ -393,44 +393,56 @@ exports.handler = async function(event, context) {
       }
       try {
         console.log('Buscando CP:', cp);
-        
-        // Try sepomex API
-        let resp1, data1, status1;
+
+        // API: zippopotam (funciona desde servidor)
         try {
-          resp1 = await fetch('https://sepomex.icalialabs.com/api/v1/zip_codes?zip_code=' + cp + '&per_page=100');
-          status1 = resp1.status;
-          data1 = await resp1.json();
-          console.log('Sepomex status:', status1, 'zips:', (data1.zip_codes||[]).length);
-        } catch(e1) { console.log('Sepomex error:', e1.message); }
+          const r1 = await fetch('https://api.zippopotam.us/mx/' + cp);
+          console.log('zippopotam status:', r1.status);
+          if (r1.ok) {
+            const d1 = await r1.json();
+            if (d1.places && d1.places.length > 0) {
+              const colonias = d1.places.map(p => p['place name']).filter(Boolean).sort();
+              const ciudad = d1.places[0]['place name'] || '';
+              const estado = d1.places[0].state || '';
+              console.log('zippopotam ok:', colonias.length, 'colonias');
+              return {statusCode:200, headers, body: JSON.stringify({success:true, colonias, ciudad, estado})};
+            }
+          }
+        } catch(e1) { console.log('zippopotam error:', e1.message); }
 
-        if (data1 && data1.zip_codes && data1.zip_codes.length > 0) {
-          const zips = data1.zip_codes;
-          const colonias = [...new Set(zips.map(z => z.d_asenta).filter(Boolean))].sort();
-          const ciudad = zips[0].d_mnpio || zips[0].d_ciudad || '';
-          const estado = zips[0].d_estado || '';
-          console.log('Found:', colonias.length, 'colonias, ciudad:', ciudad, 'estado:', estado);
-          return {statusCode:200, headers, body: JSON.stringify({success:true, colonias, ciudad, estado})};
-        }
-
-        // Fallback: datos.gob.mx
-        let resp2, data2;
+        // API 2: postcodes.io mexico (via proxy)
         try {
-          resp2 = await fetch('https://datos.gob.mx/busca/api/3/action/datastore_search?resource_id=2a29e57a-5d6c-4e7a-87e6-640c3db4f3c2&filters={%22d_codigo%22:%22' + cp + '%22}&limit=100');
-          data2 = await resp2.json();
-          console.log('datos.gob status:', resp2.status);
-        } catch(e2) { console.log('datos.gob error:', e2.message); }
+          const r2 = await fetch('https://us-central1-latam-api.cloudfunctions.net/postalCodes?country=MX&cp=' + cp);
+          console.log('latam-api status:', r2.status);
+          if (r2.ok) {
+            const d2 = await r2.json();
+            if (d2.colonias && d2.colonias.length > 0) {
+              return {statusCode:200, headers, body: JSON.stringify({
+                success:true, colonias: d2.colonias, ciudad: d2.ciudad||'', estado: d2.estado||''
+              })};
+            }
+          }
+        } catch(e2) { console.log('latam-api error:', e2.message); }
 
-        if (data2 && data2.result && data2.result.records && data2.result.records.length > 0) {
-          const recs = data2.result.records;
-          const colonias = [...new Set(recs.map(r => r.d_asenta).filter(Boolean))].sort();
-          const ciudad = recs[0].D_mnpio || recs[0].d_ciudad || '';
-          const estado = recs[0].d_estado || '';
-          return {statusCode:200, headers, body: JSON.stringify({success:true, colonias, ciudad, estado})};
-        }
+        // API 3: correosdemexico.gob.mx unofficial
+        try {
+          const r3 = await fetch('https://api.copomex.com/query/info_cp/' + cp + '?token=prueba');
+          console.log('copomex status:', r3.status);
+          if (r3.ok) {
+            const d3 = await r3.json();
+            const items = Array.isArray(d3.response) ? d3.response : [d3.response];
+            if (items && items.length > 0 && items[0].asentamiento) {
+              const colonias = [...new Set(items.map(i => i.asentamiento).filter(Boolean))].sort();
+              const ciudad = items[0].municipio || '';
+              const estado = items[0].estado || '';
+              console.log('copomex ok:', colonias.length);
+              return {statusCode:200, headers, body: JSON.stringify({success:true, colonias, ciudad, estado})};
+            }
+          }
+        } catch(e3) { console.log('copomex error:', e3.message); }
 
-        // Fallback 3: use our own embedded data for most common CPs
-        console.log('All APIs failed for CP:', cp);
-        return {statusCode:200, headers, body: JSON.stringify({success:false, error:'CP no encontrado en APIs'})};
+        console.log('Todas las APIs fallaron para CP:', cp);
+        return {statusCode:200, headers, body: JSON.stringify({success:false, error:'CP no encontrado'})};
 
       } catch(err) {
         console.log('buscar_cp exception:', err.message);
