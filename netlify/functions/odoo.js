@@ -206,7 +206,18 @@ exports.handler = async function(event, context) {
       }
 
       const createArgsXml = `<value><struct>${membersXml}</struct></value>`;
+      
+      // DEBUG: log what we're sending
+      console.log('=== PARTNER DATA BEING SENT ===');
+      console.log(JSON.stringify(partnerData, null, 2));
+      console.log('=== XML ARGS ===');
+      console.log(createArgsXml.substring(0, 500));
+
       const createText = await xmlrpc(uid, 'res.partner', 'create', createArgsXml);
+      
+      console.log('=== ODOO RESPONSE ===');
+      console.log(createText.substring(0, 500));
+      
       const idMatch = createText.match(/<value><int>(\d+)<\/int><\/value>/);
       const partnerId = idMatch ? parseInt(idMatch[1]) : null;
 
@@ -357,7 +368,11 @@ exports.handler = async function(event, context) {
 
         await sendEmail(email, '¡Bienvenido a Adaptekk! Tu registro está en revisión', welcomeHtml);
 
-        return {statusCode:200, headers, body: JSON.stringify({success:true, partner_id: partnerId})};
+        return {statusCode:200, headers, body: JSON.stringify({
+          success:true, 
+          partner_id: partnerId,
+          fields_sent: Object.keys(partnerData)
+        })};
       }
 
       return {statusCode:200, headers, body: JSON.stringify({
