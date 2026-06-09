@@ -385,6 +385,46 @@ exports.handler = async function(event, context) {
       })};
     }
 
+    // ── BUSCAR CODIGO POSTAL ──
+    if (action === 'buscar_cp') {
+      const cp = body.cp || '';
+      if (cp.length !== 5) {
+        return {statusCode:400, headers, body: JSON.stringify({error:'CP inválido'})};
+      }
+      try {
+        // Try sepomex API
+        const resp = await fetch(`https://sepomex.icalialabs.com/api/v1/zip_codes?zip_code=${cp}&per_page=100`);
+        if (resp.ok) {
+          const data = await resp.json();
+          const zips = data.zip_codes || [];
+          if (zips.length > 0) {
+            const colonias = [...new Set(zips.map(z => z.d_asenta).filter(Boolean))].sort();
+            const ciudad = zips[0].d_mnpio || zips[0].d_ciudad || '';
+            const estado = zips[0].d_estado || '';
+            return {statusCode:200, headers, body: JSON.stringify({success:true, colonias, ciudad, estado})};
+          }
+        }
+        // Fallback: tau.com.mx API
+        const resp2 = await fetch(`https://api.tau.com.mx/dipomex/v1/codigo_postal?cp=${cp}`, {
+          headers: {'APIKEY': 'demo'}
+        });
+        if (resp2.ok) {
+          const data2 = await resp2.json();
+          if (data2.colonias && data2.colonias.length > 0) {
+            return {statusCode:200, headers, body: JSON.stringify({
+              success:true,
+              colonias: data2.colonias.map(c => c.colonia).sort(),
+              ciudad: data2.municipio || '',
+              estado: data2.estado || ''
+            })};
+          }
+        }
+        return {statusCode:200, headers, body: JSON.stringify({success:false, error:'CP no encontrado'})};
+      } catch(err) {
+        return {statusCode:200, headers, body: JSON.stringify({success:false, error: err.message})};
+      }
+    }
+
     // ── SEARCH PRODUCTS ──
     if (action === 'search_products') {
       const uid = await odooAuth();
