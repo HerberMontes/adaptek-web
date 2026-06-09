@@ -4,7 +4,32 @@ const ODOO_USER  = 'herber.montes@hydratechgroup.mx';
 const ODOO_KEY   = 'c7928b95a94f5ba9e6c124ba06c610160c2352bc';
 const RESEND_KEY = 're_5K17NUmB_8ufhqW5tYTR72dN7gy3ZQJhS';
 const FROM_EMAIL = 'validaciones@adaptekk.com';
-const ADMIN_EMAIL = 'validaciones@adaptekk.com';
+const ADMIN_EMAIL = 'validaciones@adaptekk.com'; // Gerencia — recibe todo
+const ZONE_EMAILS = {
+  'Noroeste':  'validaciones@adaptekk.com',
+  'Norte':     'validaciones@adaptekk.com',
+  'Noreste':   'validaciones@adaptekk.com',
+  'Bajio':     'validaciones@adaptekk.com',
+  'Centro':    'validaciones@adaptekk.com',
+  'Pacifico':  'validaciones@adaptekk.com',
+  'Golfo':     'validaciones@adaptekk.com',
+  'Peninsula': 'validaciones@adaptekk.com'
+};
+
+// Get zone from state
+function getZoneFromState(estado) {
+  if (!estado) return null;
+  const e = estado.toLowerCase();
+  if (['baja california','baja california sur','sonora','sinaloa','nayarit'].some(s => e.includes(s))) return 'Noroeste';
+  if (['chihuahua','durango','coahuila'].some(s => e.includes(s))) return 'Norte';
+  if (['nuevo leon','tamaulipas','san luis potosi','zacatecas'].some(s => e.includes(s))) return 'Noreste';
+  if (['jalisco','aguascalientes','guanajuato','queretaro','michoacan'].some(s => e.includes(s))) return 'Bajio';
+  if (['ciudad de mexico','estado de mexico','hidalgo','tlaxcala','puebla','morelos'].some(s => e.includes(s))) return 'Centro';
+  if (['guerrero','oaxaca','chiapas'].some(s => e.includes(s))) return 'Pacifico';
+  if (['veracruz','tabasco'].some(s => e.includes(s))) return 'Golfo';
+  if (['yucatan','campeche','quintana roo'].some(s => e.includes(s))) return 'Peninsula';
+  return null;
+}
 const SITE_URL   = 'https://cheery-fenglisu-0daf09.netlify.app';
 
 async function odooAuth() {
@@ -314,12 +339,47 @@ exports.handler = async function(event, context) {
           }];
         }
 
+        // Send to gerencia (always)
         const adminResp = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
           body: JSON.stringify(emailPayload)
         });
         await adminResp.json();
+
+        // Also notify the corresponding zone executive
+        const clientEstado = (calle + ' ' + ciudad + ' ' + (regimen_fiscal||'')).toLowerCase();
+        // Get state from comment
+        const zona = getZoneFromState(ciudad || '');
+        if (zona && ZONE_EMAILS[zona] && ZONE_EMAILS[zona] !== ADMIN_EMAIL) {
+          const zonePayload = { ...emailPayload, to: [ZONE_EMAILS[zona]], subject: `[${zona}] ` + emailPayload.subject };
+          await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(zonePayload)
+          });
+        }
+
+        // Add zone to Odoo comment
+        const zonaInfo = zona ? `\nZona: ${zona}` : '';
+        if (zona && partnerId) {
+          const zoneUpdateXml = `<?xml version="1.0"?>
+<methodCall><methodName>execute_kw</methodName><params>
+  <param><value><string>${ODOO_DB}</string></value></param>
+  <param><value><int>${uid}</int></value></param>
+  <param><value><string>${ODOO_KEY}</string></value></param>
+  <param><value><string>res.partner</string></value></param>
+  <param><value><string>write</string></value></param>
+  <param><value><array><data>
+    <value><array><data><value><int>${partnerId}</int></value></data></array></value>
+    <value><struct>
+      <member><name>comment</name><value><string>Registro Adaptekk Web | Contacto: ${name} | Estado: Pendiente aprobacion | Zona: ${zona}</string></value></member>
+    </struct></value>
+  </data></array></value></param>
+  <param><value><struct></struct></value></param>
+</params></methodCall>`;
+          await fetch(`${ODOO_URL}/xmlrpc/2/object`, {method:'POST',headers:{'Content-Type':'text/xml'},body:zoneUpdateXml});
+        }
 
         // If no constancia — send WhatsApp reminder link via email to admin
         if (!constancia_b64 && rfc) {
@@ -462,6 +522,246 @@ exports.handler = async function(event, context) {
         console.log('buscar_cp exception:', err.message);
         return {statusCode:200, headers, body: JSON.stringify({success:false, error: err.message})};
       }
+    }
+
+    // ── GET PENDING CLIENTS ──
+    if (action === 'get_pending_clients') {
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+
+      const searchXml = `<value><array><data><value><array><data>
+        <value><array><data>${xmlStr('customer_rank')}<value><string>&gt;</string></value>${xmlInt(0)}</data></array></value>
+      </data></array></value></data></array></value>`;
+
+      const text = await xmlrpc(uid, 'res.partner', 'search_read', searchXml +
+        `<value><struct>
+          <member><name>fields</name><value><array><data>
+            <value><string>id</string></value>
+            <value><string>name</string></value>
+            <value><string>email</string></value>
+            <value><string>phone</string></value>
+            <value><string>company_name</string></value>
+            <value><string>vat</string></value>
+            <value><string>zip</string></value>
+            <value><string>street</string></value>
+            <value><string>city</string></value>
+            <value><string>l10n_mx_edi_fiscal_regime</string></value>
+            <value><string>comment</string></value>
+          </data></array></value></member>
+          <member><name>limit</name><value><int>100</int></value></member>
+          <member><name>order</name><value><string>id desc</string></value></member>
+        </struct></value>`
+      );
+
+      // Parse XML response into JSON array
+      const clients = [];
+      const memberRegex = /<struct>([\s\S]*?)<\/struct>/g;
+      let match;
+      while ((match = memberRegex.exec(text)) !== null) {
+        const struct = match[1];
+        const getVal = (field) => {
+          const m = struct.match(new RegExp('<name>' + field + '<\/name>\s*<value>(?:<(?:string|int|boolean)>)?([^<]*)', 'i'));
+          return m ? m[1].trim() : '';
+        };
+        const id = parseInt(getVal('id'));
+        if (id && id > 0) {
+          clients.push({
+            id,
+            name: getVal('name'),
+            email: getVal('email'),
+            phone: getVal('phone'),
+            company_name: getVal('company_name'),
+            vat: getVal('vat'),
+            zip: getVal('zip'),
+            street: getVal('street'),
+            city: getVal('city'),
+            l10n_mx_edi_fiscal_regime: getVal('l10n_mx_edi_fiscal_regime'),
+            comment: getVal('comment')
+          });
+        }
+      }
+
+      return {statusCode:200, headers, body: JSON.stringify({success:true, clients, total: clients.length})};
+    }
+
+    // ── UPDATE CLIENT STATUS ──
+    if (action === 'update_client_status') {
+      const { partner_id, status, notas, client_name, client_email, client_phone } = body;
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+
+      const statusMap = {
+        aprobar: 'VERIFICADO',
+        rechazar: 'RECHAZADO',
+        info: 'INFO_SOLICITADA'
+      };
+      const statusLabel = statusMap[status] || status;
+      const fecha = new Date().toLocaleString('es-MX', {timeZone:'America/Mexico_City'});
+
+      // Update comment in Odoo
+      const newComment = `${statusLabel} por ejecutivo el ${fecha}${notas ? '\nNota: ' + notas : ''}\n---\nRegistro Adaptekk Web`;
+      const updateXml = `<value><struct>
+        <member><name>comment</name>${xmlStr(newComment)}</member>
+      </struct></value>`;
+
+      const idsXml = `<value><array><data><value><int>${partner_id}</int></value></data></array></value>`;
+      await xmlrpc(uid, 'res.partner', 'write', idsXml + updateXml);
+
+      // Send email to client
+      if (status === 'aprobar') {
+        const approveHtml = `
+          <div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;">
+            <div style="background:#001F5B;padding:24px;text-align:center;">
+              <span style="font-family:Arial Black;font-size:28px;font-weight:900;color:#fff;">ADAP</span><span style="font-family:Arial Black;font-size:28px;font-weight:900;color:#C8102E;">TEK</span><span style="font-family:Arial Black;font-size:28px;font-weight:900;color:#fff;">K</span>
+            </div>
+            <div style="padding:32px;background:#fff;border:1px solid #eee;">
+              <div style="background:#D1FAE5;border-radius:8px;padding:16px;text-align:center;margin-bottom:20px;">
+                <div style="font-size:40px;margin-bottom:8px;">&#9989;</div>
+                <div style="font-size:18px;font-weight:800;color:#065F46;">Tu cuenta ha sido verificada</div>
+              </div>
+              <p style="color:#555;">Hola <strong>${client_name}</strong>,</p>
+              <p style="color:#555;">Tu cuenta en Adaptekk ha sido verificada exitosamente. Ya puedes acceder a:</p>
+              <ul style="color:#555;line-height:2;">
+                <li>Precios reales de todos los productos</li>
+                <li>Stock disponible en tiempo real</li>
+                <li>Solicitar cotizaciones formales</li>
+                <li>Historial de pedidos</li>
+              </ul>
+              <a href="${SITE_URL}" style="display:block;background:#001F5B;color:#fff;text-align:center;padding:14px;border-radius:6px;text-decoration:none;font-weight:700;margin-top:20px;font-size:15px;">Acceder a Adaptekk →</a>
+            </div>
+            <div style="background:#f5f5f5;padding:14px;text-align:center;font-size:11px;color:#aaa;">© 2026 Adaptekk S.A. de C.V. — Conecta sin límites</div>
+          </div>`;
+        await sendEmail(client_email, '✅ Tu cuenta Adaptekk fue verificada — ya puedes ver precios', approveHtml);
+
+      } else if (status === 'rechazar') {
+        const rejectHtml = `
+          <div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;">
+            <div style="background:#001F5B;padding:24px;text-align:center;">
+              <span style="font-family:Arial Black;font-size:28px;font-weight:900;color:#fff;">ADAP</span><span style="font-family:Arial Black;font-size:28px;font-weight:900;color:#C8102E;">TEK</span><span style="font-family:Arial Black;font-size:28px;font-weight:900;color:#fff;">K</span>
+            </div>
+            <div style="padding:32px;background:#fff;border:1px solid #eee;">
+              <h2 style="color:#001F5B;">Actualización sobre tu registro</h2>
+              <p style="color:#555;">Hola <strong>${client_name}</strong>, necesitamos que actualices algunos datos de tu cuenta.</p>
+              ${notas ? `<div style="background:#FFF8E1;border-left:4px solid #FFA000;padding:14px;border-radius:4px;margin:16px 0;"><strong>Motivo:</strong> ${notas}</div>` : ''}
+              <p style="color:#555;">Por favor contáctanos para resolver esto:</p>
+              <a href="https://wa.me/${client_phone}" style="display:block;background:#25D366;color:#fff;text-align:center;padding:12px;border-radius:6px;text-decoration:none;font-weight:700;margin-top:16px;">WhatsApp con Ejecutivo</a>
+              <a href="mailto:validaciones@adaptekk.com" style="display:block;background:#001F5B;color:#fff;text-align:center;padding:12px;border-radius:6px;text-decoration:none;font-weight:700;margin-top:8px;">Enviar Email</a>
+            </div>
+            <div style="background:#f5f5f5;padding:14px;text-align:center;font-size:11px;color:#aaa;">© 2026 Adaptekk S.A. de C.V.</div>
+          </div>`;
+        await sendEmail(client_email, 'Información requerida para tu cuenta Adaptekk', rejectHtml);
+
+      } else if (status === 'info') {
+        const infoHtml = `
+          <div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;">
+            <div style="background:#001F5B;padding:24px;text-align:center;">
+              <span style="font-family:Arial Black;font-size:28px;font-weight:900;color:#fff;">ADAP</span><span style="font-family:Arial Black;font-size:28px;font-weight:900;color:#C8102E;">TEK</span><span style="font-family:Arial Black;font-size:28px;font-weight:900;color:#fff;">K</span>
+            </div>
+            <div style="padding:32px;background:#fff;border:1px solid #eee;">
+              <h2 style="color:#001F5B;">Necesitamos informacion adicional</h2>
+              <p style="color:#555;">Hola <strong>${client_name}</strong>, para completar tu registro necesitamos:</p>
+              <div style="background:#f4f8ff;border-left:4px solid #001F5B;padding:14px;border-radius:4px;margin:16px 0;">${notas}</div>
+              <p style="color:#555;">Puedes respondernos por cualquiera de estos medios:</p>
+              <a href="https://wa.me/${client_phone}?text=Hola, me registre en Adaptekk y necesitan informacion adicional." style="display:block;background:#25D366;color:#fff;text-align:center;padding:12px;border-radius:6px;text-decoration:none;font-weight:700;margin-top:16px;">Responder por WhatsApp</a>
+              <a href="mailto:validaciones@adaptekk.com" style="display:block;background:#001F5B;color:#fff;text-align:center;padding:12px;border-radius:6px;text-decoration:none;font-weight:700;margin-top:8px;">Responder por Email</a>
+            </div>
+            <div style="background:#f5f5f5;padding:14px;text-align:center;font-size:11px;color:#aaa;">© 2026 Adaptekk S.A. de C.V.</div>
+          </div>`;
+        await sendEmail(client_email, 'Informacion requerida — Adaptekk', infoHtml);
+      }
+
+      return {statusCode:200, headers, body: JSON.stringify({success:true, status: statusLabel})};
+    }
+
+    // ── SAVE USER PASSWORD ──
+    if (action === 'save_user_pass') {
+      const { user_key, new_pass, gerencia_pass } = body;
+      // Verify gerencia password
+      if (gerencia_pass !== 'adaptekk2026') {
+        return {statusCode:401, headers, body: JSON.stringify({error:'No autorizado'})};
+      }
+      if (!user_key || !new_pass || new_pass.length < 6) {
+        return {statusCode:400, headers, body: JSON.stringify({error:'Datos invalidos'})};
+      }
+      // Store in Odoo as a special partner note (as a config partner)
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+
+      // Search for config partner
+      const searchText = await xmlrpc(uid, 'res.partner', 'search',
+        `<value><array><data><value><array><data>
+          <value><array><data>${xmlStr('name')}<value><string>=</string></value>${xmlStr('ADAPTEKK_CONFIG')}</data></array></value>
+        </data></array></value></data></array></value>`
+      );
+      const idMatch = searchText.match(/<value><int>(\d+)<\/int><\/value>/);
+
+      // Load current config
+      let passes = {};
+      if (idMatch) {
+        const readText = await xmlrpc(uid, 'res.partner', 'read',
+          `<value><array><data><value><int>${idMatch[1]}</int></value></data></array></value>
+           <value><struct><member><name>fields</name><value><array><data>
+             <value><string>comment</string></value>
+           </data></array></value></member></struct></value>`
+        );
+        const commentMatch = readText.match(/<name>comment<\/name>\s*<value>(?:<string>)?([^<]*)/);
+        if (commentMatch) {
+          try { passes = JSON.parse(commentMatch[1]); } catch(e) { passes = {}; }
+        }
+      }
+
+      passes[user_key] = new_pass;
+      const passesJson = JSON.stringify(passes);
+
+      if (idMatch) {
+        // Update existing config partner
+        await xmlrpc(uid, 'res.partner', 'write',
+          `<value><array><data><value><int>${idMatch[1]}</int></value></data></array></value>
+           <value><struct><member><name>comment</name>${xmlStr(passesJson)}</member></struct></value>`
+        );
+      } else {
+        // Create config partner
+        await xmlrpc(uid, 'res.partner', 'create',
+          `<value><struct>
+            <member><name>name</name>${xmlStr('ADAPTEKK_CONFIG')}</member>
+            <member><name>comment</name>${xmlStr(passesJson)}</member>
+            <member><name>active</name><value><boolean>0</boolean></value></member>
+          </struct></value>`
+        );
+      }
+
+      return {statusCode:200, headers, body: JSON.stringify({success:true, user_key, message:'Contrasena actualizada'})};
+    }
+
+    // ── GET USER PASSWORDS ──
+    if (action === 'get_user_passes') {
+      const { gerencia_pass } = body;
+      if (gerencia_pass !== 'adaptekk2026') {
+        return {statusCode:401, headers, body: JSON.stringify({error:'No autorizado'})};
+      }
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+
+      const searchText = await xmlrpc(uid, 'res.partner', 'search',
+        `<value><array><data><value><array><data>
+          <value><array><data>${xmlStr('name')}<value><string>=</string></value>${xmlStr('ADAPTEKK_CONFIG')}</data></array></value>
+        </data></array></value></data></array></value>`
+      );
+      const idMatch = searchText.match(/<value><int>(\d+)<\/int><\/value>/);
+      if (!idMatch) return {statusCode:200, headers, body: JSON.stringify({success:true, passes:{}})};
+
+      const readText = await xmlrpc(uid, 'res.partner', 'read',
+        `<value><array><data><value><int>${idMatch[1]}</int></value></data></array></value>
+         <value><struct><member><name>fields</name><value><array><data>
+           <value><string>comment</string></value>
+         </data></array></value></member></struct></value>`
+      );
+      const commentMatch = readText.match(/<name>comment<\/name>\s*<value>(?:<string>)?([^<]*)/);
+      let passes = {};
+      if (commentMatch) {
+        try { passes = JSON.parse(commentMatch[1]); } catch(e) { passes = {}; }
+      }
+      return {statusCode:200, headers, body: JSON.stringify({success:true, passes})};
     }
 
     // ── SEARCH PRODUCTS ──
