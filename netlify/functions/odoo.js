@@ -144,7 +144,7 @@ exports.handler = async function(event, context) {
 
     // ── CREATE CONTACT IN ODOO ──
     if (action === 'create_contact') {
-      const { name, email, phone, company, rfc, razon_social, cp_fiscal, regimen_fiscal, email_fiscal, constancia_b64, constancia_name } = body;
+      const { name, email, phone, company, rfc, razon_social, cp_fiscal, regimen_fiscal, email_fiscal, calle, colonia, ciudad, estado, constancia_b64, constancia_name } = body;
 
       const uid = await odooAuth();
       if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
@@ -172,22 +172,27 @@ exports.handler = async function(event, context) {
       }
 
       // Build ALL fields in one struct - no string concatenation issues
-      const partnerData = {
-        name: razon_social || name,
-        email: email,
-        phone: phone || '',
-        customer_rank: 1,
-        comment: `Registro Adaptekk Web\nContacto: ${name}\nEstado: Pendiente aprobación`,
-        company_name: company || '',
-        // Fiscal data
-        vat: rfc || '',
-        zip: cp_fiscal || '',
-        l10n_mx_edi_fiscal_regime: regimen_fiscal || '',
-        // Extra
-        street: '',
-        city: '',
-        country_id: 156  // Mexico
-      };
+      // Build partner data — only include non-empty values
+      const partnerData = {};
+      partnerData.name           = razon_social || name;
+      partnerData.email          = email;
+      partnerData.customer_rank  = 1;
+      partnerData.country_id     = 156; // Mexico
+      partnerData.comment        = `Registro Adaptekk Web | Contacto: ${name} | Estado: Pendiente aprobación`;
+
+      if (phone)           partnerData.phone = phone;
+      if (company)         partnerData.company_name = company;
+
+      // Fiscal data — only if RFC provided
+      if (rfc) {
+        partnerData.vat                        = rfc;
+        partnerData.l10n_mx_edi_fiscal_regime  = regimen_fiscal || '';
+      }
+      // Fiscal address
+      if (cp_fiscal)  partnerData.zip    = cp_fiscal;
+      if (calle)      partnerData.street = calle + (colonia ? ', ' + colonia : '');
+      if (ciudad)     partnerData.city   = ciudad;
+      if (estado)     partnerData.state_name = estado;
 
       // Build XML struct from object
       let membersXml = '';
