@@ -783,13 +783,14 @@ exports.handler = async function(event, context) {
 
       console.log('Searching AT codes:', atCode, '|', atCodeRev);
 
+      // Search both directions using OR operator
       const searchXml = `<value><array><data><value><array><data>
+        <value><string>|</string></value>
         <value><array><data>
-          ${xmlStr('default_code')}<value><string>in</string></value>
-          <value><array><data>
-            ${xmlStr(atCode)}
-            ${xmlStr(atCodeRev)}
-          </data></array></value>
+          ${xmlStr('default_code')}<value><string>=</string></value>${xmlStr(atCode)}
+        </data></array></value>
+        <value><array><data>
+          ${xmlStr('default_code')}<value><string>=</string></value>${xmlStr(atCodeRev)}
         </data></array></value>
       </data></array></value></data></array></value>`;
 
@@ -903,3 +904,4 @@ exports.handler = async function(event, context) {
     return {statusCode:500, headers, body: JSON.stringify({error:'Function error', detail: err.message})};
   }
 };
+
