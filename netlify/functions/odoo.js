@@ -802,37 +802,41 @@ exports.handler = async function(event, context) {
       const candArray = Array.from(candidates);
       console.log('Searching AT codes:', candArray);
 
-      // Build OR search - Odoo XML-RPC requires one | per pair
-      // For N conditions: need N-1 pipe operators
-      // Structure: ['|', cond1, cond2] for 2, ['|','|',cond1,cond2,cond3] for 3, etc.
-      function buildOrDomain(codes) {
-        const conds = codes.map(code =>
-          `<value><array><data>${xmlStr('default_code')}<value><string>=</string></value>${xmlStr(code)}</data></array></value>`
+      // Search sequentially for each candidate until found
+      async function searchByCode(code) {
+        const xml = `<value><array><data><value><array><data>
+          <value><array><data>
+            ${xmlStr('default_code')}<value><string>=</string></value>${xmlStr(code)}
+          </data></array></value>
+        </data></array></value></data></array></value>`;
+        return await xmlrpc(uid, 'product.product', 'search_read', xml +
+          `<value><struct>
+            <member><name>fields</name><value><array><data>
+              <value><string>id</string></value>
+              <value><string>name</string></value>
+              <value><string>default_code</string></value>
+              <value><string>list_price</string></value>
+              <value><string>qty_available</string></value>
+              <value><string>description_sale</string></value>
+            </data></array></value></member>
+            <member><name>limit</name><value><int>5</int></value></member>
+          </struct></value>`
         );
-        if (conds.length === 1) return conds[0];
-        // Add N-1 pipe operators before N conditions
-        const pipes = Array(conds.length - 1).fill('<value><string>|</string></value>').join('');
-        return pipes + conds.join('');
       }
 
-      const searchXml = `<value><array><data><value><array><data>
-        ${buildOrDomain(candArray)}
-      </data></array></value></data></array></value>`;
-
-      const searchText = await xmlrpc(uid, 'product.product', 'search_read',
-        searchXml +
-        `<value><struct>
-          <member><name>fields</name><value><array><data>
-            <value><string>id</string></value>
-            <value><string>name</string></value>
-            <value><string>default_code</string></value>
-            <value><string>list_price</string></value>
-            <value><string>qty_available</string></value>
-            <value><string>description_sale</string></value>
-          </data></array></value></member>
-          <member><name>limit</name><value><int>10</int></value></member>
-        </struct></value>`
-      );
+      // Try each candidate code until we find a match
+      let searchText = '';
+      for (const code of candArray) {
+        console.log('Trying:', code);
+        searchText = await searchByCode(code);
+        // Check if we got results
+        const testMatch = searchText.match(/<name>id<\/name>\s*<value><int>(\d+)<\/int><\/value>/);
+        if (testMatch) {
+          console.log('Found with code:', code);
+          break;
+        }
+      }
+      const dummyText = searchText; // alias for parser below
 
       // Parse XML results
       const products = [];
