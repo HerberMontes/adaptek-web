@@ -874,6 +874,9 @@ exports.handler = async function(event, context) {
       }
 
       console.log('Products found:', products.length);
+      if (products.length === 0 && searchText.length > 100) {
+        console.log('Raw XML sample:', searchText.substring(0, 800));
+      }
 
       // If no exact match, check if AT code exists in catalog (qty=0 = fabricado)
       if (products.length === 0) {
