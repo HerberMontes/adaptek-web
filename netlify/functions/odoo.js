@@ -61,6 +61,29 @@ function hasResults(xmlText) {
   return dataContent.length > 0 && dataContent.includes('<int>');
 }
 
+async function odooSearchRead(uid, model, domain_xml, fields, limit) {
+  const fieldsXml = fields.map(f => `<value><string>${f}</string></value>`).join('');
+  const xml = `<?xml version="1.0"?>
+<methodCall><methodName>execute_kw</methodName><params>
+  <param><value><string>${ODOO_DB}</string></value></param>
+  <param><value><int>${uid}</int></value></param>
+  <param><value><string>${ODOO_KEY}</string></value></param>
+  <param><value><string>${model}</string></value></param>
+  <param><value><string>search_read</string></value></param>
+  <param><value><array><data>
+    <value><array><data>${domain_xml}</data></array></value>
+  </data></array></value></param>
+  <param><value><struct>
+    <member><name>fields</name><value><array><data>${fieldsXml}</data></array></value></member>
+    <member><name>limit</name><value><int>${limit||10}</int></value></member>
+  </struct></value></param>
+</params></methodCall>`;
+  const resp = await fetch(`${ODOO_URL}/xmlrpc/2/object`, {
+    method: 'POST', headers: {'Content-Type':'text/xml'}, body: xml
+  });
+  return await resp.text();
+}
+
 async function xmlrpc(uid, model, method, argsXml) {
   const xml = `<?xml version="1.0"?>
 <methodCall><methodName>execute_kw</methodName><params>
@@ -804,24 +827,11 @@ exports.handler = async function(event, context) {
 
       // Search sequentially for each candidate until found
       async function searchByCode(code) {
-        const xml = `<value><array><data><value><array><data>
-          <value><array><data>
-            ${xmlStr('default_code')}<value><string>=</string></value>${xmlStr(code)}
-          </data></array></value>
-        </data></array></value></data></array></value>`;
-        return await xmlrpc(uid, 'product.product', 'search_read', xml +
-          `<value><struct>
-            <member><name>fields</name><value><array><data>
-              <value><string>id</string></value>
-              <value><string>name</string></value>
-              <value><string>default_code</string></value>
-              <value><string>list_price</string></value>
-              <value><string>qty_available</string></value>
-              <value><string>description_sale</string></value>
-            </data></array></value></member>
-            <member><name>limit</name><value><int>5</int></value></member>
-          </struct></value>`
-        );
+        const domainXml = `<value><array><data>
+          ${xmlStr('default_code')}<value><string>=</string></value>${xmlStr(code)}
+        </data></array></value>`;
+        return await odooSearchRead(uid, 'product.product', domainXml,
+          ['id','name','default_code','list_price','qty_available','description_sale'], 5);
       }
 
       // Try each candidate code until we find a match
@@ -830,7 +840,7 @@ exports.handler = async function(event, context) {
         console.log('Trying:', code);
         searchText = await searchByCode(code);
         // Check if we got results
-        const testMatch = searchText.match(/<name>id<\/name>\s*<value><int>(\d+)<\/int><\/value>/);
+        const testMatch = searchText.includes('<name>id</name>');
         if (testMatch) {
           console.log('Found with code:', code);
           break;
