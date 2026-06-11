@@ -1,0 +1,35 @@
+# ─── Adaptekk · .gitignore ───
+# Renombra este archivo a ".gitignore" (con el punto al inicio) en la raíz del repo.
+
+# Credenciales y secretos (NUNCA subir)
+.env
+.env.*
+*.key
+*credentials*
+ADAPTEKK_ROADMAP.md
+
+# Archivos temporales de desarrollo / parcheo
+block*.js
+all_ids.txt
+_tokens.css
+_preview.py
+t2.js
+odoo_github.js
+odoo_backup.js
+adaptatodo-mx.html
+
+# Fragmentos ya integrados dentro de index.html
+checkout_block.html
+pago_block.html
+
+# Vista previa de diseño (no es parte del sitio)
+preview_comercio.html
+
+# Dependencias y build
+node_modules/
+.netlify/
+dist/
+.DS_Store
+
+# Pruebas locales (opcional: quita estas líneas si quieres versionarlas en /tests)
+smoketest*.js
