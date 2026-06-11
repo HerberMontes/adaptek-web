@@ -848,29 +848,44 @@ exports.handler = async function(event, context) {
       }
       const dummyText = searchText; // alias for parser below
 
-      // Parse XML results - handle both <int> and <double> value types
+      // Parse XML results using simple string extraction (no regex flags needed)
       const products = [];
-      const structRegex = /<struct>([\s\S]*?)<\/struct>/g;
-      let match;
-      while ((match = structRegex.exec(searchText)) !== null) {
-        const struct = match[1];
-        const getVal = (field) => {
-          const m = struct.match(new RegExp(
-            '<name>' + field + '<\/name>\s*<value>(?:<(?:string|int|double|boolean)>)?([^<]*)',
-          'i'));
-          return m ? m[1].trim() : '';
-        };
-        const id = parseInt(getVal('id'));
+      function extractField(xml, field) {
+        const tag = '<name>' + field + '</name>';
+        const pos = xml.indexOf(tag);
+        if (pos < 0) return '';
+        const afterTag = xml.substring(pos + tag.length);
+        const valStart = afterTag.indexOf('<value>');
+        if (valStart < 0) return '';
+        const inner = afterTag.substring(valStart + 7); // after <value>
+        // Skip type tag if present: <string>, <int>, <double>, <boolean>
+        const typeEnd = inner.indexOf('>');
+        const firstChar = inner.charAt(0);
+        let content;
+        if (firstChar === '<') {
+          content = inner.substring(typeEnd + 1);
+        } else {
+          content = inner;
+        }
+        const end = content.indexOf('<');
+        return end >= 0 ? content.substring(0, end).trim() : content.trim();
+      }
+
+      // Split by <struct> to get individual records
+      const parts = searchText.split('<struct>');
+      for (let i = 1; i < parts.length; i++) {
+        const struct = parts[i].split('</struct>')[0];
+        const id = parseInt(extractField(struct, 'id'));
         if (id > 0) {
-          const qty = parseFloat(getVal('qty_available')) || 0;
-          const price = parseFloat(getVal('list_price')) || 0;
+          const qty = parseFloat(extractField(struct, 'qty_available')) || 0;
+          const price = parseFloat(extractField(struct, 'list_price')) || 0;
           products.push({
             id,
-            name: getVal('name'),
-            at_code: getVal('default_code'),
+            name: extractField(struct, 'name'),
+            at_code: extractField(struct, 'default_code'),
             price,
             qty_available: qty,
-            description: getVal('description_sale'),
+            description: extractField(struct, 'description_sale'),
             status: qty > 0 ? 'stock' : 'fabricado'
           });
         }
