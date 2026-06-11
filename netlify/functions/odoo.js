@@ -1,10 +1,13 @@
-const ODOO_URL   = 'https://hydratechgroup.odoo.com';
-const ODOO_DB    = 'hydratechgroup';
-const ODOO_USER  = 'herber.montes@hydratechgroup.mx';
-const ODOO_KEY   = 'c7928b95a94f5ba9e6c124ba06c610160c2352bc';
-const RESEND_KEY = 're_5K17NUmB_8ufhqW5tYTR72dN7gy3ZQJhS';
-const FROM_EMAIL = 'validaciones@adaptekk.com';
-const ADMIN_EMAIL = 'validaciones@adaptekk.com'; // Gerencia — recibe todo
+// ── Credenciales: SIEMPRE desde variables de entorno de Netlify ──
+// Configurar en Netlify → Site settings → Environment variables.
+// NUNCA poner las llaves reales en este archivo (el repo es público en GitHub).
+const ODOO_URL    = process.env.ODOO_URL    || 'https://hydratechgroup.odoo.com';
+const ODOO_DB     = process.env.ODOO_DB     || 'hydratechgroup';
+const ODOO_USER   = process.env.ODOO_USER   || '';
+const ODOO_KEY    = process.env.ODOO_API_KEY || '';
+const RESEND_KEY  = process.env.RESEND_KEY  || '';
+const FROM_EMAIL  = process.env.FROM_EMAIL  || 'validaciones@adaptekk.com';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'validaciones@adaptekk.com'; // Gerencia — recibe todo
 const ZONE_EMAILS = {
   'Noroeste':  'validaciones@adaptekk.com',
   'Norte':     'validaciones@adaptekk.com',
@@ -30,7 +33,7 @@ function getZoneFromState(estado) {
   if (['yucatan','campeche','quintana roo'].some(s => e.includes(s))) return 'Peninsula';
   return null;
 }
-const SITE_URL   = 'https://cheery-fenglisu-0daf09.netlify.app';
+const SITE_URL    = process.env.SITE_URL || 'https://cheery-fenglisu-0daf09.netlify.app';
 
 async function odooAuth() {
   const xml = `<?xml version="1.0"?>
@@ -103,6 +106,134 @@ async function xmlrpc(uid, model, method, argsXml) {
 
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+// ── Extrae un campo de un <struct> XML-RPC (mismo parser usado en buscar_por_configurador) ──
+function xmlExtractField(xml, field) {
+  const tag = '<name>' + field + '</name>';
+  const pos = xml.indexOf(tag);
+  if (pos < 0) return '';
+  const afterTag = xml.substring(pos + tag.length);
+  const valStart = afterTag.indexOf('<value>');
+  if (valStart < 0) return '';
+  const inner = afterTag.substring(valStart + 7);
+  const typeEnd = inner.indexOf('>');
+  const firstChar = inner.charAt(0);
+  let content = (firstChar === '<') ? inner.substring(typeEnd + 1) : inner;
+  const end = content.indexOf('<');
+  return end >= 0 ? content.substring(0, end).trim() : content.trim();
+}
+
+// ── Busca un producto en Odoo por código AT (default_code) y devuelve precio/stock REALES ──
+// Nunca confiamos en el precio que manda el navegador: se recalcula aquí contra Odoo.
+async function lookupProductByCode(uid, code) {
+  if (!code) return null;
+  const domainXml = `<value><array><data>
+    ${xmlStr('default_code')}<value><string>=</string></value>${xmlStr(code)}
+  </data></array></value>`;
+  const xml = await odooSearchRead(uid, 'product.product', domainXml,
+    ['id','name','default_code','list_price','qty_available'], 1);
+  const parts = xml.split('<struct>');
+  if (parts.length < 2) return null;
+  const struct = parts[1].split('</struct>')[0];
+  const id = parseInt(xmlExtractField(struct, 'id'));
+  if (!(id > 0)) return null;
+  const qty = parseFloat(xmlExtractField(struct, 'qty_available')) || 0;
+  const price = parseFloat(xmlExtractField(struct, 'list_price')) || 0;
+  return {
+    id,
+    name: xmlExtractField(struct, 'name'),
+    at_code: xmlExtractField(struct, 'default_code') || code,
+    price,
+    qty_available: qty,
+    status: qty > 0 ? 'stock' : 'fabricado'
+  };
+}
+
+// ── Busca un partner por email; si no existe, lo crea ligero (guest checkout) ──
+async function findOrCreatePartner(uid, contacto) {
+  const email = (contacto.email || '').trim();
+  const nombre = (contacto.nombre || contacto.name || 'Cliente Adaptekk').trim();
+  if (email) {
+    const dom = `<value><array><data><value><array><data>
+      ${xmlStr('email')}<value><string>=</string></value>${xmlStr(email)}
+    </data></array></value></data></array></value>`;
+    const found = await xmlrpc(uid, 'res.partner', 'search', dom);
+    const m = found.match(/<value><int>(\d+)<\/int><\/value>/);
+    if (m) return parseInt(m[1]);
+  }
+  // Crear partner básico
+  let members = `<member><name>name</name>${xmlStr(nombre)}</member>`;
+  if (email) members += `<member><name>email</name>${xmlStr(email)}</member>`;
+  if (contacto.tel) members += `<member><name>phone</name>${xmlStr(contacto.tel)}</member>`;
+  members += `<member><name>customer_rank</name>${xmlInt(1)}</member>`;
+  members += `<member><name>country_id</name>${xmlInt(156)}</member>`;
+  const createText = await xmlrpc(uid, 'res.partner', 'create', `<value><struct>${members}</struct></value>`);
+  const im = createText.match(/<value><int>(\d+)<\/int><\/value>/);
+  return im ? parseInt(im[1]) : null;
+}
+
+// ── Crea una sale.order en Odoo con líneas a precio REAL + envío. Devuelve {ok, saleId, total, folio} ──
+async function crearOrdenOdoo(uid, orden, estado) {
+  try {
+    const items = Array.isArray(orden.items) ? orden.items : [];
+    const co = orden.checkout || {};
+    const folio = String(orden.folio || ('PED-' + Date.now().toString(36).toUpperCase()));
+
+    const partnerId = await findOrCreatePartner(uid, co.contacto || {});
+    if (!partnerId) return { ok:false, error:'No se pudo crear/recuperar el cliente' };
+
+    // Construir líneas con precio real de Odoo
+    const lineXmls = [];
+    let total = 0;
+    for (const it of items) {
+      const code = it.at_code || it.code;
+      const qty = Math.max(1, parseInt(it.qty) || 1);
+      const prod = await lookupProductByCode(uid, code);
+      if (!prod || !prod.id) continue;
+      total += (prod.price || 0) * qty;
+      // order_line en formato Odoo: (0,0,{...})
+      const lineStruct = `<value><struct>
+        <member><name>product_id</name>${xmlInt(prod.id)}</member>
+        <member><name>product_uom_qty</name>${xmlInt(qty)}</member>
+        <member><name>price_unit</name><value><double>${(prod.price||0).toFixed(2)}</double></value></member>
+      </struct></value>`;
+      lineXmls.push(`<value><array><data>${xmlInt(0)}${xmlInt(0)}${lineStruct}</data></array></value>`);
+    }
+
+    // Línea de envío
+    const SHIP = { express:285, estandar:145, economico:95 };
+    const envio = co.envio || null;
+    if (envio && SHIP[envio.id]) {
+      total += SHIP[envio.id];
+      const shipStruct = `<value><struct>
+        <member><name>name</name>${xmlStr('Env\u00edo ' + (envio.name || envio.id))}</member>
+        <member><name>product_uom_qty</name>${xmlInt(1)}</member>
+        <member><name>price_unit</name><value><double>${SHIP[envio.id].toFixed(2)}</double></value></member>
+      </struct></value>`;
+      lineXmls.push(`<value><array><data>${xmlInt(0)}${xmlInt(0)}${shipStruct}</data></array></value>`);
+    }
+
+    if (!lineXmls.length) return { ok:false, error:'Ning\u00fan producto v\u00e1lido en Odoo' };
+
+    const orderStruct = `<value><struct>
+      <member><name>partner_id</name>${xmlInt(partnerId)}</member>
+      <member><name>client_order_ref</name>${xmlStr(folio)}</member>
+      <member><name>order_line</name><value><array><data>${lineXmls.join('')}</data></array></value></member>
+    </struct></value>`;
+    const createText = await xmlrpc(uid, 'sale.order', 'create', orderStruct);
+    const m = createText.match(/<value><int>(\d+)<\/int><\/value>/);
+    const saleId = m ? parseInt(m[1]) : null;
+    if (!saleId) return { ok:false, error:'Odoo no devolvi\u00f3 id de orden' };
+
+    if (estado === 'confirm') {
+      await xmlrpc(uid, 'sale.order', 'action_confirm',
+        `<value><array><data><value><int>${saleId}</int></value></data></array></value>`).catch(()=>{});
+    }
+    return { ok:true, saleId, folio, total: Math.round(total*100)/100 };
+  } catch(e) {
+    return { ok:false, error: e.message };
+  }
 }
 
 async function sendEmail(to, subject, html) {
@@ -798,31 +929,28 @@ exports.handler = async function(event, context) {
       const genA = gen_a === 'M' ? 'M' : 'H';
       const genB = gen_b === 'M' ? 'M' : 'H';
 
-      // Build all possible AT codes for this combination
-      // For straight connectors (NR): order doesn't matter - generate all 4 combinations
-      // For others: both orders still possible
-      const extA = `${std_a}-${genA}${med_a}`;
-      const extB = std_b ? `${std_b}-${genB}${med_b}` : '';
+      const extA = std_a + '-' + genA + med_a;
+      const extB = std_b ? std_b + '-' + genB + med_b : '';
+
+      // For straight connectors (NR): normalize by sorting extremos alphabetically
+      // This ensures AT-NR-BSPP-M16-JIC-M16 is ALWAYS the same regardless of selection order
+      let ext1 = extA, ext2 = extB;
+      if (tipoCode === 'NR' && extB && extA > extB) {
+        ext1 = extB; ext2 = extA; // swap to alphabetical order
+      }
+
+      // Primary normalized code
+      const atCodeNorm = 'AT-' + tipoCode + '-' + ext1 + (ext2 ? '-' + ext2 : '');
+      // Also keep original order as fallback
+      const atCodeOrig = 'AT-' + tipoCode + '-' + extA + (extB ? '-' + extB : '');
 
       const candidates = new Set();
-      // Primary order
-      candidates.add(`AT-${tipoCode}-${extA}${extB ? '-'+extB : ''}`);
-      // Reversed order
-      if (extB && extA !== extB) {
-        candidates.add(`AT-${tipoCode}-${extB}-${extA}`);
-      }
-      // Also try with different gender combinations (sometimes H/M swapped in catalog)
-      const genAalt = genA === 'M' ? 'H' : 'M';
-      const genBalt = genB === 'M' ? 'H' : 'M';
-      candidates.add(`AT-${tipoCode}-${std_a}-${genAalt}${med_a}${extB ? '-'+extB : ''}`);
-      if (extB) {
-        candidates.add(`AT-${tipoCode}-${extA}-${std_b}-${genBalt}${med_b}`);
-        candidates.add(`AT-${tipoCode}-${std_b}-${genBalt}${med_b}-${extA}`);
-        candidates.add(`AT-${tipoCode}-${std_b}-${genBalt}${med_b}-${std_a}-${genAalt}${med_a}`);
-      }
+      candidates.add(atCodeNorm);
+      if (atCodeOrig !== atCodeNorm) candidates.add(atCodeOrig);
 
-      const atCode = `AT-${tipoCode}-${extA}${extB ? '-'+extB : ''}`;
+      const atCode = atCodeNorm; // use normalized as display code
       const candArray = Array.from(candidates);
+      console.log('Normalized AT code:', atCode);
       console.log('Searching AT codes:', candArray);
 
       // Search sequentially for each candidate until found
@@ -946,6 +1074,135 @@ exports.handler = async function(event, context) {
       })};
     }
 
+    // ── BULK STOCK UPDATE ──
+    if (action === 'bulk_stock_update') {
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+
+      const { products } = body; // [{code, qty}]
+      if (!products || !products.length) {
+        return {statusCode:400, headers, body: JSON.stringify({error:'No products provided'})};
+      }
+
+      let updated = 0, errors = 0, notFound = 0;
+      const batchSize = 10;
+
+      for (let i = 0; i < products.length; i += batchSize) {
+        const batch = products.slice(i, i + batchSize);
+        
+        for (const item of batch) {
+          try {
+            // Find product.product id by default_code
+            const domXml = `<value><array><data>
+              <value><array><data>
+                ${xmlStr('default_code')}<value><string>=</string></value>${xmlStr(item.code)}
+              </data></array></value>
+            </data></array></value>`;
+            
+            const searchResp = await odooSearchRead(uid, 'product.product', domXml, ['id','name','default_code'], 1);
+            
+            if (!searchResp.includes('<name>id</name>')) { notFound++; continue; }
+            
+            // Extract product id
+            const parts = searchResp.split('<struct>');
+            let productId = null;
+            if (parts.length > 1) {
+              const struct = parts[1].split('</struct>')[0];
+              const idVal = extractField(struct, 'id');
+              productId = parseInt(idVal);
+            }
+            
+            if (!productId) { notFound++; continue; }
+
+            // Find or create stock.quant for this product in WH/Stock
+            // First find location id for WH/Stock
+            const locDom = `<value><array><data>
+              <value><array><data>
+                ${xmlStr('complete_name')}<value><string>=</string></value>${xmlStr('WH/Stock')}
+              </data></array></value>
+            </data></array></value>`;
+            const locResp = await odooSearchRead(uid, 'stock.location', locDom, ['id'], 1);
+            const locParts = locResp.split('<struct>');
+            let locationId = 8; // default WH/Stock id
+            if (locParts.length > 1) {
+              const locVal = extractField(locParts[1].split('</struct>')[0], 'id');
+              if (locVal) locationId = parseInt(locVal);
+            }
+
+            // Use inventory adjustment: write qty directly to stock.quant
+            // First search for existing quant
+            const quantDom = `<value><array><data>
+              <value><string>|</string></value>
+              <value><array><data>
+                ${xmlStr('product_id')}<value><string>=</string></value><value><int>${productId}</int></value>
+              </data></array></value>
+              <value><array><data>
+                ${xmlStr('location_id')}<value><string>=</string></value><value><int>${locationId}</int></value>
+              </data></array></value>
+            </data></array></value>`;
+
+            // Create inventory adjustment via action_apply_inventory
+            const createXml = `<?xml version="1.0"?>
+<methodCall><methodName>execute_kw</methodName><params>
+  <param><value><string>${ODOO_DB}</string></value></param>
+  <param><value><int>${uid}</int></value></param>
+  <param><value><string>${ODOO_KEY}</string></value></param>
+  <param><value><string>stock.quant</string></value></param>
+  <param><value><string>create</string></value></param>
+  <param><value><array><data>
+    <value><struct>
+      <member><name>product_id</name><value><int>${productId}</int></value></member>
+      <member><name>location_id</name><value><int>${locationId}</int></value></member>
+      <member><name>inventory_quantity</name><value><double>${item.qty}</double></value></member>
+    </struct></value>
+  </data></array></value></param>
+  <param><value><struct></struct></value></param>
+</params></methodCall>`;
+
+            const createResp = await fetch(`${ODOO_URL}/xmlrpc/2/object`, {
+              method: 'POST', headers: {'Content-Type':'text/xml'}, body: createXml
+            });
+            const createText = await createResp.text();
+            
+            if (createText.includes('<int>') || createText.includes('faultCode') === false) {
+              // Apply the inventory
+              const quantIdMatch = createText.match(/<value><int>(\d+)<\/int><\/value>/);
+              if (quantIdMatch) {
+                const quantId = parseInt(quantIdMatch[1]);
+                const applyXml = `<?xml version="1.0"?>
+<methodCall><methodName>execute_kw</methodName><params>
+  <param><value><string>${ODOO_DB}</string></value></param>
+  <param><value><int>${uid}</int></value></param>
+  <param><value><string>${ODOO_KEY}</string></value></param>
+  <param><value><string>stock.quant</string></value></param>
+  <param><value><string>action_apply_inventory</string></value></param>
+  <param><value><array><data>
+    <value><array><data><value><int>${quantId}</int></value></data></array></value>
+  </data></array></value></param>
+  <param><value><struct></struct></value></param>
+</params></methodCall>`;
+                await fetch(`${ODOO_URL}/xmlrpc/2/object`, {
+                  method: 'POST', headers: {'Content-Type':'text/xml'}, body: applyXml
+                });
+                updated++;
+              }
+            } else {
+              errors++;
+            }
+          } catch(e) {
+            errors++;
+          }
+        }
+        
+        // Progress log every 50 products
+        if (i % 50 === 0) console.log(`Progress: ${i}/${products.length} | updated:${updated} notFound:${notFound} errors:${errors}`);
+      }
+
+      return {statusCode:200, headers, body: JSON.stringify({
+        success: true, updated, notFound, errors, total: products.length
+      })};
+    }
+
     // ── SEARCH PRODUCTS ──
     if (action === 'search_products') {
       const uid = await odooAuth();
@@ -956,6 +1213,200 @@ exports.handler = async function(event, context) {
         </data></array></value></data></array></value>`
       );
       return {statusCode:200, headers, body: JSON.stringify({success:true, raw: text.substring(0,1000)})};
+    }
+
+    // ── CREAR ORDEN EN ODOO (Fase 4) ──
+    // Crea/recupera el partner y genera una sale.order con sus líneas (precios reales de Odoo).
+    if (action === 'crear_orden_odoo') {
+      const orden = body.orden || {};
+      const items = Array.isArray(orden.items) ? orden.items : [];
+      const co = orden.checkout || {};
+      const contacto = co.contacto || {};
+      if (!items.length) return {statusCode:400, headers, body: JSON.stringify({error:'Orden sin productos'})};
+
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+
+      const result = await crearOrdenOdoo(uid, orden, 'draft');
+      if (!result.ok) {
+        return {statusCode:502, headers, body: JSON.stringify({success:false, error:result.error})};
+      }
+      return {statusCode:200, headers, body: JSON.stringify({
+        success:true, sale_id:result.saleId, folio:result.folio, total:result.total
+      })};
+    }
+
+    // ── CREAR PREFERENCIA MERCADO PAGO (tarjeta) ──
+    // Recalcula el total en el servidor contra Odoo y crea una preference de pago.
+    if (action === 'crear_preferencia_mp') {
+      const MP_TOKEN = process.env.MP_ACCESS_TOKEN;
+      const site = process.env.SITE_URL || SITE_URL;
+      const orden = body.orden || {};
+      const items = Array.isArray(orden.items) ? orden.items : [];
+
+      if (!MP_TOKEN) {
+        // Mercado Pago aún no configurado en Netlify → el front cae a su fallback.
+        return {statusCode:200, headers, body: JSON.stringify({
+          success:false, error:'Mercado Pago no configurado (falta MP_ACCESS_TOKEN)'
+        })};
+      }
+      if (!items.length) {
+        return {statusCode:400, headers, body: JSON.stringify({error:'Orden sin productos'})};
+      }
+
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+
+      // Crear la orden en Odoo como borrador para que el webhook la confirme tras el pago
+      const ordenCreada = await crearOrdenOdoo(uid, orden, 'draft');
+
+      // Recalcular cada línea con el precio REAL de Odoo (no confiar en el cliente)
+      const mpItems = [];
+      let serverSubtotal = 0;
+      for (const it of items) {
+        const code = it.at_code || it.code;
+        const qty = Math.max(1, parseInt(it.qty) || 1);
+        const prod = await lookupProductByCode(uid, code);
+        if (!prod || !(prod.price > 0)) {
+          // Producto sin precio en Odoo → no se puede cobrar en línea
+          return {statusCode:409, headers, body: JSON.stringify({
+            success:false, error:'Producto sin precio en sistema: ' + code + '. Contacta a un ejecutivo.'
+          })};
+        }
+        serverSubtotal += prod.price * qty;
+        mpItems.push({
+          id: prod.at_code,
+          title: prod.at_code + (prod.name ? ' - ' + prod.name : ''),
+          quantity: qty,
+          currency_id: 'MXN',
+          unit_price: Math.round(prod.price * 100) / 100
+        });
+      }
+
+      // Costo de envío validado contra catálogo fijo (no confiar en el monto del cliente)
+      const SHIP = { express:285, estandar:145, economico:95 };
+      const envio = orden.checkout && orden.checkout.envio ? orden.checkout.envio : null;
+      const shipId = envio && SHIP[envio.id] ? envio.id : null;
+      if (shipId) {
+        mpItems.push({
+          id: 'ENVIO-' + shipId,
+          title: 'Env\u00edo ' + (envio.name || shipId),
+          quantity: 1,
+          currency_id: 'MXN',
+          unit_price: SHIP[shipId]
+        });
+      }
+
+      const folio = String(orden.folio || ('PED-' + Date.now().toString().slice(-6)));
+      const preference = {
+        items: mpItems,
+        external_reference: folio,
+        back_urls: {
+          success: site + '/?pago=ok&folio='  + encodeURIComponent(folio),
+          failure: site + '/?pago=err&folio=' + encodeURIComponent(folio),
+          pending: site + '/?pago=pend&folio='+ encodeURIComponent(folio)
+        },
+        auto_return: 'approved',
+        notification_url: site + '/.netlify/functions/mp-webhook',
+        statement_descriptor: 'ADAPTEKK',
+        metadata: { folio: folio, server_subtotal: serverSubtotal }
+      };
+
+      try {
+        const mpResp = await fetch('https://api.mercadopago.com/checkout/preferences', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + MP_TOKEN, 'Content-Type': 'application/json' },
+          body: JSON.stringify(preference)
+        });
+        const mpData = await mpResp.json();
+        if (mpData && mpData.init_point) {
+          return {statusCode:200, headers, body: JSON.stringify({
+            success:true,
+            init_point: mpData.init_point,
+            preference_id: mpData.id,
+            folio: folio,
+            server_total: Math.round((serverSubtotal + (shipId ? SHIP[shipId] : 0)) * 100) / 100
+          })};
+        }
+        return {statusCode:502, headers, body: JSON.stringify({
+          success:false, error:'Mercado Pago no devolvi\u00f3 init_point', detail: (mpData && mpData.message) || ''
+        })};
+      } catch(e) {
+        return {statusCode:502, headers, body: JSON.stringify({success:false, error:'Error al contactar Mercado Pago', detail:e.message})};
+      }
+    }
+
+    // ── REGISTRAR PAGO POR TRANSFERENCIA (SPEI) ──
+    // Recibe JSON con folio + comprobante en base64 y crea/marca la orden en Odoo "pago por validar".
+    if (action === 'registrar_pago_transferencia') {
+      const folio = String(body.folio || '').trim();
+      if (!folio) return {statusCode:400, headers, body: JSON.stringify({error:'Folio requerido'})};
+
+      // Revalidar comprobante server-side (el cliente ya validó, pero no confiamos)
+      const comp = body.comprobante || null; // { name, type, size, data(base64) }
+      if (comp) {
+        const okTypes = ['image/jpeg','image/png','application/pdf'];
+        if (comp.type && okTypes.indexOf(comp.type) === -1) {
+          return {statusCode:415, headers, body: JSON.stringify({error:'Formato de comprobante no v\u00e1lido'})};
+        }
+        if (comp.size && comp.size > 5 * 1024 * 1024) {
+          return {statusCode:413, headers, body: JSON.stringify({error:'Comprobante excede 5MB'})};
+        }
+      }
+
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+
+      // Crear la orden en Odoo (borrador → queda como "pago por validar" hasta confirmar el depósito)
+      let saleId = null;
+      if (body.orden && Array.isArray(body.orden.items) && body.orden.items.length) {
+        const oc = await crearOrdenOdoo(uid, body.orden, 'draft');
+        if (oc.ok) saleId = oc.saleId;
+      }
+
+      // Adjuntar comprobante en Odoo (ir.attachment) si viene en base64
+      let attachmentId = null;
+      try {
+        if (comp && comp.data) {
+          const createAttXml = `<value><struct>
+            <member><name>name</name>${xmlStr('Comprobante ' + folio + ' - ' + (comp.name || 'transferencia'))}</member>
+            <member><name>type</name>${xmlStr('binary')}</member>
+            <member><name>datas</name>${xmlStr(comp.data)}</member>
+            <member><name>res_model</name>${xmlStr('sale.order')}</member>
+          </struct></value>`;
+          const attText = await xmlrpc(uid, 'ir.attachment', 'create', createAttXml);
+          const m = attText.match(/<value><int>(\d+)<\/int><\/value>/);
+          attachmentId = m ? parseInt(m[1]) : null;
+        }
+      } catch(e) { /* adjuntar es best-effort, no bloquea el registro */ }
+
+      // Notificar a gerencia para validar el pago manualmente (Fase 4 automatiza la orden en Odoo)
+      try {
+        await sendEmail(ADMIN_EMAIL,
+          'Comprobante de transferencia recibido — ' + folio,
+          `<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;">
+            <div style="background:#001F5B;padding:18px;text-align:center;">
+              <span style="font-family:Arial Black;font-size:22px;color:#fff;">ADAP</span><span style="font-family:Arial Black;font-size:22px;color:#C8102E;">TEK</span><span style="font-family:Arial Black;font-size:22px;color:#fff;">K</span>
+            </div>
+            <div style="padding:24px;border:1px solid #eee;">
+              <h3 style="color:#001F5B;margin-top:0;">Nuevo comprobante por validar</h3>
+              <p>Folio: <b>${folio}</b></p>
+              <p>Archivo: ${comp ? (comp.name || 'comprobante') : 'no adjunto'}</p>
+              <p>Adjunto en Odoo (ir.attachment): ${attachmentId || 'no guardado'}</p>
+              <p style="color:#888;font-size:13px;">Validar el dep\u00f3sito y liberar el pedido.</p>
+            </div>
+          </div>`
+        );
+      } catch(e) { /* email best-effort */ }
+
+      return {statusCode:200, headers, body: JSON.stringify({
+        success:true,
+        folio: folio,
+        sale_id: saleId,
+        estado: 'pago-por-validar',
+        attachment_id: attachmentId,
+        mensaje: 'Comprobante recibido. Un ejecutivo validar\u00e1 el pago.'
+      })};
     }
 
     return {statusCode:400, headers, body: JSON.stringify({error:'Unknown action: ' + action})};
