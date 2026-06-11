@@ -848,26 +848,29 @@ exports.handler = async function(event, context) {
       }
       const dummyText = searchText; // alias for parser below
 
-      // Parse XML results
+      // Parse XML results - handle both <int> and <double> value types
       const products = [];
       const structRegex = /<struct>([\s\S]*?)<\/struct>/g;
       let match;
       while ((match = structRegex.exec(searchText)) !== null) {
         const struct = match[1];
-        const getStr = (field) => {
-          const m = struct.match(new RegExp('<name>' + field + '<\/name>\s*<value>(?:<string>)?([^<]*)', 'i'));
+        const getVal = (field) => {
+          const m = struct.match(new RegExp(
+            '<name>' + field + '<\/name>\s*<value>(?:<(?:string|int|double|boolean)>)?([^<]*)',
+          'i'));
           return m ? m[1].trim() : '';
         };
-        const id = parseInt(getStr('id'));
+        const id = parseInt(getVal('id'));
         if (id > 0) {
-          const qty = parseFloat(getStr('qty_available')) || 0;
+          const qty = parseFloat(getVal('qty_available')) || 0;
+          const price = parseFloat(getVal('list_price')) || 0;
           products.push({
             id,
-            name: getStr('name'),
-            at_code: getStr('default_code'),
-            price: parseFloat(getStr('list_price')) || 0,
+            name: getVal('name'),
+            at_code: getVal('default_code'),
+            price,
             qty_available: qty,
-            description: getStr('description_sale'),
+            description: getVal('description_sale'),
             status: qty > 0 ? 'stock' : 'fabricado'
           });
         }
