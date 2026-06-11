@@ -802,19 +802,22 @@ exports.handler = async function(event, context) {
       const candArray = Array.from(candidates);
       console.log('Searching AT codes:', candArray);
 
-      // Build OR search for all candidates
-      const orConditions = candArray.map(code =>
-        `<value><array><data>${xmlStr('default_code')}<value><string>=</string></value>${xmlStr(code)}</data></array></value>`
-      ).join('');
+      // Build OR search - Odoo XML-RPC requires one | per pair
+      // For N conditions: need N-1 pipe operators
+      // Structure: ['|', cond1, cond2] for 2, ['|','|',cond1,cond2,cond3] for 3, etc.
+      function buildOrDomain(codes) {
+        const conds = codes.map(code =>
+          `<value><array><data>${xmlStr('default_code')}<value><string>=</string></value>${xmlStr(code)}</data></array></value>`
+        );
+        if (conds.length === 1) return conds[0];
+        // Add N-1 pipe operators before N conditions
+        const pipes = Array(conds.length - 1).fill('<value><string>|</string></value>').join('');
+        return pipes + conds.join('');
+      }
 
-      const searchXml = candArray.length === 1
-        ? `<value><array><data><value><array><data>
-            ${xmlStr('default_code')}<value><string>=</string></value>${xmlStr(candArray[0])}
-           </data></array></value></data></array></value>`
-        : `<value><array><data><value><array><data>
-            <value><string>|</string></value>
-            ${orConditions}
-           </data></array></value></data></array></value>`;
+      const searchXml = `<value><array><data><value><array><data>
+        ${buildOrDomain(candArray)}
+      </data></array></value></data></array></value>`;
 
       const searchText = await xmlrpc(uid, 'product.product', 'search_read',
         searchXml +
