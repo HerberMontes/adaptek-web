@@ -770,29 +770,51 @@ exports.handler = async function(event, context) {
       const uid = await odooAuth();
       if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
 
-      // Build AT code pattern to search
-      // AT-[TIPO]-[STD_A]-[GEN_A][MED_A]-[STD_B]-[GEN_B][MED_B]
       const tipoMap = {'NR':'NR','C90':'C90','C45':'C45','TEE':'TEE','TAP':'TAP'};
       const tipoCode = tipoMap[tipo] || 'NR';
       const genA = gen_a === 'M' ? 'M' : 'H';
       const genB = gen_b === 'M' ? 'M' : 'H';
 
-      // Search for exact match first
-      const atCode = `AT-${tipoCode}-${std_a}-${genA}${med_a}-${std_b}-${genB}${med_b}`;
-      const atCodeRev = `AT-${tipoCode}-${std_b}-${genB}${med_b}-${std_a}-${genA}${med_a}`;
+      // Build all possible AT codes for this combination
+      // For straight connectors (NR): order doesn't matter - generate all 4 combinations
+      // For others: both orders still possible
+      const extA = `${std_a}-${genA}${med_a}`;
+      const extB = std_b ? `${std_b}-${genB}${med_b}` : '';
 
-      console.log('Searching AT codes:', atCode, '|', atCodeRev);
+      const candidates = new Set();
+      // Primary order
+      candidates.add(`AT-${tipoCode}-${extA}${extB ? '-'+extB : ''}`);
+      // Reversed order
+      if (extB && extA !== extB) {
+        candidates.add(`AT-${tipoCode}-${extB}-${extA}`);
+      }
+      // Also try with different gender combinations (sometimes H/M swapped in catalog)
+      const genAalt = genA === 'M' ? 'H' : 'M';
+      const genBalt = genB === 'M' ? 'H' : 'M';
+      candidates.add(`AT-${tipoCode}-${std_a}-${genAalt}${med_a}${extB ? '-'+extB : ''}`);
+      if (extB) {
+        candidates.add(`AT-${tipoCode}-${extA}-${std_b}-${genBalt}${med_b}`);
+        candidates.add(`AT-${tipoCode}-${std_b}-${genBalt}${med_b}-${extA}`);
+        candidates.add(`AT-${tipoCode}-${std_b}-${genBalt}${med_b}-${std_a}-${genAalt}${med_a}`);
+      }
 
-      // Search both directions using OR operator
-      const searchXml = `<value><array><data><value><array><data>
-        <value><string>|</string></value>
-        <value><array><data>
-          ${xmlStr('default_code')}<value><string>=</string></value>${xmlStr(atCode)}
-        </data></array></value>
-        <value><array><data>
-          ${xmlStr('default_code')}<value><string>=</string></value>${xmlStr(atCodeRev)}
-        </data></array></value>
-      </data></array></value></data></array></value>`;
+      const atCode = `AT-${tipoCode}-${extA}${extB ? '-'+extB : ''}`;
+      const candArray = Array.from(candidates);
+      console.log('Searching AT codes:', candArray);
+
+      // Build OR search for all candidates
+      const orConditions = candArray.map(code =>
+        `<value><array><data>${xmlStr('default_code')}<value><string>=</string></value>${xmlStr(code)}</data></array></value>`
+      ).join('');
+
+      const searchXml = candArray.length === 1
+        ? `<value><array><data><value><array><data>
+            ${xmlStr('default_code')}<value><string>=</string></value>${xmlStr(candArray[0])}
+           </data></array></value></data></array></value>`
+        : `<value><array><data><value><array><data>
+            <value><string>|</string></value>
+            ${orConditions}
+           </data></array></value></data></array></value>`;
 
       const searchText = await xmlrpc(uid, 'product.product', 'search_read',
         searchXml +
@@ -904,4 +926,3 @@ exports.handler = async function(event, context) {
     return {statusCode:500, headers, body: JSON.stringify({error:'Function error', detail: err.message})};
   }
 };
-
