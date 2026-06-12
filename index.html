@@ -1791,27 +1791,26 @@ window.irACheckout = function() {
     alert('Tu carrito está vacío');
     return;
   }
-  // Ocultar todas las demás páginas manualmente (no dependemos de showPage)
-  try {
-    var allPages = ['home','cfg','cross','tutorials','quote','cart','checkout','pago','login','register','portal'];
-    allPages.forEach(function(p){
-      var el = document.getElementById('page-'+p);
-      if (el) el.style.display = (p === 'checkout') ? 'block' : 'none';
-    });
-  } catch(e){}
-  // Forzar la página de checkout y el paso 1 visibles
+  // PRUEBA DIRECTA: confirmar que el botón ejecuta esta función
   var pc = document.getElementById('page-checkout');
-  if (pc) pc.style.display = 'block';
+  if (!pc) { alert('ERROR: no existe page-checkout en la página'); return; }
+  // Ocultar todas las páginas
+  var allPages = ['home','cfg','cross','tutorials','quote','cart','checkout','pago','login','register','portal'];
+  allPages.forEach(function(p){
+    var el = document.getElementById('page-'+p);
+    if (el) el.style.display = (p === 'checkout') ? 'block' : 'none';
+  });
+  // Forzar visible
+  pc.style.display = 'block';
+  pc.style.minHeight = '80vh';
   var s1 = document.getElementById('co-step-1');
   if (s1) s1.style.display = 'block';
-  // SIEMPRE empezar en el paso 1 (no continuar en un paso guardado que pueda salir vacío)
+  // Empezar siempre en paso 1
   window.CHECKOUT.step = 1;
-  // Inicializar de forma protegida; si algo falla, lo mostramos en pantalla (no en blanco)
   try {
     if (typeof window.checkoutInit === 'function') window.checkoutInit();
     else if (typeof window.coGoStep === 'function') window.coGoStep(1);
   } catch(e){
-    if (typeof console !== 'undefined') console.error('checkoutInit falló:', e);
     try { if (typeof window.coGoStep === 'function') window.coGoStep(1); } catch(_){}
   }
   try { window.scrollTo(0,0); } catch(e){}
