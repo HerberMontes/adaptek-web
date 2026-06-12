@@ -1413,8 +1413,8 @@ exports.handler = async function(event, context) {
       const uid = await odooAuth();
       if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
 
-      // Crear la orden en Odoo como borrador (el webhook / esta misma respuesta la confirma)
-      const ordenCreada = await crearOrdenOdoo(uid, orden, 'draft');
+      // (La orden se crea UNA sola vez más abajo, después de conocer el resultado del pago,
+      //  para no dejar borradores huérfanos.)
 
       // Recalcular el monto REAL desde Odoo (seguridad: nunca confiar en el monto del cliente)
       let serverSubtotal = 0;
@@ -1481,9 +1481,13 @@ exports.handler = async function(event, context) {
           })};
         }
 
-        // Si se aprueba al instante, confirmar la orden en Odoo de una vez
+        // Crear la orden en Odoo UNA sola vez, con el estado correcto según el pago:
+        //  - aprobado            → confirmada ('confirm')
+        //  - en proceso/pendiente → borrador ('draft'), el webhook la confirmará al acreditar
         if (status === 'approved') {
-          try { await crearOrdenOdoo(uid, orden, 'sale'); } catch(_){}
+          try { await crearOrdenOdoo(uid, orden, 'confirm'); } catch(_){}
+        } else if (status === 'in_process' || status === 'pending') {
+          try { await crearOrdenOdoo(uid, orden, 'draft'); } catch(_){}
         }
 
         return {statusCode:200, headers, body: JSON.stringify({
