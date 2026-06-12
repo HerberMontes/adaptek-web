@@ -300,7 +300,9 @@ async function sendEmail(to, subject, html) {
 }
 
 // Envía el correo de confirmación al cliente y un aviso al equipo de Adaptekk.
-async function enviarCorreosPedido(orden, folio, total, metodo, estado) {
+async function enviarCorreosPedido(orden, folio, total, metodo, estado, destinatarios) {
+  // destinatarios: 'ambos' (default) | 'solo_equipo' | 'solo_cliente'
+  destinatarios = destinatarios || 'ambos';
   if (!RESEND_KEY) return; // sin Resend configurado, no hace nada
   const co = orden.checkout || {};
   const contacto = co.contacto || {};
@@ -321,7 +323,7 @@ async function enviarCorreosPedido(orden, folio, total, metodo, estado) {
   const aprobado = estado === 'aprobado';
 
   // ── Correo al CLIENTE ──
-  if (clienteEmail) {
+  if (clienteEmail && destinatarios !== 'solo_equipo') {
     const htmlCliente = `
       <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;">
         <div style="background:#001F5B;padding:20px;text-align:center;">
@@ -350,7 +352,7 @@ async function enviarCorreosPedido(orden, folio, total, metodo, estado) {
   }
 
   // ── Aviso al EQUIPO (ADMIN_EMAIL) ──
-  if (ADMIN_EMAIL) {
+  if (ADMIN_EMAIL && destinatarios !== 'solo_cliente') {
     const htmlAdmin = `
       <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;">
         <h2 style="color:#001F5B;">${aprobado ? '🟢 Nuevo pedido PAGADO' : '🟡 Nuevo pedido (pago pendiente)'}</h2>
@@ -1647,8 +1649,9 @@ exports.handler = async function(event, context) {
 
       // Crear la orden en Odoo como borrador (el webhook la confirma cuando llegue la transferencia)
       try { await crearOrdenOdoo(uid, orden, 'draft'); } catch(_){}
-      // Correos: aviso de pedido registrado (pago pendiente por transferencia)
-      try { await enviarCorreosPedido(orden, folio, serverTotal, 'spei', 'pendiente'); } catch(_){}
+      // Aviso SOLO al equipo (pedido entrante pendiente de pago). Al cliente NO se le manda
+      // correo todavía: lo recibirá cuando el pago se acredite (vía webhook).
+      try { await enviarCorreosPedido(orden, folio, serverTotal, 'spei', 'pendiente', 'solo_equipo'); } catch(_){}
 
       // Crear el pago SPEI (clabe) en Mercado Pago
       const paymentBody = {
