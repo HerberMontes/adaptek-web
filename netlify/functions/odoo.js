@@ -1441,16 +1441,20 @@ exports.handler = async function(event, context) {
         description: 'Adaptekk pedido ' + folio,
         installments: parseInt(pago.installments) || 1,
         payment_method_id: pago.payment_method_id,
-        issuer_id: pago.issuer_id,
         external_reference: folio,
         notification_url: (process.env.SITE_URL || SITE_URL) + '/.netlify/functions/mp-webhook',
         statement_descriptor: 'ADAPTEKK',
         metadata: { folio: folio, server_subtotal: serverSubtotal },
         payer: {
-          email: (pago.payer && pago.payer.email) || 'comprador@adaptekk.com',
-          identification: (pago.payer && pago.payer.identification) || undefined
+          email: (pago.payer && pago.payer.email) || 'comprador@adaptekk.com'
         }
       };
+      // issuer_id solo si viene (para efectivo/SPEI no aplica)
+      if (pago.issuer_id) paymentBody.issuer_id = pago.issuer_id;
+      // identificación del pagador solo si viene completa
+      if (pago.payer && pago.payer.identification && pago.payer.identification.number) {
+        paymentBody.payer.identification = pago.payer.identification;
+      }
 
       try {
         const mpResp = await fetch('https://api.mercadopago.com/v1/payments', {
@@ -1464,6 +1468,18 @@ exports.handler = async function(event, context) {
         });
         const pay = await mpResp.json();
         const status = pay.status; // approved | in_process | rejected | ...
+
+        // Si MP devolvió un error (sin status), exponerlo para diagnóstico
+        if (!status) {
+          return {statusCode:200, headers, body: JSON.stringify({
+            success: false,
+            status: 'rejected',
+            status_detail: 'mp_error',
+            error: (pay.message || pay.error || 'Mercado Pago rechazó la solicitud') +
+                   (pay.cause && pay.cause[0] ? ' ('+(pay.cause[0].description||pay.cause[0].code)+')' : ''),
+            folio: folio
+          })};
+        }
 
         // Si se aprueba al instante, confirmar la orden en Odoo de una vez
         if (status === 'approved') {
