@@ -1,10 +1,10 @@
-const ODOO_URL    = process.env.ODOO_URL    || 'https://hydratechgroup.odoo.com';
-const ODOO_DB     = process.env.ODOO_DB     || 'hydratechgroup';
-const ODOO_USER   = process.env.ODOO_USER   || 'herber.montes@hydratechgroup.mx';
-const ODOO_KEY    = process.env.ODOO_API_KEY || '';
-const RESEND_KEY  = process.env.RESEND_KEY  || '';
-const FROM_EMAIL  = process.env.FROM_EMAIL  || 'validaciones@adaptekk.com';
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'validaciones@adaptekk.com'; // Gerencia
+const ODOO_URL   = process.env.ODOO_URL  || 'https://hydratechgroup.odoo.com';
+const ODOO_DB    = process.env.ODOO_DB   || 'hydratechgroup';
+const ODOO_USER  = process.env.ODOO_USER || '';
+const ODOO_KEY   = process.env.ODOO_API_KEY || process.env.ODOO_KEY || '';
+const RESEND_KEY = process.env.RESEND_KEY || '';
+const FROM_EMAIL = process.env.FROM_EMAIL || 'validaciones@adaptekk.com';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'validaciones@adaptekk.com'; // Gerencia — recibe todo
 const ZONE_EMAILS = {
   'Noroeste':  'validaciones@adaptekk.com',
   'Norte':     'validaciones@adaptekk.com',
@@ -30,7 +30,7 @@ function getZoneFromState(estado) {
   if (['yucatan','campeche','quintana roo'].some(s => e.includes(s))) return 'Peninsula';
   return null;
 }
-const SITE_URL    = process.env.SITE_URL    || 'https://cheery-fenglisu-0daf09.netlify.app';
+const SITE_URL   = process.env.SITE_URL || 'https://cheery-fenglisu-0daf09.netlify.app';
 
 async function odooAuth() {
   const xml = `<?xml version="1.0"?>
@@ -1389,6 +1389,97 @@ exports.handler = async function(event, context) {
         })};
       } catch(e) {
         return {statusCode:502, headers, body: JSON.stringify({success:false, error:'Error al contactar Mercado Pago', detail:e.message})};
+      }
+    }
+
+    // ── PROCESAR PAGO TRANSPARENTE (Checkout Bricks) ──
+    // Recibe el token de tarjeta generado por el Brick + datos del pago, recalcula el
+    // monto REAL desde Odoo (no confía en el cliente) y crea el pago en Mercado Pago.
+    if (action === 'process_payment') {
+      const MP_TOKEN = process.env.MP_ACCESS_TOKEN;
+      if (!MP_TOKEN) {
+        return {statusCode:200, headers, body: JSON.stringify({ success:false, error:'Mercado Pago no configurado (falta MP_ACCESS_TOKEN)' })};
+      }
+      const orden = body.orden || {};
+      const pago  = body.pago  || {};   // { token, payment_method_id, issuer_id, installments, payer }
+      const items = Array.isArray(orden.items) ? orden.items : [];
+      if (!items.length) {
+        return {statusCode:400, headers, body: JSON.stringify({error:'Orden sin productos'})};
+      }
+      if (!pago.token) {
+        return {statusCode:400, headers, body: JSON.stringify({error:'Falta el token de pago'})};
+      }
+
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+
+      // Crear la orden en Odoo como borrador (el webhook / esta misma respuesta la confirma)
+      const ordenCreada = await crearOrdenOdoo(uid, orden, 'draft');
+
+      // Recalcular el monto REAL desde Odoo (seguridad: nunca confiar en el monto del cliente)
+      let serverSubtotal = 0;
+      for (const it of items) {
+        const code = it.at_code || it.code;
+        const qty = Math.max(1, parseInt(it.qty) || 1);
+        const prod = await lookupProductByCode(uid, code);
+        if (!prod || !(prod.price > 0)) {
+          return {statusCode:409, headers, body: JSON.stringify({ success:false, error:'Producto sin precio en sistema: ' + code + '. Contacta a un ejecutivo.' })};
+        }
+        serverSubtotal += prod.price * qty;
+      }
+      const SHIP = { express:285, estandar:145, economico:95 };
+      const envio = orden.checkout && orden.checkout.envio ? orden.checkout.envio : null;
+      const shipId = envio && SHIP[envio.id] ? envio.id : null;
+      const serverTotal = Math.round((serverSubtotal + (shipId ? SHIP[shipId] : 0)) * 100) / 100;
+
+      const folio = String(orden.folio || ('PED-' + Date.now().toString().slice(-6)));
+
+      // Crear el pago en Mercado Pago con el token y el monto calculado por el servidor
+      const paymentBody = {
+        transaction_amount: serverTotal,
+        token: pago.token,
+        description: 'Adaptekk pedido ' + folio,
+        installments: parseInt(pago.installments) || 1,
+        payment_method_id: pago.payment_method_id,
+        issuer_id: pago.issuer_id,
+        external_reference: folio,
+        notification_url: (process.env.SITE_URL || SITE_URL) + '/.netlify/functions/mp-webhook',
+        statement_descriptor: 'ADAPTEKK',
+        metadata: { folio: folio, server_subtotal: serverSubtotal },
+        payer: {
+          email: (pago.payer && pago.payer.email) || 'comprador@adaptekk.com',
+          identification: (pago.payer && pago.payer.identification) || undefined
+        }
+      };
+
+      try {
+        const mpResp = await fetch('https://api.mercadopago.com/v1/payments', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + MP_TOKEN,
+            'Content-Type': 'application/json',
+            'X-Idempotency-Key': folio + '-' + Date.now()
+          },
+          body: JSON.stringify(paymentBody)
+        });
+        const pay = await mpResp.json();
+        const status = pay.status; // approved | in_process | rejected | ...
+
+        // Si se aprueba al instante, confirmar la orden en Odoo de una vez
+        if (status === 'approved') {
+          try { await crearOrdenOdoo(uid, orden, 'sale'); } catch(_){}
+        }
+
+        return {statusCode:200, headers, body: JSON.stringify({
+          success: status === 'approved',
+          status: status,
+          status_detail: pay.status_detail || '',
+          payment_id: pay.id || null,
+          folio: folio,
+          server_total: serverTotal
+        })};
+      } catch(e) {
+        return {statusCode:502, headers, body: JSON.stringify({success:false, error:'Error al procesar el pago', detail:e.message})};
       }
     }
 
