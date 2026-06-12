@@ -1791,28 +1791,27 @@ window.irACheckout = function() {
     alert('Tu carrito está vacío');
     return;
   }
-  // PRUEBA DIRECTA: confirmar que el botón ejecuta esta función
   var pc = document.getElementById('page-checkout');
-  if (!pc) { alert('ERROR: no existe page-checkout en la página'); return; }
-  // Ocultar todas las páginas
-  var allPages = ['home','cfg','cross','tutorials','quote','cart','checkout','pago','login','register','portal'];
-  allPages.forEach(function(p){
+  if (!pc) { alert('ERROR: no existe page-checkout'); return; }
+  // Ocultar todas las demás páginas
+  ['home','cfg','cross','tutorials','quote','cart','checkout','pago','login','register','portal'].forEach(function(p){
     var el = document.getElementById('page-'+p);
     if (el) el.style.display = (p === 'checkout') ? 'block' : 'none';
   });
-  // Forzar visible
+  window.CHECKOUT.step = 1;
+  // Intentar inicializar (prefill, envíos) SIN que un fallo deje la página en blanco
+  try { if (typeof window.checkoutInit === 'function') window.checkoutInit(); } catch(e){
+    if (typeof console !== 'undefined') console.error('checkoutInit:', e);
+  }
+  // PASE LO QUE PASE: forzar checkout y paso 1 visibles como ÚLTIMA acción
   pc.style.display = 'block';
   pc.style.minHeight = '80vh';
-  var s1 = document.getElementById('co-step-1');
-  if (s1) s1.style.display = 'block';
-  // Empezar siempre en paso 1
-  window.CHECKOUT.step = 1;
-  try {
-    if (typeof window.checkoutInit === 'function') window.checkoutInit();
-    else if (typeof window.coGoStep === 'function') window.coGoStep(1);
-  } catch(e){
-    try { if (typeof window.coGoStep === 'function') window.coGoStep(1); } catch(_){}
-  }
+  var s1 = document.getElementById('co-step-1'); if (s1) s1.style.display = 'block';
+  var s2 = document.getElementById('co-step-2'); if (s2) s2.style.display = 'none';
+  var s3 = document.getElementById('co-step-3'); if (s3) s3.style.display = 'none';
+  var s4 = document.getElementById('co-step-4'); if (s4) s4.style.display = 'none';
+  // Asegurar que la tarjeta de elección invitado/cuenta esté visible
+  var ac = document.getElementById('co-account-choice'); if (ac) ac.style.display = 'block';
   try { window.scrollTo(0,0); } catch(e){}
 };
 
