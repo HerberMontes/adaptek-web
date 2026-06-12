@@ -201,6 +201,29 @@ async function crearOrdenOdoo(uid, orden, estado) {
     const co = orden.checkout || {};
     const folio = String(orden.folio || ('PED-' + Date.now().toString(36).toUpperCase()));
 
+    // IDEMPOTENCIA: si ya existe una orden con este folio (client_order_ref), reutilizarla
+    // en vez de crear otra. Así un segundo intento de pago no genera una cotización duplicada.
+    try {
+      const existDomain = `<value><array><data>
+        <value><array><data>${xmlStr('client_order_ref')}<value><string>=</string></value>${xmlStr(folio)}</data></array></value>
+      </data></array></value>`;
+      const existText = await odooSearchRead(uid, 'sale.order', existDomain, ['id','state'], 1);
+      const existMatch = existText.match(/<name>id<\/name><value><int>(\d+)<\/int><\/value>/);
+      if (existMatch) {
+        const existId = parseInt(existMatch[1]);
+        if (estado === 'confirm') {
+          try {
+            await xmlrpc(uid, 'sale.order', 'action_confirm',
+              `<value><array><data><value><int>${existId}</int></value></data></array></value>`);
+            return { ok:true, saleId:existId, folio, reused:true, confirmed:true };
+          } catch(ce) {
+            return { ok:true, saleId:existId, folio, reused:true, confirmed:false, confirmError:ce.message };
+          }
+        }
+        return { ok:true, saleId:existId, folio, reused:true, confirmed:false };
+      }
+    } catch(_){ /* si la búsqueda falla, seguimos creando normal */ }
+
     const partnerId = await findOrCreatePartner(uid, co.contacto || {});
     if (!partnerId) return { ok:false, error:'No se pudo crear/recuperar el cliente' };
 
@@ -252,10 +275,16 @@ async function crearOrdenOdoo(uid, orden, estado) {
     if (!saleId) return { ok:false, error:'Odoo no devolvi\u00f3 id de orden' };
 
     if (estado === 'confirm') {
-      await xmlrpc(uid, 'sale.order', 'action_confirm',
-        `<value><array><data><value><int>${saleId}</int></value></data></array></value>`).catch(()=>{});
+      try {
+        await xmlrpc(uid, 'sale.order', 'action_confirm',
+          `<value><array><data><value><int>${saleId}</int></value></data></array></value>`);
+        return { ok:true, saleId, folio, total: Math.round(total*100)/100, confirmed:true };
+      } catch(confErr) {
+        // La orden se creó pero no se pudo confirmar automáticamente (queda como cotización)
+        return { ok:true, saleId, folio, total: Math.round(total*100)/100, confirmed:false, confirmError: confErr.message };
+      }
     }
-    return { ok:true, saleId, folio, total: Math.round(total*100)/100 };
+    return { ok:true, saleId, folio, total: Math.round(total*100)/100, confirmed:false };
   } catch(e) {
     return { ok:false, error: e.message };
   }
@@ -1554,12 +1583,13 @@ exports.handler = async function(event, context) {
         // Crear la orden en Odoo UNA sola vez, con el estado correcto según el pago:
         //  - aprobado            → confirmada ('confirm')
         //  - en proceso/pendiente → borrador ('draft'), el webhook la confirmará al acreditar
+        let ordenInfo = null;
         if (status === 'approved') {
-          try { await crearOrdenOdoo(uid, orden, 'confirm'); } catch(_){}
+          try { ordenInfo = await crearOrdenOdoo(uid, orden, 'confirm'); } catch(e){ ordenInfo = {ok:false, error:e.message}; }
           // Enviar correos de confirmación (al cliente y al equipo). No bloquea la respuesta si fallan.
           try { await enviarCorreosPedido(orden, folio, serverTotal, 'tarjeta', 'aprobado'); } catch(_){}
         } else if (status === 'in_process' || status === 'pending') {
-          try { await crearOrdenOdoo(uid, orden, 'draft'); } catch(_){}
+          try { ordenInfo = await crearOrdenOdoo(uid, orden, 'draft'); } catch(e){ ordenInfo = {ok:false, error:e.message}; }
         }
 
         return {statusCode:200, headers, body: JSON.stringify({
@@ -1568,7 +1598,8 @@ exports.handler = async function(event, context) {
           status_detail: pay.status_detail || '',
           payment_id: pay.id || null,
           folio: folio,
-          server_total: serverTotal
+          server_total: serverTotal,
+          orden_odoo: ordenInfo   // diagnóstico: { ok, saleId, confirmed, confirmError }
         })};
       } catch(e) {
         return {statusCode:502, headers, body: JSON.stringify({success:false, error:'Error al procesar el pago', detail:e.message})};
