@@ -45,6 +45,28 @@ async function odooExec(uid, model, method, argsXml){
   return await resp.text();
 }
 
+// search_read con el patrón CORRECTO: domain como arg posicional, fields/limit como kwargs.
+async function odooSearchRead(uid, model, domain_xml, fields, limit){
+  const fieldsXml = fields.map(f => `<value><string>${f}</string></value>`).join('');
+  const xml = `<?xml version="1.0"?>
+<methodCall><methodName>execute_kw</methodName><params>
+  <param><value><string>${ODOO_DB}</string></value></param>
+  <param><value><int>${uid}</int></value></param>
+  <param><value><string>${ODOO_KEY}</string></value></param>
+  <param><value><string>${model}</string></value></param>
+  <param><value><string>search_read</string></value></param>
+  <param><value><array><data>
+    <value><array><data>${domain_xml}</data></array></value>
+  </data></array></value></param>
+  <param><value><struct>
+    <member><name>fields</name><value><array><data>${fieldsXml}</data></array></value></member>
+    <member><name>limit</name><value><int>${limit||10}</int></value></member>
+  </struct></value></param>
+</params></methodCall>`;
+  const resp = await fetch(`${ODOO_URL}/xmlrpc/2/object`, { method:'POST', headers:{'Content-Type':'text/xml'}, body:xml });
+  return await resp.text();
+}
+
 // Avisa por correo (cliente y equipo) que el pago se acreditó y el pedido está confirmado.
 async function avisarPagoAcreditado(folio, pay){
   const RESEND_KEY = process.env.RESEND_KEY || '';
@@ -115,14 +137,11 @@ exports.handler = async function(event){
     console.log('[webhook] ODOO uid=' + uid);
     if (!uid) return { statusCode:200, body:'odoo auth fail' };
 
-    // Buscar la orden por su referencia (client_order_ref = folio)
-    const domainXml = `<value><array><data><value><array><data>
+    // Buscar la orden por su referencia (client_order_ref = folio) con el patrón correcto
+    const domainXml = `<value><array><data>
       ${xmlStr('client_order_ref')}<value><string>=</string></value>${xmlStr(folio)}
-    </data></array></value></data></array></value>`;
-    const searchXml = `${domainXml}<value><array><data>
-      <value><string>id</string></value><value><string>state</string></value>
     </data></array></value>`;
-    const found = await odooExec(uid, 'sale.order', 'search_read', searchXml);
+    const found = await odooSearchRead(uid, 'sale.order', domainXml, ['id','state'], 1);
     const idMatch = found.match(/<name>id<\/name><value><int>(\d+)<\/int><\/value>/);
     const saleId = idMatch ? parseInt(idMatch[1]) : null;
     console.log('[webhook] orden encontrada saleId=' + saleId + ' (folio=' + folio + ')');
