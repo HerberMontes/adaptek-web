@@ -4654,7 +4654,6 @@ function renderResult(){
     std_a: stdA, gen_a: gA, med_a: mA,
     std_b: stdB, gen_b: gB, med_b: mB
   };
-  if (typeof console!=='undefined') console.log('[configurador] enviando búsqueda:', searchParams);
 
   fetch('/.netlify/functions/odoo', {
     method:'POST',
@@ -4663,7 +4662,6 @@ function renderResult(){
   })
   .then(function(r){return r.json();})
   .then(function(data){
-    if (typeof console!=='undefined') console.log('[configurador] respuesta buscar_por_configurador:', data);
     body.innerHTML='';
     var p2=mkdiv('config-panel active');
     renderResultPanel(p2, data, searchParams);
