@@ -2957,11 +2957,16 @@ window.mostrarPaginaGracias = function(info){
     // Pago pendiente (SPEI/OXXO): esperando que se acredite
     if (icon) icon.innerHTML = '&#8987;';
     if (titulo) titulo.textContent = '¡PEDIDO REGISTRADO!';
-    if (sub) sub.textContent = 'Tu pedido quedó reservado. En cuanto recibamos tu pago, lo confirmamos y te avisamos por correo.';
+    if (sub) sub.textContent = 'Tu pedido quedó reservado. Una vez que realices tu transferencia, espera unos minutos en esta página: en cuanto el banco confirme tu pago, esto se actualizará solo.';
     if (estado){ estado.textContent = 'Esperando pago'; estado.style.color = '#b8860b'; }
-    if (extra) extra.innerHTML = info.metodo === 'spei'
-      ? 'Realiza tu transferencia SPEI con los datos que te mostramos. El pedido se confirma automáticamente al acreditarse.'
-      : 'Completa tu pago para confirmar el pedido.';
+    if (extra) extra.innerHTML = '<div style="background:#f0f9ff;border:1px solid #009EE3;border-radius:8px;padding:12px;font-size:13px;color:#007bb5;">'
+      + '&#8987; <b>Esperando confirmación de tu pago...</b><br>Si ya transferiste, no cierres esta página. Se actualizará automáticamente al acreditarse (puede tardar unos minutos).'
+      + '<div style="margin-top:10px;"><button onclick="window.consultarMiPedido(\'' + (info.folio||'') + '\')" style="background:#009EE3;color:#fff;border:none;padding:9px 18px;border-radius:6px;font-weight:700;cursor:pointer;font-size:13px;">Ya pagué, verificar ahora</button></div>'
+      + '</div>';
+    // Mantener el sondeo activo en esta pantalla (por si no venía corriendo)
+    if (info.folio && !window._sondeoPago) {
+      window.iniciarSondeoPago(info.folio, info.total);
+    }
   } else {
     // Pago aprobado
     if (icon) icon.innerHTML = '&#9989;';
@@ -2969,6 +2974,8 @@ window.mostrarPaginaGracias = function(info){
     if (sub) sub.textContent = 'Tu pago fue aprobado y tu pedido está confirmado. Te enviamos un correo con todos los detalles.';
     if (estado){ estado.textContent = 'Pagado y confirmado'; estado.style.color = '#1a7d34'; }
     if (extra) extra.innerHTML = 'Prepararemos tu pedido y te mantendremos informado del envío. ¡Gracias por confiar en Adaptekk!';
+    // Si había un sondeo corriendo, detenerlo (ya se confirmó)
+    if (window._sondeoPago) { clearInterval(window._sondeoPago); window._sondeoPago = null; }
   }
 
   showPage('gracias');
@@ -3209,11 +3216,10 @@ window.copiarMonto = function(monto){
 window._sondeoPago = null;
 window.iniciarSondeoPago = function(folio, monto){
   if (!folio) return;
-  // Limpiar cualquier sondeo previo
   if (window._sondeoPago) { clearInterval(window._sondeoPago); window._sondeoPago = null; }
 
   var intentos = 0;
-  var maxIntentos = 80; // ~20 min (80 x 15s). Suficiente para SPEI.
+  var maxIntentos = 120; // ~20 min (120 x 10s)
 
   async function consultar(){
     intentos++;
@@ -3225,22 +3231,25 @@ window.iniciarSondeoPago = function(folio, monto){
       });
       var data = await resp.json();
       if (data && data.ok && data.confirmada) {
-        // ¡Pago confirmado! Detener sondeo y mostrar pantalla de gracias.
+        // ¡Pago confirmado! Detener sondeo y actualizar la pantalla a "confirmado".
         clearInterval(window._sondeoPago); window._sondeoPago = null;
+        // Actualizar PEDIDO_CONFIRMADO a estado aprobado
+        if (window.PEDIDO_CONFIRMADO) window.PEDIDO_CONFIRMADO.estado = 'aprobado';
+        // Mostrar/actualizar la pantalla de gracias en modo CONFIRMADO
         window.mostrarPaginaGracias({
           folio: folio,
           total: monto,
           metodo: 'spei',
-          estado: 'aprobado'   // ya confirmado
+          estado: 'aprobado'
         });
         if (typeof showToast==='function') showToast('\u2705 \u00a1Tu pago fue confirmado!');
       }
-    } catch(e){ /* reintentar en el próximo ciclo */ }
+    } catch(e){ /* reintentar */ }
   }
 
-  // Primera consulta a los 8s, luego cada 15s
-  setTimeout(consultar, 8000);
-  window._sondeoPago = setInterval(consultar, 15000);
+  // Primera consulta rápida a los 5s, luego cada 10s
+  setTimeout(consultar, 5000);
+  window._sondeoPago = setInterval(consultar, 10000);
 };
 
 // Permite al cliente consultar manualmente el estado de su pedido por folio
