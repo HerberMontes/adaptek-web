@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Adaptek — Conectores Hidráulicos y Adaptadores</title>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;600;700&family=Montserrat:wght@700;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;600;700&family=Montserrat:wght@700;900&display=swap" rel="stylesheet"/>
   <style>
     :root{
       --rojo:#C8102E; --rojo-oscuro:#a00c24; --azul:#001F5B; --azul-claro:#2557A7;
@@ -18,15 +18,17 @@
       --ambar-50:#FFF7E6; --ambar-700:#8a6100;
       --r-sm:8px; --r-md:12px; --r-lg:16px; --r-pill:999px;
       --e-1:0 1px 2px rgba(16,32,72,.06); --e-2:0 4px 14px rgba(16,32,72,.08); --e-3:0 12px 34px rgba(16,32,72,.14);
-      --display:'Bebas Neue',sans-serif; --cond:'Barlow Condensed',sans-serif; --body:'Barlow',sans-serif;
+      --display:-apple-system,BlinkMacSystemFont,'Inter',sans-serif; --cond:-apple-system,BlinkMacSystemFont,'Inter',sans-serif; --body:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;
     }
     /* ── COMPONENTES DE COMERCIO ESTANDARIZADOS (carrito · checkout · pago) ── */
     .shop{font-family:var(--body);color:var(--tinta);}
-    .shop-head{background:var(--azul);color:#fff;padding:18px 24px;display:flex;align-items:center;gap:14px;}
-    .shop-head .back{background:rgba(255,255,255,.12);border:none;color:#fff;width:38px;height:38px;border-radius:var(--r-sm);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:background .18s;}
-    .shop-head .back:hover{background:rgba(255,255,255,.22);}
-    .shop-head h1{font-family:var(--display);font-size:26px;letter-spacing:1.5px;font-weight:400;line-height:1;margin:0;}
-    .shop-head .sub{font-size:12px;color:rgba(255,255,255,.65);letter-spacing:.6px;margin-top:3px;}
+    .shop-head{background:#fff;color:#1d1d1f;padding:24px 24px 8px;display:flex;align-items:center;gap:14px;}
+    /* Fondo blanco garantizado en las páginas del flujo de compra (evita fondo oscuro en móvil) */
+    #page-cart,#page-checkout,#page-pago,#page-gracias,#page-cfg,#page-cross,#page-quote{background:#fff;min-height:100vh;}
+    .shop-head .back{background:#f5f5f7;border:none;color:#1d1d1f;width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:background .18s;}
+    .shop-head .back:hover{background:#e8e8ed;}
+    .shop-head h1{font-family:var(--display);font-size:32px;letter-spacing:-.3px;font-weight:600;line-height:1.05;margin:0;color:#1d1d1f;}
+    .shop-head .sub{font-size:15px;color:#86868b;letter-spacing:0;margin-top:4px;}
     .shop-eyebrow{font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--tinta-3);}
     .shop-h2{font-family:var(--display);font-size:22px;letter-spacing:1px;color:var(--azul);font-weight:400;margin:0;}
     .shop-card{background:#fff;border:1px solid var(--linea);border-radius:var(--r-md);box-shadow:var(--e-1);padding:20px;}
@@ -61,7 +63,7 @@
     .pay-badges .pb{font-family:var(--cond);font-weight:700;font-size:11px;letter-spacing:.5px;color:var(--tinta-2);background:#fff;border:1px solid var(--linea);border-radius:5px;padding:4px 9px;}
     @media (prefers-reduced-motion: reduce){ .ui-btn{transition:none;} }
     *{margin:0;padding:0;box-sizing:border-box;} html{scroll-behavior:smooth;overflow-x:hidden;}
-    body{font-family:'Barlow',sans-serif;background:var(--blanco);color:var(--negro);overflow-x:clip;}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;background:var(--blanco);color:var(--negro);overflow-x:clip;}
 
     /* ── TOPBAR ── */
     .topbar{background:var(--azul);padding:6px 0;text-align:center;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.85);}
@@ -109,7 +111,7 @@
       color:var(--rojo);margin-bottom:10px;
     }
     .hero-title{
-      font-family:'Bebas Neue',cursive;font-size:clamp(32px,6vw,56px);
+      font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:clamp(32px,6vw,56px);
       letter-spacing:2px;line-height:1;color:var(--negro);margin-bottom:14px;
     }
     .hero-title span{color:var(--rojo);}
@@ -117,7 +119,7 @@
       font-size:15px;color:#555;line-height:1.7;max-width:600px;margin:0 auto 28px;
     }
     .hero-stats{display:flex;justify-content:center;gap:40px;flex-wrap:wrap;margin-bottom:0;}
-    .hero-stat-num{font-family:'Bebas Neue',cursive;font-size:38px;line-height:1;color:var(--rojo);}
+    .hero-stat-num{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:38px;line-height:1;color:var(--rojo);}
     .hero-stat-lbl{font-size:10px;color:#aaa;letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
 
     /* ── 3 BIG ACTION ICONS ── */
@@ -144,7 +146,7 @@
     }
     .action-card:hover .action-icon{border-color:var(--rojo);background:rgba(200,16,46,.06);}
     .action-title{
-      font-family:\'Barlow Condensed\',sans-serif;font-size:17px;font-weight:700;
+      font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:17px;font-weight:700;
       letter-spacing:1.5px;text-transform:uppercase;color:var(--negro);margin-bottom:6px;
     }
     .action-sub{font-size:12px;color:#888;line-height:1.5;max-width:180px;margin:0 auto;}
@@ -169,7 +171,7 @@
     .contact-item strong{color:#fff;}
     .contact-wa{
       background:#25D366;color:#fff;padding:10px 20px;border-radius:3px;
-      font-family:\'Barlow Condensed\',sans-serif;font-size:13px;font-weight:700;
+      font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:13px;font-weight:700;
       letter-spacing:2px;text-transform:uppercase;text-decoration:none;
       display:flex;align-items:center;gap:8px;white-space:nowrap;
       transition:background .2s;
@@ -179,39 +181,39 @@
     /* ── CROSS REFERENCE PAGE ── */
     .cross-page{padding:48px 32px;max-width:760px;margin:0 auto;}
     .cross-search-box{
-      background:var(--blanco);border:2px solid var(--borde);border-radius:8px;
-      padding:32px;box-shadow:var(--sombra);margin-bottom:28px;
+      background:#fff;border:1px solid #e8e8ed;border-radius:18px;
+      padding:32px;box-shadow:none;margin-bottom:32px;
     }
     .cross-input-row{display:flex;gap:10px;margin-top:16px;}
     .cross-input{
-      flex:1;border:2px solid var(--borde);border-radius:4px;padding:12px 16px;
-      font-family:'Barlow',sans-serif;font-size:15px;outline:none;
-      transition:border-color .2s;
+      flex:1;border:1px solid #d2d2d7;border-radius:12px;padding:13px 16px;
+      font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:15px;outline:none;
+      transition:border-color .2s,box-shadow .2s;
     }
-    .cross-input:focus{border-color:var(--azul);}
+    .cross-input:focus{border-color:#0071e3;box-shadow:0 0 0 3px rgba(0,113,227,.15);}
     .cross-btn{
-      background:var(--rojo);color:#fff;border:none;padding:12px 24px;border-radius:4px;
-      font-family:\'Barlow Condensed\',sans-serif;font-size:14px;font-weight:700;
-      letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:background .2s;white-space:nowrap;
+      background:#0071e3;color:#fff;border:none;padding:13px 26px;border-radius:980px;
+      font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:15px;font-weight:600;
+      letter-spacing:0;text-transform:none;cursor:pointer;transition:background .2s;white-space:nowrap;
     }
-    .cross-btn:hover{background:var(--rojo-oscuro);}
+    .cross-btn:hover{background:#0077ed;}
     .cross-brands{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
     .cross-brand-tag{
-      background:var(--gris);border:1px solid var(--borde);color:#666;
-      font-size:11px;font-weight:600;padding:4px 10px;border-radius:2px;letter-spacing:.5px;
+      background:#f5f5f7;border:none;color:#1d1d1f;cursor:pointer;
+      font-size:13px;font-weight:500;padding:6px 14px;border-radius:980px;letter-spacing:0;transition:background .2s;
     }
     .cross-result{
-      background:var(--blanco);border:1px solid var(--borde);border-left:4px solid var(--rojo);
-      border-radius:4px;padding:20px 22px;box-shadow:var(--sombra);
+      background:#fff;border:1px solid #e8e8ed;
+      border-radius:18px;padding:26px 28px;box-shadow:none;
       display:none;
     }
     .cross-result.show{display:block;}
-    .cross-result-part{font-family:\'Barlow Condensed\',sans-serif;font-size:22px;font-weight:700;color:var(--azul);margin-bottom:4px;}
-    .cross-result-name{font-size:13px;color:#666;margin-bottom:12px;}
+    .cross-result-part{font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:24px;font-weight:600;color:#1d1d1f;margin-bottom:4px;letter-spacing:-.3px;}
+    .cross-result-name{font-size:14px;color:#86868b;margin-bottom:14px;}
     .cross-specs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
-    .cross-spec{background:var(--gris);border:1px solid var(--borde);color:#333;font-size:11px;padding:3px 9px;border-radius:2px;font-weight:600;}
+    .cross-spec{background:#f5f5f7;border:none;color:#1d1d1f;font-size:12px;padding:4px 11px;border-radius:980px;font-weight:500;}
     .cross-actions{display:flex;gap:10px;}
-    .cross-not-found{text-align:center;padding:28px;color:#aaa;display:none;}
+    .cross-not-found{text-align:center;padding:28px;color:#86868b;display:none;}
     .cross-not-found.show{display:block;}
     .cross-not-found strong{display:block;font-size:16px;color:#888;margin-bottom:6px;}
 
@@ -225,70 +227,70 @@
     }
     .tut-card:hover{box-shadow:var(--sombra-h);transform:translateY(-2px);border-color:rgba(200,16,46,.3);}
     .tut-icon{font-size:32px;margin-bottom:12px;}
-    .tut-title{font-family:\'Barlow Condensed\',sans-serif;font-size:16px;font-weight:700;letter-spacing:1px;color:var(--negro);margin-bottom:6px;}
+    .tut-title{font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:16px;font-weight:700;letter-spacing:1px;color:var(--negro);margin-bottom:6px;}
     .tut-desc{font-size:12px;color:#888;line-height:1.6;}
     .tut-link{display:inline-block;margin-top:10px;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--rojo);text-decoration:none;}
 
     /* ── PAGE HEADER (for sub-pages) ── */
     .page-header{
-      background:var(--azul);color:#fff;padding:28px 32px;
+      background:#fff;color:#1d1d1f;padding:32px 32px 8px;
       display:flex;align-items:center;gap:16px;
     }
     .page-header-back{
-      background:rgba(255,255,255,.15);border:none;color:#fff;
+      background:#f5f5f7;border:none;color:#1d1d1f;
       width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:18px;
       display:flex;align-items:center;justify-content:center;flex-shrink:0;
       transition:background .2s;
     }
-    .page-header-back:hover{background:rgba(255,255,255,.25);}
-    .page-header-title{font-family:'Bebas Neue',cursive;font-size:28px;letter-spacing:2px;}
-    .page-header-sub{font-size:12px;opacity:.7;margin-top:2px;}
+    .page-header-back:hover{background:#e8e8ed;}
+    .page-header-title{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:32px;font-weight:600;letter-spacing:-.3px;color:#1d1d1f;}
+    .page-header-sub{font-size:15px;opacity:1;color:#86868b;margin-top:4px;}
 
     /* ── SECTION HEADER ── */
     .section-header{text-align:center;margin-bottom:40px;}
-    .section-tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--rojo);margin-bottom:8px;}
-    .section-header h2{font-family:'Bebas Neue',cursive;font-size:clamp(30px,5vw,50px);letter-spacing:2px;color:var(--negro);}
-    .section-header p{color:#777;font-size:14px;max-width:520px;margin:10px auto 0;}
+    .section-tag{display:inline-block;font-size:12px;font-weight:500;letter-spacing:.3px;text-transform:none;color:#86868b;margin-bottom:8px;}
+    .section-header h2{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:clamp(30px,5vw,48px);font-weight:600;letter-spacing:-.5px;color:#1d1d1f;}
+    .section-header p{color:#86868b;font-size:16px;max-width:520px;margin:10px auto 0;}
 
     /* ── CONFIGURADOR (embedded) ── */
-    .config-section{padding:32px 32px 40px;background:#F4F8FC;min-height:calc(100vh - 140px);}
-    .config-progress{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:32px;flex-wrap:wrap;}
+    .config-section{padding:32px 32px 60px;background:#fff;min-height:calc(100vh - 140px);}
+    .config-progress{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:44px;flex-wrap:wrap;}
     .config-step-dot{display:flex;flex-direction:column;align-items:center;gap:4px;}
-    .config-step-dot .dot-num{width:34px;height:34px;border-radius:50%;border:2px solid var(--borde);background:#fff;display:flex;align-items:center;justify-content:center;font-family:\'Barlow Condensed\',sans-serif;font-size:13px;font-weight:700;color:#bbb;transition:all .3s;}
-    .config-step-dot .dot-lbl{font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#ccc;white-space:nowrap;}
-    .config-step-dot.active .dot-num{border-color:var(--rojo);background:var(--rojo);color:#fff;}
-    .config-step-dot.active .dot-lbl{color:var(--rojo);}
-    .config-step-dot.done .dot-num{border-color:#25a244;background:#25a244;color:#fff;}
-    .config-step-dot.done .dot-lbl{color:#25a244;}
-    .config-step-line{width:32px;height:2px;background:var(--borde);margin-bottom:18px;flex-shrink:0;transition:background .4s;}
-    .config-step-line.done{background:#25a244;}
+    .config-step-dot .dot-num{width:34px;height:34px;border-radius:50%;border:2px solid var(--borde);background:#fff;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:13px;font-weight:700;color:#bbb;transition:all .3s;}
+    .config-step-dot .dot-lbl{font-size:11px;font-weight:500;letter-spacing:0;text-transform:none;color:#aeaeb2;white-space:nowrap;}
+    .config-step-dot.active .dot-num{border-color:#0071e3;background:#0071e3;color:#fff;}
+    .config-step-dot.active .dot-lbl{color:#1d1d1f;}
+    .config-step-dot.done .dot-num{border-color:#0071e3;background:#0071e3;color:#fff;}
+    .config-step-dot.done .dot-lbl{color:#1d1d1f;}
+    .config-step-line{width:36px;height:2px;background:#e8e8ed;margin-bottom:20px;flex-shrink:0;transition:background .4s;}
+    .config-step-line.done{background:#0071e3;}
     .config-panel{display:none;}
-    .config-panel.active{display:block;animation:panelIn .3s ease;background:#F4F8FC;}
+    .config-panel.active{display:block;animation:panelIn .3s ease;background:#fff;}
     @keyframes panelIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
     .config-panel-title{display:none;}
-    .config-panel-q{font-family:'Bebas Neue',cursive;font-size:26px;letter-spacing:1px;color:#111;margin-bottom:18px;}
-    .config-options{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;}
-    .config-opt{border:2px solid #e0e8f0;border-radius:12px;padding:24px 16px 18px;text-align:center;cursor:pointer;background:#fff;transition:border-color .2s,box-shadow .2s,transform .15s;min-height:210px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.04);}
-    .config-opt:hover{border-color:var(--azul);box-shadow:0 4px 16px rgba(27,58,107,.12);transform:translateY(-2px);}
-    .config-opt-label{font-family:\'Barlow Condensed\',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;color:#111;line-height:1.2;}
-    .config-opt-sub{font-size:10px;color:#aaa;margin-top:2px;}
-    .config-group-label{font-size:10px;font-weight:700;letter-spacing:3px;color:#bbb;text-transform:uppercase;margin:12px 0 6px;display:block;}
-    .config-nav{display:flex;align-items:center;justify-content:space-between;margin-top:20px;padding-top:16px;border-top:1px solid var(--borde);flex-wrap:wrap;gap:8px;}
-    .config-breadcrumb{font-size:11px;color:#aaa;display:flex;flex-wrap:wrap;gap:3px;align-items:center;}
-    .btn-config-back{background:none;border:2px solid var(--borde);color:#888;padding:8px 18px;font-family:\'Barlow Condensed\',sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;border-radius:3px;cursor:pointer;}
-    .config-results{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-top:6px;}
-    .config-result-card{background:#fff;border:1px solid var(--borde);border-left:4px solid var(--rojo);border-radius:4px;padding:18px 20px;box-shadow:var(--sombra);transition:box-shadow .2s,transform .15s;}
-    .config-result-card:hover{box-shadow:var(--sombra-h);transform:translateY(-2px);}
-    .config-result-part{font-family:\'Barlow Condensed\',sans-serif;font-size:18px;font-weight:700;color:#111;margin-bottom:3px;}
-    .config-result-name{font-size:11px;color:#777;margin-bottom:8px;line-height:1.4;}
-    .config-result-specs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;}
-    .config-result-actions{display:flex;gap:7px;}
-    .btn-result-quote{flex:1;background:var(--rojo);color:#fff;border:none;padding:8px 0;border-radius:3px;cursor:pointer;font-family:\'Barlow Condensed\',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;transition:background .2s;}
-    .btn-result-quote:hover{background:#a00c24;}
-    .btn-result-wa{background:#25D366;color:#fff;border:none;padding:8px 12px;border-radius:3px;cursor:pointer;font-size:14px;text-decoration:none;display:flex;align-items:center;justify-content:center;}
-    .btn-result-wa:hover{background:#1da851;}
-    .config-summary{background:#f5f5f5;border:1px solid var(--borde);border-left:4px solid var(--azul);border-radius:4px;padding:12px 16px;margin-bottom:14px;}
-    .spec-tag{background:#f5f5f5;border:1px solid var(--borde);color:#333;font-size:10px;padding:2px 7px;border-radius:2px;font-weight:600;}
+    .config-panel-q{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:28px;font-weight:600;letter-spacing:-.3px;color:#1d1d1f;margin-bottom:24px;text-align:center;}
+    .config-options{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;}
+    .config-opt{border:1.5px solid #e8e8ed;border-radius:16px;padding:24px 16px 18px;text-align:center;cursor:pointer;background:#fff;transition:border-color .2s,box-shadow .2s,transform .15s;min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:none;}
+    .config-opt:hover{border-color:#0071e3;box-shadow:0 0 0 3px rgba(0,113,227,.1);transform:none;}
+    .config-opt-label{font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:15px;font-weight:600;letter-spacing:0;color:#1d1d1f;line-height:1.3;}
+    .config-opt-sub{font-size:12px;color:#86868b;margin-top:4px;}
+    .config-group-label{font-size:12px;font-weight:600;letter-spacing:0;color:#86868b;text-transform:none;margin:16px 0 8px;display:block;}
+    .config-nav{display:flex;align-items:center;justify-content:space-between;margin-top:28px;padding-top:20px;border-top:1px solid #e8e8ed;flex-wrap:wrap;gap:8px;}
+    .config-breadcrumb{font-size:13px;color:#86868b;display:flex;flex-wrap:wrap;gap:3px;align-items:center;}
+    .btn-config-back{background:none;border:none;color:#0071e3;padding:8px 4px;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:15px;font-weight:400;letter-spacing:0;text-transform:none;border-radius:0;cursor:pointer;}
+    .config-results{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-top:6px;}
+    .config-result-card{background:#fff;border:1px solid #e8e8ed;border-radius:16px;padding:22px 24px;box-shadow:none;transition:box-shadow .2s,transform .15s;}
+    .config-result-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.06);transform:none;}
+    .config-result-part{font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:19px;font-weight:600;color:#1d1d1f;margin-bottom:4px;letter-spacing:-.2px;}
+    .config-result-name{font-size:13px;color:#86868b;margin-bottom:10px;line-height:1.45;}
+    .config-result-specs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+    .config-result-actions{display:flex;gap:8px;}
+    .btn-result-quote{flex:1;background:#0071e3;color:#fff;border:none;padding:11px 0;border-radius:980px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:14px;font-weight:600;letter-spacing:0;text-transform:none;transition:background .2s;}
+    .btn-result-quote:hover{background:#0077ed;}
+    .btn-result-wa{background:#25D366;color:#fff;border:none;padding:11px 16px;border-radius:980px;cursor:pointer;font-size:14px;font-weight:600;text-decoration:none;display:flex;align-items:center;justify-content:center;}
+    .btn-result-wa:hover{background:#20bd5a;}
+    .config-summary{background:#f5f5f7;border:none;border-radius:14px;padding:16px 18px;margin-bottom:18px;}
+    .spec-tag{background:#f5f5f7;border:none;color:#1d1d1f;font-size:12px;padding:4px 11px;border-radius:980px;font-weight:500;}
 
     /* ── PAGES ── */
     
@@ -296,7 +298,7 @@
 
     /* ── COTIZACIÓN ── */
     .q-step{display:flex;flex-direction:column;align-items:center;gap:4px;}
-    .q-dot{width:36px;height:36px;border-radius:50%;border:2px solid #dde6f0;background:#fff;display:flex;align-items:center;justify-content:center;font-family:\'Barlow Condensed\',sans-serif;font-size:14px;font-weight:700;color:#bbb;transition:all .3s;}
+    .q-dot{width:36px;height:36px;border-radius:50%;border:2px solid #dde6f0;background:#fff;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:14px;font-weight:700;color:#bbb;transition:all .3s;}
     .q-lbl{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#ccc;white-space:nowrap;}
     .q-step.active .q-dot{border-color:var(--rojo);background:var(--rojo);color:#fff;}
     .q-step.active .q-lbl{color:var(--rojo);}
@@ -314,14 +316,14 @@
 
     /* ── CART ── */
     .cart-item{background:#fff;border:1px solid #dde6f0;border-radius:8px;padding:14px 16px;display:flex;align-items:center;gap:12px;}
-    .cart-item-part{font-family:\'Barlow Condensed\',sans-serif;font-size:17px;font-weight:700;color:#001F5B;letter-spacing:.5px;}
+    .cart-item-part{font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:17px;font-weight:700;color:#001F5B;letter-spacing:.5px;}
     .cart-item-desc{font-size:11px;color:#999;margin-top:2px;}
     .cart-qty-btn{width:30px;height:30px;border:1px solid #dde6f0;border-radius:4px;background:#f8f8f8;cursor:pointer;font-size:16px;color:#555;display:flex;align-items:center;justify-content:center;transition:all .15s;}
     .cart-qty-btn:hover{background:#001F5B;color:#fff;border-color:#001F5B;}
-    .cart-qty-num{width:34px;text-align:center;font-family:\'Barlow Condensed\',sans-serif;font-size:16px;font-weight:700;}
+    .cart-qty-num{width:34px;text-align:center;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:16px;font-weight:700;}
     .cart-del{background:none;border:none;color:#ddd;cursor:pointer;font-size:20px;padding:2px 6px;margin-left:auto;flex-shrink:0;transition:color .15s;}
     .cart-del:hover{color:#C8102E;}
-    .cart-field{width:100%;border:2px solid #dde6f0;border-radius:5px;padding:10px 12px;font-size:13px;outline:none;box-sizing:border-box;transition:border-color .2s;font-family:'Barlow',sans-serif;}
+    .cart-field{width:100%;border:2px solid #dde6f0;border-radius:5px;padding:10px 12px;font-size:13px;outline:none;box-sizing:border-box;transition:border-color .2s;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;}
     .cart-field:focus{border-color:#001F5B;}
     .cart-label{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#888;display:block;margin-bottom:4px;}
     .cart-err{font-size:10px;color:#C8102E;margin-top:3px;display:none;}
@@ -336,15 +338,15 @@
     .auth-logo span{color:#C8102E;}
     .auth-subtitle{font-size:12px;color:rgba(255,255,255,.6);letter-spacing:2px;text-transform:uppercase;}
     .auth-body{padding:28px 32px;}
-    .auth-title{font-family:'Bebas Neue',cursive;font-size:24px;letter-spacing:2px;color:#111;margin-bottom:6px;}
+    .auth-title{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:24px;letter-spacing:2px;color:#111;margin-bottom:6px;}
     .auth-desc{font-size:13px;color:#888;margin-bottom:22px;}
     .auth-field{margin-bottom:14px;}
-    .auth-label{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#888;display:block;margin-bottom:5px;}
-    .auth-input{width:100%;border:2px solid #dde6f0;border-radius:5px;padding:11px 14px;font-size:14px;outline:none;box-sizing:border-box;transition:border-color .2s;font-family:'Barlow',sans-serif;}
+    .auth-label{font-size:13px;font-weight:500;letter-spacing:0;text-transform:none;color:#1d1d1f;display:block;margin-bottom:7px;}
+    .auth-input{width:100%;border:1px solid #d2d2d7;border-radius:12px;padding:13px 15px;font-size:15px;outline:none;box-sizing:border-box;transition:border-color .2s,box-shadow .2s;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;background:#fff;}.auth-input:focus{border-color:#0071e3;box-shadow:0 0 0 3px rgba(0,113,227,.15);}
     .auth-input:focus{border-color:#001F5B;}
-    .auth-btn-primary{width:100%;background:#C8102E;color:#fff;border:none;padding:13px;border-radius:6px;cursor:pointer;font-family:\'Barlow Condensed\',sans-serif;font-size:15px;font-weight:700;letter-spacing:2px;text-transform:uppercase;transition:background .2s;margin-bottom:12px;}
+    .auth-btn-primary{width:100%;background:#C8102E;color:#fff;border:none;padding:13px;border-radius:6px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:15px;font-weight:700;letter-spacing:2px;text-transform:uppercase;transition:background .2s;margin-bottom:12px;}
     .auth-btn-primary:hover{background:#a00c24;}
-    .auth-btn-google{width:100%;background:#fff;color:#333;border:2px solid #dde6f0;padding:11px;border-radius:6px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s;margin-bottom:16px;}
+    .auth-btn-google{width:100%;background:#fff;color:#333;border:2px solid #dde6f0;padding:11px;border-radius:6px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s;margin-bottom:16px;}
     .auth-btn-google:hover{border-color:#001F5B;background:#F0F5FC;}
     .auth-divider{display:flex;align-items:center;gap:12px;margin-bottom:16px;color:#ccc;font-size:12px;}
     .auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:#e0e0e0;}
@@ -356,7 +358,7 @@
     .portal-layout{display:flex;min-height:calc(100vh - 60px);background:#F4F8FC;}
     .portal-sidebar{width:220px;background:#fff;border-right:1px solid #dde6f0;padding:0;flex-shrink:0;}
     .portal-sidebar-user{padding:20px 16px;border-bottom:1px solid #e8eef6;background:linear-gradient(135deg,#001F5B,#2557A7);}
-    .portal-avatar{width:44px;height:44px;border-radius:50%;background:#C8102E;display:flex;align-items:center;justify-content:center;font-family:\'Barlow Condensed\',sans-serif;font-size:20px;font-weight:700;color:#fff;margin-bottom:8px;}
+    .portal-avatar{width:44px;height:44px;border-radius:50%;background:#C8102E;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:20px;font-weight:700;color:#fff;margin-bottom:8px;}
     .portal-username{font-size:13px;font-weight:700;color:#fff;}
     .portal-useremail{font-size:11px;color:rgba(255,255,255,.6);}
     .portal-nav-item{display:flex;align-items:center;gap:10px;padding:12px 16px;font-size:13px;font-weight:600;color:#555;cursor:pointer;transition:all .2s;border-left:3px solid transparent;}
@@ -365,12 +367,12 @@
     .portal-nav-icon{font-size:16px;width:20px;text-align:center;}
     .portal-content{flex:1;padding:28px 24px;overflow-y:auto;}
     .portal-panel{display:none;} .portal-panel.active{display:block;}
-    .portal-section-title{font-family:'Bebas Neue',cursive;font-size:26px;letter-spacing:2px;color:#111;margin-bottom:4px;}
+    .portal-section-title{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:26px;letter-spacing:2px;color:#111;margin-bottom:4px;}
     .portal-section-sub{font-size:13px;color:#888;margin-bottom:24px;}
     .portal-card{background:#fff;border:1px solid #dde6f0;border-radius:8px;padding:18px 20px;margin-bottom:14px;}
     .portal-card-title{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#888;margin-bottom:10px;}
     .portal-stat{text-align:center;padding:16px;}
-    .portal-stat-num{font-family:'Bebas Neue',cursive;font-size:36px;letter-spacing:1px;color:#001F5B;}
+    .portal-stat-num{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:36px;letter-spacing:1px;color:#001F5B;}
     .portal-stat-lbl{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#aaa;}
     .discount-bar{height:10px;border-radius:5px;background:#e0e0e0;overflow:hidden;margin:8px 0;}
     .discount-fill{height:100%;border-radius:5px;background:linear-gradient(to right,#001F5B,#C8102E);transition:width .8s ease;}
@@ -494,7 +496,7 @@
     .wa-bubble::before{content:'';position:absolute;inset:-5px;border-radius:50%;border:2px solid rgba(37,211,102,.4);animation:wa-ping 2s ease-out infinite;}
     @keyframes wa-ping{0%{transform:scale(1);opacity:1}70%,100%{transform:scale(1.35);opacity:0}}
     .wa-badge{position:absolute;top:-3px;right:-3px;background:var(--rojo);color:#fff;width:18px;height:18px;border-radius:50%;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #fff;}
-    .wa-tooltip{background:#fff;color:#111;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;padding:8px 14px;border-radius:6px;box-shadow:0 4px 20px rgba(0,0,0,.13);white-space:nowrap;opacity:0;transform:translateX(8px);transition:opacity .25s,transform .25s;pointer-events:none;border-left:3px solid #25D366;}
+    .wa-tooltip{background:#fff;color:#111;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:12px;font-weight:600;padding:8px 14px;border-radius:6px;box-shadow:0 4px 20px rgba(0,0,0,.13);white-space:nowrap;opacity:0;transform:translateX(8px);transition:opacity .25s,transform .25s;pointer-events:none;border-left:3px solid #25D366;}
     .wa-tooltip strong{display:block;font-size:11px;color:#25D366;margin-bottom:2px;}
     .wa-float:hover .wa-tooltip{opacity:1;transform:translateX(0);}
 
@@ -603,7 +605,7 @@
   
     /* ── COTIZACIÓN ── */
     .q-step{display:flex;flex-direction:column;align-items:center;gap:4px;}
-    .q-dot{width:36px;height:36px;border-radius:50%;border:2px solid #dde6f0;background:#fff;display:flex;align-items:center;justify-content:center;font-family:\'Barlow Condensed\',sans-serif;font-size:14px;font-weight:700;color:#bbb;transition:all .3s;}
+    .q-dot{width:36px;height:36px;border-radius:50%;border:2px solid #dde6f0;background:#fff;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:14px;font-weight:700;color:#bbb;transition:all .3s;}
     .q-lbl{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#ccc;white-space:nowrap;}
     .q-step.active .q-dot{border-color:var(--rojo);background:var(--rojo);color:#fff;}
     .q-step.active .q-lbl{color:var(--rojo);}
@@ -621,14 +623,14 @@
 
     /* ── CART ── */
     .cart-item{background:#fff;border:1px solid #dde6f0;border-radius:8px;padding:14px 16px;display:flex;align-items:center;gap:12px;}
-    .cart-item-part{font-family:\'Barlow Condensed\',sans-serif;font-size:17px;font-weight:700;color:#001F5B;letter-spacing:.5px;}
+    .cart-item-part{font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:17px;font-weight:700;color:#001F5B;letter-spacing:.5px;}
     .cart-item-desc{font-size:11px;color:#999;margin-top:2px;}
     .cart-qty-btn{width:30px;height:30px;border:1px solid #dde6f0;border-radius:4px;background:#f8f8f8;cursor:pointer;font-size:16px;color:#555;display:flex;align-items:center;justify-content:center;transition:all .15s;}
     .cart-qty-btn:hover{background:#001F5B;color:#fff;border-color:#001F5B;}
-    .cart-qty-num{width:34px;text-align:center;font-family:\'Barlow Condensed\',sans-serif;font-size:16px;font-weight:700;}
+    .cart-qty-num{width:34px;text-align:center;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:16px;font-weight:700;}
     .cart-del{background:none;border:none;color:#ddd;cursor:pointer;font-size:20px;padding:2px 6px;margin-left:auto;flex-shrink:0;transition:color .15s;}
     .cart-del:hover{color:#C8102E;}
-    .cart-field{width:100%;border:2px solid #dde6f0;border-radius:5px;padding:10px 12px;font-size:13px;outline:none;box-sizing:border-box;transition:border-color .2s;font-family:'Barlow',sans-serif;}
+    .cart-field{width:100%;border:2px solid #dde6f0;border-radius:5px;padding:10px 12px;font-size:13px;outline:none;box-sizing:border-box;transition:border-color .2s;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;}
     .cart-field:focus{border-color:#001F5B;}
     .cart-label{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#888;display:block;margin-bottom:4px;}
     .cart-err{font-size:10px;color:#C8102E;margin-top:3px;display:none;}
@@ -643,15 +645,15 @@
     .auth-logo span{color:#C8102E;}
     .auth-subtitle{font-size:12px;color:rgba(255,255,255,.6);letter-spacing:2px;text-transform:uppercase;}
     .auth-body{padding:28px 32px;}
-    .auth-title{font-family:'Bebas Neue',cursive;font-size:24px;letter-spacing:2px;color:#111;margin-bottom:6px;}
+    .auth-title{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:24px;letter-spacing:2px;color:#111;margin-bottom:6px;}
     .auth-desc{font-size:13px;color:#888;margin-bottom:22px;}
     .auth-field{margin-bottom:14px;}
-    .auth-label{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#888;display:block;margin-bottom:5px;}
-    .auth-input{width:100%;border:2px solid #dde6f0;border-radius:5px;padding:11px 14px;font-size:14px;outline:none;box-sizing:border-box;transition:border-color .2s;font-family:'Barlow',sans-serif;}
+    .auth-label{font-size:13px;font-weight:500;letter-spacing:0;text-transform:none;color:#1d1d1f;display:block;margin-bottom:7px;}
+    .auth-input{width:100%;border:1px solid #d2d2d7;border-radius:12px;padding:13px 15px;font-size:15px;outline:none;box-sizing:border-box;transition:border-color .2s,box-shadow .2s;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;background:#fff;}.auth-input:focus{border-color:#0071e3;box-shadow:0 0 0 3px rgba(0,113,227,.15);}
     .auth-input:focus{border-color:#001F5B;}
-    .auth-btn-primary{width:100%;background:#C8102E;color:#fff;border:none;padding:13px;border-radius:6px;cursor:pointer;font-family:\'Barlow Condensed\',sans-serif;font-size:15px;font-weight:700;letter-spacing:2px;text-transform:uppercase;transition:background .2s;margin-bottom:12px;}
+    .auth-btn-primary{width:100%;background:#C8102E;color:#fff;border:none;padding:13px;border-radius:6px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:15px;font-weight:700;letter-spacing:2px;text-transform:uppercase;transition:background .2s;margin-bottom:12px;}
     .auth-btn-primary:hover{background:#a00c24;}
-    .auth-btn-google{width:100%;background:#fff;color:#333;border:2px solid #dde6f0;padding:11px;border-radius:6px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s;margin-bottom:16px;}
+    .auth-btn-google{width:100%;background:#fff;color:#333;border:2px solid #dde6f0;padding:11px;border-radius:6px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s;margin-bottom:16px;}
     .auth-btn-google:hover{border-color:#001F5B;background:#F0F5FC;}
     .auth-divider{display:flex;align-items:center;gap:12px;margin-bottom:16px;color:#ccc;font-size:12px;}
     .auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:#e0e0e0;}
@@ -663,7 +665,7 @@
     .portal-layout{display:flex;min-height:calc(100vh - 60px);background:#F4F8FC;}
     .portal-sidebar{width:220px;background:#fff;border-right:1px solid #dde6f0;padding:0;flex-shrink:0;}
     .portal-sidebar-user{padding:20px 16px;border-bottom:1px solid #e8eef6;background:linear-gradient(135deg,#001F5B,#2557A7);}
-    .portal-avatar{width:44px;height:44px;border-radius:50%;background:#C8102E;display:flex;align-items:center;justify-content:center;font-family:\'Barlow Condensed\',sans-serif;font-size:20px;font-weight:700;color:#fff;margin-bottom:8px;}
+    .portal-avatar{width:44px;height:44px;border-radius:50%;background:#C8102E;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:20px;font-weight:700;color:#fff;margin-bottom:8px;}
     .portal-username{font-size:13px;font-weight:700;color:#fff;}
     .portal-useremail{font-size:11px;color:rgba(255,255,255,.6);}
     .portal-nav-item{display:flex;align-items:center;gap:10px;padding:12px 16px;font-size:13px;font-weight:600;color:#555;cursor:pointer;transition:all .2s;border-left:3px solid transparent;}
@@ -672,12 +674,12 @@
     .portal-nav-icon{font-size:16px;width:20px;text-align:center;}
     .portal-content{flex:1;padding:28px 24px;overflow-y:auto;}
     .portal-panel{display:none;} .portal-panel.active{display:block;}
-    .portal-section-title{font-family:'Bebas Neue',cursive;font-size:26px;letter-spacing:2px;color:#111;margin-bottom:4px;}
+    .portal-section-title{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:26px;letter-spacing:2px;color:#111;margin-bottom:4px;}
     .portal-section-sub{font-size:13px;color:#888;margin-bottom:24px;}
     .portal-card{background:#fff;border:1px solid #dde6f0;border-radius:8px;padding:18px 20px;margin-bottom:14px;}
     .portal-card-title{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#888;margin-bottom:10px;}
     .portal-stat{text-align:center;padding:16px;}
-    .portal-stat-num{font-family:'Bebas Neue',cursive;font-size:36px;letter-spacing:1px;color:#001F5B;}
+    .portal-stat-num{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:36px;letter-spacing:1px;color:#001F5B;}
     .portal-stat-lbl{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#aaa;}
     .discount-bar{height:10px;border-radius:5px;background:#e0e0e0;overflow:hidden;margin:8px 0;}
     .discount-fill{height:100%;border-radius:5px;background:linear-gradient(to right,#001F5B,#C8102E);transition:width .8s ease;}
@@ -837,7 +839,7 @@
     <li><a href="#" onclick="showPage('tutorials');return false;">Catálogo</a></li>
     <li style="padding:0 4px;display:flex;align-items:center;">
       <a href="#" onclick="showPage('login');return false;" id="nav-login-btn"
-        style="font-family:\'Barlow Condensed\',sans-serif;font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#001F5B;text-decoration:none;padding:7px 12px;border-radius:5px;border:2px solid #001F5B;display:block;transition:all .2s;"
+        style="font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#001F5B;text-decoration:none;padding:7px 12px;border-radius:5px;border:2px solid #001F5B;display:block;transition:all .2s;"
         onmouseover="this.style.background='#001F5B';this.style.color='#fff';"
         onmouseout="this.style.background='transparent';this.style.color='#001F5B';">
         Iniciar Sesión
@@ -909,11 +911,11 @@
       </div>
 
       <!-- Main title -->
-      <h1 style="font-family:\'Barlow Condensed\',sans-serif;font-size:52px;font-weight:800;color:#fff;line-height:1.08;margin:0 0 10px;letter-spacing:.5px;text-transform:uppercase;text-shadow:0 2px 24px rgba(0,0,0,.4);">
+      <h1 style="font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:52px;font-weight:800;color:#fff;line-height:1.08;margin:0 0 10px;letter-spacing:.5px;text-transform:uppercase;text-shadow:0 2px 24px rgba(0,0,0,.4);">
         Tu solución integral<br/>en el abastecimiento de<br/>
         <span style="color:#C8102E;text-shadow:0 2px 20px rgba(200,16,46,.5);">Conectores Hidráulicos</span>
       </h1>
-      <p style="font-family:\'Barlow Condensed\',sans-serif;font-size:28px;font-weight:400;color:rgba(255,255,255,.75);margin:0 0 20px;letter-spacing:2px;text-transform:uppercase;">y Adaptadores</p>
+      <p style="font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:28px;font-weight:400;color:rgba(255,255,255,.75);margin:0 0 20px;letter-spacing:2px;text-transform:uppercase;">y Adaptadores</p>
 
       <!-- Divider -->
       <div style="width:60px;height:3px;background:#C8102E;border-radius:2px;margin:0 auto 20px;"></div>
@@ -926,15 +928,15 @@
       <!-- Stats — centered, no boxes -->
       <div style="display:flex;justify-content:center;align-items:center;gap:0;">
         <div style="padding:0 32px;border-right:1px solid rgba(255,255,255,.2);">
-          <div style="font-family:'Bebas Neue',cursive;font-size:42px;color:#fff;line-height:1;text-shadow:0 2px 12px rgba(0,0,0,.3);">3,200+</div>
+          <div style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:42px;color:#fff;line-height:1;text-shadow:0 2px 12px rgba(0,0,0,.3);">3,200+</div>
           <div style="font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-top:4px;">Referencias</div>
         </div>
         <div style="padding:0 32px;border-right:1px solid rgba(255,255,255,.2);">
-          <div style="font-family:'Bebas Neue',cursive;font-size:42px;color:#fff;line-height:1;text-shadow:0 2px 12px rgba(0,0,0,.3);">15+</div>
+          <div style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:42px;color:#fff;line-height:1;text-shadow:0 2px 12px rgba(0,0,0,.3);">15+</div>
           <div style="font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-top:4px;">Estándares</div>
         </div>
         <div style="padding:0 32px;">
-          <div style="font-family:'Bebas Neue',cursive;font-size:42px;color:#C8102E;line-height:1;text-shadow:0 2px 16px rgba(200,16,46,.4);">24h</div>
+          <div style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:42px;color:#C8102E;line-height:1;text-shadow:0 2px 16px rgba(200,16,46,.4);">24h</div>
           <div style="font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-top:4px;">Entrega CDMX</div>
         </div>
       </div>
@@ -960,7 +962,7 @@
         </svg>
       </div>
       <!-- Label -->
-      <div style="font-family:'Bebas Neue',cursive;font-size:26px;letter-spacing:3px;color:#001F5B;margin-bottom:10px;">Seleccionar Conector</div>
+      <div style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:26px;letter-spacing:3px;color:#001F5B;margin-bottom:10px;">Seleccionar Conector</div>
       <!-- Steps -->
       <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;justify-content:center;">
         <span style="background:#EEF5FF;color:#001F5B;font-size:10px;font-weight:700;padding:3px 10px;border-radius:12px;letter-spacing:.5px;">Tipo</span>
@@ -976,7 +978,7 @@
         Configura tu adaptador paso a paso y obtén tu número de parte AT exacto
       </div>
       <!-- CTA -->
-      <div style="display:flex;align-items:center;gap:8px;background:#001F5B;color:#fff;padding:10px 22px;border-radius:6px;font-family:\'Barlow Condensed\',sans-serif;font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">
+      <div style="display:flex;align-items:center;gap:8px;background:#001F5B;color:#fff;padding:10px 22px;border-radius:6px;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">
         Configurar ahora
         <span class="cfg-arrow" style="opacity:0;transition:all .25s;transform:translateX(0);">→</span>
       </div>
@@ -1007,7 +1009,7 @@
           <!-- Text -->
           <div style="flex:1;min-width:0;">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
-              <span style="font-family:'Bebas Neue',cursive;font-size:22px;letter-spacing:2px;color:#001F5B;line-height:1;">Buscador con IA</span>
+              <span style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:22px;letter-spacing:2px;color:#001F5B;line-height:1;">Buscador con IA</span>
               <span style="background:#25a244;color:#fff;font-size:9px;font-weight:800;padding:3px 10px;border-radius:10px;letter-spacing:1px;">● EN VIVO</span>
             </div>
             <p style="font-size:12px;color:#555;margin:0;line-height:1.5;">Describe, fotografía o dicta el conector — <strong>la IA lo identifica al instante</strong></p>
@@ -1070,7 +1072,7 @@
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#001F5B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
         </button>
         <!-- Textarea -->
-        <textarea id="chat-input" placeholder="Describe tu conector..." style="flex:1;border:none;outline:none;resize:none;font-family:'Barlow',sans-serif;font-size:13px;color:#111;line-height:1.5;min-height:34px;max-height:90px;padding:7px 4px;background:transparent;" rows="1" oninput="autoResize(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}"></textarea>
+        <textarea id="chat-input" placeholder="Describe tu conector..." style="flex:1;border:none;outline:none;resize:none;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:13px;color:#111;line-height:1.5;min-height:34px;max-height:90px;padding:7px 4px;background:transparent;" rows="1" oninput="autoResize(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}"></textarea>
         <!-- Send -->
         <button onclick="sendChatMessage()" style="width:34px;height:34px;border-radius:7px;background:#001F5B;border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background .2s;" onmouseover="this.style.background='#C8102E'" onmouseout="this.style.background='#001F5B'">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -1163,19 +1165,19 @@
   </div>
   <div class="cross-page">
     <div class="section-header">
-      <div class="section-tag">&#9679; Referencia Cruzada</div>
-      <h2>BUSCA TU EQUIVALENTE AT</h2>
+      <div class="section-tag">Referencia cruzada</div>
+      <h2>Busca tu equivalente AT</h2>
       <p>Ingresa el número de parte de otra marca y te damos el número AT equivalente con disponibilidad inmediata.</p>
     </div>
 
     <div class="cross-search-box">
-      <div style="font-size:13px;color:#888;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;">Número de parte de otra marca</div>
+      <div style="font-size:13px;color:#86868b;font-weight:500;letter-spacing:0;text-transform:none;margin-bottom:8px;">Número de parte de otra marca</div>
       <div class="cross-input-row">
         <input class="cross-input" id="cross-input" type="text" placeholder="Ej: 9500-08-08, 10343-08-08, SS-400-1-4..." oninput="crossSearch(this.value)" onkeydown="if(event.key==='Enter')crossSearch(document.getElementById('cross-input').value)"/>
-        <button class="cross-btn" onclick="crossSearch(document.getElementById('cross-input').value)">BUSCAR</button>
+        <button class="cross-btn" onclick="crossSearch(document.getElementById('cross-input').value)">Buscar</button>
       </div>
-      <div style="margin-top:12px;">
-        <div style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Marcas compatibles:</div>
+      <div style="margin-top:16px;">
+        <div style="font-size:12px;color:#86868b;font-weight:500;letter-spacing:0;text-transform:none;margin-bottom:10px;">Marcas compatibles</div>
         <div class="cross-brands">
           <span class="cross-brand-tag" onclick="document.getElementById('cross-input').value='10343-8-8';crossSearch('10343-8-8')">Parker</span>
           <span class="cross-brand-tag" onclick="document.getElementById('cross-input').value='ds-a 8-ml';crossSearch('ds-a 8-ml')">Gates</span>
@@ -1190,13 +1192,13 @@
 
     <!-- RESULT -->
     <div class="cross-result" id="cross-result">
-      <div style="font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--rojo);margin-bottom:4px;">EQUIVALENTE AT ENCONTRADO</div>
-      <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:#888;text-transform:uppercase;margin-bottom:4px;" id="cr-brand"></div><div class="cross-result-part" id="cr-part"></div>
+      <div style="font-size:12px;font-weight:500;letter-spacing:0;text-transform:none;color:#0071e3;margin-bottom:6px;">Equivalente AT encontrado</div>
+      <div style="font-size:12px;font-weight:500;letter-spacing:0;color:#86868b;text-transform:none;margin-bottom:4px;" id="cr-brand"></div><div class="cross-result-part" id="cr-part"></div>
       <div class="cross-result-name" id="cr-name"></div>
       <div class="cross-specs" id="cr-specs"></div>
       <div class="cross-actions">
-        <button class="cross-btn" onclick="alert('Cotizacion enviada. En produccion esto abre el formulario.')">Solicitar cotizacion</button>
-        <a class="btn-result-wa" id="cr-wa" href="#" target="_blank" style="padding:0 16px;display:flex;align-items:center;">&#128242;</a>
+        <button class="cross-btn" onclick="alert('Cotizacion enviada. En produccion esto abre el formulario.')">Solicitar cotización</button>
+        <a class="btn-result-wa" id="cr-wa" href="#" target="_blank" style="padding:0 18px;display:flex;align-items:center;">WhatsApp</a>
       </div>
     </div>
 
@@ -1205,17 +1207,17 @@
       <strong>No encontramos esa referencia</strong>
       Es posible que no tengamos esa referencia en nuestra base de datos aún, o que el código sea de un estándar especializado.
       <br/><br/>
-      <a href="https://wa.me/5215555550000" target="_blank" class="cross-btn" style="display:inline-block;text-decoration:none;">&#128242; Consultar por WhatsApp</a>
+      <a href="https://wa.me/5215555550000" target="_blank" class="cross-btn" style="display:inline-block;text-decoration:none;">Consultar por WhatsApp</a>
     </div>
 
     <!-- EXAMPLE CODES -->
-    <div style="margin-top:32px;">
-      <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:12px;">Ejemplos de búsqueda</div>
+    <div style="margin-top:36px;">
+      <div style="font-size:12px;font-weight:500;letter-spacing:0;text-transform:none;color:#86868b;margin-bottom:12px;">Ejemplos de búsqueda</div>
       <div style="display:flex;flex-wrap:wrap;gap:8px;">
-        <button onclick="crossSearch('9500-08-08')" style="background:var(--gris);border:1px solid var(--borde);color:#333;padding:6px 12px;border-radius:3px;cursor:pointer;font-size:12px;font-weight:600;">9500-08-08</button>
-        <button onclick="crossSearch('10343-12-12')" style="background:var(--gris);border:1px solid var(--borde);color:#333;padding:6px 12px;border-radius:3px;cursor:pointer;font-size:12px;font-weight:600;">10343-12-12</button>
-        <button onclick="crossSearch('SS-400-1-4')" style="background:var(--gris);border:1px solid var(--borde);color:#333;padding:6px 12px;border-radius:3px;cursor:pointer;font-size:12px;font-weight:600;">SS-400-1-4</button>
-        <button onclick="crossSearch('2701-08-08')" style="background:var(--gris);border:1px solid var(--borde);color:#333;padding:6px 12px;border-radius:3px;cursor:pointer;font-size:12px;font-weight:600;">2701-08-08</button>
+        <button onclick="crossSearch('9500-08-08')" style="background:#f5f5f7;border:none;color:#1d1d1f;padding:8px 16px;border-radius:980px;cursor:pointer;font-size:13px;font-weight:500;">9500-08-08</button>
+        <button onclick="crossSearch('10343-12-12')" style="background:#f5f5f7;border:none;color:#1d1d1f;padding:8px 16px;border-radius:980px;cursor:pointer;font-size:13px;font-weight:500;">10343-12-12</button>
+        <button onclick="crossSearch('SS-400-1-4')" style="background:#f5f5f7;border:none;color:#1d1d1f;padding:8px 16px;border-radius:980px;cursor:pointer;font-size:13px;font-weight:500;">SS-400-1-4</button>
+        <button onclick="crossSearch('2701-08-08')" style="background:#f5f5f7;border:none;color:#1d1d1f;padding:8px 16px;border-radius:980px;cursor:pointer;font-size:13px;font-weight:500;">2701-08-08</button>
       </div>
     </div>
   </div>
@@ -1230,7 +1232,7 @@
   <div class="page-header">
     <button class="page-header-back" onclick="showPage('home')" title="Regresar">&#8592;</button>
     <div>
-      <div class="page-header-title">&#128203; Solicitar Cotización</div>
+      <div class="page-header-title">Solicitar cotización</div>
       <div class="page-header-sub">Sin cuenta requerida — te respondemos en menos de 2 horas</div>
     </div>
   </div>
@@ -1257,13 +1259,13 @@
 
     <!-- STEP 1: PRODUCTO -->
     <div id="qpanel-1" class="q-panel active">
-      <div style="font-family:'Bebas Neue',cursive;font-size:26px;letter-spacing:2px;color:#111;margin-bottom:6px;">&#128297; ¿Qué conector necesitas?</div>
+      <div style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:26px;letter-spacing:2px;color:#111;margin-bottom:6px;">&#128297; ¿Qué conector necesitas?</div>
       <p style="font-size:13px;color:#888;margin-bottom:20px;">Describe el conector o usa el configurador para encontrar el código AT exacto.</p>
 
       <!-- Producto summary (se llena desde el configurador) -->
       <div id="q-product-from-cfg" style="display:none;background:#F0F5FC;border:2px solid #001F5B;border-radius:8px;padding:16px 18px;margin-bottom:16px;">
         <div style="font-size:10px;font-weight:700;letter-spacing:3px;color:#001F5B;text-transform:uppercase;margin-bottom:6px;">&#10003; Conector seleccionado desde el configurador</div>
-        <div style="font-family:\'Barlow Condensed\',sans-serif;font-size:20px;font-weight:700;color:#111;" id="q-part-number">—</div>
+        <div style="font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:20px;font-weight:700;color:#111;" id="q-part-number">—</div>
         <div style="font-size:13px;color:#666;margin-top:3px;" id="q-part-desc">—</div>
         <button onclick="clearQuoteProduct()" style="margin-top:10px;background:none;border:1px solid #dde6f0;color:#aaa;font-size:11px;padding:4px 10px;border-radius:4px;cursor:pointer;">&#10005; Cambiar conector</button>
       </div>
@@ -1271,13 +1273,13 @@
       <!-- Manual description -->
       <div id="q-manual-input">
         <label style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#888;display:block;margin-bottom:6px;">Código AT o descripción del conector</label>
-        <textarea id="q-connector-desc" placeholder="Ej: AT-NR-JIC-M08-NPT-M06&#10;o: Conector recto JIC 1/2&quot; macho × NPT 3/8&quot; macho&#10;o: Codo 90° BSPP 3/4&quot;" style="width:100%;border:2px solid #dde6f0;border-radius:6px;padding:12px 14px;font-family:'Barlow',sans-serif;font-size:14px;resize:vertical;min-height:90px;outline:none;box-sizing:border-box;transition:border-color .2s;" onfocus="this.style.borderColor='#001F5B'" onblur="this.style.borderColor='#dde6f0'"></textarea>
+        <textarea id="q-connector-desc" placeholder="Ej: AT-NR-JIC-M08-NPT-M06&#10;o: Conector recto JIC 1/2&quot; macho × NPT 3/8&quot; macho&#10;o: Codo 90° BSPP 3/4&quot;" style="width:100%;border:2px solid #dde6f0;border-radius:6px;padding:12px 14px;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:14px;resize:vertical;min-height:90px;outline:none;box-sizing:border-box;transition:border-color .2s;" onfocus="this.style.borderColor='#001F5B'" onblur="this.style.borderColor='#dde6f0'"></textarea>
 
         <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;">
-          <button onclick="showPage('cfg');quoteReturnStep=1;" style="background:#F0F5FC;border:2px solid #001F5B;color:#001F5B;padding:9px 16px;border-radius:5px;cursor:pointer;font-family:\'Barlow Condensed\',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">
+          <button onclick="showPage('cfg');quoteReturnStep=1;" style="background:#F0F5FC;border:2px solid #001F5B;color:#001F5B;padding:9px 16px;border-radius:5px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">
             &#128295; Usar el Configurador
           </button>
-          <button onclick="quoteStep1Next()" style="background:#001F5B;color:#fff;border:none;padding:9px 20px;border-radius:5px;cursor:pointer;font-family:\'Barlow Condensed\',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;flex:1;">
+          <button onclick="quoteStep1Next()" style="background:#001F5B;color:#fff;border:none;padding:9px 20px;border-radius:5px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;flex:1;">
             Continuar &#8594;
           </button>
         </div>
@@ -1301,17 +1303,17 @@
 
       <div style="margin-top:12px;">
         <label style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#888;display:block;margin-bottom:5px;">Notas adicionales (opcional)</label>
-        <textarea id="q-notes" placeholder="Aplicación, presión de trabajo, material especial, etc." style="width:100%;border:2px solid #dde6f0;border-radius:5px;padding:10px 12px;font-family:'Barlow',sans-serif;font-size:13px;resize:vertical;min-height:60px;outline:none;box-sizing:border-box;" onfocus="this.style.borderColor='#001F5B'" onblur="this.style.borderColor='#dde6f0'"></textarea>
+        <textarea id="q-notes" placeholder="Aplicación, presión de trabajo, material especial, etc." style="width:100%;border:2px solid #dde6f0;border-radius:5px;padding:10px 12px;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:13px;resize:vertical;min-height:60px;outline:none;box-sizing:border-box;" onfocus="this.style.borderColor='#001F5B'" onblur="this.style.borderColor='#dde6f0'"></textarea>
       </div>
 
-      <button onclick="quoteStep1Next()" style="width:100%;margin-top:16px;background:var(--rojo);color:#fff;border:none;padding:14px;border-radius:6px;cursor:pointer;font-family:\'Barlow Condensed\',sans-serif;font-size:15px;font-weight:700;letter-spacing:2px;text-transform:uppercase;transition:background .2s;" onmouseover="this.style.background='#a00c24'" onmouseout="this.style.background='var(--rojo)'">
+      <button onclick="quoteStep1Next()" style="width:100%;margin-top:16px;background:var(--rojo);color:#fff;border:none;padding:14px;border-radius:6px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:15px;font-weight:700;letter-spacing:2px;text-transform:uppercase;transition:background .2s;" onmouseover="this.style.background='#a00c24'" onmouseout="this.style.background='var(--rojo)'">
         Continuar a mis datos &#8594;
       </button>
     </div>
 
     <!-- STEP 2: DATOS DEL CLIENTE -->
     <div id="qpanel-2" class="q-panel">
-      <div style="font-family:'Bebas Neue',cursive;font-size:26px;letter-spacing:2px;color:#111;margin-bottom:6px;">&#128100; Tus datos de contacto</div>
+      <div style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:26px;letter-spacing:2px;color:#111;margin-bottom:6px;">Tus datos de contacto</div>
       <p style="font-size:13px;color:#888;margin-bottom:20px;">Solo necesitamos lo básico para enviarte la cotización. Sin registro requerido.</p>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
@@ -1366,7 +1368,7 @@
       <!-- Facturación opcional -->
       <div style="margin-top:16px;border:1px solid #dde6f0;border-radius:8px;overflow:hidden;">
         <div onclick="toggleFacturacion()" style="padding:12px 16px;background:#f8f8f8;cursor:pointer;display:flex;align-items:center;justify-content:space-between;">
-          <span style="font-size:13px;font-weight:600;color:#333;">&#128196; ¿Necesitas factura? (opcional)</span>
+          <span style="font-size:13px;font-weight:600;color:#333;">¿Necesitas factura? (opcional)</span>
           <span id="fact-toggle-icon" style="color:#aaa;font-size:18px;">&#43;</span>
         </div>
         <div id="fact-fields" style="display:none;padding:14px 16px;display:none;">
@@ -1406,8 +1408,8 @@
       </div>
 
       <div style="display:flex;gap:10px;margin-top:18px;">
-        <button onclick="quoteGoStep(1)" style="background:none;border:2px solid #dde6f0;color:#888;padding:12px 20px;border-radius:5px;cursor:pointer;font-family:\'Barlow Condensed\',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">&#8592; Atrás</button>
-        <button onclick="quoteStep2Next()" style="flex:1;background:var(--rojo);color:#fff;border:none;padding:12px;border-radius:5px;cursor:pointer;font-family:\'Barlow Condensed\',sans-serif;font-size:15px;font-weight:700;letter-spacing:2px;text-transform:uppercase;" onmouseover="this.style.background='#a00c24'" onmouseout="this.style.background='var(--rojo)'">
+        <button onclick="quoteGoStep(1)" style="background:none;border:2px solid #dde6f0;color:#888;padding:12px 20px;border-radius:5px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">&#8592; Atrás</button>
+        <button onclick="quoteStep2Next()" style="flex:1;background:var(--rojo);color:#fff;border:none;padding:12px;border-radius:5px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:15px;font-weight:700;letter-spacing:2px;text-transform:uppercase;" onmouseover="this.style.background='#a00c24'" onmouseout="this.style.background='var(--rojo)'">
           Revisar y enviar &#8594;
         </button>
       </div>
@@ -1415,7 +1417,7 @@
 
     <!-- STEP 3: CONFIRMACIÓN -->
     <div id="qpanel-3" class="q-panel">
-      <div style="font-family:'Bebas Neue',cursive;font-size:26px;letter-spacing:2px;color:#111;margin-bottom:6px;">&#128203; Resumen de tu cotización</div>
+      <div style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:26px;letter-spacing:2px;color:#111;margin-bottom:6px;">&#128203; Resumen de tu cotización</div>
       <p style="font-size:13px;color:#888;margin-bottom:20px;">Revisa los detalles antes de enviar.</p>
 
       <!-- Summary card -->
@@ -1427,39 +1429,39 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
 
         <!-- WhatsApp -->
-        <button onclick="sendQuoteWhatsApp()" style="background:#25D366;color:#fff;border:none;padding:14px 10px;border-radius:6px;cursor:pointer;font-family:\'Barlow Condensed\',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .2s;" onmouseover="this.style.background='#1da851'" onmouseout="this.style.background='#25D366'">
+        <button onclick="sendQuoteWhatsApp()" style="background:#25D366;color:#fff;border:none;padding:14px 10px;border-radius:6px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .2s;" onmouseover="this.style.background='#1da851'" onmouseout="this.style.background='#25D366'">
           <svg width="18" height="18" viewBox="0 0 32 32" fill="none"><path d="M16 3C9.37 3 4 8.37 4 15c0 2.39.67 4.63 1.84 6.54L4 29l7.69-1.8A11.93 11.93 0 0016 27c6.63 0 12-5.37 12-12S22.63 3 16 3z" fill="white"/><path d="M21.5 18.9c-.3-.15-1.77-.87-2.04-.97-.28-.1-.48-.15-.68.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.47-.89-.79-1.49-1.76-1.66-2.06-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.07-.15-.68-1.63-.93-2.23-.24-.58-.49-.5-.68-.51l-.58-.01c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48 0 1.46 1.07 2.88 1.22 3.08.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.22 1.36.19 1.87.12.57-.09 1.77-.72 2.02-1.42.25-.7.25-1.3.17-1.42-.07-.12-.27-.19-.57-.34z" fill="#25D366"/></svg>
           Enviar por WhatsApp
         </button>
 
         <!-- Email -->
-        <button onclick="sendQuoteEmail()" style="background:#001F5B;color:#fff;border:none;padding:14px 10px;border-radius:6px;cursor:pointer;font-family:\'Barlow Condensed\',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .2s;" onmouseover="this.style.background='#142d54'" onmouseout="this.style.background='#001F5B'">
+        <button onclick="sendQuoteEmail()" style="background:#001F5B;color:#fff;border:none;padding:14px 10px;border-radius:6px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .2s;" onmouseover="this.style.background='#142d54'" onmouseout="this.style.background='#001F5B'">
           &#9993; Enviar por Correo
         </button>
       </div>
 
-      <button onclick="quoteGoStep(2)" style="width:100%;background:none;border:2px solid #dde6f0;color:#888;padding:11px;border-radius:5px;cursor:pointer;font-family:\'Barlow Condensed\',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">&#8592; Editar datos</button>
+      <button onclick="quoteGoStep(2)" style="width:100%;background:none;border:2px solid #dde6f0;color:#888;padding:11px;border-radius:5px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">&#8592; Editar datos</button>
     </div>
 
     <!-- STEP: ÉXITO -->
     <div id="qpanel-ok" class="q-panel" style="text-align:center;padding:20px 0;">
       <div style="font-size:64px;margin-bottom:16px;">&#10003;</div>
-      <div style="font-family:'Bebas Neue',cursive;font-size:32px;letter-spacing:2px;color:#25a244;margin-bottom:10px;">¡Cotización Enviada!</div>
+      <div style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:32px;letter-spacing:2px;color:#25a244;margin-bottom:10px;">¡Cotización Enviada!</div>
       <p style="font-size:14px;color:#666;max-width:420px;margin:0 auto 24px;line-height:1.7;">
         Recibimos tu solicitud. Un asesor de Adaptek te contactará por WhatsApp en menos de <strong>2 horas hábiles</strong> con tu cotización.
       </p>
       <div style="background:#F0F5FC;border-radius:8px;padding:16px 20px;margin-bottom:24px;text-align:left;max-width:400px;margin-left:auto;margin-right:auto;">
         <div style="font-size:10px;font-weight:700;letter-spacing:3px;color:#001F5B;text-transform:uppercase;margin-bottom:8px;">Próximos pasos</div>
         <div style="font-size:13px;color:#555;line-height:1.8;">
-          1. &#128242; Recibes confirmación por WhatsApp<br/>
+          1. Recibes confirmación por WhatsApp<br/>
           2. &#128203; Te enviamos la cotización con precio y disponibilidad<br/>
           3. &#9989; Confirmas y realizas el pago<br/>
-          4. &#128666; Preparamos y enviamos tu pedido
+          4. Preparamos y enviamos tu pedido
         </div>
       </div>
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-        <button onclick="quoteReset()" style="background:#001F5B;color:#fff;border:none;padding:12px 24px;border-radius:5px;cursor:pointer;font-family:\'Barlow Condensed\',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">&#43; Nueva Cotización</button>
-        <button onclick="showPage('home')" style="background:none;border:2px solid #dde6f0;color:#888;padding:12px 24px;border-radius:5px;cursor:pointer;font-family:\'Barlow Condensed\',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Ir al Inicio</button>
+        <button onclick="quoteReset()" style="background:#001F5B;color:#fff;border:none;padding:12px 24px;border-radius:5px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">&#43; Nueva Cotización</button>
+        <button onclick="showPage('home')" style="background:none;border:2px solid #dde6f0;color:#888;padding:12px 24px;border-radius:5px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Ir al Inicio</button>
       </div>
     </div>
 
@@ -1474,29 +1476,56 @@
 <div id="page-cart" style="display:none;">
 
 <style>
-.cart-wrap{max-width:1000px;margin:0 auto;padding:24px 16px;}
-.cart-header{background:#001F5B;color:#fff;padding:16px 24px;display:flex;align-items:center;gap:12px;}
-.cart-item{background:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.07);padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:16px;}
-.cart-item-code{font-family:'Bebas Neue',cursive;font-size:18px;color:#001F5B;letter-spacing:1px;}
-.cart-item-name{font-size:12px;color:#888;margin-top:2px;}
-.qty-btn{width:30px;height:30px;border:1.5px solid #dde6f0;border-radius:6px;background:#fff;cursor:pointer;font-size:16px;font-weight:700;color:#001F5B;display:flex;align-items:center;justify-content:center;}
-.qty-btn:hover{background:#EEF5FF;}
-.qty-input{width:44px;height:30px;border:1.5px solid #dde6f0;border-radius:6px;text-align:center;font-size:14px;font-weight:700;}
-.cart-price{font-size:16px;font-weight:800;color:#001F5B;white-space:nowrap;}
-.cart-remove{background:none;border:none;cursor:pointer;color:#ccc;font-size:18px;padding:4px;}
-.cart-remove:hover{color:#C8102E;}
-.cart-summary{background:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.07);padding:20px;position:sticky;top:80px;}
-.cart-total-row{display:flex;justify-content:space-between;padding:8px 0;font-size:14px;color:#555;border-bottom:1px solid #f0f0f0;}
-.cart-total-row.final{font-size:18px;font-weight:800;color:#001F5B;border-bottom:none;padding-top:12px;}
-.cart-btn{width:100%;padding:14px;border:none;border-radius:var(--r-sm);cursor:pointer;font-family:var(--cond);font-weight:700;font-size:15px;letter-spacing:1px;text-transform:uppercase;margin-top:8px;transition:transform .12s,background .18s,box-shadow .18s;}
-.cart-btn:active{transform:translateY(1px);}
-.cart-btn.primary{background:var(--azul);color:#fff;}
-.cart-btn.primary:hover{background:var(--azul-700);box-shadow:var(--e-2);}
-.cart-btn.secondary{background:var(--superficie);color:var(--tinta);border:1px solid var(--linea);}
-.cart-btn.secondary:hover{background:#eef1f6;}
-.cart-btn.pdf{background:var(--rojo);color:#fff;}
-.cart-btn.pdf:hover{background:var(--rojo-oscuro);box-shadow:var(--e-2);}
-.cart-empty{text-align:center;padding:80px 24px;color:#aaa;}
+/* ===== Carrito estilo Apple: limpio, espacioso, elegante ===== */
+.cart-wrap{max-width:980px;margin:0 auto;padding:48px 22px 80px;}
+.cart-pagetitle{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:44px;line-height:1.05;color:#1d1d1f;letter-spacing:.5px;margin:0 0 6px;}
+.cart-pagesub{font-size:17px;color:#86868b;margin:0 0 38px;font-weight:400;}
+.cart-grid{display:grid;grid-template-columns:1fr 340px;gap:48px;align-items:start;}
+
+/* Item: separado por líneas finísimas, sin tarjetas pesadas */
+.cart-item{background:transparent;border:none;border-bottom:1px solid #e8e8ed;border-radius:0;box-shadow:none;padding:26px 4px;margin:0;display:flex;align-items:center;gap:22px;}
+.cart-item:first-child{border-top:1px solid #e8e8ed;}
+.cart-item-code{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:19px;font-weight:600;color:#1d1d1f;letter-spacing:.2px;}
+.cart-item-name{font-size:13px;color:#86868b;margin-top:4px;line-height:1.45;}
+.cart-price{font-size:19px;font-weight:600;color:#1d1d1f;white-space:nowrap;letter-spacing:-.2px;}
+
+/* Selector de cantidad: pill suave gris claro */
+.qty-wrap{display:inline-flex;align-items:center;background:#f5f5f7;border-radius:980px;padding:3px;}
+.qty-btn{width:32px;height:32px;border:none;border-radius:50%;background:transparent;cursor:pointer;font-size:18px;font-weight:500;color:#1d1d1f;display:flex;align-items:center;justify-content:center;transition:background .15s;}
+.qty-btn:hover{background:#e3e3e8;}
+.qty-input{width:38px;height:32px;border:none;background:transparent;text-align:center;font-size:15px;font-weight:600;color:#1d1d1f;-moz-appearance:textfield;}
+.qty-input::-webkit-outer-spin-button,.qty-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+.cart-remove{background:none;border:none;cursor:pointer;color:#0071e3;font-size:13px;font-weight:400;padding:6px 2px;margin-top:8px;transition:color .15s;}
+.cart-remove:hover{color:#0058b8;text-decoration:underline;}
+
+/* Resumen: tarjeta blanca suave, sticky */
+.cart-summary{background:#f5f5f7;border-radius:18px;padding:28px 26px;position:sticky;top:90px;}
+.cart-summary-title{font-size:21px;font-weight:600;color:#1d1d1f;margin-bottom:20px;letter-spacing:-.2px;}
+.cart-total-row{display:flex;justify-content:space-between;align-items:baseline;padding:11px 0;font-size:15px;color:#1d1d1f;}
+.cart-total-row span:first-child{color:#86868b;}
+.cart-total-divider{height:1px;background:#d2d2d7;margin:8px 0;}
+.cart-total-row.final{font-size:22px;font-weight:600;color:#1d1d1f;padding-top:14px;}
+.cart-total-row.final span:first-child{color:#1d1d1f;}
+
+/* Botones tipo Apple: pill, azul para primario */
+.cart-btn{width:100%;padding:14px;border:none;border-radius:980px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-weight:600;font-size:16px;letter-spacing:0;text-transform:none;margin-top:12px;transition:background .18s,transform .1s;}
+.cart-btn:active{transform:scale(.985);}
+.cart-btn.primary{background:#0071e3;color:#fff;}
+.cart-btn.primary:hover{background:#0077ed;}
+.cart-btn.secondary{background:transparent;color:#0071e3;border:none;padding:8px;}
+.cart-btn.secondary:hover{text-decoration:underline;}
+.cart-btn.pdf{background:#e8e8ed;color:#1d1d1f;}
+.cart-btn.pdf:hover{background:#dcdce1;}
+.cart-btn.wa{background:#25D366;color:#fff;}
+.cart-btn.wa:hover{background:#20bd5a;}
+.cart-empty{text-align:center;padding:100px 24px;color:#86868b;}
+
+@media(max-width:820px){
+  .cart-grid{grid-template-columns:1fr;gap:28px;}
+  .cart-summary{position:static;}
+  .cart-pagetitle{font-size:36px;}
+  .cart-item{flex-wrap:wrap;gap:14px;}
+}
 </style>
 
 <!-- Header -->
@@ -1509,22 +1538,25 @@
 </div>
 
 <div class="cart-wrap">
-  <div style="display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start;">
+  <h2 class="cart-pagetitle">Tu carrito</h2>
+  <p class="cart-pagesub" id="cart-pagesub">Revisa tus conectores antes de continuar.</p>
+
+  <div class="cart-grid">
 
     <!-- Left: Product list -->
     <div>
       <div id="cart-empty" class="cart-empty" style="display:none;">
-        <div style="font-size:48px;margin-bottom:12px;">&#128722;</div>
-        <div style="font-size:18px;font-weight:700;color:#001F5B;margin-bottom:8px;">Tu carrito está vacío</div>
-        <div style="font-size:13px;margin-bottom:20px;">Usa el configurador o el buscador IA para encontrar tus conectores</div>
-        <button onclick="showPage('cfg')" style="background:#001F5B;color:#fff;border:none;padding:12px 24px;border-radius:8px;cursor:pointer;font-weight:700;">Ir al Configurador</button>
+        <div style="font-size:52px;margin-bottom:16px;">&#128722;</div>
+        <div style="font-size:22px;font-weight:600;color:#1d1d1f;margin-bottom:10px;">Tu carrito está vacío</div>
+        <div style="font-size:15px;margin-bottom:26px;color:#86868b;">Usa el configurador o el buscador para encontrar tus conectores.</div>
+        <button onclick="showPage('cfg')" style="background:#0071e3;color:#fff;border:none;padding:12px 26px;border-radius:980px;cursor:pointer;font-weight:600;font-size:16px;">Ir al configurador</button>
       </div>
       <div id="cart-items-list"></div>
     </div>
 
     <!-- Right: Summary -->
     <div class="cart-summary" id="cart-summary-panel" style="display:none;">
-      <div style="font-size:14px;font-weight:800;color:#001F5B;letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;">Resumen del pedido</div>
+      <div class="cart-summary-title">Resumen</div>
 
       <div class="cart-total-row">
         <span id="cart-item-count">0 productos</span>
@@ -1532,32 +1564,33 @@
       </div>
       <div class="cart-total-row">
         <span>Envío</span>
-        <span style="color:#aaa;">Se calcula en checkout</span>
+        <span style="color:#86868b;">Se calcula al pagar</span>
       </div>
+      <div class="cart-total-divider"></div>
       <div class="cart-total-row final">
-        <span>Total estimado</span>
+        <span>Total</span>
         <span id="cart-total">$0.00</span>
       </div>
 
-      <div id="cart-price-note" style="background:#FFF8E1;border-radius:6px;padding:10px;font-size:11px;color:#795548;margin:12px 0;display:none;">
-        &#9888; Los precios reales se confirman al verificar tu cuenta
+      <div id="cart-price-note" style="background:#fff;border-radius:12px;padding:13px;font-size:12px;color:#86868b;margin:14px 0;display:none;line-height:1.5;">
+        &#9888; Los precios reales se confirman al verificar tu cuenta.
       </div>
 
       <button class="cart-btn primary" onclick="irACheckout()">
-        Proceder al Checkout &#8594;
+        Continuar al pago
       </button>
-      <button class="cart-btn pdf" onclick="descargarCotizacion()" style="margin-top:8px;">
-        &#128196; Descargar Cotización PDF
+      <button class="cart-btn pdf" onclick="descargarCotizacion()">
+        Descargar cotización (PDF)
       </button>
-      <button class="cart-btn secondary" onclick="showPage('cfg')" style="margin-top:8px;">
-        &#43; Agregar más productos
-      </button>
-
-      <button class="cart-btn" onclick="contactarEjecutivo('carrito')" style="margin-top:8px;background:#25D366;color:#fff;">
-        &#128172; Contactar a un ejecutivo
+      <button class="cart-btn secondary" onclick="showPage('cfg')">
+        Agregar más productos
       </button>
 
-      <div id="cart-range-note" style="display:none;background:#EEF5FF;border-radius:6px;padding:10px;font-size:11px;color:#001F5B;margin-top:12px;line-height:1.5;">
+      <button class="cart-btn wa" onclick="contactarEjecutivo('carrito')">
+        Contactar a un ejecutivo
+      </button>
+
+      <div id="cart-range-note" style="display:none;background:#fff;border-radius:12px;padding:13px;font-size:12px;color:#86868b;margin-top:14px;line-height:1.5;">
         &#128274; Estás viendo un <b>rango de precios estimado</b>. Regístrate para ver el precio exacto, disponibilidad de stock y tiempos de entrega.
       </div>
 
@@ -1750,16 +1783,16 @@ window.renderCart = function() {
         + '<div style="font-size:10px;color:#aaa;text-align:right;">' + pd.sub + '</div>';
     }
 
-    // Stock / fabricación: SOLO registrados
+    // Stock / fabricación: SOLO registrados — badges sutiles estilo Apple
     var statusBadge = '';
     if (registered) {
       if (item.status === 'stock') {
-        var pzas = item.qty_available > 0 ? ' \u00b7 ' + item.qty_available + ' pzas' : '';
-        statusBadge = '<span style="background:#D1FAE5;color:#065F46;font-size:9px;padding:2px 8px;border-radius:10px;font-weight:700;">EN STOCK' + pzas + '</span>';
+        var pzas = item.qty_available > 0 ? ' · ' + item.qty_available + ' pzas' : '';
+        statusBadge = '<span style="color:#1d7d34;font-size:12px;font-weight:500;">&#10003; En stock' + pzas + '</span>';
       } else if (item.status === 'fabricado') {
-        statusBadge = '<span style="background:#FFF3CD;color:#856404;font-size:9px;padding:2px 8px;border-radius:10px;font-weight:700;">FABRICADO BAJO PEDIDO</span>';
+        statusBadge = '<span style="color:#9a6a00;font-size:12px;font-weight:500;">Fabricado bajo pedido</span>';
       } else {
-        statusBadge = '<span style="background:#EEF5FF;color:#001F5B;font-size:9px;padding:2px 8px;border-radius:10px;font-weight:700;">FABRICACI\u00d3N ESPECIAL</span>';
+        statusBadge = '<span style="color:#86868b;font-size:12px;font-weight:500;">Fabricación especial</span>';
       }
       statusBadge = '<div style="margin-top:6px;">' + statusBadge + '</div>';
     }
@@ -1769,14 +1802,14 @@ window.renderCart = function() {
         + '<div class="cart-item-code">' + item.at_code + '</div>'
         + '<div class="cart-item-name">' + (item.name || '') + '</div>'
         + statusBadge
+        + '<button class="cart-remove" onclick="cartRemove(\'' + item.at_code + '\')" title="Eliminar">Eliminar</button>'
       + '</div>'
-      + '<div style="display:flex;align-items:center;gap:8px;">'
-        + '<button class="qty-btn" onclick="cartSetQty(\'' + item.at_code + '\',' + (qty-1) + ')">&#8722;</button>'
+      + '<div class="qty-wrap">'
+        + '<button class="qty-btn" onclick="cartSetQty(\'' + item.at_code + '\',' + (qty-1) + ')" aria-label="Menos">&#8722;</button>'
         + '<input class="qty-input" type="number" min="1" value="' + qty + '" onchange="cartSetQty(\'' + item.at_code + '\',this.value)"/>'
-        + '<button class="qty-btn" onclick="cartSetQty(\'' + item.at_code + '\',' + (qty+1) + ')">&#43;</button>'
+        + '<button class="qty-btn" onclick="cartSetQty(\'' + item.at_code + '\',' + (qty+1) + ')" aria-label="Más">&#43;</button>'
       + '</div>'
       + '<div style="text-align:right;min-width:120px;">' + priceDisplay + '</div>'
-      + '<button class="cart-remove" onclick="cartRemove(\'' + item.at_code + '\')" title="Eliminar">&#10005;</button>'
     + '</div>';
   }).join('');
 
@@ -1936,53 +1969,65 @@ cartUpdateBadge();
 <div id="page-checkout" style="display:none;">
 
 <style>
-.co-wrap{max-width:760px;margin:0 auto;padding:24px 16px 60px;}
-.co-steps{display:flex;align-items:center;justify-content:center;gap:0;margin:18px auto 26px;max-width:560px;}
+/* ===== Checkout estilo Apple: limpio, espacioso ===== */
+.co-wrap{max-width:720px;margin:0 auto;padding:44px 22px 80px;}
+/* Barra de pasos minimalista */
+.co-steps{display:flex;align-items:center;justify-content:center;gap:0;margin:8px auto 40px;max-width:520px;}
 .co-step{display:flex;flex-direction:column;align-items:center;flex:1;position:relative;}
-.co-step::before{content:'';position:absolute;top:14px;left:-50%;width:100%;height:2px;background:#dde6f0;z-index:0;}
+.co-step::before{content:'';position:absolute;top:13px;left:-50%;width:100%;height:2px;background:#e8e8ed;z-index:0;}
 .co-step:first-child::before{display:none;}
-.co-step.done::before,.co-step.active::before{background:#001F5B;}
-.co-step-dot{width:28px;height:28px;border-radius:50%;background:#fff;border:2px solid #dde6f0;color:#aab;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;z-index:1;transition:all .25s;}
-.co-step.active .co-step-dot{border-color:#001F5B;background:#001F5B;color:#fff;box-shadow:0 0 0 4px rgba(0,31,91,.12);}
-.co-step.done .co-step-dot{border-color:#001F5B;background:#001F5B;color:#fff;}
-.co-step-lbl{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#aab;margin-top:6px;}
-.co-step.active .co-step-lbl,.co-step.done .co-step-lbl{color:#001F5B;}
-.co-card{background:#fff;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.07);padding:24px;margin-bottom:16px;}
-.co-title{font-family:'Bebas Neue',cursive;font-size:24px;letter-spacing:1.5px;color:#001F5B;margin:0 0 4px;}
-.co-sub{font-size:13px;color:#888;margin:0 0 18px;}
-.co-choice{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.co-choice-card{border:2px solid #dde6f0;border-radius:10px;padding:18px 14px;text-align:center;cursor:pointer;transition:all .2s;background:#fff;}
-.co-choice-card:hover{border-color:#001F5B;transform:translateY(-2px);}
-.co-choice-card.sel{border-color:#001F5B;background:#F4F8FF;box-shadow:0 0 0 3px rgba(0,31,91,.08);}
-.co-choice-ico{font-size:26px;margin-bottom:6px;}
-.co-choice-t{font-weight:800;color:#001F5B;font-size:14px;}
-.co-choice-d{font-size:11px;color:#888;margin-top:3px;}
-.co-ship{border:2px solid #dde6f0;border-radius:10px;padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;margin-bottom:10px;transition:all .2s;background:#fff;}
-.co-ship:hover{border-color:#001F5B;}
-.co-ship.sel{border-color:#001F5B;background:#F4F8FF;box-shadow:0 0 0 3px rgba(0,31,91,.08);}
-.co-ship-radio{width:18px;height:18px;border-radius:50%;border:2px solid #c5d0e0;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
-.co-ship.sel .co-ship-radio{border-color:#001F5B;}
-.co-ship.sel .co-ship-radio::after{content:'';width:9px;height:9px;border-radius:50%;background:#001F5B;}
-.co-ship-name{font-weight:800;color:#001F5B;font-size:14px;}
-.co-ship-time{font-size:11px;color:#888;}
-.co-ship-price{margin-left:auto;font-weight:800;color:#001F5B;white-space:nowrap;}
-.co-nav{display:flex;gap:10px;margin-top:8px;}
-.co-btn{flex:1;padding:14px;border:none;border-radius:8px;cursor:pointer;font-weight:800;font-size:14px;letter-spacing:1px;font-family:'Barlow',sans-serif;transition:background .2s;}
-.co-btn.primary{background:#001F5B;color:#fff;}
-.co-btn.primary:hover{background:#003087;}
-.co-btn.primary:disabled{background:#b8c4d6;cursor:not-allowed;}
-.co-btn.ghost{background:#f0f2f6;color:#445;flex:0 0 auto;padding:14px 20px;}
-.co-err{font-size:11px;color:#C8102E;margin-top:4px;display:none;}
-.co-sum-row{display:flex;justify-content:space-between;padding:7px 0;font-size:13px;color:#555;border-bottom:1px solid #f0f0f0;}
-.co-sum-row.final{font-size:17px;font-weight:800;color:#001F5B;border-bottom:none;padding-top:12px;}
-.co-sum-block{background:#FAFBFF;border:1px solid #e8edf5;border-radius:8px;padding:12px 14px;margin-bottom:10px;position:relative;}
-.co-sum-block h4{margin:0 0 6px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#888;}
-.co-sum-block p{margin:0;font-size:13px;color:#223;line-height:1.5;}
-.co-edit{position:absolute;top:10px;right:12px;font-size:11px;color:#001F5B;font-weight:700;cursor:pointer;text-decoration:underline;background:none;border:none;font-family:inherit;}
-.co-toggle{display:flex;gap:10px;margin-bottom:14px;}
-.co-toggle button{flex:1;padding:12px;border:2px solid #dde6f0;border-radius:8px;background:#fff;cursor:pointer;font-weight:800;font-size:13px;color:#667;font-family:'Barlow',sans-serif;transition:all .2s;}
-.co-toggle button.sel{border-color:#001F5B;background:#001F5B;color:#fff;}
-@media(max-width:640px){.co-choice{grid-template-columns:1fr;}}
+.co-step.done::before,.co-step.active::before{background:#0071e3;}
+.co-step-dot{width:28px;height:28px;border-radius:50%;background:#fff;border:2px solid #d2d2d7;color:#aeaeb2;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;z-index:1;transition:all .25s;}
+.co-step.active .co-step-dot{border-color:#0071e3;background:#0071e3;color:#fff;}
+.co-step.done .co-step-dot{border-color:#0071e3;background:#0071e3;color:#fff;}
+.co-step-lbl{font-size:11px;font-weight:500;letter-spacing:.2px;text-transform:none;color:#aeaeb2;margin-top:8px;}
+.co-step.active .co-step-lbl,.co-step.done .co-step-lbl{color:#1d1d1f;}
+/* Tarjeta blanca limpia */
+.co-card{background:#fff;border:1px solid #e8e8ed;border-radius:18px;box-shadow:none;padding:32px 30px;margin-bottom:18px;}
+.co-title{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:30px;letter-spacing:.5px;color:#1d1d1f;margin:0 0 4px;}
+.co-sub{font-size:15px;color:#86868b;margin:0 0 24px;}
+/* Selección invitado/cuenta */
+.co-choice{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.co-choice-card{border:1.5px solid #e8e8ed;border-radius:14px;padding:28px 18px;text-align:center;cursor:pointer;transition:all .2s;background:#fff;}
+.co-choice-card:hover{border-color:#0071e3;}
+.co-choice-card.sel{border-color:#0071e3;background:#f5f9ff;box-shadow:0 0 0 3px rgba(0,113,227,.1);}
+.co-choice-ico{font-size:28px;margin-bottom:8px;}
+.co-choice-t{font-weight:600;color:#1d1d1f;font-size:16px;}
+.co-choice-d{font-size:12px;color:#86868b;margin-top:4px;line-height:1.4;}
+/* Opciones de envío */
+.co-ship{border:1.5px solid #e8e8ed;border-radius:14px;padding:18px;display:flex;align-items:center;gap:14px;cursor:pointer;margin-bottom:12px;transition:all .2s;background:#fff;}
+.co-ship:hover{border-color:#0071e3;}
+.co-ship.sel{border-color:#0071e3;background:#f5f9ff;box-shadow:0 0 0 3px rgba(0,113,227,.1);}
+.co-ship-radio{width:20px;height:20px;border-radius:50%;border:2px solid #c5c5cc;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:border-color .2s;}
+.co-ship.sel .co-ship-radio{border-color:#0071e3;}
+.co-ship.sel .co-ship-radio::after{content:'';width:10px;height:10px;border-radius:50%;background:#0071e3;}
+.co-ship-name{font-weight:600;color:#1d1d1f;font-size:15px;}
+.co-ship-time{font-size:12px;color:#86868b;margin-top:2px;}
+.co-ship-price{margin-left:auto;font-weight:600;color:#1d1d1f;white-space:nowrap;font-size:15px;}
+/* Navegación con botones pill */
+.co-nav{display:flex;gap:12px;margin-top:8px;}
+.co-btn{flex:1;padding:14px;border:none;border-radius:980px;cursor:pointer;font-weight:600;font-size:16px;letter-spacing:0;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;transition:background .2s,transform .1s;}
+.co-btn:active{transform:scale(.985);}
+.co-btn.primary{background:#0071e3;color:#fff;}
+.co-btn.primary:hover{background:#0077ed;}
+.co-btn.primary:disabled{background:#c5dafc;cursor:not-allowed;}
+.co-btn.ghost{background:#f5f5f7;color:#1d1d1f;flex:0 0 auto;padding:14px 24px;}
+.co-btn.ghost:hover{background:#ececf0;}
+.co-err{font-size:12px;color:#e5342b;margin-top:5px;display:none;}
+/* Resumen */
+.co-sum-row{display:flex;justify-content:space-between;padding:9px 0;font-size:15px;color:#1d1d1f;}
+.co-sum-row span:first-child{color:#86868b;}
+.co-sum-row.final{font-size:20px;font-weight:600;color:#1d1d1f;border-top:1px solid #e8e8ed;padding-top:14px;margin-top:6px;}
+.co-sum-row.final span:first-child{color:#1d1d1f;}
+.co-sum-block{background:#f5f5f7;border:none;border-radius:14px;padding:16px 18px;margin-bottom:12px;position:relative;}
+.co-sum-block h4{margin:0 0 8px;font-size:11px;letter-spacing:.3px;text-transform:uppercase;color:#86868b;font-weight:600;}
+.co-sum-block p{margin:0;font-size:14px;color:#1d1d1f;line-height:1.5;}
+.co-edit{position:absolute;top:14px;right:16px;font-size:13px;color:#0071e3;font-weight:400;cursor:pointer;text-decoration:none;background:none;border:none;font-family:inherit;}
+.co-edit:hover{text-decoration:underline;}
+.co-toggle{display:flex;gap:10px;margin-bottom:16px;}
+.co-toggle button{flex:1;padding:13px;border:1.5px solid #e8e8ed;border-radius:12px;background:#fff;cursor:pointer;font-weight:600;font-size:14px;color:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;transition:all .2s;}
+.co-toggle button.sel{border-color:#0071e3;background:#0071e3;color:#fff;}
+@media(max-width:640px){.co-choice{grid-template-columns:1fr;}.co-title{font-size:26px;}}
 </style>
 
 <!-- Header -->
@@ -2011,14 +2056,12 @@ cartUpdateBadge();
       <div class="co-sub">Con cuenta guardas tu historial y datos de facturaci&#243;n. Como invitado solo necesitamos tus datos de contacto.</div>
       <div class="co-choice">
         <div class="co-choice-card" id="co-opt-login" onclick="coChooseAccount('login')">
-          <div class="co-choice-ico">&#128100;</div>
           <div class="co-choice-t">Tengo cuenta</div>
-          <div class="co-choice-d">Inicia sesi&#243;n y prellenamos tus datos</div>
+          <div class="co-choice-d">Inicia sesión y prellenamos tus datos</div>
         </div>
         <div class="co-choice-card" id="co-opt-guest" onclick="coChooseAccount('guest')">
-          <div class="co-choice-ico">&#9889;</div>
           <div class="co-choice-t">Comprar como invitado</div>
-          <div class="co-choice-d">R&#225;pido, sin registro</div>
+          <div class="co-choice-d">Rápido, sin registro</div>
         </div>
       </div>
     </div>
@@ -2196,7 +2239,7 @@ cartUpdateBadge();
         <button class="co-btn ghost" onclick="coBack(4)">&#8592;</button>
         <button class="co-btn primary" onclick="coConfirmar()">Continuar al pago &#8594;</button>
       </div>
-      <div style="text-align:center;margin-top:14px;font-size:11px;color:#aaa;">&#128274; Tus datos est&#225;n protegidos &nbsp;|&nbsp; A&#250;n no se realiza ning&#250;n cargo</div>
+      <div style="text-align:center;margin-top:14px;font-size:11px;color:#aaa;">Tus datos están protegidos &nbsp;|&nbsp; Aún no se realiza ningún cargo</div>
     </div>
   </div>
 
@@ -2562,38 +2605,38 @@ window.coConfirmar = function(){
 
 <style>
 .pay-wrap{max-width:640px;margin:0 auto;padding:24px 16px 60px;}
-.pay-card{background:#fff;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.07);padding:24px;margin-bottom:16px;}
-.pay-title{font-family:'Bebas Neue',cursive;font-size:24px;letter-spacing:1.5px;color:#001F5B;margin:0 0 4px;}
-.pay-sub{font-size:13px;color:#888;margin:0 0 18px;}
-.pay-folio{display:inline-block;background:#EEF5FF;color:#001F5B;font-weight:800;font-size:13px;padding:4px 12px;border-radius:20px;font-family:monospace;}
-.pay-method{border:2px solid #dde6f0;border-radius:10px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;margin-bottom:12px;transition:all .2s;background:#fff;}
-.pay-method:hover{border-color:#001F5B;}
-.pay-method.sel{border-color:#001F5B;background:#F4F8FF;box-shadow:0 0 0 3px rgba(0,31,91,.08);}
+.pay-card{background:#fff;border:1px solid #e8e8ed;border-radius:18px;box-shadow:none;padding:30px;margin-bottom:18px;}
+.pay-title{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:24px;font-weight:600;letter-spacing:-.3px;color:#1d1d1f;margin:0 0 4px;}
+.pay-sub{font-size:15px;color:#86868b;margin:0 0 22px;line-height:1.5;}
+.pay-folio{display:inline-block;background:#f5f5f7;color:#1d1d1f;font-weight:500;font-size:13px;padding:5px 14px;border-radius:980px;font-family:'SF Mono',monospace;}
+.pay-method{border:1.5px solid #e8e8ed;border-radius:14px;padding:18px;display:flex;align-items:center;gap:14px;cursor:pointer;margin-bottom:12px;transition:all .2s;background:#fff;}
+.pay-method:hover{border-color:#0071e3;}
+.pay-method.sel{border-color:#0071e3;background:#f5f9ff;box-shadow:0 0 0 3px rgba(0,113,227,.1);}
 .pay-method-ico{font-size:28px;width:40px;text-align:center;flex-shrink:0;}
-.pay-method-t{font-weight:800;color:#001F5B;font-size:15px;}
-.pay-method-d{font-size:12px;color:#888;margin-top:2px;}
+.pay-method-t{font-weight:600;color:#1d1d1f;font-size:16px;}
+.pay-method-d{font-size:13px;color:#86868b;margin-top:3px;}
 .pay-method-radio{width:20px;height:20px;border-radius:50%;border:2px solid #c5d0e0;flex-shrink:0;margin-left:auto;display:flex;align-items:center;justify-content:center;}
-.pay-method.sel .pay-method-radio{border-color:#001F5B;}
-.pay-method.sel .pay-method-radio::after{content:'';width:10px;height:10px;border-radius:50%;background:#001F5B;}
-.pay-panel{border:1px solid #e8edf5;border-radius:10px;padding:18px;margin-bottom:14px;background:#FAFBFF;}
+.pay-method.sel .pay-method-radio{border-color:#0071e3;}
+.pay-method.sel .pay-method-radio::after{content:'';width:10px;height:10px;border-radius:50%;background:#0071e3;}
+.pay-panel{border:1px solid #e8e8ed;border-radius:14px;padding:20px;margin-bottom:14px;background:#fff;}
 .pay-bank-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eef1f6;font-size:14px;}
 .pay-bank-row:last-child{border-bottom:none;}
-.pay-bank-lbl{color:#888;}
-.pay-bank-val{font-weight:700;color:#223;font-family:monospace;}
-.pay-copy{background:none;border:1px solid #c5d0e0;border-radius:5px;font-size:10px;padding:2px 8px;cursor:pointer;color:#001F5B;margin-left:8px;font-weight:700;}
-.pay-btn{width:100%;padding:15px;border:none;border-radius:8px;cursor:pointer;font-weight:800;font-size:15px;letter-spacing:.5px;font-family:'Barlow',sans-serif;transition:background .2s;}
+.pay-bank-lbl{color:#86868b;}
+.pay-bank-val{font-weight:600;color:#1d1d1f;font-family:'SF Mono',monospace;}
+.pay-copy{background:none;border:1px solid #d2d2d7;border-radius:980px;font-size:11px;padding:3px 12px;cursor:pointer;color:#0071e3;margin-left:8px;font-weight:500;}
+.pay-btn{width:100%;padding:15px;border:none;border-radius:980px;cursor:pointer;font-weight:600;font-size:16px;letter-spacing:0;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;transition:background .2s;}
 .pay-btn.mp{background:#009EE3;color:#fff;}
-.pay-opt-chip{display:inline-block;background:#f0f5fc;color:#001F5B;font-size:12px;font-weight:600;padding:6px 12px;border-radius:20px;border:1px solid #e0e8f2;}
+.pay-opt-chip{display:inline-block;background:#f5f5f7;color:#1d1d1f;font-size:13px;font-weight:500;padding:7px 14px;border-radius:980px;border:none;}
 .pay-btn.mp:hover{background:#0084c7;}
 .pay-btn.mp:disabled{background:#9fd4ec;cursor:not-allowed;}
-.pay-btn.transfer{background:#001F5B;color:#fff;}
-.pay-btn.transfer:hover{background:#003087;}
-.pay-upload{border:2px dashed #c5d0e0;border-radius:8px;padding:18px;text-align:center;cursor:pointer;background:#fff;font-size:13px;color:#667;margin:12px 0;display:block;}
-.pay-upload:hover{border-color:#001F5B;}
-.pay-total-box{background:#001F5B;color:#fff;border-radius:10px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
-.pay-total-box .lbl{font-size:12px;opacity:.8;letter-spacing:1px;text-transform:uppercase;}
-.pay-total-box .amt{font-size:22px;font-weight:900;}
-.pay-warn{background:#FFF8E1;border-radius:8px;padding:12px 14px;font-size:12px;color:#795548;line-height:1.6;margin-top:8px;}
+.pay-btn.transfer{background:#0071e3;color:#fff;}
+.pay-btn.transfer:hover{background:#0077ed;}
+.pay-upload{border:1.5px dashed #d2d2d7;border-radius:14px;padding:18px;text-align:center;cursor:pointer;background:#fff;font-size:14px;color:#86868b;margin:12px 0;display:block;}
+.pay-upload:hover{border-color:#0071e3;}
+.pay-total-box{background:#f5f5f7;color:#1d1d1f;border-radius:14px;padding:20px 22px;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.pay-total-box .lbl{font-size:15px;opacity:1;color:#86868b;letter-spacing:0;text-transform:none;}
+.pay-total-box .amt{font-size:24px;font-weight:600;letter-spacing:-.3px;}
+.pay-warn{background:#fff8e6;border-radius:12px;padding:14px 16px;font-size:13px;color:#86702a;line-height:1.6;margin-top:8px;}
 </style>
 
 <!-- Header -->
@@ -2617,9 +2660,9 @@ window.coConfirmar = function(){
       <span class="amt" id="pay-total">$0.00 MXN</span>
     </div>
     <div id="pay-guest-warn" class="pay-warn" style="display:none;">
-      &#9888; Tu total es un <b>estimado por rango</b> porque a&#250;n no tienes cuenta verificada. Para pagar en l&#237;nea necesitamos cerrar el precio:
+      Tu total es un <b>estimado por rango</b> porque a&#250;n no tienes cuenta verificada. Para pagar en l&#237;nea necesitamos cerrar el precio:
       reg&#237;strate o pide a un ejecutivo que confirme tu cotizaci&#243;n. Mientras, puedes <b>contactar a un ejecutivo</b> para concretar.
-      <button onclick="contactarEjecutivo('pantalla de pago')" style="display:block;margin-top:10px;background:#25D366;color:#fff;border:none;padding:10px;border-radius:6px;width:100%;font-weight:700;cursor:pointer;">&#128172; Contactar a un ejecutivo</button>
+      <button onclick="contactarEjecutivo('pantalla de pago')" style="display:block;margin-top:12px;background:#25D366;color:#fff;border:none;padding:11px;border-radius:980px;width:100%;font-weight:600;cursor:pointer;">Contactar a un ejecutivo</button>
     </div>
   </div>
 
@@ -2632,9 +2675,9 @@ window.coConfirmar = function(){
         Completa tu pago de forma segura. Puedes pagar con:
       </div>
       <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:0 0 16px;">
-        <span class="pay-opt-chip">&#128179; Tarjeta crédito/débito</span>
-        <span class="pay-opt-chip">&#127974; Transferencia SPEI</span>
-        <span class="pay-opt-chip">&#127978; OXXO y efectivo</span>
+        <span class="pay-opt-chip">Tarjeta crédito/débito</span>
+        <span class="pay-opt-chip">Transferencia SPEI</span>
+        <span class="pay-opt-chip">OXXO y efectivo</span>
       </div>
 
       <!-- Aquí se renderiza el formulario de pago de Mercado Pago (Payment Brick), dentro de la página -->
@@ -2644,18 +2687,18 @@ window.coConfirmar = function(){
       <div id="mp-brick-status" style="display:none;text-align:center;padding:16px;font-size:14px;"></div>
 
       <!-- Opción de pago por transferencia SPEI (flujo aparte: genera una CLABE) -->
-      <div id="spei-wrap" style="margin-top:18px;border-top:1px solid #e5e7eb;padding-top:16px;">
-        <div style="text-align:center;font-size:13px;color:#555;margin-bottom:10px;">
+      <div id="spei-wrap" style="margin-top:20px;border-top:1px solid #e8e8ed;padding-top:18px;">
+        <div style="text-align:center;font-size:14px;color:#86868b;margin-bottom:12px;">
           ¿Prefieres pagar por transferencia bancaria?
         </div>
-        <button id="btn-spei" onclick="window.pagarConSPEI()" style="width:100%;background:#fff;border:2px solid #009EE3;color:#009EE3;font-weight:700;padding:13px;border-radius:8px;cursor:pointer;font-size:15px;">
-          &#127974; Pagar con transferencia SPEI
+        <button id="btn-spei" onclick="window.pagarConSPEI()" style="width:100%;background:#fff;border:1.5px solid #0071e3;color:#0071e3;font-weight:600;padding:14px;border-radius:980px;cursor:pointer;font-size:16px;">
+          Pagar con transferencia SPEI
         </button>
       </div>
       <!-- Aquí se muestran la CLABE e instrucciones de SPEI -->
       <div id="spei-result" style="display:none;margin-top:16px;"></div>
 
-      <div style="font-size:11px;color:#aaa;margin-top:12px;text-align:center;">&#128274; Conexión cifrada · Tus datos están protegidos por Mercado Pago</div>
+      <div style="font-size:11px;color:#aaa;margin-top:12px;text-align:center;">Conexión cifrada · Tus datos están protegidos por Mercado Pago</div>
     </div>
   </div>
 
@@ -2671,7 +2714,7 @@ window.coConfirmar = function(){
     <div class="pay-badges">
       <span class="pb">VISA</span><span class="pb">Mastercard</span><span class="pb">AMEX</span><span class="pb">SPEI</span><span class="pb">Mercado Pago</span>
     </div>
-    <span>&#128274; Adaptekk no almacena los datos de tu tarjeta &#183; procesado por Mercado Pago</span>
+    <span>Adaptekk no almacena los datos de tu tarjeta · procesado por Mercado Pago</span>
   </div>
 </div>
 </div>
@@ -2681,38 +2724,38 @@ window.coConfirmar = function(){
 ═══════════════════════ -->
 <div id="page-gracias" style="display:none;">
   <div style="max-width:640px;margin:0 auto;padding:40px 16px 60px;">
-    <div style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:32px 24px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,.06);">
-      <div id="gracias-icon" style="font-size:56px;margin-bottom:8px;">&#9989;</div>
-      <h2 id="gracias-titulo" style="font-family:'Bebas Neue',sans-serif;font-size:30px;color:#001F5B;margin:6px 0;letter-spacing:.5px;">¡GRACIAS POR TU COMPRA!</h2>
-      <p id="gracias-sub" style="font-size:14px;color:#555;margin:0 0 20px;line-height:1.5;">Tu pedido fue confirmado. Te enviamos un correo con todos los detalles.</p>
+    <div style="background:#fff;border:1px solid #e8e8ed;border-radius:18px;padding:48px 36px;text-align:center;box-shadow:none;">
+      <div id="gracias-icon" style="font-size:15px;font-weight:600;color:#1d7d34;margin-bottom:14px;letter-spacing:0;">Pago confirmado</div>
+      <h2 id="gracias-titulo" style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:34px;font-weight:600;color:#1d1d1f;margin:6px 0;letter-spacing:-.5px;">Gracias por tu compra</h2>
+      <p id="gracias-sub" style="font-size:17px;color:#86868b;margin:8px 0 32px;line-height:1.5;">Tu pedido fue confirmado. Te enviamos un correo con todos los detalles.</p>
 
-      <div style="background:#f7f9fc;border-radius:10px;padding:18px;text-align:left;margin-bottom:20px;">
-        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #eef;">
-          <span style="color:#888;font-size:13px;">Número de pedido</span>
-          <span id="gracias-folio" style="font-weight:700;color:#001F5B;font-size:14px;">—</span>
+      <div style="background:#f5f5f7;border-radius:14px;padding:8px 20px;text-align:left;margin-bottom:28px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid #e2e2e7;">
+          <span style="color:#86868b;font-size:15px;">Número de pedido</span>
+          <span id="gracias-folio" style="font-weight:600;color:#1d1d1f;font-size:15px;">—</span>
         </div>
-        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #eef;">
-          <span style="color:#888;font-size:13px;">Total</span>
-          <span id="gracias-total" style="font-weight:700;color:#001F5B;font-size:14px;">—</span>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid #e2e2e7;">
+          <span style="color:#86868b;font-size:15px;">Total</span>
+          <span id="gracias-total" style="font-weight:600;color:#1d1d1f;font-size:15px;">—</span>
         </div>
-        <div style="display:flex;justify-content:space-between;padding:6px 0;">
-          <span style="color:#888;font-size:13px;">Estado</span>
-          <span id="gracias-estado" style="font-weight:700;font-size:14px;">—</span>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;">
+          <span style="color:#86868b;font-size:15px;">Estado</span>
+          <span id="gracias-estado" style="font-weight:600;font-size:15px;">—</span>
         </div>
       </div>
 
-      <div id="gracias-extra" style="font-size:13px;color:#555;margin-bottom:20px;line-height:1.5;"></div>
+      <div id="gracias-extra" style="font-size:15px;color:#86868b;margin-bottom:28px;line-height:1.5;"></div>
 
-      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;">
-        <button onclick="window.descargarComprobantePDF()" style="background:#C8102E;color:#fff;border:none;padding:13px 24px;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px;">&#11015; Descargar comprobante (PDF)</button>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:14px;">
+        <button onclick="window.descargarComprobantePDF()" style="background:#0071e3;color:#fff;border:none;padding:13px 28px;border-radius:980px;font-weight:600;cursor:pointer;font-size:16px;">Descargar comprobante</button>
       </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
-        <button onclick="showPage('home')" style="background:#001F5B;color:#fff;border:none;padding:13px 24px;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px;">Volver al inicio</button>
-        <button onclick="showPage('cfg')" style="background:#fff;color:#001F5B;border:2px solid #001F5B;padding:13px 24px;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px;">Seguir comprando</button>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;align-items:center;">
+        <button onclick="showPage('home')" style="background:none;color:#0071e3;border:none;padding:8px 12px;font-weight:400;cursor:pointer;font-size:16px;">Volver al inicio</button>
+        <button onclick="showPage('cfg')" style="background:none;color:#0071e3;border:none;padding:8px 12px;font-weight:400;cursor:pointer;font-size:16px;">Seguir comprando</button>
       </div>
 
-      <div style="margin-top:22px;font-size:12px;color:#aaa;">
-        ¿Dudas con tu pedido? <a href="#" onclick="contactarEjecutivo('post-compra');return false;" style="color:#25D366;font-weight:700;text-decoration:none;">Contáctanos por WhatsApp</a>
+      <div style="margin-top:28px;font-size:14px;color:#86868b;">
+        ¿Dudas con tu pedido? <a href="#" onclick="contactarEjecutivo('post-compra');return false;" style="color:#0071e3;font-weight:400;text-decoration:none;">Contáctanos por WhatsApp</a>
       </div>
     </div>
   </div>
@@ -2955,12 +2998,12 @@ window.mostrarPaginaGracias = function(info){
 
   if (info.estado === 'pendiente' || info.metodo === 'spei') {
     // Pago pendiente (SPEI/OXXO): esperando que se acredite
-    if (icon) icon.innerHTML = '&#8987;';
-    if (titulo) titulo.textContent = '¡PEDIDO REGISTRADO!';
+    if (icon){ icon.textContent = 'Esperando pago'; icon.style.color = '#9a6a00'; }
+    if (titulo) titulo.textContent = 'Pedido registrado';
     if (sub) sub.textContent = 'Tu pedido quedó reservado. Una vez que realices tu transferencia, espera unos minutos en esta página: en cuanto el banco confirme tu pago, esto se actualizará solo.';
-    if (estado){ estado.textContent = 'Esperando pago'; estado.style.color = '#b8860b'; }
-    if (extra) extra.innerHTML = '<div style="background:#f0f9ff;border:1px solid #009EE3;border-radius:8px;padding:12px;font-size:13px;color:#007bb5;">'
-      + '&#8987; <b>Esperando confirmación de tu pago...</b><br>Si ya transferiste, no cierres esta página. El estado se actualizará automáticamente al acreditarse (puede tardar unos minutos).'
+    if (estado){ estado.textContent = 'Esperando pago'; estado.style.color = '#9a6a00'; }
+    if (extra) extra.innerHTML = '<div style="background:#f5f9ff;border:1px solid #cfe3ff;border-radius:12px;padding:14px;font-size:14px;color:#0071e3;">'
+      + '<b>Esperando confirmación de tu pago.</b><br>Si ya transferiste, no cierres esta página. El estado se actualizará automáticamente al acreditarse (puede tardar unos minutos).'
       + '</div>';
     // Mantener el sondeo activo en esta pantalla (por si no venía corriendo)
     if (info.folio && !window._sondeoPago) {
@@ -2968,11 +3011,11 @@ window.mostrarPaginaGracias = function(info){
     }
   } else {
     // Pago aprobado
-    if (icon) icon.innerHTML = '&#9989;';
-    if (titulo) titulo.textContent = '¡GRACIAS POR TU COMPRA!';
+    if (icon){ icon.textContent = 'Pago confirmado'; icon.style.color = '#1d7d34'; }
+    if (titulo) titulo.textContent = 'Gracias por tu compra';
     if (sub) sub.textContent = 'Tu pago fue aprobado y tu pedido está confirmado. Te enviamos un correo con todos los detalles.';
-    if (estado){ estado.textContent = 'Pagado y confirmado'; estado.style.color = '#1a7d34'; }
-    if (extra) extra.innerHTML = 'Prepararemos tu pedido y te mantendremos informado del envío. ¡Gracias por confiar en Adaptekk!';
+    if (estado){ estado.textContent = 'Pagado y confirmado'; estado.style.color = '#1d7d34'; }
+    if (extra) extra.innerHTML = 'Prepararemos tu pedido y te mantendremos informado del envío.';
     // Si había un sondeo corriendo, detenerlo (ya se confirmó)
     if (window._sondeoPago) { clearInterval(window._sondeoPago); window._sondeoPago = null; }
   }
@@ -3125,7 +3168,7 @@ window.pagarConSPEI = async function(){
 
       // Construir el bloque de datos de transferencia DENTRO de la página
       var html = '<div style="background:#e8f6fc;border:1px solid #009EE3;border-radius:10px;padding:20px;">'
-        + '<div style="text-align:center;font-size:32px;">&#127974;</div>'
+        + ''
         + '<div style="text-align:center;font-size:16px;font-weight:700;color:#007bb5;margin:6px 0 4px;">Datos para tu transferencia SPEI</div>'
         + '<div style="text-align:center;font-size:13px;color:#444;margin-bottom:6px;">Pedido <b>' + (data.folio||'') + '</b></div>'
         + '<div style="background:#fff3cd;border:1px solid #f0ad4e;border-radius:8px;padding:12px;margin-bottom:12px;text-align:center;">'
@@ -3161,7 +3204,7 @@ window.pagarConSPEI = async function(){
         html += '<div style="text-align:center;font-size:13px;color:#444;">Tu pedido quedó reservado. Un ejecutivo te enviará los datos de transferencia.</div>';
       }
       // Botón para descargar el comprobante del pedido en PDF
-      html += '<div style="text-align:center;margin-top:16px;"><button onclick="window.descargarComprobantePDF()" style="background:#C8102E;color:#fff;border:none;padding:11px 20px;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px;">&#11015; Descargar comprobante (PDF)</button></div>';
+      html += '<div style="text-align:center;margin-top:16px;"><button onclick="window.descargarComprobantePDF()" style="background:#0071e3;color:#fff;border:none;padding:12px 24px;border-radius:980px;font-weight:600;cursor:pointer;font-size:15px;">Descargar comprobante</button></div>';
       // Aviso de espera de confirmación automática
       html += '<div id="spei-esperando" style="text-align:center;margin-top:14px;font-size:12px;color:#007bb5;background:#f0f9ff;border-radius:8px;padding:10px;">&#8987; Esperando la confirmaci&#243;n de tu pago... Esta p&#225;gina se actualizar&#225; autom&#225;ticamente cuando se acredite. No la cierres.</div>';
       html += '</div>';
@@ -3184,12 +3227,12 @@ window.pagarConSPEI = async function(){
       // Cuando se confirme, la página cambia sola a la pantalla de "¡Pago confirmado!".
       window.iniciarSondeoPago(data.folio, data.monto);
     } else {
-      if (btn){ btn.disabled=false; btn.innerHTML='&#127974; Pagar con transferencia SPEI'; }
+      if (btn){ btn.disabled=false; btn.innerHTML='Pagar con transferencia SPEI'; }
       resultBox.innerHTML = '<div style="background:#fdecef;border:1px solid #C8102E;border-radius:10px;padding:16px;text-align:center;color:#C8102E;font-size:13px;">No se pudo generar la transferencia. ' + ((data && data.error) ? data.error : '') + '</div>';
     }
   } catch(e) {
     if (typeof console!=='undefined') console.error('pagarConSPEI:', e);
-    if (btn){ btn.disabled=false; btn.innerHTML='&#127974; Pagar con transferencia SPEI'; }
+    if (btn){ btn.disabled=false; btn.innerHTML='Pagar con transferencia SPEI'; }
     resultBox.innerHTML = '<div style="background:#fdecef;border:1px solid #C8102E;border-radius:10px;padding:16px;text-align:center;color:#C8102E;font-size:13px;">Error de conexión. Intenta de nuevo.</div>';
   }
 };
@@ -3238,17 +3281,17 @@ window.iniciarSondeoPago = function(folio, monto){
 
         // Actualizar el campo Estado en vivo: "Esperando pago" → "Pago confirmado"
         var estEl = document.getElementById('gracias-estado');
-        if (estEl){ estEl.textContent = 'Pago confirmado'; estEl.style.color = '#1a7d34'; }
-        // Cambiar el ícono y título a confirmado
-        var icoEl = document.getElementById('gracias-icon'); if (icoEl) icoEl.innerHTML = '&#9989;';
-        var titEl = document.getElementById('gracias-titulo'); if (titEl) titEl.textContent = '¡GRACIAS POR TU COMPRA!';
+        if (estEl){ estEl.textContent = 'Pago confirmado'; estEl.style.color = '#1d7d34'; }
+        // Cambiar el encabezado y título a confirmado
+        var icoEl = document.getElementById('gracias-icon'); if (icoEl){ icoEl.textContent = 'Pago confirmado'; icoEl.style.color = '#1d7d34'; }
+        var titEl = document.getElementById('gracias-titulo'); if (titEl) titEl.textContent = 'Gracias por tu compra';
         var subEl = document.getElementById('gracias-sub'); if (subEl) subEl.textContent = 'Tu pago fue confirmado y tu pedido está en proceso. Te enviamos un correo con los detalles.';
         // Reemplazar el recuadro de espera por uno de confirmado (sin botón)
         var extraEl = document.getElementById('gracias-extra');
-        if (extraEl) extraEl.innerHTML = '<div style="background:#eafbef;border:1px solid #25a244;border-radius:8px;padding:12px;font-size:13px;color:#1a7d34;">&#9989; <b>¡Pago confirmado!</b> Prepararemos tu pedido y te avisaremos del envío. Ya puedes cerrar esta página o seguir comprando.</div>';
+        if (extraEl) extraEl.innerHTML = '<div style="background:#f0faf2;border:1px solid #c4eccf;border-radius:12px;padding:14px;font-size:14px;color:#1d7d34;"><b>Pago confirmado.</b> Prepararemos tu pedido y te avisaremos del envío. Ya puedes cerrar esta página o seguir comprando.</div>';
 
         // Toast UNA sola vez
-        if (typeof showToast==='function') showToast('\u2705 \u00a1Tu pago fue confirmado!');
+        if (typeof showToast==='function') showToast('Tu pago fue confirmado');
       }
     } catch(e){ /* reintentar */ }
   }
@@ -4456,21 +4499,21 @@ function renderStep(){
   function buildCol(ei){
     var ext=exts[ei]||{},ltr=LTR[ei],done=ext.std&&ext.gen&&ext.med;
     var col=document.createElement('div');
-    col.style.cssText='border:2px solid '+(done?'#25a244':'#001F5B')+';border-radius:10px;overflow:hidden;';
+    col.style.cssText='border:1px solid '+(done?'#c4eccf':'#e8e8ed')+';border-radius:16px;overflow:hidden;';
     var hdr=document.createElement('div');
-    hdr.style.cssText='padding:8px 12px;background:'+(done?'#25a244':'#001F5B')+';display:flex;align-items:center;gap:8px;';
-    hdr.innerHTML='<span style="width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.25);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;">'+ltr+'</span>'
-      +'<span style="font-family:\'Barlow Condensed\',sans-serif;font-size:14px;font-weight:700;color:#fff;">EXTREMO '+ltr+'</span>'
-      +(done?'<span style="margin-left:auto;color:#fff;">&#10003;</span>':'');
+    hdr.style.cssText='padding:16px 18px;background:'+(done?'#f0faf2':'#f5f5f7')+';display:flex;align-items:center;gap:10px;';
+    hdr.innerHTML='<span style="width:22px;height:22px;border-radius:50%;background:'+(done?'#1d7d34':'#0071e3')+';color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;">'+ltr+'</span>'
+      +'<span style="font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:16px;font-weight:600;color:#1d1d1f;letter-spacing:-.2px;">Extremo '+ltr+'</span>'
+      +(done?'<span style="margin-left:auto;color:#1d7d34;font-size:13px;font-weight:600;">Listo</span>':'');
     col.appendChild(hdr);
-    var bd=document.createElement('div');bd.style.cssText='padding:10px;background:#fff;';
+    var bd=document.createElement('div');bd.style.cssText='padding:18px;background:#fff;';
     // ESTANDAR
     var s1=document.createElement('div');s1.style.cssText='margin-bottom:8px;';
-    s1.innerHTML='<div style="font-size:8px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:5px;">Estándar</div>';
+    s1.innerHTML='<div style="font-size:12px;font-weight:600;letter-spacing:0;text-transform:none;color:#86868b;margin-bottom:8px;">Estándar</div>';
     if(ext.std){
       var sv=document.createElement('div');
-      sv.style.cssText='display:flex;align-items:center;justify-content:space-between;background:#EEF5FF;border:1.5px solid #001F5B;border-radius:5px;padding:6px 9px;';
-      sv.innerHTML='<span style="font-family:\'Barlow Condensed\',sans-serif;font-size:15px;font-weight:700;color:#001F5B;">'+ext.std.label+'</span>';
+      sv.style.cssText='display:flex;align-items:center;justify-content:space-between;background:#f5f9ff;border:1.5px solid #0071e3;border-radius:10px;padding:10px 14px;';
+      sv.innerHTML='<span style="font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:16px;font-weight:600;color:#1d1d1f;">'+ext.std.label+'</span>';
       var cb=document.createElement('button');cb.innerHTML='&#10005;';
       cb.style.cssText='background:none;border:none;color:#aaa;cursor:pointer;font-size:13px;';
       cb.onclick=(function(i){return function(){exts[i].std=null;exts[i].gen=null;exts[i].med=null;renderStep();};})(ei);
@@ -4479,21 +4522,21 @@ function renderStep(){
       var grupos=[];ESTANDARES.forEach(function(e){if(grupos.indexOf(e.g)===-1)grupos.push(e.g);});
       grupos.forEach(function(grp){
         var gl=document.createElement('div');
-        gl.style.cssText='font-size:8px;color:#ccc;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin:4px 0 3px;';
+        gl.style.cssText='font-size:11px;color:#aeaeb2;font-weight:500;letter-spacing:0;text-transform:none;margin:10px 0 6px;';
         gl.textContent=grp;s1.appendChild(gl);
         var gr=document.createElement('div');gr.style.cssText='display:flex;flex-wrap:wrap;gap:3px;';
         ESTANDARES.filter(function(e){return e.g===grp;}).forEach(function(e){
           var btn=document.createElement('button');
           if(e.img&&CONNECTOR_IMGS&&CONNECTOR_IMGS[e.img]){
-            btn.style.cssText='border:1.5px solid #e0e8f0;background:#fff;padding:4px 6px;border-radius:6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;';
-            btn.innerHTML='<img src="'+CONNECTOR_IMGS[e.img]+'" style="width:36px;height:36px;object-fit:contain;" alt="'+e.label+'"/><span style="font-family:\'Barlow Condensed\',sans-serif;font-size:10px;font-weight:700;color:#001F5B;">'+e.label+'</span>';
+            btn.style.cssText='border:1px solid #e8e8ed;background:#fff;padding:10px 8px;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;';
+            btn.innerHTML='<img src="'+CONNECTOR_IMGS[e.img]+'" style="width:36px;height:36px;object-fit:contain;" alt="'+e.label+'"/><span style="font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:12px;font-weight:500;color:#1d1d1f;">'+e.label+'</span>';
           } else {
             btn.textContent=e.label;
-            btn.style.cssText='border:1.5px solid #e0e8f0;background:#fff;padding:4px 7px;border-radius:4px;cursor:pointer;font-family:\'Barlow Condensed\',sans-serif;font-size:11px;font-weight:700;color:#001F5B;white-space:nowrap;';
+            btn.style.cssText='border:1px solid #e8e8ed;background:#fff;padding:9px 14px;border-radius:980px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:14px;font-weight:500;color:#1d1d1f;white-space:nowrap;';
           }
           btn.title=e.sub;
-          btn.onmouseenter=function(){btn.style.background='#001F5B';btn.style.color='#fff';};
-          btn.onmouseleave=function(){btn.style.background='#fff';btn.style.color='#001F5B';};
+          btn.onmouseenter=function(){btn.style.borderColor='#0071e3';};
+          btn.onmouseleave=function(){btn.style.borderColor='#e8e8ed';};
           btn.onclick=(function(ee,i){return function(){exts[i].std=ee;exts[i].gen=null;exts[i].med=null;renderStep();};})(e,ei);
           gr.appendChild(btn);
         });s1.appendChild(gr);
@@ -4504,23 +4547,23 @@ function renderStep(){
     if(ext.std){
       var s2=document.createElement('div');
       s2.style.cssText='margin-bottom:8px;padding-top:8px;border-top:1px solid #f0f0f0;';
-      s2.innerHTML='<div style="font-size:8px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:5px;">Género</div>';
+      s2.innerHTML='<div style="font-size:12px;font-weight:600;letter-spacing:0;text-transform:none;color:#86868b;margin-bottom:8px;">Género</div>';
       if(ext.gen){
         var gv=document.createElement('div');
-        gv.style.cssText='display:flex;align-items:center;justify-content:space-between;background:#EEF5FF;border:1.5px solid #001F5B;border-radius:5px;padding:6px 9px;';
-        gv.innerHTML='<span style="font-family:\'Barlow Condensed\',sans-serif;font-size:15px;font-weight:700;color:#001F5B;">'+(ext.gen.code==='M'?'♂':'♀')+' '+ext.gen.label+'</span>';
+        gv.style.cssText='display:flex;align-items:center;justify-content:space-between;background:#f5f9ff;border:1.5px solid #0071e3;border-radius:10px;padding:10px 14px;';
+        gv.innerHTML='<span style="font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:16px;font-weight:600;color:#1d1d1f;">'+ext.gen.label+'</span>';
         var gcb=document.createElement('button');gcb.innerHTML='&#10005;';
         gcb.style.cssText='background:none;border:none;color:#aaa;cursor:pointer;font-size:13px;';
         gcb.onclick=(function(i){return function(){exts[i].gen=null;exts[i].med=null;renderStep();};})(ei);
         gv.appendChild(gcb);s2.appendChild(gv);
       } else {
-        var gr2=document.createElement('div');gr2.style.cssText='display:flex;gap:6px;';
+        var gr2=document.createElement('div');gr2.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:8px;';
         GENEROS.forEach(function(gen){
           var btn=document.createElement('div');
-          btn.style.cssText='flex:1;border:2px solid #e0e8f0;background:#fff;padding:10px 4px;border-radius:8px;cursor:pointer;text-align:center;';
-          btn.innerHTML='<div style="font-size:20px;">'+(gen.code==='M'?'♂':'♀')+'</div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:13px;font-weight:700;">'+gen.label+'</div>';
-          btn.onmouseenter=function(){btn.style.borderColor='#001F5B';btn.style.background='#EEF5FF';};
-          btn.onmouseleave=function(){btn.style.borderColor='#e0e8f0';btn.style.background='#fff';};
+          btn.style.cssText='border:1px solid #e8e8ed;background:#fff;padding:14px 8px;border-radius:12px;cursor:pointer;text-align:center;min-height:52px;display:flex;align-items:center;justify-content:center;';
+          btn.innerHTML='<div style="font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:14px;font-weight:500;color:#1d1d1f;line-height:1.25;">'+gen.label+'</div>';
+          btn.onmouseenter=function(){btn.style.borderColor='#0071e3';};
+          btn.onmouseleave=function(){btn.style.borderColor='#e8e8ed';};
           btn.onclick=(function(g,i){return function(){exts[i].gen=g;exts[i].med=null;renderStep();};})(gen,ei);
           gr2.appendChild(btn);
         });s2.appendChild(gr2);
@@ -4530,23 +4573,23 @@ function renderStep(){
     // MEDIDA
     if(ext.std&&ext.gen){
       var s3=document.createElement('div');s3.style.cssText='padding-top:8px;border-top:1px solid #f0f0f0;';
-      s3.innerHTML='<div style="font-size:8px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:5px;">Medida</div>';
+      s3.innerHTML='<div style="font-size:12px;font-weight:600;letter-spacing:0;text-transform:none;color:#86868b;margin-bottom:8px;">Medida</div>';
       if(ext.med){
         var mv=document.createElement('div');
-        mv.style.cssText='display:flex;align-items:center;justify-content:space-between;background:#EEF5FF;border:1.5px solid #001F5B;border-radius:5px;padding:6px 9px;';
-        mv.innerHTML='<span style="font-family:\'Bebas Neue\',cursive;font-size:22px;color:#001F5B;">'+ext.med+'</span>';
+        mv.style.cssText='display:flex;align-items:center;justify-content:space-between;background:#f5f9ff;border:1.5px solid #0071e3;border-radius:10px;padding:10px 14px;';
+        mv.innerHTML='<span style="font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:20px;font-weight:600;color:#1d1d1f;">'+ext.med+'</span>';
         var mcb=document.createElement('button');mcb.innerHTML='&#10005;';
         mcb.style.cssText='background:none;border:none;color:#aaa;cursor:pointer;font-size:13px;';
         mcb.onclick=(function(i){return function(){exts[i].med=null;renderStep();};})(ei);
         mv.appendChild(mcb);s3.appendChild(mv);
       } else {
         var sizes=MEDIDAS[ext.std.code]||[];
-        var gr3=document.createElement('div');gr3.style.cssText='display:flex;flex-wrap:wrap;gap:4px;';
+        var gr3=document.createElement('div');gr3.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px;';
         sizes.forEach(function(m){
           var btn=document.createElement('button');btn.textContent=m;
-          btn.style.cssText='border:1.5px solid #e0e8f0;background:#fff;padding:6px 8px;border-radius:5px;cursor:pointer;font-family:\'Bebas Neue\',cursive;font-size:16px;color:#001F5B;min-width:46px;text-align:center;';
-          btn.onmouseenter=function(){btn.style.background='#001F5B';btn.style.color='#fff';};
-          btn.onmouseleave=function(){btn.style.background='#fff';btn.style.color='#001F5B';};
+          btn.style.cssText='border:1px solid #e8e8ed;background:#fff;padding:11px 8px;border-radius:12px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:15px;font-weight:500;color:#1d1d1f;text-align:center;';
+          btn.onmouseenter=function(){btn.style.borderColor='#0071e3';};
+          btn.onmouseleave=function(){btn.style.borderColor='#e8e8ed';};
           btn.onclick=(function(m,i){return function(){exts[i].med=m;renderStep();};})(m,ei);
           gr3.appendChild(btn);
         });s3.appendChild(gr3);
@@ -4564,7 +4607,7 @@ function renderStep(){
   if(allDone){
     var vb=document.createElement('button');
     vb.textContent='Ver resultado →';
-    vb.style.cssText='width:100%;background:#C8102E;color:#fff;border:none;padding:13px;border-radius:6px;cursor:pointer;font-family:\'Barlow Condensed\',sans-serif;font-size:15px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;';
+    vb.style.cssText='width:100%;background:#C8102E;color:#fff;border:none;padding:13px;border-radius:6px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:15px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;';
     vb.onmouseover=function(){vb.style.background='#a00c24';};
     vb.onmouseout=function(){vb.style.background='#C8102E';};
     vb.onclick=function(){step=resultStep;renderStep();};
@@ -4611,6 +4654,7 @@ function renderResult(){
     std_a: stdA, gen_a: gA, med_a: mA,
     std_b: stdB, gen_b: gB, med_b: mB
   };
+  if (typeof console!=='undefined') console.log('[configurador] enviando búsqueda:', searchParams);
 
   fetch('/.netlify/functions/odoo', {
     method:'POST',
@@ -4619,6 +4663,7 @@ function renderResult(){
   })
   .then(function(r){return r.json();})
   .then(function(data){
+    if (typeof console!=='undefined') console.log('[configurador] respuesta buscar_por_configurador:', data);
     body.innerHTML='';
     var p2=mkdiv('config-panel active');
     renderResultPanel(p2, data, searchParams);
@@ -4640,7 +4685,7 @@ function renderResultPanel(p, data, params){
   var hdr=document.createElement('div');
   hdr.style.cssText='text-align:center;padding:24px;border-bottom:2px solid #f0f0f0;margin-bottom:20px;';
   hdr.innerHTML='<div style="font-size:10px;letter-spacing:3px;color:#aaa;text-transform:uppercase;margin-bottom:8px;">Número de parte</div>'
-    +'<div style="font-family:\'Bebas Neue\',cursive;font-size:36px;color:#001F5B;letter-spacing:2px;">'+atCode+'</div>';
+    +'<div style="font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:36px;color:#001F5B;letter-spacing:2px;">'+atCode+'</div>';
   p.appendChild(hdr);
 
   // -- Selector de MATERIAL (CS acero al carbon / SS inoxidable) --
@@ -4650,9 +4695,9 @@ function renderResultPanel(p, data, params){
     var b=document.createElement('button');
     var on=(material===m[0]);
     b.textContent=m[1];
-    b.style.cssText='flex:1;max-width:170px;padding:11px;border-radius:8px;cursor:pointer;'
-      +'font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;'
-      +(on?'background:#001F5B;color:#fff;border:2px solid #001F5B;':'background:#fff;color:#001F5B;border:2px solid #dde6f0;');
+    b.style.cssText='flex:1;max-width:180px;padding:13px;border-radius:980px;cursor:pointer;'
+      +'font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:15px;font-weight:600;letter-spacing:0;'
+      +(on?'background:#0071e3;color:#fff;border:1.5px solid #0071e3;':'background:#fff;color:#1d1d1f;border:1.5px solid #e8e8ed;');
     b.onclick=function(){ if(material!==m[0]){ material=m[0]; renderResult(); } };
     matWrap.appendChild(b);
   });
@@ -4680,34 +4725,28 @@ function renderResultPanel(p, data, params){
       +'</div>'
     +'</div>'
     +(prod.price > 0 ?
-      '<div style="font-size:13px;color:#555;">Precio: <strong style="font-size:18px;color:#001F5B;">$'+prod.price.toFixed(2)+' MXN</strong></div>'
-      : '<div style="font-size:13px;color:#888;">Precio bajo cotización — contacta a tu ejecutivo</div>'
+      '<div style="font-size:15px;color:#86868b;">Precio: <strong style="font-size:19px;color:#1d1d1f;font-weight:600;">$'+prod.price.toFixed(2)+' MXN</strong></div>'
+      : '<div style="font-size:15px;color:#86868b;">Precio bajo cotización — contacta a tu ejecutivo</div>'
     );
 
   } else if (data.status === 'fabricacion_nueva') {
-    statusDiv.style.cssText='border-radius:10px;padding:20px;margin-bottom:20px;background:#EEF5FF;border:2px solid #001F5B;';
-    statusDiv.innerHTML='<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">'
-      +'<div style="font-size:32px;">&#128296;</div>'
-      +'<div>'
-        +'<div style="font-size:16px;font-weight:800;color:#001F5B;">Fabricación especial</div>'
-        +'<div style="font-size:12px;color:#666;margin-top:2px;">Este conector se fabrica bajo pedido con tus especificaciones exactas</div>'
-      +'</div>'
-    +'</div>'
-    +'<div style="font-size:13px;color:#555;">Tiempo estimado de entrega: <strong>3-5 días hábiles</strong></div>';
+    statusDiv.style.cssText='border-radius:14px;padding:22px;margin-bottom:20px;background:#f5f5f7;border:none;';
+    statusDiv.innerHTML='<div style="font-size:17px;font-weight:600;color:#1d1d1f;margin-bottom:4px;">Fabricación especial</div>'
+        +'<div style="font-size:14px;color:#86868b;margin-bottom:10px;">Este conector se fabrica bajo pedido con tus especificaciones exactas</div>'
+    +'<div style="font-size:14px;color:#1d1d1f;">Tiempo estimado de entrega: <strong style="font-weight:600;">3-5 días hábiles</strong></div>';
   } else {
-    statusDiv.style.cssText='border-radius:10px;padding:20px;margin-bottom:20px;background:#EEF5FF;border:2px solid #001F5B;';
-    statusDiv.innerHTML='<div style="font-size:32px;margin-bottom:8px;">&#128296;</div>'
-      +'<div style="font-size:16px;font-weight:800;color:#001F5B;">Fabricación bajo pedido</div>'
-      +'<div style="font-size:12px;color:#666;margin-top:4px;">Contacta a tu ejecutivo para cotización y tiempo de entrega</div>';
+    statusDiv.style.cssText='border-radius:14px;padding:22px;margin-bottom:20px;background:#f5f5f7;border:none;';
+    statusDiv.innerHTML='<div style="font-size:17px;font-weight:600;color:#1d1d1f;margin-bottom:4px;">Fabricación bajo pedido</div>'
+      +'<div style="font-size:14px;color:#86868b;">Contacta a tu ejecutivo para cotización y tiempo de entrega</div>';
   }
   p.appendChild(statusDiv);
 
   // Spec summary
   var spec=document.createElement('div');
-  spec.style.cssText='background:#f9f9f9;border-radius:8px;padding:16px;margin-bottom:20px;display:grid;grid-template-columns:1fr 1fr;gap:12px;';
+  spec.style.cssText='background:#f5f5f7;border-radius:14px;padding:20px;margin-bottom:24px;display:grid;grid-template-columns:1fr 1fr;gap:16px;';
   function specRow(label,val){
-    return '<div><div style="font-size:9px;color:#aaa;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">'+label+'</div>'
-      +'<div style="font-size:13px;font-weight:700;color:#111;">'+val+'</div></div>';
+    return '<div><div style="font-size:12px;color:#86868b;text-transform:none;letter-spacing:0;margin-bottom:4px;">'+label+'</div>'
+      +'<div style="font-size:15px;font-weight:600;color:#1d1d1f;">'+val+'</div></div>';
   }
   var extA=exts[0]||{};var extB=exts[1]||{};
   spec.innerHTML=
@@ -4723,8 +4762,8 @@ function renderResultPanel(p, data, params){
 
   // Add to cart button (always visible)
   var cartBtn=document.createElement('button');
-  cartBtn.style.cssText='grid-column:1/-1;background:#25a244;color:#fff;border:none;padding:14px;border-radius:6px;cursor:pointer;font-family:\'Barlow Condensed\',sans-serif;font-size:15px;font-weight:700;letter-spacing:1px;margin-bottom:4px;';
-  cartBtn.innerHTML='&#128722; Agregar al Carrito';
+  cartBtn.style.cssText='grid-column:1/-1;background:#0071e3;color:#fff;border:none;padding:15px;border-radius:980px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:16px;font-weight:600;letter-spacing:0;margin-bottom:8px;';
+  cartBtn.innerHTML='Agregar al carrito';
   cartBtn.onclick=function(){
     var product = {
       at_code: atCode,
@@ -4742,14 +4781,14 @@ function renderResultPanel(p, data, params){
   var waBtn=document.createElement('a');
   waBtn.href='https://wa.me/525555550000?text='+waMsg;
   waBtn.target='_blank';
-  waBtn.style.cssText='display:block;background:#25D366;color:#fff;text-align:center;padding:13px;border-radius:6px;text-decoration:none;font-family:\'Barlow Condensed\',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;';
-  waBtn.innerHTML='&#128241; WhatsApp Ejecutivo';
+  waBtn.style.cssText='display:block;background:#f5f5f7;color:#1d1d1f;text-align:center;padding:14px;border-radius:980px;text-decoration:none;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:15px;font-weight:600;letter-spacing:0;';
+  waBtn.innerHTML='WhatsApp ejecutivo';
   btns.appendChild(waBtn);
 
   // Quote button
   var qBtn=document.createElement('button');
-  qBtn.style.cssText='background:#001F5B;color:#fff;border:none;padding:13px;border-radius:6px;cursor:pointer;font-family:\'Barlow Condensed\',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;';
-  qBtn.innerHTML='&#128203; Solicitar Cotización';
+  qBtn.style.cssText='background:#f5f5f7;color:#1d1d1f;border:none;padding:14px;border-radius:980px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:15px;font-weight:600;letter-spacing:0;';
+  qBtn.innerHTML='Solicitar cotización';
   qBtn.onclick=function(){showPage('quote');};
   btns.appendChild(qBtn);
   p.appendChild(btns);
@@ -5751,7 +5790,7 @@ async function verifyOTP(email, nombre, apellido, empresa, phone) {
           + '<h2 style="color:#001F5B;margin-bottom:8px;">¡Registro exitoso!</h2>'
           + '<p style="color:#555;margin-bottom:8px;">Tu cuenta está <strong>pendiente de aprobación</strong>.</p>'
           + '<p style="color:#888;font-size:13px;margin-bottom:24px;">Un ejecutivo de Adaptekk revisará tu cuenta y recibirás una confirmación en tu correo en menos de <strong>24 horas hábiles</strong>.</p>'
-          + '<button onclick="showPage(\'home\')" style="background:#001F5B;color:#fff;border:none;padding:13px 32px;border-radius:6px;cursor:pointer;font-family:\'Barlow Condensed\',sans-serif;font-size:15px;font-weight:700;letter-spacing:1px;">Ir al inicio →</button>'
+          + '<button onclick="showPage(\'home\')" style="background:#001F5B;color:#fff;border:none;padding:13px 32px;border-radius:6px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:15px;font-weight:700;letter-spacing:1px;">Ir al inicio →</button>'
           + '</div>';
       }
     } else {
@@ -5899,7 +5938,7 @@ function regValPass() {
 <!-- API KEY SETTINGS PANEL -->
 <div id="api-key-panel" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:none;align-items:center;justify-content:center;">
   <div style="background:#fff;border-radius:10px;padding:32px;max-width:480px;width:90%;box-shadow:0 16px 60px rgba(0,0,0,.25);">
-    <div style="font-family:'Bebas Neue',cursive;font-size:26px;letter-spacing:2px;color:#111;margin-bottom:6px;">&#128272; Configurar API Key — Claude</div>
+    <div style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:26px;letter-spacing:2px;color:#111;margin-bottom:6px;">&#128272; Configurar API Key — Claude</div>
     <p style="font-size:13px;color:#888;margin-bottom:20px;line-height:1.6;">
       Para probar el Buscador IA necesitas una API key de Anthropic.<br/>
       <strong>Pasos:</strong><br/>1. Ve a <a href="https://console.anthropic.com" target="_blank" style="color:#001F5B;font-weight:600;">console.anthropic.com</a><br/>2. Crea tu cuenta<br/>3. Ve a <strong>API Keys</strong> → <strong>Create Key</strong><br/>4. Copia y pega aquí (empieza con sk-ant-...)
@@ -5910,7 +5949,7 @@ function regValPass() {
       onfocus="this.style.borderColor='#001F5B'"
       onblur="this.style.borderColor='#dde6f0'"/>
     <div style="display:flex;gap:10px;">
-      <button onclick="saveApiKey()" style="flex:1;background:#001F5B;color:#fff;border:none;padding:12px;border-radius:6px;cursor:pointer;font-family:\'Barlow Condensed\',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;">Guardar y Probar</button>
+      <button onclick="saveApiKey()" style="flex:1;background:#001F5B;color:#fff;border:none;padding:12px;border-radius:6px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;">Guardar y Probar</button>
       <button onclick="closeApiPanel()" style="background:#f5f5f5;color:#888;border:none;padding:12px 20px;border-radius:6px;cursor:pointer;font-size:13px;">Cancelar</button>
     </div>
     <p style="font-size:10px;color:#bbb;margin-top:12px;text-align:center;">&#128274; La key se guarda solo en este navegador. Solo para pruebas.</p>
@@ -5995,23 +6034,24 @@ function regValPass() {
 .cart-drawer-backdrop.open { display: block; opacity: 1; }
 
 .cart-drawer-header {
-  background: #001F5B;
-  color: #fff;
-  padding: 16px 20px;
+  background: #fff;
+  color: #1d1d1f;
+  padding: 20px 22px 14px;
   border-radius: 16px 16px 0 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-shrink: 0;
+  border-bottom: 1px solid #f0f0f2;
 }
 .cart-drawer-body {
   overflow-y: auto;
   flex: 1;
-  padding: 12px 16px;
+  padding: 12px 20px;
 }
 .cart-drawer-footer {
-  padding: 16px;
-  border-top: 1px solid #f0f0f0;
+  padding: 18px 20px;
+  border-top: 1px solid #f0f0f2;
   flex-shrink: 0;
   background: #fff;
 }
@@ -6021,21 +6061,22 @@ function regValPass() {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 0;
-  border-bottom: 1px solid #f5f5f5;
+  padding: 14px 0;
+  border-bottom: 1px solid #f0f0f2;
 }
 .cart-mini-item:last-child { border-bottom: none; }
 .cart-mini-code {
-  font-family: 'Bebas Neue', cursive;
-  font-size: 14px;
-  color: #001F5B;
-  letter-spacing: 1px;
+  font-family: -apple-system,BlinkMacSystemFont,'Inter',sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1d1d1f;
+  letter-spacing: 0;
   line-height: 1.2;
 }
 .cart-mini-name {
-  font-size: 10px;
-  color: #aaa;
-  margin-top: 1px;
+  font-size: 12px;
+  color: #86868b;
+  margin-top: 2px;
 }
 .cart-mini-qty {
   display: flex;
@@ -6044,31 +6085,32 @@ function regValPass() {
   flex-shrink: 0;
 }
 .cart-mini-qty-btn {
-  width: 24px;
-  height: 24px;
-  border: 1.5px solid #dde6f0;
-  border-radius: 4px;
-  background: #fff;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: #f5f5f7;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 500;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #001F5B;
+  color: #1d1d1f;
 }
 .cart-mini-qty-num {
   width: 28px;
   text-align: center;
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 600;
   border: none;
   background: transparent;
+  color: #1d1d1f;
 }
 .cart-mini-price {
-  font-size: 13px;
-  font-weight: 700;
-  color: #001F5B;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1d1d1f;
   flex-shrink: 0;
   min-width: 70px;
   text-align: right;
@@ -6115,36 +6157,35 @@ function regValPass() {
 <div class="cart-drawer" id="cart-drawer">
   <div class="cart-drawer-header">
     <div>
-      <div style="font-family:'Bebas Neue',cursive;font-size:20px;letter-spacing:2px;">&#128722; Mi Carrito</div>
-      <div style="font-size:11px;color:rgba(255,255,255,.6);" id="drawer-subtitle">0 productos</div>
+      <div style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:21px;font-weight:600;letter-spacing:-.3px;color:#1d1d1f;">Mi carrito</div>
+      <div style="font-size:13px;color:#86868b;margin-top:2px;" id="drawer-subtitle">0 productos</div>
     </div>
-    <button onclick="closeCartDrawer()" style="background:rgba(255,255,255,.1);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;">&#215;</button>
+    <button onclick="closeCartDrawer()" style="background:#f5f5f7;border:none;color:#1d1d1f;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;">&#215;</button>
   </div>
 
   <div class="cart-drawer-body" id="cart-drawer-body">
-    <div style="text-align:center;padding:40px 20px;color:#aaa;" id="drawer-empty">
-      <div style="font-size:36px;margin-bottom:8px;">&#128722;</div>
-      <div style="font-size:14px;">Tu carrito está vacío</div>
+    <div style="text-align:center;padding:48px 20px;color:#86868b;" id="drawer-empty">
+      <div style="font-size:15px;">Tu carrito está vacío</div>
     </div>
     <div id="cart-drawer-items"></div>
   </div>
 
   <div class="cart-drawer-footer" id="cart-drawer-footer" style="display:none;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-      <span style="font-size:14px;color:#555;">Total estimado</span>
-      <span style="font-size:18px;font-weight:800;color:#001F5B;" id="drawer-total">$0.00</span>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <span style="font-size:15px;color:#86868b;">Total estimado</span>
+      <span style="font-size:19px;font-weight:600;color:#1d1d1f;letter-spacing:-.3px;" id="drawer-total">$0.00</span>
     </div>
     <button onclick="closeCartDrawer();showPage('cart');"
-      style="width:100%;background:#001F5B;color:#fff;border:none;padding:14px;border-radius:8px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:1px;margin-bottom:8px;">
-      Ver Carrito Completo &#8594;
+      style="width:100%;background:#0071e3;color:#fff;border:none;padding:14px;border-radius:980px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:16px;font-weight:600;letter-spacing:0;margin-bottom:10px;">
+      Ver carrito completo
     </button>
     <button onclick="closeCartDrawer();showPage('cart');setTimeout(irACheckout,200);"
-      style="width:100%;background:#C8102E;color:#fff;border:none;padding:14px;border-radius:8px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:1px;">
-      Proceder al Checkout &#8594;
+      style="width:100%;background:#f5f5f7;color:#1d1d1f;border:none;padding:14px;border-radius:980px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:16px;font-weight:600;letter-spacing:0;">
+      Continuar al pago
     </button>
     <button onclick="contactarEjecutivo('carrito flotante');"
-      style="width:100%;background:#25D366;color:#fff;border:none;padding:12px;border-radius:8px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:1px;margin-top:8px;">
-      &#128172; Contactar a un ejecutivo
+      style="width:100%;background:none;color:#0071e3;border:none;padding:12px;border-radius:980px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:15px;font-weight:400;letter-spacing:0;margin-top:6px;">
+      Contactar a un ejecutivo
     </button>
   </div>
 </div>
