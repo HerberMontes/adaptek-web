@@ -2960,8 +2960,7 @@ window.mostrarPaginaGracias = function(info){
     if (sub) sub.textContent = 'Tu pedido quedó reservado. Una vez que realices tu transferencia, espera unos minutos en esta página: en cuanto el banco confirme tu pago, esto se actualizará solo.';
     if (estado){ estado.textContent = 'Esperando pago'; estado.style.color = '#b8860b'; }
     if (extra) extra.innerHTML = '<div style="background:#f0f9ff;border:1px solid #009EE3;border-radius:8px;padding:12px;font-size:13px;color:#007bb5;">'
-      + '&#8987; <b>Esperando confirmación de tu pago...</b><br>Si ya transferiste, no cierres esta página. Se actualizará automáticamente al acreditarse (puede tardar unos minutos).'
-      + '<div style="margin-top:10px;"><button onclick="window.consultarMiPedido(\'' + (info.folio||'') + '\')" style="background:#009EE3;color:#fff;border:none;padding:9px 18px;border-radius:6px;font-weight:700;cursor:pointer;font-size:13px;">Ya pagué, verificar ahora</button></div>'
+      + '&#8987; <b>Esperando confirmación de tu pago...</b><br>Si ya transferiste, no cierres esta página. El estado se actualizará automáticamente al acreditarse (puede tardar unos minutos).'
       + '</div>';
     // Mantener el sondeo activo en esta pantalla (por si no venía corriendo)
     if (info.folio && !window._sondeoPago) {
@@ -3231,17 +3230,22 @@ window.iniciarSondeoPago = function(folio, monto){
       });
       var data = await resp.json();
       if (data && data.ok && data.confirmada) {
-        // ¡Pago confirmado! Detener sondeo y actualizar la pantalla a "confirmado".
+        // ¡Pago confirmado! Detener sondeo y actualizar SOLO lo necesario (sin re-renderizar todo).
         clearInterval(window._sondeoPago); window._sondeoPago = null;
-        // Actualizar PEDIDO_CONFIRMADO a estado aprobado
         if (window.PEDIDO_CONFIRMADO) window.PEDIDO_CONFIRMADO.estado = 'aprobado';
-        // Mostrar/actualizar la pantalla de gracias en modo CONFIRMADO
-        window.mostrarPaginaGracias({
-          folio: folio,
-          total: monto,
-          metodo: 'spei',
-          estado: 'aprobado'
-        });
+
+        // Actualizar el campo Estado en vivo: "Esperando pago" → "Pago confirmado"
+        var estEl = document.getElementById('gracias-estado');
+        if (estEl){ estEl.textContent = 'Pago confirmado'; estEl.style.color = '#1a7d34'; }
+        // Cambiar el ícono y título a confirmado
+        var icoEl = document.getElementById('gracias-icon'); if (icoEl) icoEl.innerHTML = '&#9989;';
+        var titEl = document.getElementById('gracias-titulo'); if (titEl) titEl.textContent = '¡GRACIAS POR TU COMPRA!';
+        var subEl = document.getElementById('gracias-sub'); if (subEl) subEl.textContent = 'Tu pago fue confirmado y tu pedido está en proceso. Te enviamos un correo con los detalles.';
+        // Reemplazar el recuadro de espera por uno de confirmado (sin botón)
+        var extraEl = document.getElementById('gracias-extra');
+        if (extraEl) extraEl.innerHTML = '<div style="background:#eafbef;border:1px solid #25a244;border-radius:8px;padding:12px;font-size:13px;color:#1a7d34;">&#9989; <b>¡Pago confirmado!</b> Prepararemos tu pedido y te avisaremos del envío. Ya puedes cerrar esta página o seguir comprando.</div>';
+
+        // Toast UNA sola vez
         if (typeof showToast==='function') showToast('\u2705 \u00a1Tu pago fue confirmado!');
       }
     } catch(e){ /* reintentar */ }
