@@ -811,6 +811,8 @@
   </style>
   <!-- SDK de Mercado Pago para el checkout modal (no redirige, abre ventana superpuesta) -->
   <script src="https://sdk.mercadopago.com/js/v2"></script>
+  <!-- jsPDF para generar el comprobante de pedido en PDF (descargable en el navegador) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
@@ -2701,6 +2703,9 @@ window.coConfirmar = function(){
 
       <div id="gracias-extra" style="font-size:13px;color:#555;margin-bottom:20px;line-height:1.5;"></div>
 
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;">
+        <button onclick="window.descargarComprobantePDF()" style="background:#C8102E;color:#fff;border:none;padding:13px 24px;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px;">&#11015; Descargar comprobante (PDF)</button>
+      </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
         <button onclick="showPage('home')" style="background:#001F5B;color:#fff;border:none;padding:13px 24px;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px;">Volver al inicio</button>
         <button onclick="showPage('cfg')" style="background:#fff;color:#001F5B;border:2px solid #001F5B;padding:13px 24px;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px;">Seguir comprando</button>
@@ -2929,6 +2934,16 @@ window.mostrarPaginaGracias = function(info){
   info = info || {};
   function setT(id, val){ var el = document.getElementById(id); if (el) el.textContent = val; }
 
+  // Guardar los datos del pedido para poder generar el PDF
+  window.PEDIDO_CONFIRMADO = {
+    folio: info.folio || '',
+    total: info.total,
+    metodo: info.metodo || 'tarjeta',
+    estado: info.estado || 'aprobado',
+    orden: (window.PAGO && window.PAGO.orden) ? window.PAGO.orden : null,
+    fecha: new Date()
+  };
+
   setT('gracias-folio', info.folio || '—');
   setT('gracias-total', (info.total != null && typeof window.fmtMXN==='function') ? (window.fmtMXN(info.total) + ' MXN') : '—');
 
@@ -2957,6 +2972,106 @@ window.mostrarPaginaGracias = function(info){
   }
 
   showPage('gracias');
+};
+
+// Genera y descarga el comprobante del pedido en PDF (en el navegador, con jsPDF)
+window.descargarComprobantePDF = function(){
+  var P = window.PEDIDO_CONFIRMADO;
+  if (!P) { if (typeof showToast==='function') showToast('\u26a0 No hay pedido para generar'); return; }
+  if (typeof window.jspdf === 'undefined' && typeof jspdf === 'undefined') {
+    if (typeof showToast==='function') showToast('\u26a0 No se pudo cargar el generador de PDF');
+    return;
+  }
+  var jsPDFns = window.jspdf || jspdf;
+  var doc = new jsPDFns.jsPDF({ unit:'pt', format:'a4' });
+  var W = doc.internal.pageSize.getWidth();
+  var navy = [0,31,91], red = [200,16,46], gray = [120,120,120];
+  var y = 50;
+
+  // Encabezado
+  doc.setFillColor(navy[0],navy[1],navy[2]);
+  doc.rect(0,0,W,90,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFont('helvetica','bold'); doc.setFontSize(26);
+  doc.text('ADAPTEKK', 40, 48);
+  doc.setFont('helvetica','normal'); doc.setFontSize(10);
+  doc.setTextColor(220,220,220);
+  doc.text('Conecta sin límites · Conectores hidráulicos', 40, 66);
+  doc.setFontSize(9);
+  doc.text('Comprobante de pedido', W-40, 48, {align:'right'});
+
+  y = 130;
+  // Título y estado
+  doc.setTextColor(navy[0],navy[1],navy[2]);
+  doc.setFont('helvetica','bold'); doc.setFontSize(16);
+  var aprobado = (P.estado !== 'pendiente' && P.metodo !== 'spei');
+  doc.text(aprobado ? 'Pedido confirmado' : 'Pedido registrado', 40, y);
+
+  // Caja de datos del pedido
+  y += 24;
+  doc.setDrawColor(220,220,220); doc.setFillColor(247,249,252);
+  doc.roundedRect(40, y, W-80, 90, 6, 6, 'FD');
+  doc.setFontSize(10); doc.setFont('helvetica','normal'); doc.setTextColor(80,80,80);
+  var fechaStr = P.fecha.toLocaleDateString('es-MX') + ' ' + P.fecha.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+  doc.text('Folio del pedido:', 56, y+24);
+  doc.text('Fecha:', 56, y+44);
+  doc.text('Método de pago:', 56, y+64);
+  doc.setFont('helvetica','bold'); doc.setTextColor(navy[0],navy[1],navy[2]);
+  doc.text(String(P.folio||'—'), 180, y+24);
+  doc.text(fechaStr, 180, y+44);
+  doc.text(P.metodo === 'spei' ? 'Transferencia SPEI' : 'Tarjeta', 180, y+64);
+  // Estado a la derecha
+  doc.setFont('helvetica','bold'); doc.setFontSize(11);
+  if (aprobado){ doc.setTextColor(26,125,52); doc.text('PAGADO', W-56, y+24, {align:'right'}); }
+  else { doc.setTextColor(184,134,11); doc.text('PENDIENTE DE PAGO', W-56, y+24, {align:'right'}); }
+
+  // Tabla de productos
+  y += 120;
+  doc.setFillColor(navy[0],navy[1],navy[2]);
+  doc.rect(40, y, W-80, 26, 'F');
+  doc.setTextColor(255,255,255); doc.setFontSize(10); doc.setFont('helvetica','bold');
+  doc.text('PRODUCTO', 56, y+17);
+  doc.text('CANT.', W-160, y+17, {align:'center'});
+  doc.text('CÓDIGO', W-56, y+17, {align:'right'});
+  y += 26;
+
+  var items = (P.orden && Array.isArray(P.orden.items)) ? P.orden.items : [];
+  doc.setFont('helvetica','normal'); doc.setTextColor(50,50,50); doc.setFontSize(10);
+  if (!items.length) {
+    doc.text('(Ver detalle en tu correo de confirmación)', 56, y+18); y += 30;
+  } else {
+    items.forEach(function(it, i){
+      if (i % 2 === 0){ doc.setFillColor(248,250,252); doc.rect(40, y, W-80, 24, 'F'); }
+      var code = it.at_code || it.code || '';
+      var name = (it.name || code);
+      if (name.length > 50) name = name.substring(0,48)+'…';
+      doc.setTextColor(50,50,50);
+      doc.text(name, 56, y+16);
+      doc.text(String(it.qty||1), W-160, y+16, {align:'center'});
+      doc.setTextColor(gray[0],gray[1],gray[2]); doc.setFontSize(9);
+      doc.text(code, W-56, y+16, {align:'right'});
+      doc.setFontSize(10);
+      y += 24;
+    });
+  }
+
+  // Total
+  y += 10;
+  doc.setDrawColor(220,220,220); doc.line(40, y, W-40, y);
+  y += 26;
+  doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(navy[0],navy[1],navy[2]);
+  doc.text('TOTAL', W-200, y);
+  doc.setTextColor(red[0],red[1],red[2]); doc.setFontSize(15);
+  var totalStr = (P.total != null && typeof window.fmtMXN==='function') ? (window.fmtMXN(P.total)+' MXN') : '—';
+  doc.text(totalStr, W-40, y, {align:'right'});
+
+  // Pie
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(gray[0],gray[1],gray[2]);
+  var py = doc.internal.pageSize.getHeight() - 50;
+  doc.text('Gracias por tu compra en Adaptekk. Este comprobante confirma tu pedido.', 40, py);
+  doc.text('Para dudas o seguimiento, contáctanos por WhatsApp o responde a tu correo de confirmación.', 40, py+14);
+
+  doc.save('Adaptekk-' + (P.folio||'pedido') + '.pdf');
 };
 
 // Pago por transferencia SPEI: genera una CLABE y muestra las instrucciones dentro de la página.
@@ -3039,8 +3154,20 @@ window.pagarConSPEI = async function(){
       } else {
         html += '<div style="text-align:center;font-size:13px;color:#444;">Tu pedido quedó reservado. Un ejecutivo te enviará los datos de transferencia.</div>';
       }
+      // Botón para descargar el comprobante del pedido en PDF
+      html += '<div style="text-align:center;margin-top:16px;"><button onclick="window.descargarComprobantePDF()" style="background:#C8102E;color:#fff;border:none;padding:11px 20px;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px;">&#11015; Descargar comprobante (PDF)</button></div>';
       html += '</div>';
       resultBox.innerHTML = html;
+
+      // Guardar datos del pedido para el PDF (SPEI: pendiente de pago)
+      window.PEDIDO_CONFIRMADO = {
+        folio: data.folio || '',
+        total: data.monto,
+        metodo: 'spei',
+        estado: 'pendiente',
+        orden: (window.PAGO && window.PAGO.orden) ? window.PAGO.orden : null,
+        fecha: new Date()
+      };
 
       // Limpiar carrito: el pedido ya quedó reservado
       try { window.CART = []; if (typeof cartSave==='function') cartSave(); if (typeof updateFAB==='function') updateFAB(); } catch(e){}
