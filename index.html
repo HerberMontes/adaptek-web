@@ -3156,6 +3156,8 @@ window.pagarConSPEI = async function(){
       }
       // Botón para descargar el comprobante del pedido en PDF
       html += '<div style="text-align:center;margin-top:16px;"><button onclick="window.descargarComprobantePDF()" style="background:#C8102E;color:#fff;border:none;padding:11px 20px;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px;">&#11015; Descargar comprobante (PDF)</button></div>';
+      // Aviso de espera de confirmación automática
+      html += '<div id="spei-esperando" style="text-align:center;margin-top:14px;font-size:12px;color:#007bb5;background:#f0f9ff;border-radius:8px;padding:10px;">&#8987; Esperando la confirmaci&#243;n de tu pago... Esta p&#225;gina se actualizar&#225; autom&#225;ticamente cuando se acredite. No la cierres.</div>';
       html += '</div>';
       resultBox.innerHTML = html;
 
@@ -3171,6 +3173,10 @@ window.pagarConSPEI = async function(){
 
       // Limpiar carrito: el pedido ya quedó reservado
       try { window.CART = []; if (typeof cartSave==='function') cartSave(); if (typeof updateFAB==='function') updateFAB(); } catch(e){}
+
+      // Iniciar sondeo: preguntar al servidor cada 15s si el pago ya se confirmó en Odoo.
+      // Cuando se confirme, la página cambia sola a la pantalla de "¡Pago confirmado!".
+      window.iniciarSondeoPago(data.folio, data.monto);
     } else {
       if (btn){ btn.disabled=false; btn.innerHTML='&#127974; Pagar con transferencia SPEI'; }
       resultBox.innerHTML = '<div style="background:#fdecef;border:1px solid #C8102E;border-radius:10px;padding:16px;text-align:center;color:#C8102E;font-size:13px;">No se pudo generar la transferencia. ' + ((data && data.error) ? data.error : '') + '</div>';
@@ -3196,6 +3202,64 @@ window.copiarMonto = function(monto){
   var txt = Number(monto).toFixed(2);
   if (navigator.clipboard) navigator.clipboard.writeText(txt);
   if (typeof showToast === 'function') showToast('\u2713 Monto copiado: $' + txt);
+};
+
+// Sondea al servidor si el pago de un folio ya se confirmó en Odoo.
+// Mientras está pendiente, sigue preguntando. Al confirmarse, muestra la pantalla de gracias.
+window._sondeoPago = null;
+window.iniciarSondeoPago = function(folio, monto){
+  if (!folio) return;
+  // Limpiar cualquier sondeo previo
+  if (window._sondeoPago) { clearInterval(window._sondeoPago); window._sondeoPago = null; }
+
+  var intentos = 0;
+  var maxIntentos = 80; // ~20 min (80 x 15s). Suficiente para SPEI.
+
+  async function consultar(){
+    intentos++;
+    if (intentos > maxIntentos) { clearInterval(window._sondeoPago); window._sondeoPago = null; return; }
+    try {
+      var resp = await fetch('/.netlify/functions/odoo', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ action:'consultar_estado_orden', folio: folio })
+      });
+      var data = await resp.json();
+      if (data && data.ok && data.confirmada) {
+        // ¡Pago confirmado! Detener sondeo y mostrar pantalla de gracias.
+        clearInterval(window._sondeoPago); window._sondeoPago = null;
+        window.mostrarPaginaGracias({
+          folio: folio,
+          total: monto,
+          metodo: 'spei',
+          estado: 'aprobado'   // ya confirmado
+        });
+        if (typeof showToast==='function') showToast('\u2705 \u00a1Tu pago fue confirmado!');
+      }
+    } catch(e){ /* reintentar en el próximo ciclo */ }
+  }
+
+  // Primera consulta a los 8s, luego cada 15s
+  setTimeout(consultar, 8000);
+  window._sondeoPago = setInterval(consultar, 15000);
+};
+
+// Permite al cliente consultar manualmente el estado de su pedido por folio
+window.consultarMiPedido = async function(folio){
+  if (!folio) return;
+  try {
+    var resp = await fetch('/.netlify/functions/odoo', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'consultar_estado_orden', folio: folio })
+    });
+    var data = await resp.json();
+    if (data && data.confirmada) {
+      window.mostrarPaginaGracias({ folio: folio, total: (window.PEDIDO_CONFIRMADO?window.PEDIDO_CONFIRMADO.total:null), metodo:'spei', estado:'aprobado' });
+    } else {
+      if (typeof showToast==='function') showToast('\u23f3 Tu pago a\u00fan no se confirma. Te avisaremos por correo.');
+    }
+  } catch(e){
+    if (typeof showToast==='function') showToast('\u26a0 No se pudo consultar. Intenta m\u00e1s tarde.');
+  }
 };
 
 function payConfirmado(metodo){
