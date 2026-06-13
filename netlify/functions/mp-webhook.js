@@ -141,9 +141,21 @@ exports.handler = async function(event){
     const domainXml = `<value><array><data>
       ${xmlStr('client_order_ref')}<value><string>=</string></value>${xmlStr(folio)}
     </data></array></value>`;
-    const found = await odooSearchRead(uid, 'sale.order', domainXml, ['id','state'], 1);
+    const found = await odooSearchRead(uid, 'sale.order', domainXml, ['id','state','client_order_ref'], 5);
+    console.log('[webhook] RESPUESTA ODOO búsqueda (primeros 500): ' + (found||'').substring(0,500));
     const idMatch = found.match(/<name>id<\/name><value><int>(\d+)<\/int><\/value>/);
-    const saleId = idMatch ? parseInt(idMatch[1]) : null;
+    let saleId = idMatch ? parseInt(idMatch[1]) : null;
+
+    // Respaldo: si no la encontró por client_order_ref, intentar buscar con 'ilike' (por si hay espacios)
+    if (!saleId) {
+      const domain2 = `<value><array><data>
+        ${xmlStr('client_order_ref')}<value><string>ilike</string></value>${xmlStr(folio)}
+      </data></array></value>`;
+      const found2 = await odooSearchRead(uid, 'sale.order', domain2, ['id','state','client_order_ref'], 5);
+      console.log('[webhook] RESPUESTA ODOO búsqueda ilike (primeros 500): ' + (found2||'').substring(0,500));
+      const idMatch2 = found2.match(/<name>id<\/name><value><int>(\d+)<\/int><\/value>/);
+      saleId = idMatch2 ? parseInt(idMatch2[1]) : null;
+    }
     console.log('[webhook] orden encontrada saleId=' + saleId + ' (folio=' + folio + ')');
 
     const nota = `Mercado Pago: pago ${paymentId} estado "${status}" (folio ${folio}).`;
