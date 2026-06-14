@@ -2255,10 +2255,16 @@ window.CHECKOUT = {
   contacto: {}, factura: {}, direccion: {}
 };
 
+var CO_SHIP_ICONS = {
+  express: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1d1d1f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4.5 13.5H11l-1 8.5 8.5-11.5H12l1-8.5Z"/></svg>',
+  estandar: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1d1d1f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>',
+  economico: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1d1d1f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>'
+};
+
 var CO_SHIPPING = [
-  { id:'express',  ico:'\u26A1',     name:'Express 24h',          time:'Entrega al d\u00EDa siguiente h\u00E1bil \u00B7 FedEx',      price:0 },
-  { id:'estandar', ico:'\uD83D\uDCE6', name:'Est\u00E1ndar 3-5 d\u00EDas', time:'Cobertura nacional \u00B7 Estafeta',                price:0 },
-  { id:'economico',ico:'\uD83D\uDCB0', name:'Econ\u00F3mico 5-7 d\u00EDas',time:'La opci\u00F3n m\u00E1s accesible \u00B7 J&T Express', price:0  }
+  { id:'express',  name:'Express 24h',          time:'Entrega al d\u00EDa siguiente h\u00E1bil \u00B7 FedEx',      price:0 },
+  { id:'estandar', name:'Est\u00E1ndar 3-5 d\u00EDas', time:'Cobertura nacional \u00B7 Estafeta',                price:0 },
+  { id:'economico',name:'Econ\u00F3mico 5-7 d\u00EDas',time:'La opci\u00F3n m\u00E1s accesible \u00B7 J&T Express', price:0  }
 ];
 
 function coEsc(s){
@@ -2367,7 +2373,7 @@ function coRenderShipping(){
     var sel = window.CHECKOUT.envio && window.CHECKOUT.envio.id === s.id;
     return '<div class="co-ship'+(sel?' sel':'')+'" onclick="coPickShip(\''+s.id+'\')">'
       + '<div class="co-ship-radio"></div>'
-      + '<div style="font-size:20px;">'+s.ico+'</div>'
+      + '<div style="width:40px;height:40px;border-radius:50%;background:#f5f5f7;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+(CO_SHIP_ICONS[s.id]||'')+'</div>'
       + '<div><div class="co-ship-name">'+s.name+'</div><div class="co-ship-time">'+s.time+'</div></div>'
       + '<div class="co-ship-price">$'+s.price.toFixed(2)+' MXN</div>'
       + '</div>';
@@ -2561,7 +2567,7 @@ function coRenderSummary(){
   if (banner) {
     if (c.envio) {
       banner.style.display = 'block';
-      banner.innerHTML = '\uD83D\uDE9A <b>Entrega estimada: ' + entregaMin + '\u2013' + entregaMax + ' d\u00edas h\u00e1biles</b>'
+      banner.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1d1d1f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px;"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg><b>Entrega estimada: ' + entregaMin + '\u2013' + entregaMax + ' d\u00edas h\u00e1biles</b>'
         + ' <span style="color:#888;">(producci\u00f3n + ' + coEsc(c.envio.name) + ')</span>';
     } else { banner.style.display = 'none'; }
   }
@@ -2956,10 +2962,10 @@ window.mostrarResultadoPago = function(res){
     return;
   } else if (status === 'in_process' || status === 'pending') {
     statusBox.innerHTML =
-      '<div style="background:#fff7e6;border:1px solid #f0ad4e;border-radius:10px;padding:22px;">'
-      + '<div style="font-size:40px;">&#8987;</div>'
-      + '<div style="font-size:18px;font-weight:700;color:#b8860b;margin:8px 0;">Pago en proceso</div>'
-      + '<div style="font-size:13px;color:#444;">Tu pago (folio <b>' + (res.folio||'') + '</b>) se está validando. Te avisaremos cuando se confirme. Si elegiste SPEI u OXXO, sigue las instrucciones para completarlo.</div>'
+      '<div style="background:#fff8e6;border:none;border-radius:14px;padding:24px;text-align:center;">'
+      + '<div class="apple-spinner" style="border-top-color:#e6a700;margin-bottom:16px;"></div>'
+      + '<div style="font-size:18px;font-weight:600;color:#9a6a00;margin:8px 0;">Pago en proceso</div>'
+      + '<div style="font-size:14px;color:#86868b;">Tu pago (folio <b>' + (res.folio||'') + '</b>) se está validando. Te avisaremos cuando se confirme. Si elegiste SPEI u OXXO, sigue las instrucciones para completarlo.</div>'
       + '</div>';
   } else {
     var motivo = '';
@@ -2998,8 +3004,8 @@ window.mostrarPaginaGracias = function(info){
   var estado = document.getElementById('gracias-estado');
   var extra = document.getElementById('gracias-extra');
 
-  if (info.estado === 'pendiente' || info.metodo === 'spei') {
-    // Pago pendiente (SPEI/OXXO): esperando que se acredite
+  if (info.estado === 'pendiente') {
+    // Pago pendiente (SPEI/OXXO sin acreditar todavía): esperando que se acredite
     if (icon){ icon.textContent = 'Esperando pago'; icon.style.color = '#9a6a00'; }
     if (titulo) titulo.textContent = 'Pedido registrado';
     if (sub) sub.textContent = 'Tu pedido quedó reservado. Una vez que realices tu transferencia, espera unos minutos en esta página: en cuanto el banco confirme tu pago, esto se actualizará solo.';
@@ -3208,7 +3214,7 @@ window.pagarConSPEI = async function(){
       // Botón para descargar el comprobante del pedido en PDF
       html += '<div style="text-align:center;margin-top:16px;"><button onclick="window.descargarComprobantePDF()" style="background:#0071e3;color:#fff;border:none;padding:12px 24px;border-radius:980px;font-weight:600;cursor:pointer;font-size:15px;">Descargar comprobante</button></div>';
       // Aviso de espera de confirmación automática
-      html += '<div id="spei-esperando" style="text-align:center;margin-top:14px;font-size:12px;color:#007bb5;background:#f0f9ff;border-radius:8px;padding:10px;">&#8987; Esperando la confirmaci&#243;n de tu pago... Esta p&#225;gina se actualizar&#225; autom&#225;ticamente cuando se acredite. No la cierres.</div>';
+      html += '<div id="spei-esperando" style="display:flex;align-items:center;justify-content:center;gap:10px;text-align:center;margin-top:14px;font-size:13px;color:#0071e3;background:#f5f9ff;border-radius:12px;padding:14px;"><span class="apple-spinner" style="width:18px;height:18px;border-width:2px;margin:0;"></span><span>Esperando la confirmaci&#243;n de tu pago. Esta p&#225;gina se actualizar&#225; autom&#225;ticamente cuando se acredite. No la cierres.</span></div>';
       html += '</div>';
       resultBox.innerHTML = html;
 
@@ -3277,20 +3283,17 @@ window.iniciarSondeoPago = function(folio, monto){
       var data = await resp.json();
       if (typeof console!=='undefined') console.log('[sondeo] folio=' + folio + ' intento=' + intentos + ' respuesta=', data);
       if (data && data.ok && data.confirmada) {
-        // ¡Pago confirmado! Detener sondeo y actualizar SOLO lo necesario (sin re-renderizar todo).
+        // ¡Pago confirmado! Detener sondeo.
         clearInterval(window._sondeoPago); window._sondeoPago = null;
         if (window.PEDIDO_CONFIRMADO) window.PEDIDO_CONFIRMADO.estado = 'aprobado';
 
-        // Actualizar el campo Estado en vivo: "Esperando pago" → "Pago confirmado"
-        var estEl = document.getElementById('gracias-estado');
-        if (estEl){ estEl.textContent = 'Pago confirmado'; estEl.style.color = '#1d7d34'; }
-        // Cambiar el encabezado y título a confirmado
-        var icoEl = document.getElementById('gracias-icon'); if (icoEl){ icoEl.textContent = 'Pago confirmado'; icoEl.style.color = '#1d7d34'; }
-        var titEl = document.getElementById('gracias-titulo'); if (titEl) titEl.textContent = 'Gracias por tu compra';
-        var subEl = document.getElementById('gracias-sub'); if (subEl) subEl.textContent = 'Tu pago fue confirmado y tu pedido está en proceso. Te enviamos un correo con los detalles.';
-        // Reemplazar el recuadro de espera por uno de confirmado (sin botón)
-        var extraEl = document.getElementById('gracias-extra');
-        if (extraEl) extraEl.innerHTML = '<div style="background:#f0faf2;border:1px solid #c4eccf;border-radius:12px;padding:14px;font-size:14px;color:#1d7d34;"><b>Pago confirmado.</b> Prepararemos tu pedido y te avisaremos del envío. Ya puedes cerrar esta página o seguir comprando.</div>';
+        // Mostrar la pantalla de gracias en estado APROBADO.
+        // Esto funciona tanto si el usuario está en la pantalla SPEI (page-pago)
+        // como si ya está en la pantalla de gracias en modo pendiente.
+        var totalConf = (window.PEDIDO_CONFIRMADO ? window.PEDIDO_CONFIRMADO.total : null) || monto;
+        if (typeof window.mostrarPaginaGracias === 'function') {
+          window.mostrarPaginaGracias({ folio: folio, total: totalConf, metodo: 'spei', estado: 'aprobado' });
+        }
 
         // Toast UNA sola vez
         if (typeof showToast==='function') showToast('Tu pago fue confirmado');
