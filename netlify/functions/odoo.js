@@ -1661,15 +1661,33 @@ exports.handler = async function(event, context) {
       const uid = await odooAuth();
       if (!uid) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'odoo auth'})};
 
-      // Entregas salientes (picking_type_code='outgoing') que están asignadas o confirmadas,
-      // es decir, pendientes de validar (no 'done' ni 'cancel').
+      // DIAGNÓSTICO: traer TODAS las entregas salientes recientes sin filtrar por estado,
+      // para ver qué hay realmente. Filtramos solo por tipo saliente.
+      // (Si picking_type_code no funciona en esta versión, probamos sin ese filtro.)
       const domainXml = `<value><array><data>
         <value><array><data>${xmlStr('picking_type_code')}<value><string>=</string></value>${xmlStr('outgoing')}</data></array></value>
-        <value><array><data>${xmlStr('state')}<value><string>in</string></value><value><array><data><value><string>assigned</string></value><value><string>confirmed</string></value><value><string>waiting</string></value></data></array></value></data></array></value>
       </data></array></value>`;
 
-      const text = await odooSearchRead(uid, 'stock.picking', domainXml,
+      let text = await odooSearchRead(uid, 'stock.picking', domainXml,
         ['id','name','origin','state','scheduled_date','partner_id','note'], 50);
+
+      let structCount = (text.split('<struct>').length - 1);
+      console.log('[almacen] con filtro outgoing → structs:', structCount);
+
+      // Si el filtro outgoing no devuelve nada, reintentar SIN filtro de tipo
+      // (solo excluyendo canceladas), para ver todas las entregas.
+      if (structCount === 0) {
+        const domainAll = `<value><array><data>
+          <value><array><data>${xmlStr('state')}<value><string>!=</string></value>${xmlStr('cancel')}</data></array></value>
+        </data></array></value>`;
+        text = await odooSearchRead(uid, 'stock.picking', domainAll,
+          ['id','name','origin','state','scheduled_date','partner_id','note','picking_type_code','picking_type_id'], 50);
+        structCount = (text.split('<struct>').length - 1);
+        console.log('[almacen] SIN filtro tipo → structs:', structCount);
+      }
+
+      console.log('[almacen] listar_pedidos raw length:', text.length, 'structs:', structCount);
+      console.log('[almacen] RAW XML (primeros 1500):', text.substring(0, 1500));
 
       // Parsear múltiples registros (split por <struct>)
       function extractField(struct, field){
@@ -1714,7 +1732,11 @@ exports.handler = async function(event, context) {
           });
         }
       }
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, pedidos })};
+      return {statusCode:200, headers, body: JSON.stringify({
+        ok:true,
+        pedidos,
+        _diag: { struct_count: structCount, raw_sample: text.substring(0, 600) }
+      })};
     }
 
     // ── DETALLE de un pedido (líneas a surtir con producto, cantidad, ubicación) ──
