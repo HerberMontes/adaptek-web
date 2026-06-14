@@ -332,6 +332,7 @@ function logoutWho(){
 async function cargarPedidos(){
   try {
     var data = await apiCall({ action:'almacen_listar_pedidos' });
+    if(typeof console!=='undefined') console.log('[almacen] respuesta listar_pedidos:', data);
     if (data && data.ok && Array.isArray(data.pedidos)) {
       // Conservar items ya cargados (para no recargar detalle innecesariamente)
       var prev = {};
