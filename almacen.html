@@ -58,6 +58,29 @@
 
   .section-label{font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink-3);margin:0 4px 12px;display:flex;align-items:center;gap:8px;}
   .section-label .cnt{background:var(--line);color:var(--ink-2);border-radius:980px;padding:1px 9px;font-size:11px;}
+
+  /* Filtros clicables (stats) */
+  .stat{cursor:pointer;transition:box-shadow .15s,transform .1s,border-color .15s;border:2px solid transparent;}
+  .stat:hover{transform:translateY(-1px);}
+  .stat.active{border-color:var(--azul);box-shadow:0 0 0 3px rgba(10,91,214,.1);}
+  .stat.proc.active{border-color:var(--ambar);box-shadow:0 0 0 3px rgba(180,106,0,.1);}
+  .stat.done.active{border-color:var(--verde);box-shadow:0 0 0 3px rgba(29,125,52,.1);}
+  .stat.mine .n{color:var(--ink);}
+
+  /* Buscador */
+  .search-row{position:relative;margin-bottom:22px;}
+  .search-ico{position:absolute;left:16px;top:50%;transform:translateY(-50%);pointer-events:none;}
+  .search-input{width:100%;border:1px solid var(--line);border-radius:12px;padding:13px 44px;font-family:inherit;font-size:15px;color:var(--ink);outline:none;background:var(--panel);transition:border-color .15s,box-shadow .15s;}
+  .search-input:focus{border-color:var(--azul);box-shadow:0 0 0 3px rgba(10,91,214,.1);}
+  .search-clear{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:var(--line);border:none;width:24px;height:24px;border-radius:50%;cursor:pointer;color:var(--ink-2);font-size:12px;display:flex;align-items:center;justify-content:center;}
+
+  /* Paginación */
+  .pager{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:24px;flex-wrap:wrap;}
+  .pager button{min-width:38px;height:38px;border:1px solid var(--line);background:var(--panel);border-radius:10px;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;color:var(--ink-2);transition:all .12s;}
+  .pager button:hover:not(:disabled){border-color:var(--azul);color:var(--azul);}
+  .pager button.active{background:var(--azul);border-color:var(--azul);color:#fff;}
+  .pager button:disabled{opacity:.4;cursor:not-allowed;}
+  .pager .pinfo{font-size:13px;color:var(--ink-3);margin:0 8px;}
   .live{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--verde);font-weight:600;letter-spacing:0;text-transform:none;margin-left:auto;}
   .live .ld{width:7px;height:7px;border-radius:50%;background:var(--verde);animation:pulse 1.6s infinite;}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
@@ -192,19 +215,27 @@
     </div>
   </div>
   <div class="wrap">
+    <!-- Filtros clicables (también muestran el conteo) -->
     <div class="stats">
-      <div class="stat pend"><div class="n" id="st-disp">0</div><div class="l">Disponibles</div></div>
-      <div class="stat proc"><div class="n" id="st-proc">0</div><div class="l">En proceso</div></div>
-      <div class="stat"><div class="n" id="st-mine">0</div><div class="l">Mis pedidos</div></div>
-      <div class="stat done"><div class="n" id="st-done">7</div><div class="l">Surtidos hoy</div></div>
+      <div class="stat pend" data-filter="disp" onclick="setFilter('disp')"><div class="n" id="st-disp">0</div><div class="l">Disponibles</div></div>
+      <div class="stat proc" data-filter="proc" onclick="setFilter('proc')"><div class="n" id="st-proc">0</div><div class="l">En proceso</div></div>
+      <div class="stat mine" data-filter="mine" onclick="setFilter('mine')"><div class="n" id="st-mine">0</div><div class="l">Mis pedidos</div></div>
+      <div class="stat done" data-filter="todos" onclick="setFilter('todos')"><div class="n" id="st-total">0</div><div class="l">Todos</div></div>
     </div>
 
-    <div class="section-label">Disponibles <span class="cnt" id="cnt-disp">0</span>
-      <span class="live"><span class="ld"></span>En vivo · actualiza cada 5s</span></div>
-    <div class="orders" id="list-disp"></div>
+    <!-- Buscador -->
+    <div class="search-row">
+      <svg class="search-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b2" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="search-input" class="search-input" type="text" placeholder="Buscar por WH, cliente o folio..." oninput="onSearch(this.value)"/>
+      <button id="search-clear" class="search-clear" onclick="clearSearch()" style="display:none;">&#10005;</button>
+    </div>
 
-    <div class="section-label">En proceso <span class="cnt" id="cnt-proc">0</span></div>
-    <div class="orders" id="list-proc"></div>
+    <div class="section-label" id="list-title">Disponibles <span class="cnt" id="cnt-shown">0</span>
+      <span class="live"><span class="ld"></span>En vivo · actualiza cada 5s</span></div>
+    <div class="orders" id="list-main"></div>
+
+    <!-- Paginación -->
+    <div class="pager" id="pager"></div>
   </div>
 
   <div class="demo-bar">
@@ -332,7 +363,6 @@ function logoutWho(){
 async function cargarPedidos(){
   try {
     var data = await apiCall({ action:'almacen_listar_pedidos' });
-    if(typeof console!=='undefined') console.log('[almacen] respuesta listar_pedidos:', data);
     if (data && data.ok && Array.isArray(data.pedidos)) {
       // Conservar items ya cargados (para no recargar detalle innecesariamente)
       var prev = {};
@@ -383,24 +413,134 @@ function orderCardTaken(p){
   + '</div>';
 }
 
+// ──── ESTADO DE VISTA (filtro / búsqueda / página) ────
+var FILTER = 'disp';   // disp | proc | mine | todos
+var SEARCH = '';
+var PAGE = 1;
+var POR_PAGINA = 15;
+
+function setFilter(f){
+  FILTER = f;
+  PAGE = 1;
+  renderBoard();
+}
+
+function onSearch(v){
+  SEARCH = (v||'').trim().toLowerCase();
+  PAGE = 1;
+  document.getElementById('search-clear').style.display = SEARCH ? 'flex' : 'none';
+  renderBoard();
+}
+
+function clearSearch(){
+  SEARCH = '';
+  document.getElementById('search-input').value = '';
+  document.getElementById('search-clear').style.display = 'none';
+  PAGE = 1;
+  renderBoard();
+}
+
+// Devuelve los pedidos del filtro activo
+function pedidosDelFiltro(){
+  if(FILTER==='disp')  return PEDIDOS.filter(function(p){return !p.owner;});
+  if(FILTER==='proc')  return PEDIDOS.filter(function(p){return p.owner;});
+  if(FILTER==='mine')  return PEDIDOS.filter(function(p){return p.owner===YO;});
+  return PEDIDOS.slice(); // todos
+}
+
+// Aplica la búsqueda por WH, cliente o folio
+function aplicarBusqueda(lista){
+  if(!SEARCH) return lista;
+  return lista.filter(function(p){
+    return (p.wh||'').toLowerCase().indexOf(SEARCH)>=0
+        || (p.cust||'').toLowerCase().indexOf(SEARCH)>=0
+        || (p.folio||'').toLowerCase().indexOf(SEARCH)>=0;
+  });
+}
+
+var FILTER_TITLES = { disp:'Disponibles', proc:'En proceso', mine:'Mis pedidos', todos:'Todos los pedidos' };
+var FILTER_EMPTY = {
+  disp:'No hay pedidos disponibles ahora mismo.',
+  proc:'Ningún pedido en proceso.',
+  mine:'No tienes pedidos asignados.',
+  todos:'No hay pedidos.'
+};
+
 function renderBoard(){
-  var disp = [], proc = [];
-  PEDIDOS.forEach(function(p){ if(p.owner) proc.push(p); else disp.push(p); });
+  // Conteos globales (para las tarjetas)
+  var nDisp = PEDIDOS.filter(function(p){return !p.owner;}).length;
+  var nProc = PEDIDOS.filter(function(p){return p.owner;}).length;
+  var nMine = PEDIDOS.filter(function(p){return p.owner===YO;}).length;
+  var nTotal = PEDIDOS.length;
+  document.getElementById('st-disp').textContent = nDisp;
+  document.getElementById('st-proc').textContent = nProc;
+  document.getElementById('st-mine').textContent = nMine;
+  document.getElementById('st-total').textContent = nTotal;
 
-  var ld = document.getElementById('list-disp');
-  ld.innerHTML = disp.length ? disp.map(orderCardAvailable).join('')
-    : '<div class="empty">No hay pedidos disponibles ahora mismo.</div>';
+  // Resaltar el filtro activo
+  document.querySelectorAll('.stat').forEach(function(s){
+    s.classList.toggle('active', s.getAttribute('data-filter')===FILTER);
+  });
 
-  var lp = document.getElementById('list-proc');
-  lp.innerHTML = proc.length ? proc.map(orderCardTaken).join('')
-    : '<div class="empty">Ningún pedido en proceso.</div>';
+  // Lista filtrada + búsqueda
+  var lista = aplicarBusqueda(pedidosDelFiltro());
 
-  var mine = PEDIDOS.filter(function(p){return p.owner===YO;}).length;
-  document.getElementById('st-disp').textContent = disp.length;
-  document.getElementById('st-proc').textContent = proc.length;
-  document.getElementById('st-mine').textContent = mine;
-  document.getElementById('cnt-disp').textContent = disp.length;
-  document.getElementById('cnt-proc').textContent = proc.length;
+  // Título y conteo de lo mostrado
+  document.getElementById('list-title').childNodes[0].nodeValue = FILTER_TITLES[FILTER] + ' ';
+  document.getElementById('cnt-shown').textContent = lista.length;
+
+  // Paginación
+  var totalPag = Math.max(1, Math.ceil(lista.length / POR_PAGINA));
+  if(PAGE > totalPag) PAGE = totalPag;
+  var ini = (PAGE-1) * POR_PAGINA;
+  var pagina = lista.slice(ini, ini + POR_PAGINA);
+
+  // Render de las tarjetas (según si están tomados o no)
+  var main = document.getElementById('list-main');
+  if(!pagina.length){
+    var msg = SEARCH ? 'Sin resultados para "'+SEARCH+'".' : FILTER_EMPTY[FILTER];
+    main.innerHTML = '<div class="empty">'+msg+'</div>';
+  } else {
+    main.innerHTML = pagina.map(function(p){
+      return p.owner ? orderCardTaken(p) : orderCardAvailable(p);
+    }).join('');
+  }
+
+  renderPager(totalPag, lista.length);
+}
+
+function renderPager(totalPag, totalItems){
+  var pager = document.getElementById('pager');
+  if(totalPag <= 1){ pager.innerHTML=''; return; }
+
+  var html = '';
+  html += '<button onclick="irPagina('+(PAGE-1)+')"'+(PAGE===1?' disabled':'')+'>‹</button>';
+
+  // Mostrar máximo 7 números, con elipsis si hay muchos
+  var nums = [];
+  if(totalPag <= 7){
+    for(var i=1;i<=totalPag;i++) nums.push(i);
+  } else {
+    nums.push(1);
+    var start = Math.max(2, PAGE-1), end = Math.min(totalPag-1, PAGE+1);
+    if(start>2) nums.push('...');
+    for(var j=start;j<=end;j++) nums.push(j);
+    if(end<totalPag-1) nums.push('...');
+    nums.push(totalPag);
+  }
+  nums.forEach(function(n){
+    if(n==='...'){ html += '<span class="pinfo">…</span>'; }
+    else html += '<button onclick="irPagina('+n+')"'+(n===PAGE?' class="active"':'')+'>'+n+'</button>';
+  });
+
+  html += '<button onclick="irPagina('+(PAGE+1)+')"'+(PAGE===totalPag?' disabled':'')+'>›</button>';
+  pager.innerHTML = html;
+}
+
+function irPagina(n){
+  PAGE = n;
+  renderBoard();
+  window.scrollTo({top:0, behavior:'smooth'});
 }
 
 function pedidoById(id){ return PEDIDOS.find(function(p){return p.id===id;}); }
