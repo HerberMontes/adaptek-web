@@ -1661,49 +1661,30 @@ exports.handler = async function(event, context) {
       const uid = await odooAuth();
       if (!uid) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'odoo auth'})};
 
-      // Odoo 19: empezar con la consulta MÍNIMA (solo id y name, campos que siempre existen)
-      // para aislar qué campo causa el fault. Sin filtro de picking_type_code (puede haber cambiado).
-      const domainXml = `<value><array><data>
-        <value><array><data>${xmlStr('state')}<value><string>!=</string></value>${xmlStr('cancel')}</data></array></value>
-      </data></array></value>`;
+      // Dominio CORRECTO (mismo formato que las consultas que funcionan):
+      // cada condición es UNA tupla <array> con [campo, operador, valor].
+      // Filtramos: entregas salientes (picking_type_code='outgoing') que NO estén hechas ni canceladas.
+      const domainXml = `<value><array><data>${xmlStr('picking_type_code')}<value><string>=</string></value>${xmlStr('outgoing')}</data></array></value>
+        <value><array><data>${xmlStr('state')}<value><string>not in</string></value><value><array><data><value><string>done</string></value><value><string>cancel</string></value></data></array></value></data></array></value>`;
 
       let text = await odooSearchRead(uid, 'stock.picking', domainXml,
-        ['id','name'], 50);
+        ['id','name','origin','state','scheduled_date','partner_id','note'], 50);
 
       let structCount = (text.split('<struct>').length - 1);
       const hayFault = text.indexOf('<fault>') >= 0;
-      console.log('[almacen] consulta mínima → fault:', hayFault, 'structs:', structCount);
+      console.log('[almacen] listar_pedidos → fault:', hayFault, 'structs:', structCount);
 
-      // Prueba alterna: usar 'search' en vez de 'search_read' (a veces Odoo 19 difiere)
-      let searchTest = '';
       if (hayFault) {
-        searchTest = await xmlrpc(uid, 'stock.picking', 'search',
-          `<value><array><data></data></array></value>`).catch(e => 'ERR:'+e.message);
-        console.log('[almacen] search simple stock.picking:', searchTest.substring(0, 300));
-      }
-
-      // Si la consulta mínima funciona, intentar agregar más campos uno por uno no es práctico aquí;
-      // devolvemos lo que haya y el diagnóstico.
-      if (hayFault) {
-        // Extraer el mensaje legible del fault (faultString) para diagnóstico claro
         let faultMsg = '';
         const fsMatch = text.match(/<name>faultString<\/name>\s*<value>\s*<string>([\s\S]*?)<\/string>/);
         if (fsMatch) faultMsg = fsMatch[1];
-        // También buscar la última línea del traceback (suele tener el error real)
-        let errLine = '';
         const lines = faultMsg.split('\n').filter(l => l.trim());
-        if (lines.length) errLine = lines[lines.length - 1];
-        console.log('[almacen] FAULT message:', faultMsg.substring(0, 800));
+        const errLine = lines.length ? lines[lines.length - 1] : '';
         return {statusCode:200, headers, body: JSON.stringify({
-          ok:false,
-          error:'odoo_fault',
-          pedidos:[],
-          _diag:{ fault:true, fault_msg: faultMsg.substring(0, 800), error_line: errLine, search_test: searchTest.substring(0, 300), raw_full: text.substring(0, 600) }
+          ok:false, error:'odoo_fault', pedidos:[],
+          _diag:{ fault:true, error_line: errLine }
         })};
       }
-
-      console.log('[almacen] listar_pedidos structs:', structCount);
-      console.log('[almacen] RAW XML (primeros 1500):', text.substring(0, 1500));
 
       // Parsear múltiples registros (split por <struct>)
       function extractField(struct, field){
@@ -1720,7 +1701,6 @@ exports.handler = async function(event, context) {
         const end = content.indexOf('<');
         return end >= 0 ? content.substring(0, end).trim() : content.trim();
       }
-      // partner_id viene como [id, "Nombre"] → extraer el nombre (segundo elemento del array)
       function extractMany2oneName(struct, field){
         const tag = '<name>' + field + '</name>';
         const pos = struct.indexOf(tag);
@@ -1739,20 +1719,16 @@ exports.handler = async function(event, context) {
           const note = extractField(struct, 'note');
           pedidos.push({
             id,
-            wh: extractField(struct, 'name'),              // WH/OUT/00085
-            origin: extractField(struct, 'origin'),        // S00123 (orden de venta origen)
+            wh: extractField(struct, 'name'),
+            origin: extractField(struct, 'origin'),
             estado_odoo: extractField(struct, 'state'),
             fecha: extractField(struct, 'scheduled_date'),
             cliente: extractMany2oneName(struct, 'partner_id'),
-            owner: _almParseOwner(note)                    // almacenista que lo tomó (o null)
+            owner: _almParseOwner(note)
           });
         }
       }
-      return {statusCode:200, headers, body: JSON.stringify({
-        ok:true,
-        pedidos,
-        _diag: { struct_count: structCount, raw_sample: text.substring(0, 600) }
-      })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, pedidos })};
     }
 
     // ── DETALLE de un pedido (líneas a surtir con producto, cantidad, ubicación) ──
@@ -1763,9 +1739,7 @@ exports.handler = async function(event, context) {
       if (!uid) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'odoo auth'})};
 
       // Leer las líneas de movimiento (stock.move) de esta entrega
-      const domainXml = `<value><array><data>
-        <value><array><data>${xmlStr('picking_id')}<value><string>=</string></value><value><int>${pickingId}</int></value></data></array></value>
-      </data></array></value>`;
+      const domainXml = `<value><array><data>${xmlStr('picking_id')}<value><string>=</string></value><value><int>${pickingId}</int></value></data></array></value>`;
       const text = await odooSearchRead(uid, 'stock.move', domainXml,
         ['id','product_id','product_uom_qty','location_id'], 50);
 
@@ -1811,9 +1785,7 @@ exports.handler = async function(event, context) {
       if (!uid) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'odoo auth'})};
 
       // 1) Leer la nota actual para ver si YA lo tomó alguien (candado)
-      const readDomain = `<value><array><data>
-        <value><array><data>${xmlStr('id')}<value><string>=</string></value><value><int>${pickingId}</int></value></data></array></value>
-      </data></array></value>`;
+      const readDomain = `<value><array><data>${xmlStr('id')}<value><string>=</string></value><value><int>${pickingId}</int></value></data></array></value>`;
       const readText = await odooSearchRead(uid, 'stock.picking', readDomain, ['id','note'], 1);
       const noteMatch = readText.match(/<name>\s*note\s*<\/name>\s*<value>\s*<string>([^<]*)<\/string>/);
       const currentNote = noteMatch ? noteMatch[1] : '';
@@ -1841,9 +1813,7 @@ exports.handler = async function(event, context) {
       const uid = await odooAuth();
       if (!uid) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'odoo auth'})};
 
-      const readDomain = `<value><array><data>
-        <value><array><data>${xmlStr('id')}<value><string>=</string></value><value><int>${pickingId}</int></value></data></array></value>
-      </data></array></value>`;
+      const readDomain = `<value><array><data>${xmlStr('id')}<value><string>=</string></value><value><int>${pickingId}</int></value></data></array></value>`;
       const readText = await odooSearchRead(uid, 'stock.picking', readDomain, ['id','note'], 1);
       const noteMatch = readText.match(/<name>\s*note\s*<\/name>\s*<value>\s*<string>([^<]*)<\/string>/);
       const currentNote = noteMatch ? noteMatch[1] : '';
