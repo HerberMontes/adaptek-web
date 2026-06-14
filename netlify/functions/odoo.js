@@ -1661,32 +1661,31 @@ exports.handler = async function(event, context) {
       const uid = await odooAuth();
       if (!uid) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'odoo auth'})};
 
-      // DIAGNÓSTICO: traer TODAS las entregas salientes recientes sin filtrar por estado,
-      // para ver qué hay realmente. Filtramos solo por tipo saliente.
-      // (Si picking_type_code no funciona en esta versión, probamos sin ese filtro.)
+      // Odoo 19: empezar con la consulta MÍNIMA (solo id y name, campos que siempre existen)
+      // para aislar qué campo causa el fault. Sin filtro de picking_type_code (puede haber cambiado).
       const domainXml = `<value><array><data>
-        <value><array><data>${xmlStr('picking_type_code')}<value><string>=</string></value>${xmlStr('outgoing')}</data></array></value>
+        <value><array><data>${xmlStr('state')}<value><string>!=</string></value>${xmlStr('cancel')}</data></array></value>
       </data></array></value>`;
 
       let text = await odooSearchRead(uid, 'stock.picking', domainXml,
-        ['id','name','origin','state','scheduled_date','partner_id','note'], 50);
+        ['id','name'], 50);
 
       let structCount = (text.split('<struct>').length - 1);
-      console.log('[almacen] con filtro outgoing → structs:', structCount);
+      const hayFault = text.indexOf('<fault>') >= 0;
+      console.log('[almacen] consulta mínima → fault:', hayFault, 'structs:', structCount);
 
-      // Si el filtro outgoing no devuelve nada, reintentar SIN filtro de tipo
-      // (solo excluyendo canceladas), para ver todas las entregas.
-      if (structCount === 0) {
-        const domainAll = `<value><array><data>
-          <value><array><data>${xmlStr('state')}<value><string>!=</string></value>${xmlStr('cancel')}</data></array></value>
-        </data></array></value>`;
-        text = await odooSearchRead(uid, 'stock.picking', domainAll,
-          ['id','name','origin','state','scheduled_date','partner_id','note','picking_type_code','picking_type_id'], 50);
-        structCount = (text.split('<struct>').length - 1);
-        console.log('[almacen] SIN filtro tipo → structs:', structCount);
+      // Si la consulta mínima funciona, intentar agregar más campos uno por uno no es práctico aquí;
+      // devolvemos lo que haya y el diagnóstico.
+      if (hayFault) {
+        return {statusCode:200, headers, body: JSON.stringify({
+          ok:false,
+          error:'odoo_fault',
+          pedidos:[],
+          _diag:{ fault:true, raw_full: text.substring(0, 1200) }
+        })};
       }
 
-      console.log('[almacen] listar_pedidos raw length:', text.length, 'structs:', structCount);
+      console.log('[almacen] listar_pedidos structs:', structCount);
       console.log('[almacen] RAW XML (primeros 1500):', text.substring(0, 1500));
 
       // Parsear múltiples registros (split por <struct>)
