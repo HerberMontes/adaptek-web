@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adaptekk · Almacén</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#eef1f4; --panel:#fff; --ink:#16202c; --ink-2:#5b6b7b; --ink-3:#94a3b2;
+    --line:#dde4ec; --azul:#0a5bd6; --azul-soft:#e8f1ff; --ambar:#b46a00; --ambar-soft:#fff3e0;
+    --verde:#1d7d34; --verde-soft:#e7f6ec; --rojo:#c0392b;
+    --shadow:0 1px 3px rgba(20,32,44,.06),0 8px 24px rgba(20,32,44,.05);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{background:var(--bg);color:var(--ink);font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased;}
+  .mono{font-family:'JetBrains Mono',monospace;letter-spacing:-.5px;}
+
+  /* ACCESO */
+  .gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#0d1b2a;}
+  .gate-card{background:var(--panel);border-radius:20px;padding:40px 34px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.4);text-align:center;}
+  .gate-brand{font-weight:800;font-size:24px;letter-spacing:.5px;margin-bottom:4px;}
+  .gate-brand span{color:#c0392b;}
+  .gate-tag{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--ink-3);margin-bottom:30px;}
+  .gate-label{font-size:13px;font-weight:600;color:var(--ink-2);text-align:left;margin-bottom:7px;}
+  .gate-input{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:14px 16px;font-family:inherit;font-size:18px;text-align:center;letter-spacing:4px;outline:none;transition:border-color .15s,box-shadow .15s;}
+  .gate-input:focus{border-color:var(--azul);box-shadow:0 0 0 3px rgba(10,91,214,.12);}
+  .gate-btn{width:100%;background:var(--azul);color:#fff;border:none;padding:15px;border-radius:12px;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;margin-top:16px;transition:background .15s;}
+  .gate-btn:hover{background:#0950bd;}
+  .gate-err{color:var(--rojo);font-size:13px;font-weight:600;margin-top:12px;min-height:18px;}
+  .gate-hint{font-size:12px;color:var(--ink-3);margin-top:18px;}
+
+  /* SELECCIÓN DE ALMACENISTA */
+  .who-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px;}
+  .who-card{border:1.5px solid var(--line);border-radius:14px;padding:24px 14px;cursor:pointer;transition:all .15s;background:var(--panel);}
+  .who-card:hover{border-color:var(--azul);box-shadow:0 0 0 3px rgba(10,91,214,.1);}
+  .who-av{width:54px;height:54px;border-radius:50%;background:#0d1b2a;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;margin:0 auto 12px;}
+  .who-name{font-size:15px;font-weight:700;}
+  .who-role{font-size:12px;color:var(--ink-3);margin-top:2px;}
+
+  /* TOP BAR */
+  .topbar{position:sticky;top:0;z-index:50;background:#0d1b2a;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:14px 22px;}
+  .brand{display:flex;align-items:center;gap:12px;font-weight:800;font-size:18px;letter-spacing:.5px;}
+  .brand .dot{width:9px;height:9px;border-radius:50%;background:#37d67a;box-shadow:0 0 0 4px rgba(55,214,122,.2);}
+  .brand .tag{font-size:11px;font-weight:600;letter-spacing:2px;color:#7d8ea0;text-transform:uppercase;border-left:1px solid #2b3a4d;padding-left:12px;}
+  .topbar .who{display:flex;align-items:center;gap:10px;font-size:13px;color:#aeb9c6;cursor:pointer;}
+  .topbar .who .av{width:30px;height:30px;border-radius:50%;background:#27384b;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:13px;}
+  .topbar .who .chg{font-size:11px;color:#5f7080;}
+
+  .wrap{max-width:1100px;margin:0 auto;padding:24px 22px 80px;}
+
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:26px;}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow);}
+  .stat .n{font-size:30px;font-weight:800;line-height:1;letter-spacing:-1px;}
+  .stat .l{font-size:12px;color:var(--ink-2);margin-top:6px;font-weight:500;}
+  .stat.pend .n{color:var(--azul);} .stat.proc .n{color:var(--ambar);} .stat.done .n{color:var(--verde);}
+
+  .section-label{font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink-3);margin:0 4px 12px;display:flex;align-items:center;gap:8px;}
+  .section-label .cnt{background:var(--line);color:var(--ink-2);border-radius:980px;padding:1px 9px;font-size:11px;}
+  .live{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--verde);font-weight:600;letter-spacing:0;text-transform:none;margin-left:auto;}
+  .live .ld{width:7px;height:7px;border-radius:50%;background:var(--verde);animation:pulse 1.6s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+  .orders{display:flex;flex-direction:column;gap:12px;margin-bottom:30px;}
+  .order{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;transition:transform .12s,box-shadow .12s;}
+  .order.available{cursor:default;}
+  .order.taken{opacity:.92;}
+  .order.mine{border-color:#bcd8ff;box-shadow:0 0 0 2px rgba(10,91,214,.12),var(--shadow);}
+  .order-top{display:flex;align-items:center;gap:14px;padding:16px 20px 0;}
+  .order-wh{font-size:18px;font-weight:800;letter-spacing:-.3px;}
+  .order-folio{font-size:12px;color:var(--ink-2);margin-top:2px;}
+  .pill{margin-left:auto;font-size:12px;font-weight:700;padding:6px 13px;border-radius:980px;letter-spacing:.3px;display:inline-flex;align-items:center;gap:7px;}
+  .pill .pd{width:7px;height:7px;border-radius:50%;}
+  .pill.pend{background:var(--azul-soft);color:var(--azul);} .pill.pend .pd{background:var(--azul);}
+  .pill.proc{background:var(--ambar-soft);color:var(--ambar);} .pill.proc .pd{background:var(--ambar);}
+  .order-body{padding:12px 20px 16px;display:flex;align-items:flex-end;justify-content:space-between;gap:16px;}
+  .order-cust{font-size:14px;color:var(--ink-2);} .order-cust b{color:var(--ink);font-weight:600;}
+  .order-items-prev{font-size:13px;color:var(--ink-3);margin-top:4px;}
+  .order-meta{text-align:right;flex-shrink:0;}
+  .order-count{font-size:13px;color:var(--ink-2);}
+  .order-age{font-size:12px;color:var(--ink-3);margin-top:2px;}
+  .order-age.urgent{color:var(--rojo);font-weight:600;}
+  .order-foot{border-top:1px solid var(--line);padding:13px 20px;display:flex;align-items:center;gap:12px;}
+  .taken-by{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--ink-2);}
+  .taken-by .av{width:26px;height:26px;border-radius:50%;background:var(--ambar);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;}
+  .taken-by b{color:var(--ink);font-weight:600;}
+  .btn-take{margin-left:auto;background:var(--azul);color:#fff;border:none;padding:10px 22px;border-radius:980px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:background .15s;}
+  .btn-take:hover{background:#0950bd;}
+  .btn-continue{margin-left:auto;background:var(--verde);color:#fff;border:none;padding:10px 22px;border-radius:980px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;}
+  .lock-note{margin-left:auto;font-size:12px;color:var(--ink-3);font-weight:500;display:flex;align-items:center;gap:6px;}
+
+  .empty{background:var(--panel);border:1px dashed var(--line);border-radius:14px;padding:28px;text-align:center;color:var(--ink-3);font-size:14px;}
+
+  .screen{display:none;} .screen.active{display:block;animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .back-row{display:flex;align-items:center;gap:12px;margin-bottom:20px;}
+  .back-btn{background:var(--panel);border:1px solid var(--line);width:42px;height:42px;border-radius:50%;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;color:var(--ink);box-shadow:var(--shadow);}
+  .detail-head{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:var(--shadow);margin-bottom:20px;}
+  .detail-wh{font-size:24px;font-weight:800;letter-spacing:-.4px;display:flex;align-items:center;gap:12px;}
+  .detail-owner{font-size:12px;font-weight:600;color:var(--ambar);background:var(--ambar-soft);padding:4px 11px;border-radius:980px;}
+  .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px 24px;margin-top:18px;}
+  .field .fl{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ink-3);margin-bottom:5px;}
+  .field .fv{font-size:15px;color:var(--ink);font-weight:500;line-height:1.4;}
+
+  .pick-label{display:flex;align-items:center;justify-content:space-between;margin:0 4px 12px;}
+  .pick-label .progress{font-size:13px;font-weight:600;color:var(--ink-2);}
+  .pick-item{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow);margin-bottom:10px;display:flex;align-items:center;gap:16px;cursor:pointer;transition:border-color .15s,background .15s;}
+  .pick-item:hover{border-color:#c2cedd;}
+  .pick-item.checked{background:var(--verde-soft);border-color:#bfe3c9;}
+  .checkbox{width:30px;height:30px;border-radius:9px;border:2px solid var(--line);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+  .pick-item.checked .checkbox{background:var(--verde);border-color:var(--verde);}
+  .checkbox svg{width:18px;height:18px;stroke:#fff;stroke-width:3.5;fill:none;opacity:0;transition:opacity .15s;}
+  .pick-item.checked .checkbox svg{opacity:1;}
+  .pick-bin-badge{flex-shrink:0;width:74px;height:62px;border-radius:12px;background:#0d1b2a;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;}
+  .pick-bin-badge .bb-lbl{font-size:9px;font-weight:700;letter-spacing:1.5px;color:#7d8ea0;text-transform:uppercase;}
+  .pick-bin-badge .bb-val{font-family:'JetBrains Mono',monospace;font-size:21px;font-weight:700;letter-spacing:-.5px;line-height:1;}
+  .pick-item.checked .pick-bin-badge{background:var(--verde);}
+  .pick-item.checked .pick-bin-badge .bb-lbl{color:rgba(255,255,255,.7);}
+  .pick-main{flex:1;min-width:0;}
+  .pick-code{font-size:17px;font-weight:700;letter-spacing:-.5px;word-break:break-all;}
+  .pick-item.checked .pick-code{text-decoration:line-through;text-decoration-color:rgba(29,125,52,.4);color:var(--ink-2);}
+  .pick-desc{font-size:13px;color:var(--ink-2);margin-top:3px;line-height:1.35;}
+  .pick-qty-box{flex-shrink:0;text-align:center;min-width:58px;}
+  .pick-qty{font-size:30px;font-weight:800;letter-spacing:-1px;line-height:1;color:var(--ink);}
+  .pick-qty-lbl{font-size:11px;font-weight:600;color:var(--ink-3);letter-spacing:.5px;margin-top:3px;text-transform:uppercase;}
+
+  .action-bar{position:sticky;bottom:0;background:linear-gradient(to top,var(--bg) 60%,rgba(238,241,244,0));padding:18px 0 6px;margin-top:8px;display:flex;gap:10px;}
+  .btn-finish{flex:1;background:var(--verde);color:#fff;border:none;padding:18px;border-radius:14px;font-family:inherit;font-size:17px;font-weight:700;letter-spacing:.3px;cursor:pointer;box-shadow:0 6px 18px rgba(29,125,52,.28);transition:opacity .15s,transform .1s;}
+  .btn-finish:active{transform:scale(.99);}
+  .btn-finish:disabled{background:#c2cedd;box-shadow:none;cursor:not-allowed;}
+  .btn-release{background:var(--panel);border:1px solid var(--line);color:var(--ink-2);padding:18px 20px;border-radius:14px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;}
+
+  .success{display:none;text-align:center;padding:60px 24px;} .success.active{display:block;animation:fade .3s ease;}
+  .success-ring{width:84px;height:84px;border-radius:50%;background:var(--verde-soft);display:flex;align-items:center;justify-content:center;margin:0 auto 22px;}
+  .success-ring svg{width:42px;height:42px;stroke:var(--verde);stroke-width:3;fill:none;}
+  .success h2{font-size:26px;font-weight:800;letter-spacing:-.5px;margin-bottom:8px;}
+  .success p{font-size:15px;color:var(--ink-2);max-width:360px;margin:0 auto 28px;line-height:1.5;}
+  .btn-next{background:var(--azul);color:#fff;border:none;padding:15px 32px;border-radius:980px;font-family:inherit;font-size:16px;font-weight:600;cursor:pointer;}
+
+  .demo-bar{max-width:1100px;margin:0 auto;padding:14px 22px 30px;text-align:center;}
+  .demo-note{font-size:12px;color:var(--ink-3);margin-bottom:10px;}
+  .demo-sim{background:#fff;border:1px dashed var(--line);border-radius:10px;padding:10px 16px;font-size:12px;color:var(--ink-2);cursor:pointer;display:inline-block;}
+  .demo-sim b{color:var(--azul);}
+
+  @media(max-width:680px){
+    .stats{grid-template-columns:repeat(2,1fr);}
+    .detail-grid{grid-template-columns:1fr;}
+    .order-body{flex-direction:column;align-items:flex-start;}
+    .order-meta{text-align:left;}
+    .pick-item{flex-wrap:wrap;gap:12px;}
+    .pick-main{flex-basis:100%;order:3;}
+    .pick-qty-box{margin-left:auto;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ════ ACCESO ════ -->
+<div id="screen-gate" class="screen active">
+  <div class="gate">
+    <div class="gate-card">
+      <div class="gate-brand">ADAP<span>TEK</span>K</div>
+      <div class="gate-tag">Portal de Almacén</div>
+      <div class="gate-label">Contraseña de acceso</div>
+      <input class="gate-input" id="gate-pass" type="password" maxlength="12" placeholder="••••" onkeydown="if(event.key==='Enter')checkGate()"/>
+      <button class="gate-btn" onclick="checkGate()">Entrar</button>
+      <div class="gate-err" id="gate-err"></div>
+      <div class="gate-hint">Demo: la contraseña es <b>1234</b></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ ¿QUIÉN ERES? ════ -->
+<div id="screen-who" class="screen">
+  <div class="gate">
+    <div class="gate-card">
+      <div class="gate-brand">¿Quién surte hoy?</div>
+      <div class="gate-tag">Selecciona tu nombre</div>
+      <div class="who-grid" id="who-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ TABLERO ════ -->
+<div id="screen-board" class="screen">
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span>ADAPTEKK<span class="tag">Almacén</span></div>
+    <div class="who" onclick="logoutWho()">
+      <span id="tb-name">—</span>
+      <span class="av" id="tb-av">—</span>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="stats">
+      <div class="stat pend"><div class="n" id="st-disp">0</div><div class="l">Disponibles</div></div>
+      <div class="stat proc"><div class="n" id="st-proc">0</div><div class="l">En proceso</div></div>
+      <div class="stat"><div class="n" id="st-mine">0</div><div class="l">Mis pedidos</div></div>
+      <div class="stat done"><div class="n" id="st-done">7</div><div class="l">Surtidos hoy</div></div>
+    </div>
+
+    <div class="section-label">Disponibles <span class="cnt" id="cnt-disp">0</span>
+      <span class="live"><span class="ld"></span>En vivo · actualiza cada 5s</span></div>
+    <div class="orders" id="list-disp"></div>
+
+    <div class="section-label">En proceso <span class="cnt" id="cnt-proc">0</span></div>
+    <div class="orders" id="list-proc"></div>
+  </div>
+
+  <div class="demo-bar">
+    <div class="demo-note">Plataforma interna de almacén · conectada a Odoo</div>
+  </div>
+</div>
+
+<!-- ════ DETALLE / SURTIDO ════ -->
+<div id="screen-detail" class="screen">
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span>ADAPTEKK<span class="tag">Almacén</span></div>
+    <div class="who"><span id="tb-name2">—</span><span class="av" id="tb-av2">—</span></div>
+  </div>
+  <div class="wrap">
+    <div class="back-row">
+      <button class="back-btn" onclick="goBoard()">&#8592;</button>
+      <div class="section-label" style="margin:0;">Surtir pedido</div>
+    </div>
+    <div class="detail-head">
+      <div class="detail-wh"><span id="d-wh">—</span><span class="detail-owner" id="d-owner">—</span></div>
+      <div class="detail-grid">
+        <div class="field"><div class="fl">Cliente</div><div class="fv" id="d-cust">—</div></div>
+        <div class="field"><div class="fl">Pedido</div><div class="fv mono" id="d-folio">—</div></div>
+        <div class="field"><div class="fl">Dirección de envío</div><div class="fv" id="d-addr">—</div></div>
+        <div class="field"><div class="fl">Paquetería</div><div class="fv" id="d-ship">—</div></div>
+      </div>
+    </div>
+    <div class="pick-label">
+      <div class="section-label" style="margin:0;">Productos a recoger</div>
+      <div class="progress" id="pick-progress">0 de 0</div>
+    </div>
+    <div id="pick-list"></div>
+    <div class="action-bar">
+      <button class="btn-release" onclick="releaseOrder()">Liberar</button>
+      <button class="btn-finish" id="btn-finish" onclick="finishPick()" disabled>Marca todos para continuar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ ÉXITO ════ -->
+<div id="screen-success" class="screen">
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span>ADAPTEKK<span class="tag">Almacén</span></div>
+  </div>
+  <div class="wrap">
+    <div class="success active">
+      <div class="success-ring"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <h2>Pedido surtido</h2>
+      <p id="success-msg">Listo para empaque y envío. El inventario se actualizó automáticamente.</p>
+      <button class="btn-next" onclick="goBoard()">Volver al tablero</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════ CONFIGURACIÓN ════
+// Apunta al backend de Netlify (mismo que usa el sitio del cliente).
+var API = '/.netlify/functions/odoo';
+
+// ════ ALMACENISTAS (futuro: editables desde portal admin) ════
+var ALMACENISTAS = [
+  { id:'Almacenista 1', name:'Almacenista 1', ini:'A1' },
+  { id:'Almacenista 2', name:'Almacenista 2', ini:'A2' },
+];
+var YO = null;
+
+// ════ ESTADO (se llena desde Odoo) ════
+var PEDIDOS = [];   // [{id, wh, origin, cliente, owner, estado_odoo, fecha, items:[]}]
+var CURRENT = null;
+var POLL = null;
+
+function nameOf(id){ var a=ALMACENISTAS.find(function(x){return x.id===id;}); return a?a.name:(id||'—'); }
+function iniOf(id){ var a=ALMACENISTAS.find(function(x){return x.id===id;}); return a?a.ini:(id?id.substring(0,2).toUpperCase():'?'); }
+
+async function apiCall(payload){
+  var resp = await fetch(API, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+  return await resp.json();
+}
+
+// ──── ACCESO ────
+function checkGate(){
+  var v = document.getElementById('gate-pass').value;
+  // La contraseña real se valida contra una variable; por ahora demo local.
+  // (Cuando se configure ALMACEN_PASS en el backend, se valida ahí.)
+  if(v === (window.__ALMACEN_PASS || '1234')){
+    document.getElementById('gate-err').textContent='';
+    renderWho();
+    showScreen('who');
+  } else {
+    document.getElementById('gate-err').textContent='Contraseña incorrecta';
+  }
+}
+
+function renderWho(){
+  document.getElementById('who-grid').innerHTML = ALMACENISTAS.map(function(a){
+    return '<div class="who-card" onclick="pickWho(\''+a.id+'\')">'
+      + '<div class="who-av">'+a.ini+'</div>'
+      + '<div class="who-name">'+a.name+'</div>'
+      + '<div class="who-role">Surtido</div>'
+    + '</div>';
+  }).join('');
+}
+
+function pickWho(id){
+  YO = id;
+  document.getElementById('tb-name').textContent = nameOf(id);
+  document.getElementById('tb-av').textContent = iniOf(id);
+  document.getElementById('tb-name2').textContent = nameOf(id);
+  document.getElementById('tb-av2').textContent = iniOf(id);
+  goBoard();
+  startPolling();
+}
+
+function logoutWho(){
+  YO = null;
+  if(POLL) clearInterval(POLL);
+  document.getElementById('gate-pass').value='';
+  showScreen('gate');
+}
+
+// ──── CARGAR PEDIDOS DESDE ODOO ────
+async function cargarPedidos(){
+  try {
+    var data = await apiCall({ action:'almacen_listar_pedidos' });
+    if (data && data.ok && Array.isArray(data.pedidos)) {
+      // Conservar items ya cargados (para no recargar detalle innecesariamente)
+      var prev = {};
+      PEDIDOS.forEach(function(p){ prev[p.id] = p.items; });
+      PEDIDOS = data.pedidos.map(function(p){
+        return {
+          id: p.id,
+          wh: p.wh || ('WH/' + p.id),
+          folio: p.origin || '',
+          cust: p.cliente || 'Cliente',
+          owner: p.owner || null,
+          estado_odoo: p.estado_odoo,
+          fecha: p.fecha || '',
+          items: prev[p.id] || null,
+          urgent: false
+        };
+      });
+      return true;
+    }
+  } catch(e){ if(typeof console!=='undefined') console.error('cargarPedidos:', e); }
+  return false;
+}
+
+// ──── TABLERO ────
+function pillFor(p){
+  if(p.owner) return '<span class="pill proc"><span class="pd"></span>En proceso</span>';
+  return '<span class="pill pend"><span class="pd"></span>Por surtir</span>';
+}
+
+function orderCardAvailable(p){
+  return '<div class="order available">'
+    + '<div class="order-top"><div><div class="order-wh">'+p.wh+'</div><div class="order-folio mono">'+(p.folio||'')+'</div></div>'+pillFor(p)+'</div>'
+    + '<div class="order-body"><div><div class="order-cust"><b>'+p.cust+'</b></div></div>'
+      + '<div class="order-meta"><div class="order-age'+(p.urgent?' urgent':'')+'">'+(p.fecha||'')+'</div></div></div>'
+    + '<div class="order-foot"><button class="btn-take" onclick="takeOrder('+p.id+')">Tomar pedido</button></div>'
+  + '</div>';
+}
+
+function orderCardTaken(p){
+  var mine = p.owner === YO;
+  var foot = mine
+    ? '<div class="taken-by"><span class="av" style="background:var(--azul)">'+iniOf(p.owner)+'</span>Lo tienes <b>tú</b></div><button class="btn-continue" onclick="openDetail('+p.id+')">Continuar surtido</button>'
+    : '<div class="taken-by"><span class="av">'+iniOf(p.owner)+'</span>Lo está surtiendo <b>'+nameOf(p.owner)+'</b></div><span class="lock-note">Bloqueado</span>';
+  return '<div class="order taken'+(mine?' mine':'')+'">'
+    + '<div class="order-top"><div><div class="order-wh">'+p.wh+'</div><div class="order-folio mono">'+(p.folio||'')+'</div></div>'+pillFor(p)+'</div>'
+    + '<div class="order-body"><div><div class="order-cust"><b>'+p.cust+'</b></div></div></div>'
+    + '<div class="order-foot">'+foot+'</div>'
+  + '</div>';
+}
+
+function renderBoard(){
+  var disp = [], proc = [];
+  PEDIDOS.forEach(function(p){ if(p.owner) proc.push(p); else disp.push(p); });
+
+  var ld = document.getElementById('list-disp');
+  ld.innerHTML = disp.length ? disp.map(orderCardAvailable).join('')
+    : '<div class="empty">No hay pedidos disponibles ahora mismo.</div>';
+
+  var lp = document.getElementById('list-proc');
+  lp.innerHTML = proc.length ? proc.map(orderCardTaken).join('')
+    : '<div class="empty">Ningún pedido en proceso.</div>';
+
+  var mine = PEDIDOS.filter(function(p){return p.owner===YO;}).length;
+  document.getElementById('st-disp').textContent = disp.length;
+  document.getElementById('st-proc').textContent = proc.length;
+  document.getElementById('st-mine').textContent = mine;
+  document.getElementById('cnt-disp').textContent = disp.length;
+  document.getElementById('cnt-proc').textContent = proc.length;
+}
+
+function pedidoById(id){ return PEDIDOS.find(function(p){return p.id===id;}); }
+
+// ──── TOMAR / BLOQUEAR (real, con candado en el servidor) ────
+async function takeOrder(id){
+  var p = pedidoById(id);
+  if(!p) return;
+  var data = await apiCall({ action:'almacen_tomar_pedido', picking_id:id, almacenista:YO });
+  if (data && data.ok){
+    p.owner = YO;
+    await openDetail(id);
+  } else if (data && data.ya_tomado){
+    alert('Este pedido ya lo tomó '+nameOf(data.owner)+'.');
+    await cargarPedidos(); renderBoard();
+  } else {
+    alert('No se pudo tomar el pedido. Intenta de nuevo.');
+  }
+}
+
+async function releaseOrder(){
+  if(CURRENT){
+    await apiCall({ action:'almacen_liberar_pedido', picking_id:CURRENT.id });
+    CURRENT.owner = null;
+  }
+  await cargarPedidos();
+  goBoard();
+}
+
+// ──── DETALLE ────
+async function openDetail(id){
+  CURRENT = pedidoById(id);
+  if(!CURRENT) return;
+  if(CURRENT.owner && CURRENT.owner !== YO){ alert('Este pedido lo tiene '+nameOf(CURRENT.owner)+'.'); goBoard(); return; }
+
+  document.getElementById('d-wh').textContent = CURRENT.wh;
+  document.getElementById('d-owner').textContent = 'Surtiendo: '+nameOf(YO);
+  document.getElementById('d-cust').textContent = CURRENT.cust;
+  document.getElementById('d-folio').textContent = CURRENT.folio || '—';
+  document.getElementById('d-addr').textContent = CURRENT.addr || '—';
+  document.getElementById('d-ship').textContent = CURRENT.ship || '—';
+
+  var pl = document.getElementById('pick-list');
+  pl.innerHTML = '<div class="empty">Cargando productos...</div>';
+  showScreen('detail');
+
+  // Cargar las líneas del pedido desde Odoo
+  if(!CURRENT.items){
+    var data = await apiCall({ action:'almacen_detalle_pedido', picking_id:id });
+    if (data && data.ok && Array.isArray(data.lineas)){
+      CURRENT.items = data.lineas.map(function(l){
+        // l.producto viene como "[AT-CODE] Nombre" → separar código y descripción
+        var prod = l.producto || '';
+        var code = prod, desc = '';
+        var m = prod.match(/^\[([^\]]+)\]\s*(.*)$/);
+        if(m){ code = m[1]; desc = m[2]; }
+        return { code:code, desc:desc, qty:l.cantidad||0, bin: l.ubicacion || '—' };
+      });
+    } else {
+      CURRENT.items = [];
+    }
+  }
+
+  pl.innerHTML = CURRENT.items.length ? CURRENT.items.map(function(it,idx){
+    return '<div class="pick-item" data-idx="'+idx+'" onclick="togglePick(this)">'
+      + '<div class="checkbox"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>'
+      + '<div class="pick-bin-badge"><span class="bb-lbl">Ubic.</span><span class="bb-val">'+it.bin+'</span></div>'
+      + '<div class="pick-main"><div class="pick-code mono">'+it.code+'</div><div class="pick-desc">'+(it.desc||'')+'</div></div>'
+      + '<div class="pick-qty-box"><div class="pick-qty">'+it.qty+'</div><div class="pick-qty-lbl">piezas</div></div>'
+    + '</div>';
+  }).join('') : '<div class="empty">No se pudieron cargar los productos de este pedido.</div>';
+  updateProgress();
+}
+
+function togglePick(el){ el.classList.toggle('checked'); updateProgress(); }
+
+function updateProgress(){
+  var items = document.querySelectorAll('.pick-item');
+  var checked = document.querySelectorAll('.pick-item.checked');
+  document.getElementById('pick-progress').textContent = checked.length+' de '+items.length;
+  var btn = document.getElementById('btn-finish');
+  if(checked.length===items.length && items.length>0){ btn.disabled=false; btn.textContent='Confirmar surtido'; }
+  else { btn.disabled=true; var f=items.length-checked.length; btn.textContent = items.length? ('Faltan '+f+' producto'+(f>1?'s':'')) : 'Sin productos'; }
+}
+
+// ──── VALIDAR (descuenta stock en Odoo) ────
+async function finishPick(){
+  var btn = document.getElementById('btn-finish');
+  btn.disabled = true; btn.textContent = 'Confirmando...';
+  var data = await apiCall({ action:'almacen_validar_pedido', picking_id:CURRENT.id, almacenista:YO });
+  if (data && data.ok){
+    document.getElementById('success-msg').textContent = CURRENT.wh+' quedó listo para empaque y envío. El inventario se actualizó automáticamente. Surtido por '+nameOf(YO)+'.';
+    // quitar de la lista local
+    PEDIDOS = PEDIDOS.filter(function(p){return p.id!==CURRENT.id;});
+    showScreen('success');
+  } else {
+    alert('No se pudo validar el pedido en Odoo. ' + ((data&&data.detalle)?data.detalle:'') + '\n\nVerifica en Odoo si requiere confirmación manual.');
+    btn.disabled = false; btn.textContent = 'Confirmar surtido';
+  }
+}
+
+async function goBoard(){ await cargarPedidos(); renderBoard(); showScreen('board'); window.scrollTo(0,0); }
+
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById('screen-'+name).classList.add('active');
+}
+
+// ──── POLLING (refresco real cada 5s) ────
+function startPolling(){
+  if(POLL) clearInterval(POLL);
+  POLL = setInterval(async function(){
+    if(document.getElementById('screen-board').classList.contains('active')){
+      await cargarPedidos();
+      renderBoard();
+    }
+  }, 5000);
+}
+</script>
+</body>
+</html>
