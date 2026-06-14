@@ -1674,14 +1674,31 @@ exports.handler = async function(event, context) {
       const hayFault = text.indexOf('<fault>') >= 0;
       console.log('[almacen] consulta mínima → fault:', hayFault, 'structs:', structCount);
 
+      // Prueba alterna: usar 'search' en vez de 'search_read' (a veces Odoo 19 difiere)
+      let searchTest = '';
+      if (hayFault) {
+        searchTest = await xmlrpc(uid, 'stock.picking', 'search',
+          `<value><array><data></data></array></value>`).catch(e => 'ERR:'+e.message);
+        console.log('[almacen] search simple stock.picking:', searchTest.substring(0, 300));
+      }
+
       // Si la consulta mínima funciona, intentar agregar más campos uno por uno no es práctico aquí;
       // devolvemos lo que haya y el diagnóstico.
       if (hayFault) {
+        // Extraer el mensaje legible del fault (faultString) para diagnóstico claro
+        let faultMsg = '';
+        const fsMatch = text.match(/<name>faultString<\/name>\s*<value>\s*<string>([\s\S]*?)<\/string>/);
+        if (fsMatch) faultMsg = fsMatch[1];
+        // También buscar la última línea del traceback (suele tener el error real)
+        let errLine = '';
+        const lines = faultMsg.split('\n').filter(l => l.trim());
+        if (lines.length) errLine = lines[lines.length - 1];
+        console.log('[almacen] FAULT message:', faultMsg.substring(0, 800));
         return {statusCode:200, headers, body: JSON.stringify({
           ok:false,
           error:'odoo_fault',
           pedidos:[],
-          _diag:{ fault:true, raw_full: text.substring(0, 1200) }
+          _diag:{ fault:true, fault_msg: faultMsg.substring(0, 800), error_line: errLine, search_test: searchTest.substring(0, 300), raw_full: text.substring(0, 600) }
         })};
       }
 
