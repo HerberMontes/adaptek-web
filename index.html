@@ -4283,7 +4283,7 @@ function crossSearch(val) {
   }
 }
 
-var CONNECTOR_IMGS={"bspt":"assets/conn-bspt.png","bspp":"assets/conn-bspp.png","orfs":"assets/conn-orfs.png","npt":"assets/conn-npt.png","jic":"assets/conn-jic.png","orb":"assets/conn-orb.png","tee":"assets/conn-tee.jpg","c45":"assets/conn-c45.jpg","c90":"assets/conn-c90.jpg","tap":"assets/conn-tap.jpg","nr":"assets/conn-nr.png"};
+var CONNECTOR_IMGS={"bspt":"assets/conn-bspt.png","bspp":"assets/conn-bspp.png","orfs":"assets/conn-orfs.png","npt":"assets/conn-npt.png","jic":"assets/conn-jic.png","sae":"assets/conn-sae.png","tee":"assets/conn-tee.jpg","c45":"assets/conn-c45.jpg","c90":"assets/conn-c90.jpg","tap":"assets/conn-tap.jpg","nr":"assets/conn-nr.png","jico":"assets/conn-jico.png","bite":"assets/conn-bite.png","jis":"assets/conn-jis.png","komatsu":"assets/conn-komatsu.png","crx":"assets/conn-crx.png","bh":"assets/conn-bh.png","bh90":"assets/conn-bh90.png","bh45":"assets/conn-bh45.png","bhtee":"assets/conn-bhtee.png"};
 
 /* ODOO CONFIG: las credenciales viven en la función Netlify (variables de entorno), no en el frontend */
 
@@ -4314,24 +4314,24 @@ var TIPOS=[
   {code:'C90',label:'Codo 90°',        sub:'Cambio de direccion', n:2, img:'c90'},
   {code:'C45',label:'Codo 45°',        sub:'Angulo medio',        n:2, img:'c45'},
   {code:'TEE',label:'Tee (T)',         sub:'Conexion en T',       n:2, img:'tee'},
-  {code:'CRX',label:'Cruz (X)',        sub:'Conexion en 4 vias',  n:2, img:null},
-  {code:'BH', label:'Pasamuros recto', sub:'Bulkhead recto',      n:2, img:null},
-  {code:'BH90',label:'Pasamuros 90°',  sub:'Bulkhead codo 90°',   n:2, img:null},
-  {code:'BH45',label:'Pasamuros 45°',  sub:'Bulkhead codo 45°',   n:2, img:null},
-  {code:'BHTEE',label:'Pasamuros Tee', sub:'Bulkhead en T',       n:2, img:null},
+  {code:'CRX',label:'Cruz (X)',        sub:'Conexion en 4 vias',  n:2, img:'crx'},
+  {code:'BH', label:'Pasamuros recto', sub:'Bulkhead recto',      n:2, img:'bh'},
+  {code:'BH90',label:'Pasamuros 90°',  sub:'Bulkhead codo 90°',   n:2, img:'bh90'},
+  {code:'BH45',label:'Pasamuros 45°',  sub:'Bulkhead codo 45°',   n:2, img:'bh45'},
+  {code:'BHTEE',label:'Pasamuros Tee', sub:'Bulkhead en T',       n:2, img:'bhtee'},
   {code:'TAP',label:'Tapón',           sub:'Cierre de puerto',    n:1, img:'tap'}
 ];
 var ESTANDARES=[
-  {code:'JIC', cat:'JIC',  label:'JIC 37',            sub:'Americano SAE J514',  g:'AMERICANO', img:'jic'},
-  {code:'JICO',cat:'JICO', label:'JIC O-Ring (FO)',   sub:'Flare-O / JIC O-ring',g:'AMERICANO', img:null},
-  {code:'NPT', cat:'NPT',  label:'NPT / NPTF',        sub:'Americano Conico',    g:'AMERICANO', img:'npt'},
-  {code:'ORB', cat:'ORB',  label:'SAE ORB',           sub:'O-Ring Boss',         g:'AMERICANO', img:'orb'},
+  {code:'JIC', cat:'JIC',  label:'JIC',            sub:'Americano SAE J514',  g:'AMERICANO', img:'jic'},
+  {code:'JICO',cat:'JICO', label:'JICO',   sub:'Flare-O / JIC O-ring',g:'AMERICANO', img:'jico'},
+  {code:'NPT', cat:'NPT',  label:'NPT',        sub:'Americano Conico',    g:'AMERICANO', img:'npt'},
+  {code:'ORB', cat:'ORB',  label:'SAE',           sub:'O-Ring Boss',         g:'AMERICANO', img:'sae'},
   {code:'ORFS',cat:'OFS',  label:'ORFS',              sub:'O-Ring Face Seal',    g:'AMERICANO', img:'orfs'},
-  {code:'BSPP',cat:'BSP',  label:'BSPP (G)',          sub:'Britanico Paralelo',  g:'BRITANICO', img:'bspp'},
-  {code:'BSPT',cat:'BST',  label:'BSPT (R)',          sub:'Britanico Conico',    g:'BRITANICO', img:'bspt'},
-  {code:'BT',  cat:'BT',   label:'Bite Type',         sub:'DIN tubo O.D.',       g:'EUROPEO',   img:null},
-  {code:'JIS', cat:'JIS',  label:'JIS B8363',         sub:'Japones',             g:'ORIENTAL',  img:null},
-  {code:'KOM', cat:'KOM',  label:'Komatsu',           sub:'Equipo japones',      g:'ORIENTAL',  img:null}
+  {code:'BSPP',cat:'BSP',  label:'BSPP',          sub:'Britanico Paralelo',  g:'BRITANICO', img:'bspp'},
+  {code:'BSPT',cat:'BST',  label:'BSPT',          sub:'Britanico Conico',    g:'BRITANICO', img:'bspt'},
+  {code:'BT',  cat:'BT',   label:'Din Tube',         sub:'DIN tubo O.D.',       g:'EUROPEO',   img:'bite'},
+  {code:'JIS', cat:'JIS',  label:'JIS',         sub:'Japones',             g:'ORIENTAL',  img:'jis'},
+  {code:'KOM', cat:'KOM',  label:'Komatsu',           sub:'Equipo japones',      g:'ORIENTAL',  img:'komatsu'}
 ];
 var GENEROS=[
   {code:'M', label:'Macho',            sub:'Rosca exterior'},
