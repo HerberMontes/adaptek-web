@@ -1054,82 +1054,54 @@ exports.handler = async function(event, context) {
       const tipoCode = tipoMap[tipo] || 'NR';
       const matSuffix = (material === 'SS') ? '-SS' : '';
 
-      // ── Reglas REALES del catálogo Adaptekk (validadas vs 5750 códigos) ──
-      // Formato: AT-{TIPO}-{STD_A}-{STD_B}-{MED_A}-{MED_B}-{SUFIJO_GENERO}[-SS]
+      // ── Formato REAL del catálogo Adaptekk: género PEGADO al estándar ──
+      // Ej: AT-NR-JICM-NPTH-08-04   (M/H/HG pegado a cada estándar, siempre escrito)
+      // Se busca por PREFIJO (=like 'PREFIJO%') para tolerar el nº Brennan final
+      // (…-08-04-2603) y el sufijo de material -SS. Luego se filtra por material.
       const medCode = (x) => {
         if (x === null || x === undefined || x === '') return '';
         const n = parseInt(x, 10);
         return isNaN(n) ? String(x) : (n < 10 ? '0' : '') + n;
       };
-      const generoSuffix = (gA, gB) => {
-        gA = gA || ''; gB = gB || '';
-        if (gB === '') { return gA === 'H' ? 'H' : (gA === 'HG' ? 'HG' : ''); }
-        if (gA === 'M'  && gB === 'M')  return '';
-        if (gA === 'H'  && gB === 'M')  return 'HA';
-        if (gA === 'HG' && gB === 'M')  return 'HGA';
-        if (gA === 'M'  && gB === 'H')  return 'HB';
-        if (gA === 'M'  && gB === 'HG') return 'HGB';
-        if (gA === 'H'  && gB === 'H')  return 'HH';
-        if (gA === 'HG' && gB === 'HG') return 'HGHG';
-        if (gA === 'H'  && gB === 'HG') return 'HHGB';
-        if (gA === 'HG' && gB === 'H')  return 'HGHB';
-        return '';
-      };
-      // Construye un código con un orden de extremos dado (sin reordenar)
-      const buildCode = (eA, eB) => {
+      const stdGen = (std, gen) => (std || '') + (gen || '');   // JIC + M = JICM
+      const buildPrefix = (eA, eB) => {
         const ma = medCode(eA.med);
-        if (!eB || !eB.std) {                       // tapón
-          const sT = generoSuffix(eA.gen, '');
-          return 'AT-' + tipoCode + '-' + eA.std + '-' + ma + (sT ? '-' + sT : '') + matSuffix;
+        const sgA = stdGen(eA.std, eA.gen);
+        if (!eB || !eB.std) {                       // tapón (1 extremo)
+          return 'AT-' + tipoCode + '-' + sgA + '-' + ma;
         }
         const mb = medCode(eB.med);
-        const suf = generoSuffix(eA.gen, eB.gen);
-        return 'AT-' + tipoCode + '-' + eA.std + '-' + eB.std + '-' + ma + '-' + mb +
-               (suf ? '-' + suf : '') + matSuffix;
+        const sgB = stdGen(eB.std, eB.gen);
+        return 'AT-' + tipoCode + '-' + sgA + '-' + sgB + '-' + ma + '-' + mb;
       };
 
       const eA = { std: std_a, gen: gen_a, med: med_a };
       const eB = std_b ? { std: std_b, gen: gen_b, med: med_b } : null;
 
-      // ── ORDEN-INDEPENDIENTE: generamos AMBAS permutaciones (A,B) y (B,A) ──
-      // El producto es el mismo sin importar el orden; buscamos las dos contra Odoo
-      // y devolvemos la que exista (su código real, tal como está dado de alta).
-      const candidates = [];
+      // ORDEN-INDEPENDIENTE: probamos (A,B) y (B,A) — el producto es el mismo.
+      const prefixes = [];
       if (eB) {
-        candidates.push(buildCode(eA, eB)); // orden A,B
-        candidates.push(buildCode(eB, eA)); // orden B,A (invertido)
+        prefixes.push(buildPrefix(eA, eB));
+        prefixes.push(buildPrefix(eB, eA));
       } else {
-        candidates.push(buildCode(eA, null));        // un solo extremo (tapón)
+        prefixes.push(buildPrefix(eA, null));
       }
+      const atCode = prefixes[0];   // código base para mostrar / nombrar fabricación nueva
+      console.log('AT prefijos a buscar:', prefixes);
 
-      // Código para MOSTRAR y para nombrar una fabricación especial nueva:
-      // usamos el primer candidato (orden A,B tal como lo armó el cliente).
-      const atCode = candidates[0];
-
-      const candArray = candidates;
-      console.log('AT code (display):', atCode);
-      console.log('Searching AT codes:', candArray);
-
-      // Search sequentially for each candidate until found
-      async function searchByCode(code) {
+      // Búsqueda por PREFIJO con =like 'PREFIJO%'
+      async function searchByPrefix(prefix) {
         const domainXml = `<value><array><data>
-          ${xmlStr('default_code')}<value><string>=</string></value>${xmlStr(code)}
+          ${xmlStr('default_code')}<value><string>=like</string></value>${xmlStr(prefix + '%')}
         </data></array></value>`;
         return await odooSearchRead(uid, 'product.product', domainXml,
-          ['id','name','default_code','list_price','qty_available','description_sale'], 5);
+          ['id','name','default_code','list_price','qty_available','description_sale'], 10);
       }
 
-      // Try each candidate code until we find a match
       let searchText = '';
-      for (const code of candArray) {
-        console.log('Trying:', code);
-        searchText = await searchByCode(code);
-        // Check if we got results
-        const testMatch = searchText.includes('<name>id</name>');
-        if (testMatch) {
-          console.log('Found with code:', code);
-          break;
-        }
+      for (const pfx of prefixes) {
+        searchText = await searchByPrefix(pfx);
+        if (searchText.includes('<name>id</name>')) { console.log('Match con prefijo:', pfx); break; }
       }
       const dummyText = searchText; // alias for parser below
 
@@ -1177,6 +1149,14 @@ exports.handler = async function(event, context) {
       }
 
       console.log('Products found:', products.length);
+      // ── Filtro de material: CS = sin -SS, SS = con -SS ──
+      {
+        const wantSS = (material === 'SS');
+        const keep = products.filter(p => wantSS ? /-SS$/.test(p.at_code||'') : !/-SS$/.test(p.at_code||''));
+        products.length = 0;
+        for (const p of keep) products.push(p);
+        console.log('Tras filtro material(' + material + '):', products.length);
+      }
       if (products.length === 0 && searchText.length > 100) {
         console.log('Raw XML sample:', searchText.substring(0, 800));
       }
@@ -1672,7 +1652,6 @@ exports.handler = async function(event, context) {
 
       let structCount = (text.split('<struct>').length - 1);
       const hayFault = text.indexOf('<fault>') >= 0;
-      console.log('[almacen] listar_pedidos → fault:', hayFault, 'structs:', structCount);
 
       if (hayFault) {
         let faultMsg = '';
@@ -1680,6 +1659,7 @@ exports.handler = async function(event, context) {
         if (fsMatch) faultMsg = fsMatch[1];
         const lines = faultMsg.split('\n').filter(l => l.trim());
         const errLine = lines.length ? lines[lines.length - 1] : '';
+        console.error('[almacen] listar_pedidos fault:', errLine);
         return {statusCode:200, headers, body: JSON.stringify({
           ok:false, error:'odoo_fault', pedidos:[],
           _diag:{ fault:true, error_line: errLine }
