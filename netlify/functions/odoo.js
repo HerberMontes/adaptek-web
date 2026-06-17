@@ -934,9 +934,12 @@ exports.handler = async function(event, context) {
       const uid = await odooAuth();
       if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
 
-      const searchXml = `<value><array><data><value><array><data>
+      // Captura todo registro web: customer_rank>0 O el marcador de comentario (por si el rank no se grabó)
+      const searchXml = `<value><array><data>
+        <value><string>|</string></value>
         <value><array><data>${xmlStr('customer_rank')}<value><string>&gt;</string></value>${xmlInt(0)}</data></array></value>
-      </data></array></value></data></array></value>`;
+        <value><array><data>${xmlStr('comment')}<value><string>ilike</string></value>${xmlStr('Registro Adaptekk Web')}</data></array></value>
+      </data></array></value>`;
 
       const text = await xmlrpc(uid, 'res.partner', 'search_read', searchXml +
         `<value><struct>
