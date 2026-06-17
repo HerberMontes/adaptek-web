@@ -310,7 +310,7 @@ async function getMetricsPartner(uid) {
   let data = {}, id = idMatch ? parseInt(idMatch[1]) : null;
   if (id) {
     const readText = await xmlrpc(uid, 'res.partner', 'read',
-      `<value><array><data><value><int>${id}</int></value></data></array></value><value><struct><member><name>fields</name><value><array><data><value><string>comment</string></value></data></array></value></member></struct></value>`
+      `<value><array><data><value><int>${id}</int></value></data></array></value>`
     );
     const m = readText.match(/<name>comment<\/name>\s*<value>(?:<string>)?([^<]*)/);
     if (m) { try { data = JSON.parse(m[1]); } catch(e) { data = {}; } }
@@ -553,16 +553,6 @@ exports.handler = async function(event, context) {
         `<value><array><data><value><array><data>
           <value><array><data>${xmlStr('email')}<value><string>=ilike</string></value>${xmlStr(email)}</data></array></value>
         </data></array></value></data></array></value>`
-        + `<value><struct>
-            <member><name>fields</name><value><array><data>
-              <value><string>id</string></value>
-              <value><string>name</string></value>
-              <value><string>email</string></value>
-              <value><string>company_name</string></value>
-              <value><string>comment</string></value>
-            </data></array></value></member>
-            <member><name>limit</name><value><int>1</int></value></member>
-          </struct></value>`
       );
       const get = (field) => { const m = text.match(new RegExp('<name>' + field + '</name>\\s*<value>(?:<(?:string|int|boolean)>)?([^<]*)', 'i')); return m ? m[1].trim() : ''; };
       const id = parseInt(get('id')) || 0;
@@ -941,24 +931,7 @@ exports.handler = async function(event, context) {
         <value><array><data>${xmlStr('comment')}<value><string>ilike</string></value>${xmlStr('Registro Adaptekk Web')}</data></array></value>
       </data></array></value>`;
 
-      const text = await xmlrpc(uid, 'res.partner', 'search_read', searchXml +
-        `<value><struct>
-          <member><name>fields</name><value><array><data>
-            <value><string>id</string></value>
-            <value><string>name</string></value>
-            <value><string>email</string></value>
-            <value><string>phone</string></value>
-            <value><string>company_name</string></value>
-            <value><string>vat</string></value>
-            <value><string>zip</string></value>
-            <value><string>street</string></value>
-            <value><string>city</string></value>
-            <value><string>l10n_mx_edi_fiscal_regime</string></value>
-            <value><string>comment</string></value>
-          </data></array></value></member>
-          <member><name>limit</name><value><int>100</int></value></member>
-          <member><name>order</name><value><string>id desc</string></value></member>
-        </struct></value>`
+      const text = await xmlrpc(uid, 'res.partner', 'search_read', searchXml
       );
 
       // Parse XML response into JSON array
@@ -1155,12 +1128,7 @@ exports.handler = async function(event, context) {
       const customers = await cnt(`<value><array><data><value><string>customer_rank</string></value><value><string>&gt;</string></value><value><int>0</int></value></data></array></value>`);
       const webRegs = await cnt(`<value><array><data><value><string>comment</string></value><value><string>ilike</string></value>${xmlStr('Registro Adaptekk Web')}</data></array></value>`);
       const text = await xmlrpc(uid, 'res.partner', 'search_read',
-        `<value><array><data></data></array></value>` +
-        `<value><struct><member><name>fields</name><value><array><data>` +
-        `<value><string>id</string></value><value><string>name</string></value><value><string>email</string></value>` +
-        `<value><string>company_id</string></value><value><string>customer_rank</string></value>` +
-        `</data></array></value></member><member><name>limit</name><value><int>6</int></value></member>` +
-        `<member><name>order</name><value><string>id desc</string></value></member></struct></value>`
+        `<value><array><data></data></array></value>`
       );
       const recent = [];
       const structs = text.match(/<struct>[\s\S]*?<\/struct>/g) || [];
@@ -1172,7 +1140,8 @@ exports.handler = async function(event, context) {
         if (cm) company = cm[1];
         recent.push({ id, name: g('name'), email: g('email'), customer_rank: g('customer_rank'), company });
       }
-      return {statusCode:200, headers, body: JSON.stringify({success:true, totalPartners, customers, webRegs, recent})};
+      recent.sort(function(a,b){return b.id-a.id;});
+      return {statusCode:200, headers, body: JSON.stringify({success:true, totalPartners, customers, webRegs, recent: recent.slice(0,6)})};
     }
 
     // ── EXEC LOGIN (gerencia: usuario = correo, contraseña en Netlify GERENCIA_PASS) ──
@@ -1211,10 +1180,7 @@ exports.handler = async function(event, context) {
       let passes = {};
       if (idMatch) {
         const readText = await xmlrpc(uid, 'res.partner', 'read',
-          `<value><array><data><value><int>${idMatch[1]}</int></value></data></array></value>
-           <value><struct><member><name>fields</name><value><array><data>
-             <value><string>comment</string></value>
-           </data></array></value></member></struct></value>`
+          `<value><array><data><value><int>${idMatch[1]}</int></value></data></array></value>`
         );
         const commentMatch = readText.match(/<name>comment<\/name>\s*<value>(?:<string>)?([^<]*)/);
         if (commentMatch) {
@@ -1263,10 +1229,7 @@ exports.handler = async function(event, context) {
       if (!idMatch) return {statusCode:200, headers, body: JSON.stringify({success:true, passes:{}})};
 
       const readText = await xmlrpc(uid, 'res.partner', 'read',
-        `<value><array><data><value><int>${idMatch[1]}</int></value></data></array></value>
-         <value><struct><member><name>fields</name><value><array><data>
-           <value><string>comment</string></value>
-         </data></array></value></member></struct></value>`
+        `<value><array><data><value><int>${idMatch[1]}</int></value></data></array></value>`
       );
       const commentMatch = readText.match(/<name>comment<\/name>\s*<value>(?:<string>)?([^<]*)/);
       let passes = {};
@@ -1404,15 +1367,7 @@ exports.handler = async function(event, context) {
         </data></array></value></data></array></value>`;
 
         const partialText = await xmlrpc(uid, 'product.product', 'search_read',
-          partialXml + `<value><struct>
-            <member><name>fields</name><value><array><data>
-              <value><string>id</string></value>
-              <value><string>name</string></value>
-              <value><string>default_code</string></value>
-              <value><string>qty_available</string></value>
-            </data></array></value></member>
-            <member><name>limit</name><value><int>5</int></value></member>
-          </struct></value>`
+          partialXml
         );
 
         const partialMatch = partialText.match(/<value><int>(\d+)<\/int><\/value>/);
