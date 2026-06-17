@@ -1143,6 +1143,38 @@ exports.handler = async function(event, context) {
       return {statusCode:200, headers, body: JSON.stringify({success:true, products:{total, thisMonth, series}, email, noResult})};
     }
 
+    // ── DIAGNÓSTICO: qué ve la API en res.partner ──
+    if (action === 'debug_partners') {
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+      async function cnt(domXml) {
+        const t = await xmlrpc(uid, 'res.partner', 'search_count', `<value><array><data>${domXml}</data></array></value>`);
+        const m = t.match(/<value><int>(\d+)<\/int><\/value>/); return m ? parseInt(m[1]) : 0;
+      }
+      const totalPartners = await cnt('');
+      const customers = await cnt(`<value><array><data><value><string>customer_rank</string></value><value><string>&gt;</string></value><value><int>0</int></value></data></array></value>`);
+      const webRegs = await cnt(`<value><array><data><value><string>comment</string></value><value><string>ilike</string></value>${xmlStr('Registro Adaptekk Web')}</data></array></value>`);
+      const text = await xmlrpc(uid, 'res.partner', 'search_read',
+        `<value><array><data></data></array></value>` +
+        `<value><struct><member><name>fields</name><value><array><data>` +
+        `<value><string>id</string></value><value><string>name</string></value><value><string>email</string></value>` +
+        `<value><string>company_id</string></value><value><string>customer_rank</string></value>` +
+        `</data></array></value></member><member><name>limit</name><value><int>6</int></value></member>` +
+        `<member><name>order</name><value><string>id desc</string></value></member></struct></value>`
+      );
+      const recent = [];
+      const structs = text.match(/<struct>[\s\S]*?<\/struct>/g) || [];
+      for (const st of structs) {
+        const g = (f) => { const m = st.match(new RegExp('<name>'+f+'</name>\\s*<value>(?:<(?:string|int|boolean)>)?([^<]*)','i')); return m ? m[1].trim() : ''; };
+        const id = parseInt(g('id')) || 0; if (!id) continue;
+        let company = '';
+        const cm = st.match(/<name>company_id<\/name>\s*<value><array>[\s\S]*?<value><string>([^<]*)<\/string>/i);
+        if (cm) company = cm[1];
+        recent.push({ id, name: g('name'), email: g('email'), customer_rank: g('customer_rank'), company });
+      }
+      return {statusCode:200, headers, body: JSON.stringify({success:true, totalPartners, customers, webRegs, recent})};
+    }
+
     // ── EXEC LOGIN (gerencia: usuario = correo, contraseña en Netlify GERENCIA_PASS) ──
     if (action === 'exec_login') {
       const { user, pass } = body;
