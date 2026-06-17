@@ -3424,7 +3424,7 @@ function payConfirmado(metodo){
           <label class="auth-label">Correo electrónico *</label>
           <input id="reg-email" type="email" class="auth-input" placeholder="correo@empresa.com"
             oninput="regValEmail()"/>
-          <div id="reg-email-err" style="font-size:10px;color:#C8102E;margin-top:3px;display:none;">&#9888; Correo inválido</div>
+          <div id="reg-email-err" style="font-size:10px;color:#C8102E;margin-top:3px;display:none;">Correo inválido</div>
         </div>
         <div style="display:grid;grid-template-columns:auto 1fr;gap:0;margin-bottom:14px;">
           <div>
@@ -3444,26 +3444,13 @@ function payConfirmado(metodo){
                 oninput="regValPhone()"
                 style="flex:1;border:none;padding:11px 12px;font-size:13px;outline:none;"/>
             </div>
-            <div id="reg-phone-err" style="font-size:10px;color:#C8102E;margin-top:3px;display:none;">&#9888; Número inválido</div>
+            <div id="reg-phone-err" style="font-size:10px;color:#C8102E;margin-top:3px;display:none;">Número inválido</div>
           </div>
         </div>
-        <div class="auth-field">
-          <label class="auth-label">Contraseña *</label>
-          <input id="reg-pass" type="password" class="auth-input" placeholder="Mínimo 8 caracteres"
-            oninput="regValPass()"/>
-          <div id="reg-pass-strength" style="display:flex;gap:4px;margin-top:6px;">
-            <div class="pass-bar" id="pb1"></div>
-            <div class="pass-bar" id="pb2"></div>
-            <div class="pass-bar" id="pb3"></div>
-            <div class="pass-bar" id="pb4"></div>
-          </div>
-          <div id="reg-pass-txt" style="font-size:10px;color:#aaa;margin-top:3px;"></div>
-        </div>
-
         <!-- Facturación opcional -->
         <div style="border:1px solid #e8eef6;border-radius:6px;overflow:hidden;margin-bottom:16px;">
           <div onclick="var isOpen=document.getElementById('reg-fact').style.display==='none';toggleEl('reg-fact');document.getElementById('reg-constancia-wrap').style.display=isOpen?'block':'none';" style="padding:10px 14px;background:#f8faff;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
-            <span style="font-size:12px;font-weight:600;color:#555;">&#128196; Datos fiscales para facturación CFDI</span>
+            <span style="font-size:12px;font-weight:600;color:#555;">Datos fiscales para facturación CFDI</span>
             <span style="color:#aaa;" id="reg-fact-ico">+</span>
           </div>
           <div id="reg-fact" style="display:none;padding:14px;background:#FAFBFF;border-radius:6px;">
@@ -4411,12 +4398,12 @@ window.mockRegister = async function(){
 
   // Validación mínima
   if (!nombre || !email) {
-    if (typeof showToast==='function') showToast('\u26a0 Completa al menos tu nombre y correo.');
+    if (typeof showToast==='function') showToast('Completa al menos tu nombre y correo.');
     return;
   }
   var emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   if (!emailOk) {
-    if (typeof showToast==='function') showToast('\u26a0 Revisa tu correo, no parece válido.');
+    if (typeof showToast==='function') showToast('Revisa tu correo, no parece válido.');
     return;
   }
 
@@ -4448,11 +4435,11 @@ window.mockRegister = async function(){
     if (data && (data.ok || data.success || data.id || data.partner_id)) {
       showRegistroExito();
     } else {
-      if (typeof showToast==='function') showToast('\u26a0 No se pudo crear la cuenta. ' + ((data && data.error) ? data.error : 'Intenta de nuevo.'));
+      if (typeof showToast==='function') showToast('No se pudo crear la cuenta. ' + ((data && data.error) ? data.error : 'Intenta de nuevo.'));
     }
   } catch(e) {
     if (btn){ btn.disabled = false; btn.textContent = 'Crear mi cuenta gratis'; }
-    if (typeof showToast==='function') showToast('\u26a0 Error de conexión. Intenta de nuevo.');
+    if (typeof showToast==='function') showToast('Error de conexión. Intenta de nuevo.');
   }
 };
 
@@ -6367,7 +6354,9 @@ function regValPhone() {
 }
 
 function regValPass() {
-  var val = document.getElementById('reg-pass').value;
+  var passEl = document.getElementById('reg-pass');
+  if (!passEl) return;
+  var val = passEl.value;
   var bars = ['pb1','pb2','pb3','pb4'];
   var colors = ['#C8102E','#F4A800','#25a244','#001F5B'];
   var labels = ['Muy débil','Débil','Buena','Fuerte'];
