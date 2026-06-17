@@ -3351,33 +3351,35 @@ function payConfirmado(metodo){
         <div class="auth-title">Iniciar Sesión</div>
         <div class="auth-desc">Accede a tu historial de cotizaciones, pedidos y datos de facturación.</div>
 
-        <!-- Google -->
-        <button class="auth-btn-google" onclick="mockGoogleLogin()">
-          <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-          Continuar con Google
-        </button>
+                <div id="login-err" style="display:none;background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C;padding:10px 12px;border-radius:8px;font-size:13px;margin-bottom:14px;"></div>
 
-        <div class="auth-divider">o ingresa con tu correo</div>
-
-        <div class="auth-field">
-          <label class="auth-label">Correo electrónico</label>
-          <input id="login-email" type="email" class="auth-input" placeholder="correo@empresa.com"/>
+        <div id="login-step-email">
+          <div class="auth-field">
+            <label class="auth-label">Correo electrónico</label>
+            <input id="login-email" type="email" class="auth-input" placeholder="correo@empresa.com" autocomplete="email" onkeydown="if(event.key==='Enter')sendLoginOtp();"/>
+          </div>
+          <button class="auth-btn-primary" id="login-send-btn" onclick="sendLoginOtp()">Enviar código</button>
         </div>
-        <div class="auth-field">
-          <label class="auth-label">Contraseña</label>
-          <input id="login-pass" type="password" class="auth-input" placeholder="••••••••"/>
-          <div style="text-align:right;margin-top:5px;">
-            <span class="auth-link" style="font-size:12px;" onclick="showForgot()">¿Olvidaste tu contraseña?</span>
+
+        <div id="login-step-otp" style="display:none;">
+          <div class="auth-desc" style="margin-bottom:14px;">Te enviamos un código de 6 dígitos a <strong id="login-otp-dest"></strong>. Revisa tu correo (y la carpeta de spam).</div>
+          <div class="auth-field">
+            <label class="auth-label">Código de verificación</label>
+            <input id="login-otp" type="text" inputmode="numeric" maxlength="6" class="auth-input" placeholder="______" style="letter-spacing:8px;text-align:center;font-size:20px;font-weight:700;" onkeydown="if(event.key==='Enter')verifyLoginOtp();"/>
+          </div>
+          <button class="auth-btn-primary" id="login-verify-btn" onclick="verifyLoginOtp()">Entrar</button>
+          <div style="display:flex;justify-content:space-between;margin-top:12px;font-size:12px;">
+            <span class="auth-link" onclick="loginChangeEmail()">&larr; Cambiar correo</span>
+            <span class="auth-link" id="login-resend" onclick="sendLoginOtp(true)">Reenviar código</span>
           </div>
         </div>
-        <button class="auth-btn-primary" onclick="mockLogin()">Iniciar Sesión</button>
 
-        <div class="auth-guest" style="margin-bottom:12px;">
+        <div class="auth-guest" style="margin:18px 0 12px;">
           <span style="font-size:12px;color:#888;">¿No tienes cuenta? </span>
           <span class="auth-link" onclick="showPage('register')">Regístrate gratis</span>
         </div>
 
-        <div style="border-top:1px solid #e0e0e0;padding-top:14px;text-align:center;">
+<div style="border-top:1px solid #e0e0e0;padding-top:14px;text-align:center;">
           <button onclick="mockGuestContinue()" style="background:none;border:1px solid #dde6f0;color:#888;padding:10px 20px;border-radius:5px;cursor:pointer;font-size:13px;width:100%;">
             Continuar como invitado →
           </button>
@@ -3646,7 +3648,7 @@ function payConfirmado(metodo){
       <div style="font-size:11px;letter-spacing:3px;color:#aaa;text-transform:uppercase;">Portal Ejecutivo</div>
     </div>
     <label style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#888;display:block;margin-bottom:6px;">Usuario</label>
-    <input id="exec-user-input" type="text" placeholder="Ej: gerencia, zona-noreste"
+    <input id="exec-user-input" type="text" placeholder="Tu correo o zona (ej: zona-noreste)"
       style="width:100%;padding:12px 16px;border:2px solid #e0e8f0;border-radius:8px;font-size:15px;box-sizing:border-box;margin-bottom:12px;"
       onkeydown="if(event.key==='Enter')execLogin()"/>
     <label style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#888;display:block;margin-bottom:6px;">Contrasena</label>
@@ -3737,7 +3739,7 @@ function payConfirmado(metodo){
 
 <script>
 var EXEC_CUENTAS = {
-  'gerencia':       {pass:'adaptekk2026',nombre:'Gerencia',rol:'gerente',zona:'todas',estados:[]},
+  'herber.montes@hydratechgroup.mx': {nombre:'Gerencia',rol:'gerente',zona:'todas',estados:[]},
   'zona-noroeste':  {pass:'adaptekk2026',nombre:'Zona Noroeste',rol:'ejecutivo',zona:'Noroeste',estados:['Baja California','Baja California Sur','Sonora','Sinaloa','Nayarit']},
   'zona-norte':     {pass:'adaptekk2026',nombre:'Zona Norte',rol:'ejecutivo',zona:'Norte',estados:['Chihuahua','Durango','Coahuila']},
   'zona-noreste':   {pass:'adaptekk2026',nombre:'Zona Noreste',rol:'ejecutivo',zona:'Noreste',estados:['Nuevo Leon','Tamaulipas','San Luis Potosi','Zacatecas']},
@@ -3750,13 +3752,31 @@ var EXEC_CUENTAS = {
 var execCurrentUser = null;
 var execTodos = [];
 
-function execLogin() {
+async function execLogin() {
   var user = document.getElementById('exec-user-input').value.trim().toLowerCase();
   var pass = document.getElementById('exec-pass-input').value;
   var err  = document.getElementById('exec-login-err');
   var cuenta = EXEC_CUENTAS[user];
-  if (cuenta && cuenta.pass === pass) {
-    execCurrentUser = cuenta;
+  if (!cuenta) { err.style.display = 'block'; return; }
+
+  var ok = false;
+  if (cuenta.rol === 'gerente') {
+    // Validación segura en el backend (contraseña en Netlify, nunca en el código)
+    var btn = document.querySelector('#exec-login-screen button');
+    if (btn) { btn.disabled = true; btn.textContent = 'Entrando…'; }
+    try {
+      var r = await fetch('/.netlify/functions/odoo', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'exec_login', user:user, pass:pass})});
+      var d = await r.json();
+      ok = !!d.success;
+    } catch(e) { ok = false; }
+    if (btn) { btn.disabled = false; btn.textContent = 'Entrar'; }
+  } else {
+    // Zonas: validación local (sin cambios)
+    ok = (cuenta.pass === pass);
+  }
+
+  if (ok) {
+    execCurrentUser = Object.assign({}, cuenta, {pass: pass}); // pass solo en memoria para autorizar acciones de admin
     document.getElementById('exec-login-screen').style.display = 'none';
     document.getElementById('exec-portal-screen').style.display = 'block';
     var badge = document.getElementById('exec-role-badge');
@@ -3923,7 +3943,7 @@ async function accionCliente(id, tipo) {
 // ── ADMIN USUARIOS (solo gerencia) ──
 function abrirAdminUsuarios() {
   var list = document.getElementById('admin-users-list');
-  var zonas = Object.keys(EXEC_CUENTAS).filter(function(k){return k!=='gerencia';});
+  var zonas = Object.keys(EXEC_CUENTAS).filter(function(k){return EXEC_CUENTAS[k].rol!=='gerente';});
   list.innerHTML = '<div style="display:flex;flex-direction:column;gap:12px;">' +
     zonas.map(function(key) {
       var cuenta = EXEC_CUENTAS[key];
@@ -4460,32 +4480,54 @@ function renderStep(){
 
   var p=mkdiv('config-panel active');
 
-  // SVG en vivo
-  function gC(ei){var e=exts[ei]||{};return(e.std&&e.gen&&e.med)?'#25a244':e.std?'#001F5B':'#ccc';}
-  var cA=gC(0),cB=tipo.n>=2?gC(1):'#ccc';
+  // ── Resumen visual de extremos (estado en vivo) ──
+  function _extDone(ei){var e=exts[ei]||{};return !!(e.std&&e.gen&&e.med);}
+  function _extCard(ei){
+    var e=exts[ei]||{}, hasStd=!!e.std, done=_extDone(ei), ltr=LTR[ei];
+    var accent=done?'#1d7d34':(hasStd?'#0071e3':'#c7c7cc');
+    var bg=done?'#f1f9f3':(hasStd?'#f5f9ff':'#fbfbfd');
+    var bd=done?'#bfe6c8':(hasStd?'#cfe4ff':'#ececf0');
+    var parts=[]; if(e.std)parts.push(e.std.label); if(e.gen)parts.push(e.gen.label); if(e.med)parts.push(e.med);
+    var detail=parts.length?parts.join('  ·  '):'Selecciona estándar';
+    var badge=done?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>':ltr;
+    return '<div style="flex:1;min-width:0;background:'+bg+';border:1.5px solid '+bd+';border-radius:16px;padding:13px 15px;transition:background .25s,border-color .25s;">'
+      +'<div style="display:flex;align-items:center;gap:9px;">'
+      +'<span style="flex:none;width:22px;height:22px;border-radius:50%;background:'+accent+';color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;">'+badge+'</span>'
+      +'<span style="font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:'+accent+';">Extremo '+ltr+'</span>'
+      +'</div>'
+      +'<div style="margin-top:9px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:'+(parts.length?'15px':'13px')+';font-weight:'+(parts.length?'600':'400')+';color:'+(parts.length?'#001F5B':'#b0b0b8')+';line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+detail+'</div>'
+      +'</div>';
+  }
+  var _dA=_extDone(0), _dB=(tipo.n>=2)?_extDone(1):true;
+  var _lnA=_dA?'#1d7d34':'#e2e2e7', _lnB=_dB?'#1d7d34':'#e2e2e7';
   var svgW=document.createElement('div');
-  svgW.style.cssText='display:flex;justify-content:center;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #eee;';
-  svgW.innerHTML='<svg width="280" height="44" viewBox="0 0 280 44" fill="none">'
-    +'<rect x="0" y="12" width="76" height="20" rx="2" fill="'+cA+'18" stroke="'+cA+'" stroke-width="2"/>'
-    +'<line x1="15" y1="12" x2="15" y2="32" stroke="'+cA+'" stroke-width="0.8"/>'
-    +'<line x1="30" y1="12" x2="30" y2="32" stroke="'+cA+'" stroke-width="0.8"/>'
-    +'<line x1="45" y1="12" x2="45" y2="32" stroke="'+cA+'" stroke-width="0.8"/>'
-    +'<line x1="60" y1="12" x2="60" y2="32" stroke="'+cA+'" stroke-width="0.8"/>'
-    +'<text x="38" y="9" text-anchor="middle" font-size="7" font-weight="800" fill="'+cA+'" font-family="Arial">EXTREMO A</text>'
-    +'<rect x="76" y="6" width="128" height="32" rx="5" fill="white" stroke="#333" stroke-width="2"/>'
-    +'<text x="140" y="26" text-anchor="middle" font-size="12" font-weight="900" fill="#001F5B" font-family="Arial">AT</text>'
-    +'<rect x="204" y="12" width="76" height="20" rx="2" fill="'+cB+'18" stroke="'+cB+'" stroke-width="2"/>'
-    +'<line x1="219" y1="12" x2="219" y2="32" stroke="'+cB+'" stroke-width="0.8"/>'
-    +'<line x1="234" y1="12" x2="234" y2="32" stroke="'+cB+'" stroke-width="0.8"/>'
-    +'<line x1="249" y1="12" x2="249" y2="32" stroke="'+cB+'" stroke-width="0.8"/>'
-    +'<line x1="264" y1="12" x2="264" y2="32" stroke="'+cB+'" stroke-width="0.8"/>'
-    +'<text x="242" y="9" text-anchor="middle" font-size="7" font-weight="800" fill="'+cB+'" font-family="Arial">EXTREMO B</text>'
-    +'</svg>';
+  svgW.style.cssText='margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid #f0f0f2;';
+  var _h='<div style="display:flex;align-items:stretch;">'+_extCard(0);
+  if(tipo.n>=2){
+    _h+='<div style="flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:66px;padding:0 4px;">'
+      +'<div style="display:flex;align-items:center;width:100%;">'
+      +'<span style="flex:1;height:2px;background:'+_lnA+';border-radius:2px;transition:background .25s;"></span>'
+      +'<span style="flex:none;margin:0 4px;padding:5px 11px;border-radius:999px;background:#001F5B;color:#fff;font-size:10px;font-weight:600;letter-spacing:.2px;white-space:nowrap;box-shadow:0 3px 10px rgba(0,31,91,.20);">'+tipo.label+'</span>'
+      +'<span style="flex:1;height:2px;background:'+_lnB+';border-radius:2px;transition:background .25s;"></span>'
+      +'</div>'
+      +'<div style="margin-top:7px;font-size:9px;font-weight:700;letter-spacing:1.5px;color:#c7c7cc;">AT</div>'
+      +'</div>'+_extCard(1);
+  } else {
+    _h+='<div style="flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:54px;padding:0 6px;">'
+      +'<div style="display:flex;align-items:center;width:100%;">'
+      +'<span style="flex:1;height:2px;background:'+_lnA+';border-radius:2px;"></span>'
+      +'<span style="flex:none;margin-left:4px;width:13px;height:24px;border-radius:0 8px 8px 0;background:#001F5B;"></span>'
+      +'</div>'
+      +'<div style="margin-top:7px;font-size:9px;font-weight:700;letter-spacing:1.5px;color:#c7c7cc;">CIERRE</div>'
+      +'</div>';
+  }
+  _h+='</div>';
+  svgW.innerHTML=_h;
   p.appendChild(svgW);
 
   // Grid 2 columnas
   var grid=document.createElement('div');
-  grid.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;';
+  grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-bottom:14px;';
 
   function buildCol(ei){
     var ext=exts[ei]||{},ltr=LTR[ei],done=ext.std&&ext.gen&&ext.med;
@@ -4515,19 +4557,25 @@ function renderStep(){
         var gl=document.createElement('div');
         gl.style.cssText='font-size:11px;color:#aeaeb2;font-weight:500;letter-spacing:0;text-transform:none;margin:10px 0 6px;';
         gl.textContent=grp;s1.appendChild(gl);
-        var gr=document.createElement('div');gr.style.cssText='display:flex;flex-wrap:wrap;gap:3px;';
+        var gr=document.createElement('div');gr.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:8px;';
         ESTANDARES.filter(function(e){return e.g===grp;}).forEach(function(e){
           var btn=document.createElement('button');
-          if(e.img&&CONNECTOR_IMGS&&CONNECTOR_IMGS[e.img]){
-            btn.style.cssText='border:1px solid #e8e8ed;background:#fff;padding:10px 8px;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;';
-            btn.innerHTML='<img src="'+CONNECTOR_IMGS[e.img]+'" style="width:36px;height:36px;object-fit:contain;" alt="'+e.label+'"/><span style="font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:12px;font-weight:500;color:#001F5B;">'+e.label+'</span>';
+          btn.style.cssText='border:1px solid #e8e8ed;background:#fff;padding:11px 5px;border-radius:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-height:88px;transition:border-color .18s,box-shadow .18s,transform .18s;';
+          var _iu=(e.img&&CONNECTOR_IMGS&&CONNECTOR_IMGS[e.img])?CONNECTOR_IMGS[e.img]:'';
+          var _ph='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#cfd3db" stroke-width="2"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="2.5"/></svg>';
+          var _cell;
+          if(_iu){
+            _cell='<span style="position:relative;width:46px;height:46px;display:inline-flex;align-items:center;justify-content:center;">'
+              +'<span style="position:absolute;inset:0;border-radius:10px;background:#f3f4f8;display:flex;align-items:center;justify-content:center;">'+_ph+'</span>'
+              +'<img src="'+_iu+'" alt="'+e.label+'" onerror="this.remove()" style="position:relative;width:46px;height:46px;object-fit:contain;border-radius:10px;background:#fff;"/>'
+              +'</span>';
           } else {
-            btn.textContent=e.label;
-            btn.style.cssText='border:1px solid #e8e8ed;background:#fff;padding:9px 14px;border-radius:980px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:14px;font-weight:500;color:#001F5B;white-space:nowrap;';
+            _cell='<span style="width:46px;height:46px;border-radius:10px;background:#f3f4f8;display:inline-flex;align-items:center;justify-content:center;">'+_ph+'</span>';
           }
+          btn.innerHTML=_cell+'<span style="font-size:12px;font-weight:600;color:#001F5B;text-align:center;line-height:1.15;">'+e.label+'</span>';
           btn.title=e.sub;
-          btn.onmouseenter=function(){btn.style.borderColor='#0071e3';};
-          btn.onmouseleave=function(){btn.style.borderColor='#e8e8ed';};
+          btn.onmouseenter=function(){btn.style.borderColor='#0071e3';btn.style.boxShadow='0 4px 14px rgba(0,113,227,.12)';btn.style.transform='translateY(-1px)';};
+          btn.onmouseleave=function(){btn.style.borderColor='#e8e8ed';btn.style.boxShadow='none';btn.style.transform='none';};
           btn.onclick=(function(ee,i){return function(){exts[i].std=ee;exts[i].gen=null;exts[i].med=null;renderStep();};})(e,ei);
           gr.appendChild(btn);
         });s1.appendChild(gr);
@@ -4553,8 +4601,8 @@ function renderStep(){
           var btn=document.createElement('div');
           btn.style.cssText='border:1px solid #e8e8ed;background:#fff;padding:14px 8px;border-radius:12px;cursor:pointer;text-align:center;min-height:52px;display:flex;align-items:center;justify-content:center;';
           btn.innerHTML='<div style="font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:14px;font-weight:500;color:#001F5B;line-height:1.25;">'+gen.label+'</div>';
-          btn.onmouseenter=function(){btn.style.borderColor='#0071e3';};
-          btn.onmouseleave=function(){btn.style.borderColor='#e8e8ed';};
+          btn.onmouseenter=function(){btn.style.borderColor='#0071e3';btn.style.boxShadow='0 4px 14px rgba(0,113,227,.12)';btn.style.transform='translateY(-1px)';};
+          btn.onmouseleave=function(){btn.style.borderColor='#e8e8ed';btn.style.boxShadow='none';btn.style.transform='none';};
           btn.onclick=(function(g,i){return function(){exts[i].gen=g;exts[i].med=null;renderStep();};})(gen,ei);
           gr2.appendChild(btn);
         });s2.appendChild(gr2);
@@ -4579,8 +4627,8 @@ function renderStep(){
         sizes.forEach(function(m){
           var btn=document.createElement('button');btn.textContent=m;
           btn.style.cssText='border:1px solid #e8e8ed;background:#fff;padding:11px 8px;border-radius:12px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:15px;font-weight:500;color:#001F5B;text-align:center;';
-          btn.onmouseenter=function(){btn.style.borderColor='#0071e3';};
-          btn.onmouseleave=function(){btn.style.borderColor='#e8e8ed';};
+          btn.onmouseenter=function(){btn.style.borderColor='#0071e3';btn.style.boxShadow='0 4px 14px rgba(0,113,227,.12)';btn.style.transform='translateY(-1px)';};
+          btn.onmouseleave=function(){btn.style.borderColor='#e8e8ed';btn.style.boxShadow='none';btn.style.transform='none';};
           btn.onclick=(function(m,i){return function(){exts[i].med=m;renderStep();};})(m,ei);
           gr3.appendChild(btn);
         });s3.appendChild(gr3);
@@ -5594,18 +5642,77 @@ function sendCartWA() {
 /* Override showPage to render cart */
 var currentUser = null;
 
-function mockLogin() {
-  var email = document.getElementById('login-email').value.trim();
-  var pass  = document.getElementById('login-pass').value;
-  if (!email || !pass) { showToast('\u26a0 Ingresa correo y contraseña'); return; }
-  // Mock user session
-  currentUser = {
-    name: email.split('@')[0],
-    email: email,
-    initials: email.substring(0,2).toUpperCase()
-  };
+var _loginEmail='';
+function _loginErr(msg){ var e=document.getElementById('login-err'); if(e){ e.innerHTML=msg; e.style.display='block'; } }
+async function sendLoginOtp(isResend){
+  var email=(document.getElementById('login-email').value||'').trim().toLowerCase();
+  var e=document.getElementById('login-err'); if(e) e.style.display='none';
+  if(!email || email.indexOf('@')<1){ _loginErr('Ingresa un correo v\u00e1lido.'); return; }
+  var sb=document.getElementById('login-send-btn'), rb=document.getElementById('login-resend');
+  if(sb && !isResend){ sb.disabled=true; sb.textContent='Enviando\u2026'; }
+  if(rb && isResend){ rb.textContent='Enviando\u2026'; }
+  try{
+    var r=await fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'send_login_otp',email:email})});
+    var d=await r.json();
+    if(d.success){
+      _loginEmail=email;
+      var dest=document.getElementById('login-otp-dest'); if(dest) dest.textContent=email;
+      document.getElementById('login-step-email').style.display='none';
+      document.getElementById('login-step-otp').style.display='block';
+      var oi=document.getElementById('login-otp'); if(oi){ oi.value=''; oi.focus(); }
+      if(isResend) showToast('\u2713 C\u00f3digo reenviado');
+    } else if(d.notFound){
+      _loginErr('No encontramos una cuenta con ese correo. <span class="auth-link" onclick="showPage(\'register\')">Regístrate gratis</span>');
+    } else {
+      _loginErr(d.error||'No pudimos enviar el c\u00f3digo.');
+    }
+  }catch(err){ _loginErr('Error de conexi\u00f3n. Intenta de nuevo.'); }
+  if(sb){ sb.disabled=false; sb.textContent='Enviar c\u00f3digo'; }
+  if(rb){ rb.textContent='Reenviar c\u00f3digo'; }
+}
+async function verifyLoginOtp(){
+  var otp=(document.getElementById('login-otp').value||'').trim();
+  if(otp.length<4){ _loginErr('Ingresa el c\u00f3digo que recibiste.'); return; }
+  var vb=document.getElementById('login-verify-btn'); if(vb){ vb.disabled=true; vb.textContent='Entrando\u2026'; }
+  try{
+    var r=await fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'verify_login_otp',email:_loginEmail,otp:otp})});
+    var d=await r.json();
+    if(d.success && d.client){ _setClientSession(d.client); }
+    else { _loginErr(d.error||'C\u00f3digo incorrecto.'); if(vb){ vb.disabled=false; vb.textContent='Entrar'; } }
+  }catch(err){ _loginErr('Error de conexi\u00f3n. Intenta de nuevo.'); if(vb){ vb.disabled=false; vb.textContent='Entrar'; } }
+}
+function loginChangeEmail(){
+  var so=document.getElementById('login-step-otp'); if(so) so.style.display='none';
+  var se=document.getElementById('login-step-email'); if(se) se.style.display='block';
+  var e=document.getElementById('login-err'); if(e) e.style.display='none';
+}
+function _setClientSession(c){
+  currentUser={ name:c.name||c.email, email:c.email, initials:((c.name||c.email||'?').substring(0,2)).toUpperCase() };
+  window.currentClientUser={ id:c.id, name:c.name||c.email, email:c.email, company_name:c.company_name||'', verified:!!c.verified };
+  try{ localStorage.setItem('adk_client_session', JSON.stringify({ id:c.id, name:c.name, email:c.email, company_name:c.company_name, verified:!!c.verified, ts:Date.now() })); }catch(e){}
+  var se=document.getElementById('login-step-email'); if(se) se.style.display='block';
+  var so=document.getElementById('login-step-otp'); if(so) so.style.display='none';
   loginSuccess();
 }
+function _refreshLoginNav(){
+  if(!window.currentClientUser) return;
+  var cu=currentUser||{ initials:(window.currentClientUser.name||'?').substring(0,2).toUpperCase(), name:window.currentClientUser.name };
+  var btn=document.getElementById('nav-login-btn');
+  if(btn){ btn.textContent=cu.initials; btn.style.background='#C8102E'; btn.onclick=function(){ showPage('portal'); return false; }; btn.title=cu.name; }
+  var mob=document.getElementById('mob-login-btn');
+  if(mob){ mob.textContent='\uD83D\uDC64 '+cu.name; mob.onclick=function(){ showPage('portal'); if(typeof toggleMenu==='function') toggleMenu(); return false; }; }
+}
+function _restoreClientSession(){
+  try{
+    var raw=localStorage.getItem('adk_client_session'); if(!raw) return;
+    var ss=JSON.parse(raw);
+    if(!ss || !ss.email || (Date.now()-(ss.ts||0) > 30*24*60*60*1000)){ localStorage.removeItem('adk_client_session'); return; }
+    currentUser={ name:ss.name||ss.email, email:ss.email, initials:((ss.name||ss.email||'?').substring(0,2)).toUpperCase() };
+    window.currentClientUser={ id:ss.id, name:ss.name||ss.email, email:ss.email, company_name:ss.company_name||'', verified:!!ss.verified };
+    _refreshLoginNav();
+  }catch(e){}
+}
+if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', _restoreClientSession); } else { _restoreClientSession(); }
 
 function mockGoogleLogin() {
   currentUser = {
@@ -5847,6 +5954,7 @@ function loginSuccess() {
 }
 
 function portalLogout() {
+  window.currentClientUser=null; try{localStorage.removeItem('adk_client_session');}catch(e){}
   currentUser = null;
   var btn = document.getElementById('nav-login-btn');
   if (btn) {
