@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const ODOO_URL   = process.env.ODOO_URL  || 'https://hydratechgroup.odoo.com';
 const ODOO_DB    = process.env.ODOO_DB   || 'hydratechgroup';
 const ODOO_USER  = process.env.ODOO_USER || 'herber.montes@hydratechgroup.mx';
@@ -59,6 +60,23 @@ function hasResults(xmlText) {
   if (!dataMatch) return false;
   const dataContent = dataMatch[1].trim();
   return dataContent.length > 0 && dataContent.includes('<int>');
+}
+
+// ── Contraseñas: hash scrypt con sal (NUNCA se guarda en texto plano) ──
+function hashPassword(pwd) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.scryptSync(String(pwd), salt, 64).toString('hex');
+  return 'scrypt$' + salt + '$' + hash;
+}
+function verifyPassword(pwd, stored) {
+  try {
+    if (!stored || stored.indexOf('scrypt$') !== 0) return false;
+    const parts = stored.split('$');
+    const salt = parts[1], hash = parts[2];
+    const calc = crypto.scryptSync(String(pwd), salt, 64).toString('hex');
+    const a = Buffer.from(calc, 'hex'), b = Buffer.from(hash, 'hex');
+    return a.length === b.length && crypto.timingSafeEqual(a, b);
+  } catch (e) { return false; }
 }
 
 async function odooSearchRead(uid, model, domain_xml, fields, limit) {
@@ -562,9 +580,64 @@ exports.handler = async function(event, context) {
       return {statusCode:200, headers, body: JSON.stringify({success:true, client})};
     }
 
+    // ── LOGIN CON CONTRASEÑA (correo + contraseña) ──
+    if (action === 'login_password') {
+      const { email, password } = body;
+      if (!email || !password) return {statusCode:400, headers, body: JSON.stringify({error:'Correo y contraseña requeridos'})};
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+      const text = await xmlrpc(uid, 'res.partner', 'search_read',
+        `<value><array><data><value><array><data>
+          <value><array><data>${xmlStr('email')}<value><string>=ilike</string></value>${xmlStr(email)}</data></array></value>
+        </data></array></value></data></array></value>`
+      );
+      const structM = text.match(/<struct>[\s\S]*?<\/struct>/);
+      if (!structM) return {statusCode:200, headers, body: JSON.stringify({success:false, notFound:true, error:'No encontramos una cuenta con ese correo.'})};
+      const struct = structM[0];
+      const id = parseInt(xmlExtractField(struct, 'id')) || 0;
+      if (!id) return {statusCode:200, headers, body: JSON.stringify({success:false, notFound:true, error:'No encontramos una cuenta con ese correo.'})};
+      const stored = xmlExtractField(struct, 'ref');
+      if (!stored || stored.indexOf('scrypt$') !== 0) {
+        return {statusCode:200, headers, body: JSON.stringify({success:false, needPassword:true, error:'Esta cuenta todavía no tiene contraseña. Usa "Crear contraseña".'})};
+      }
+      if (!verifyPassword(password, stored)) {
+        return {statusCode:200, headers, body: JSON.stringify({success:false, error:'Correo o contraseña incorrectos.'})};
+      }
+      const comment = xmlExtractField(struct, 'comment') || '';
+      const verified = /VERIFICADO/i.test(comment);
+      const client = { id, name: xmlExtractField(struct, 'name'), email: xmlExtractField(struct, 'email') || email, company_name: xmlExtractField(struct, 'company_name'), verified };
+      return {statusCode:200, headers, body: JSON.stringify({success:true, client})};
+    }
+
+    // ── CREAR / RESTABLECER CONTRASEÑA (requiere código OTP enviado con send_login_otp) ──
+    if (action === 'reset_password') {
+      const { email, otp, password } = body;
+      if (!email || !otp || !password) return {statusCode:400, headers, body: JSON.stringify({error:'Datos incompletos'})};
+      if (String(password).length < 6) return {statusCode:200, headers, body: JSON.stringify({success:false, error:'La contraseña debe tener al menos 6 caracteres.'})};
+      const st = otpStore[email];
+      if (!st || Date.now() > st.expires) { if (st) delete otpStore[email]; return {statusCode:200, headers, body: JSON.stringify({success:false, error:'Código expirado. Solicita uno nuevo.'})}; }
+      if (st.otp !== otp) return {statusCode:200, headers, body: JSON.stringify({success:false, error:'Código incorrecto.'})};
+      delete otpStore[email];
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+      const sText = await xmlrpc(uid, 'res.partner', 'search',
+        `<value><array><data><value><array><data>
+          <value><array><data>${xmlStr('email')}<value><string>=ilike</string></value>${xmlStr(email)}</data></array></value>
+        </data></array></value></data></array></value>`
+      );
+      const idM = sText.match(/<int>(\d+)<\/int>/);
+      const pid = idM ? parseInt(idM[1]) : 0;
+      if (!pid) return {statusCode:200, headers, body: JSON.stringify({success:false, error:'No encontramos una cuenta con ese correo.'})};
+      const hash = hashPassword(password);
+      const idsXml = `<value><array><data><value><int>${pid}</int></value></data></array></value>`;
+      const valXml = `<value><struct><member><name>ref</name>${xmlStr(hash)}</member></struct></value>`;
+      await xmlrpc(uid, 'res.partner', 'write', idsXml + valXml);
+      return {statusCode:200, headers, body: JSON.stringify({success:true})};
+    }
+
     // ── CREATE CONTACT IN ODOO ──
     if (action === 'create_contact') {
-      const { name, email, phone, company, rfc, razon_social, cp_fiscal, regimen_fiscal, email_fiscal, calle, colonia, ciudad, estado, constancia_b64, constancia_name } = body;
+      const { name, email, phone, company, password, rfc, razon_social, cp_fiscal, regimen_fiscal, email_fiscal, calle, colonia, ciudad, estado, constancia_b64, constancia_name } = body;
 
       const uid = await odooAuth();
       if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
@@ -602,6 +675,8 @@ exports.handler = async function(event, context) {
 
       if (phone)           partnerData.phone = phone;
       if (company)         partnerData.company_name = company;
+      // Contraseña: se guarda cifrada (hash) en el campo 'ref' (referencia interna)
+      if (password)        partnerData.ref = hashPassword(password);
 
       // Fiscal data — only if RFC provided
       if (rfc) {
