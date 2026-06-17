@@ -456,7 +456,7 @@ exports.handler = async function(event, context) {
 
     // ── SEND VERIFICATION CODE ──
     if (action === 'send_verification') {
-      const { email, name } = body;
+      const { email, name, phone } = body;
       if (!email) return {statusCode:400, headers, body: JSON.stringify({error:'Email requerido'})};
 
       const uid = await odooAuth();
@@ -468,7 +468,19 @@ exports.handler = async function(event, context) {
         </data></array></value></data></array></value>`
       );
       if (hasResults(checkText)) {
-        return {statusCode:200, headers, body: JSON.stringify({success:false, error:'Este correo ya está registrado. ¿Quieres iniciar sesión?'})};
+        return {statusCode:200, headers, body: JSON.stringify({success:false, error:'Este correo ya está registrado. Inicia sesión, o si olvidaste tu contraseña usa "Crear / olvidé mi contraseña".'})};
+      }
+
+      // Teléfono repetido: no se permiten dos cuentas con el mismo teléfono
+      if (phone) {
+        const checkPhone = await xmlrpc(uid, 'res.partner', 'search',
+          `<value><array><data><value><array><data>
+            <value><array><data>${xmlStr('phone')}<value><string>=ilike</string></value>${xmlStr(phone)}</data></array></value>
+          </data></array></value></data></array></value>`
+        );
+        if (hasResults(checkPhone)) {
+          return {statusCode:200, headers, body: JSON.stringify({success:false, error:'Este teléfono ya está registrado con otra cuenta. Inicia sesión, o usa "Crear / olvidé mi contraseña".'})};
+        }
       }
 
       const otp = generateOTP();
@@ -650,6 +662,18 @@ exports.handler = async function(event, context) {
       );
       if (hasResults(checkEmail)) {
         return {statusCode:200, headers, body: JSON.stringify({success:false, error:'Este correo ya está registrado'})};
+      }
+
+      // Teléfono duplicado (red de seguridad)
+      if (phone) {
+        const checkPhone2 = await xmlrpc(uid, 'res.partner', 'search',
+          `<value><array><data><value><array><data>
+            <value><array><data>${xmlStr('phone')}<value><string>=ilike</string></value>${xmlStr(phone)}</data></array></value>
+          </data></array></value></data></array></value>`
+        );
+        if (hasResults(checkPhone2)) {
+          return {statusCode:200, headers, body: JSON.stringify({success:false, error:'Este teléfono ya está registrado con otra cuenta'})};
+        }
       }
 
       // Check duplicate RFC
