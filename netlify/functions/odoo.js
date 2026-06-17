@@ -296,7 +296,55 @@ async function sendEmail(to, subject, html) {
     headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ from: `Adaptekk <${FROM_EMAIL}>`, to: [to], subject, html })
   });
-  return await resp.json();
+  const result = await resp.json();
+  if (result && result.id) { try { await bumpMetric('email'); } catch(e) {} }
+  return result;
+}
+
+// ── Métricas (contadores propios en un partner oculto ADAPTEKK_METRICS) ──
+async function getMetricsPartner(uid) {
+  const searchText = await xmlrpc(uid, 'res.partner', 'search',
+    `<value><array><data><value><array><data><value><array><data>${xmlStr('name')}<value><string>=</string></value>${xmlStr('ADAPTEKK_METRICS')}</data></array></value></data></array></value></data></array></value>`
+  );
+  const idMatch = searchText.match(/<value><int>(\d+)<\/int><\/value>/);
+  let data = {}, id = idMatch ? parseInt(idMatch[1]) : null;
+  if (id) {
+    const readText = await xmlrpc(uid, 'res.partner', 'read',
+      `<value><array><data><value><int>${id}</int></value></data></array></value><value><struct><member><name>fields</name><value><array><data><value><string>comment</string></value></data></array></value></member></struct></value>`
+    );
+    const m = readText.match(/<name>comment<\/name>\s*<value>(?:<string>)?([^<]*)/);
+    if (m) { try { data = JSON.parse(m[1]); } catch(e) { data = {}; } }
+  }
+  return { id, data };
+}
+async function saveMetricsPartner(uid, id, data) {
+  const json = JSON.stringify(data);
+  if (id) {
+    await xmlrpc(uid, 'res.partner', 'write',
+      `<value><array><data><value><int>${id}</int></value></data></array></value><value><struct><member><name>comment</name>${xmlStr(json)}</member></struct></value>`
+    );
+  } else {
+    await xmlrpc(uid, 'res.partner', 'create',
+      `<value><struct><member><name>name</name>${xmlStr('ADAPTEKK_METRICS')}</member><member><name>comment</name>${xmlStr(json)}</member><member><name>active</name><value><boolean>0</boolean></value></member></struct></value>`
+    );
+  }
+}
+function mxDay() { return new Date().toLocaleDateString('en-CA', {timeZone:'America/Mexico_City'}); }
+async function bumpMetric(kind) {
+  const uid = await odooAuth(); if (!uid) return;
+  const { id, data } = await getMetricsPartner(uid);
+  if (kind === 'email') {
+    const day = mxDay(), month = day.slice(0,7);
+    if (data.emailDay !== day) { data.emailDay = day; data.emailDayCount = 0; }
+    if (data.emailMonth !== month) { data.emailMonth = month; data.emailMonthCount = 0; }
+    data.emailDayCount = (data.emailDayCount||0) + 1;
+    data.emailMonthCount = (data.emailMonthCount||0) + 1;
+  } else if (kind === 'noresult') {
+    const month = mxDay().slice(0,7);
+    if (data.noResultMonth !== month) { data.noResultMonth = month; data.noResultCount = 0; }
+    data.noResultCount = (data.noResultCount||0) + 1;
+  }
+  await saveMetricsPartner(uid, id, data);
 }
 
 // Envía el correo de confirmación al cliente y un aviso al equipo de Adaptekk.
@@ -1051,6 +1099,45 @@ exports.handler = async function(event, context) {
       const result = await sendEmail(email, 'Tu acceso a Adaptekk', accessHtml);
       if (result.id) return {statusCode:200, headers, body: JSON.stringify({success:true})};
       return {statusCode:200, headers, body: JSON.stringify({success:false, error:'No se pudo enviar el correo'})};
+    }
+
+    // ── MÉTRICAS DEL TABLERO (productos + contadores) ──
+    if (action === 'get_dashboard_metrics') {
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+
+      let email = {day:0, month:0}, noResult = 0;
+      try {
+        const { data } = await getMetricsPartner(uid);
+        const today = mxDay(), month = today.slice(0,7);
+        email.day = (data.emailDay === today) ? (data.emailDayCount||0) : 0;
+        email.month = (data.emailMonth === month) ? (data.emailMonthCount||0) : 0;
+        noResult = (data.noResultMonth === month) ? (data.noResultCount||0) : 0;
+      } catch(e) {}
+
+      async function prodCount(condXml) {
+        const args = `<value><array><data>${condXml}</data></array></value>`;
+        const t = await xmlrpc(uid, 'product.template', 'search_count', args);
+        const m = t.match(/<value><int>(\d+)<\/int><\/value>/);
+        return m ? parseInt(m[1]) : 0;
+      }
+      function cond(op, dateStr) {
+        return `<value><array><data><value><string>create_date</string></value><value><string>${op}</string></value><value><string>${dateStr}</string></value></data></array></value>`;
+      }
+      const total = await prodCount('');
+      const series = [];
+      const now = new Date();
+      for (let i = 5; i >= 0; i--) {
+        const d  = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
+        const dn = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i + 1, 1));
+        const start = d.toISOString().slice(0,10) + ' 00:00:00';
+        const end   = dn.toISOString().slice(0,10) + ' 00:00:00';
+        const c = await prodCount(cond('&gt;=', start) + cond('&lt;', end));
+        series.push({ month: d.toISOString().slice(0,7), count: c });
+      }
+      const thisMonth = series.length ? series[series.length-1].count : 0;
+
+      return {statusCode:200, headers, body: JSON.stringify({success:true, products:{total, thisMonth, series}, email, noResult})};
     }
 
     // ── EXEC LOGIN (gerencia: usuario = correo, contraseña en Netlify GERENCIA_PASS) ──
