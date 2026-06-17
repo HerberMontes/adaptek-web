@@ -1031,6 +1031,28 @@ exports.handler = async function(event, context) {
     }
 
     // ── SAVE USER PASSWORD ──
+    // ── REENVIAR ACCESO AL CLIENTE (correo con enlace para iniciar sesión) ──
+    if (action === 'resend_client_access') {
+      const { email, name } = body;
+      if (!email) return {statusCode:400, headers, body: JSON.stringify({error:'Email requerido'})};
+      const accessHtml = `
+        <div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;">
+          <div style="background:#001F5B;padding:24px;text-align:center;">
+            <span style="font-family:Arial Black;font-size:28px;font-weight:900;color:#fff;">ADAP</span><span style="font-family:Arial Black;font-size:28px;font-weight:900;color:#C8102E;">TEK</span><span style="font-family:Arial Black;font-size:28px;font-weight:900;color:#fff;">K</span>
+          </div>
+          <div style="padding:32px;background:#fff;border:1px solid #eee;">
+            <h2 style="color:#001F5B;margin-top:0;">Acceso a tu cuenta Adaptekk</h2>
+            <p style="color:#555;">Hola <strong>${name||'cliente'}</strong>, aquí tienes el acceso a tu cuenta. Entra con este correo y te enviaremos un código de un solo uso para iniciar sesión.</p>
+            <a href="${SITE_URL}" style="display:block;background:#001F5B;color:#fff;text-align:center;padding:14px;border-radius:6px;text-decoration:none;font-weight:700;margin-top:20px;font-size:15px;">Iniciar sesión en Adaptekk →</a>
+            <p style="color:#888;font-size:12px;margin-top:18px;">Si no solicitaste esto, puedes ignorar este correo.</p>
+          </div>
+          <div style="background:#f5f5f5;padding:16px;text-align:center;font-size:11px;color:#aaa;">© 2026 Adaptekk S.A. de C.V. — Conecta sin límites</div>
+        </div>`;
+      const result = await sendEmail(email, 'Tu acceso a Adaptekk', accessHtml);
+      if (result.id) return {statusCode:200, headers, body: JSON.stringify({success:true})};
+      return {statusCode:200, headers, body: JSON.stringify({success:false, error:'No se pudo enviar el correo'})};
+    }
+
     // ── EXEC LOGIN (gerencia: usuario = correo, contraseña en Netlify GERENCIA_PASS) ──
     if (action === 'exec_login') {
       const { user, pass } = body;
