@@ -3762,6 +3762,12 @@ body.exec-mode #cart-fab, body.exec-mode .wa-float{display:none!important;}
         onfocus="this.style.borderColor='#001F5B'" onblur="this.style.borderColor='#e0e8f0'"/>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9aa7b8" stroke-width="2" stroke-linecap="round" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     </div>
+    <div style="margin-bottom:16px;">
+      <button id="ft-origen-web" onclick="toggleOrigenWeb()" style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:30px;border:1.5px solid #e0e8f0;background:#fff;color:#6B7785;font-size:13px;font-weight:600;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;transition:all .2s;">
+        <span id="ft-origen-dot" style="width:8px;height:8px;border-radius:50%;background:#c2ccda;display:inline-block;"></span>
+        Solo registros web
+      </button>
+    </div>
     <div id="exec-loading" style="text-align:center;padding:70px 0;color:#9AA7B8;"><div class="dsh-spinner"></div><div style="margin-top:14px;font-size:13px;">Cargando clientes…</div></div>
     <div id="exec-empty" style="display:none;text-align:center;padding:70px 20px;color:#9AA7B8;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C2CCDA" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto;display:block;"><circle cx="9" cy="8" r="3.2"/><path d="M3 19a6 6 0 0 1 12 0"/><path d="M16 8.5a3 3 0 0 1 0 5.5M17.5 19a5 5 0 0 0-3-4.6"/></svg><div style="font-size:15px;font-weight:600;color:#6B7785;margin-top:14px;">No hay clientes en esta vista</div><div style="font-size:13px;margin-top:4px;">Los registros nuevos aparecen aquí en cuanto entran.</div></div>
     <div id="exec-list"></div>
@@ -4022,6 +4028,18 @@ function getEstado(cl) {
   return 'pendiente';
 }
 
+// Origen del contacto: 'web' (registro desde el sitio) u 'odoo' (cliente que ya existía)
+function getOrigen(cl) {
+  return /Registro Adaptekk Web/i.test(cl.comment || '') ? 'web' : 'odoo';
+}
+function origenBadgeHtml(cl, big) {
+  var fs = big ? '10px' : '9px';
+  var pad = big ? '3px 9px' : '2px 8px';
+  return getOrigen(cl)==='web'
+    ? '<span style="display:inline-flex;align-items:center;gap:4px;background:#EEF5FF;color:#001F5B;font-size:'+fs+';font-weight:700;padding:'+pad+';border-radius:12px;letter-spacing:.3px;white-space:nowrap;"><span style="width:5px;height:5px;border-radius:50%;background:#001F5B;display:inline-block;"></span>Registro web</span>'
+    : '<span style="display:inline-flex;align-items:center;gap:4px;background:#F0F0F2;color:#8A8A8A;font-size:'+fs+';font-weight:700;padding:'+pad+';border-radius:12px;letter-spacing:.3px;white-space:nowrap;">Cliente Odoo</span>';
+}
+
 function updateStats() {
   document.getElementById('st-total').textContent = execTodos.length;
   document.getElementById('st-pend').textContent = execTodos.filter(function(c){return getEstado(c)==='pendiente';}).length;
@@ -4031,6 +4049,20 @@ function updateStats() {
 
 var execFiltro = 'todos';
 var execBusqueda = '';
+var execOrigen = 'todos';
+function toggleOrigenWeb(){
+  execOrigen = (execOrigen==='web') ? 'todos' : 'web';
+  var btn = document.getElementById('ft-origen-web');
+  var dot = document.getElementById('ft-origen-dot');
+  if (execOrigen==='web'){
+    if(btn){ btn.style.background='#EEF5FF'; btn.style.borderColor='#001F5B'; btn.style.color='#001F5B'; }
+    if(dot){ dot.style.background='#001F5B'; }
+  } else {
+    if(btn){ btn.style.background='#fff'; btn.style.borderColor='#e0e8f0'; btn.style.color='#6B7785'; }
+    if(dot){ dot.style.background='#c2ccda'; }
+  }
+  aplicarFiltros();
+}
 function filtrar(f) {
   execFiltro = f;
   var btns = ['todos','pendiente','verificado','rechazado'];
@@ -4045,13 +4077,25 @@ function buscarClientes(q) {
   aplicarFiltros();
 }
 function aplicarFiltros() {
-  var list = execFiltro === 'todos' ? execTodos : execTodos.filter(function(c){return getEstado(c)===execFiltro;});
+  var list = execFiltro === 'todos' ? execTodos.slice() : execTodos.filter(function(c){return getEstado(c)===execFiltro;});
+  if (execOrigen === 'web') {
+    list = list.filter(function(c){ return getOrigen(c)==='web'; });
+  }
   if (execBusqueda) {
     list = list.filter(function(c){
       var hay = ((c.name||'')+' '+(c.email||'')+' '+(c.company_name||'')+' '+(c.vat||'')+' '+(c.phone||'')).toLowerCase();
       return hay.indexOf(execBusqueda) >= 0;
     });
   }
+  // Orden: registros web primero, luego pendientes, luego más nuevos arriba
+  var estRank = {pendiente:0, verificado:1, rechazado:2};
+  list.sort(function(a,b){
+    var ao = getOrigen(a)==='web'?0:1, bo = getOrigen(b)==='web'?0:1;
+    if (ao!==bo) return ao-bo;
+    var ae = estRank[getEstado(a)], be = estRank[getEstado(b)];
+    if (ae!==be) return ae-be;
+    return (b.id||0)-(a.id||0);
+  });
   renderList(list);
 }
 
@@ -4071,7 +4115,7 @@ function renderList(list) {
         '<div style="font-size:11px;color:#888;margin-top:2px;">'+(cl.email||'—')+' | '+(cl.phone||'—')+'</div>' +
         '<div style="font-size:11px;color:#aaa;">'+(cl.company_name||'')+'</div>' +
       '</div>' +
-      '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">' + badge +
+      '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">' + badge + origenBadgeHtml(cl,false) +
         '<div style="font-size:10px;">'+(cl.vat?'<span style="color:#25a244;">RFC OK</span>':'<span style="color:#C8102E;">Sin RFC</span>')+'</div>' +
       '</div></div></div>';
   }).join('');
@@ -4089,7 +4133,8 @@ function verDetalle(id) {
   mb.innerHTML =
     '<div style="display:flex;align-items:start;justify-content:space-between;margin-bottom:18px;">' +
       '<div><div style="font-size:19px;font-weight:800;color:#001F5B;">'+(cl.name||'—')+'</div>' +
-      '<div style="font-size:12px;color:#888;">'+(cl.company_name||'')+'</div></div>' + badge +
+      '<div style="font-size:12px;color:#888;">'+(cl.company_name||'')+'</div></div>' +
+      '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">'+badge+origenBadgeHtml(cl,true)+'</div>' +
     '</div>' +
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">' +
       fr('Email',cl.email) + fr('Telefono',cl.phone) +
