@@ -1036,102 +1036,63 @@
     <div style="position:relative;z-index:1;max-width:760px;margin:0 auto;padding:46px 20px 0;text-align:center;">
       <h2 style="font-size:clamp(28px,5.2vw,48px);font-weight:800;line-height:1.06;letter-spacing:-1.2px;margin:0 0 28px;background:linear-gradient(95deg,#001F5B 0%,#0A3A8C 45%,#C8102E 118%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">¿Qué conector<br/>buscas hoy?</h2>
 
-    <!-- RIGHT: Buscador IA -->
-    <div id="ai-chat-section" style="background:#fff;display:flex;flex-direction:column;position:relative;border:1px solid #E3E9F3;border-radius:18px;overflow:hidden;box-shadow:0 18px 50px rgba(16,32,64,.12);text-align:left;">
+      <!-- BUSCADOR IA (estilo Canva) -->
+      <div style="background:#fff;border:1px solid #E3E9F3;border-radius:22px;padding:20px 20px 16px;box-shadow:0 18px 50px rgba(16,32,64,.12);text-align:left;">
+        <div style="display:inline-flex;align-items:center;gap:7px;background:#EEF3FF;color:#001F5B;font-size:11px;font-weight:700;letter-spacing:.4px;padding:5px 11px;border-radius:20px;margin-bottom:12px;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#001F5B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 4.6L18.5 9l-4.6 1.9L12 15l-1.9-4.1L5.5 9l4.6-1.4L12 3z"/></svg>
+          Búsqueda con IA
+        </div>
+        <textarea id="chat-input" placeholder="Describe el conector que necesitas: tipo, roscas, medidas… o pega un código." rows="2" oninput="autoResize(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}" style="width:100%;border:none;outline:none;resize:none;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:17px;color:#1a1a2e;line-height:1.5;min-height:58px;max-height:140px;padding:4px 2px;background:transparent;"></textarea>
 
-      <!-- Header — Redesigned -->
-      <div style="position:relative;overflow:hidden;background:#fff;border-bottom:1px solid #e8eef6;">
-
-        <!-- Top stripe -->
-        <div style="height:4px;background:linear-gradient(90deg,#001F5B 0%,#C8102E 50%,#001F5B 100%);"></div>
-
-        <!-- Main header content -->
-        <div style="padding:18px 22px 16px;display:flex;align-items:center;gap:16px;">
-
-          <!-- Icon block -->
-          <div style="flex-shrink:0;width:52px;height:52px;border-radius:14px;background:#0d1b2a;display:flex;align-items:center;justify-content:center;box-shadow:none;">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10"/>
-              <path d="M12 8v4l3 3"/>
-              <path d="M16.5 2.5a5 5 0 0 1 5 5"/>
-              <path d="M22 2l-1 5-5-1"/>
-            </svg>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <!-- Imagen -->
+            <label title="Subir imagen" style="display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border-radius:30px;border:1px solid #E7ECF3;background:#fff;cursor:pointer;font-size:13px;font-weight:600;color:#5A6675;transition:all .2s;" onmouseover="this.style.borderColor='#BFD0EC';this.style.color='#001F5B'" onmouseout="this.style.borderColor='#E7ECF3';this.style.color='#5A6675'">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4.35-4.35a2 2 0 0 0-2.83 0L4 21"/></svg>
+              Imagen
+              <input type="file" accept="image/*" id="chat-img-input" style="display:none" onchange="handleChatImage(this)"/>
+            </label>
+            <!-- Documento -->
+            <label title="Subir documento (PDF)" style="display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border-radius:30px;border:1px solid #E7ECF3;background:#fff;cursor:pointer;font-size:13px;font-weight:600;color:#5A6675;transition:all .2s;" onmouseover="this.style.borderColor='#BFD0EC';this.style.color='#001F5B'" onmouseout="this.style.borderColor='#E7ECF3';this.style.color='#5A6675'">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+              Documento
+              <input type="file" accept="application/pdf,.pdf" id="chat-doc-input" style="display:none" onchange="handleChatDoc(this)"/>
+            </label>
+            <!-- Audio -->
+            <button type="button" id="chat-voice-btn" title="Hablar" onclick="toggleChatVoice()" style="display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border-radius:30px;border:1px solid #E7ECF3;background:#fff;cursor:pointer;font-size:13px;font-weight:600;color:#5A6675;transition:all .2s;" onmouseover="this.style.borderColor='#BFD0EC';this.style.color='#001F5B'" onmouseout="this.style.borderColor='#E7ECF3';this.style.color='#5A6675'">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+              Audio
+            </button>
           </div>
-
-          <!-- Text -->
-          <div style="flex:1;min-width:0;">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
-              <span style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:22px;font-weight:600;letter-spacing:-.3px;color:#001F5B;line-height:1;">Buscador con IA</span>
-              <span style="display:inline-flex;align-items:center;gap:5px;background:#e7f6ec;color:#1d7d34;font-size:10px;font-weight:600;padding:4px 11px;border-radius:980px;letter-spacing:0;"><span style="width:6px;height:6px;border-radius:50%;background:#1d7d34;display:inline-block;"></span>En vivo</span>
-            </div>
-            <p style="font-size:13px;color:#86868b;margin:0;line-height:1.5;">Describe, fotografía o dicta el conector — <strong style="color:#001F5B;font-weight:600;">la IA lo identifica al instante</strong></p>
-          </div>
+          <button type="button" onclick="sendChatMessage()" style="display:inline-flex;align-items:center;gap:9px;background:#001F5B;color:#fff;border:none;padding:13px 24px;border-radius:30px;font-size:15px;font-weight:700;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;transition:background .2s;" onmouseover="this.style.background='#C8102E'" onmouseout="this.style.background='#001F5B'">
+            Buscar con IA
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
+          </button>
         </div>
 
-        <!-- Capability pills row -->
-        <div style="display:flex;gap:0;border-top:1px solid #f0f0f2;overflow-x:auto;">
-          <div style="flex:1;padding:12px;text-align:center;border-right:1px solid #f0f0f2;min-width:80px;">
-            <div style="display:flex;justify-content:center;margin-bottom:5px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#001F5B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 6.1H3"/><path d="M21 12.1H3"/><path d="M15.1 18H3"/></svg></div>
-            <div style="font-size:10px;font-weight:600;color:#001F5B;letter-spacing:0;text-transform:none;">Texto</div>
-          </div>
-          <div style="flex:1;padding:12px;text-align:center;border-right:1px solid #f0f0f2;min-width:80px;">
-            <div style="display:flex;justify-content:center;margin-bottom:5px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#001F5B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z"/><circle cx="12" cy="13" r="3"/></svg></div>
-            <div style="font-size:10px;font-weight:600;color:#001F5B;letter-spacing:0;text-transform:none;">Foto</div>
-          </div>
-          <div style="flex:1;padding:12px;text-align:center;border-right:1px solid #f0f0f2;min-width:80px;">
-            <div style="display:flex;justify-content:center;margin-bottom:5px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#001F5B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg></div>
-            <div style="font-size:10px;font-weight:600;color:#001F5B;letter-spacing:0;text-transform:none;">Voz</div>
-          </div>
-          <div style="flex:1;padding:12px;text-align:center;min-width:80px;">
-            <div style="display:flex;justify-content:center;margin-bottom:5px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0071e3" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
-            <div style="font-size:10px;font-weight:600;color:#0071e3;letter-spacing:0;text-transform:none;">Código AT</div>
-          </div>
+        <!-- preview imagen -->
+        <div id="chat-img-preview-strip" style="display:none;background:#EEF5FF;border:1px solid #dde6f0;border-radius:10px;padding:7px 12px;align-items:center;gap:8px;margin-top:12px;">
+          <img id="chat-img-thumb" style="height:40px;width:40px;object-fit:cover;border-radius:6px;border:1px solid #dde6f0;"/>
+          <div style="flex:1;"><div style="font-size:11px;font-weight:600;color:#001F5B;" id="chat-img-name">imagen.jpg</div></div>
+          <button type="button" onclick="clearChatImage()" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:15px;">&#10005;</button>
         </div>
-      </div>
-      <!-- Chat messages -->
-      <div id="chat-messages" style="flex:1;background:#fff;min-height:180px;max-height:260px;overflow-y:auto;padding:14px 14px;display:flex;flex-direction:column;gap:10px;">
-        <div style="display:flex;gap:8px;align-items:flex-start;">
-          <div style="width:28px;height:28px;border-radius:50%;background:#0d1b2a;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></div>
-          <div>
-            <div style="background:#F0F5FC;border-radius:0 8px 8px 8px;padding:9px 12px;max-width:100%;">
-              <p style="font-size:12px;color:#111;margin:0 0 4px;line-height:1.5;">¡Hola! Describe tu conector, sube una foto o habla.</p>
-            </div>
-            <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;">
-              <button onclick="useExample('conector recto 1/2 JIC macho a 3/8 NPT macho')" style="background:#f5f5f7;border:none;color:#001F5B;font-size:11px;font-weight:500;padding:5px 12px;border-radius:980px;cursor:pointer;">JIC × NPT ½"</button>
-              <button onclick="useExample('codo 90 grados 3/4 JIC macho macho')" style="background:#f5f5f7;border:none;color:#001F5B;font-size:11px;font-weight:500;padding:5px 12px;border-radius:980px;cursor:pointer;">Codo 90° ¾"</button>
-              <button onclick="useExample('tapon BSP 1/2 macho')" style="background:#f5f5f7;border:none;color:#001F5B;font-size:11px;font-weight:500;padding:5px 12px;border-radius:980px;cursor:pointer;">Tapón BSP ½"</button>
-            </div>
-          </div>
+        <!-- preview documento -->
+        <div id="chat-doc-preview-strip" style="display:none;background:#F4F0FF;border:1px solid #e2d9f5;border-radius:10px;padding:7px 12px;align-items:center;gap:8px;margin-top:8px;">
+          <div style="width:32px;height:32px;border-radius:6px;background:#001F5B;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div>
+          <div style="flex:1;"><div style="font-size:11px;font-weight:600;color:#001F5B;" id="chat-doc-name">documento.pdf</div></div>
+          <button type="button" onclick="clearChatDoc()" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:15px;">&#10005;</button>
         </div>
       </div>
 
-      <!-- Image preview strip -->
-      <div id="chat-img-preview-strip" style="display:none;background:#EEF5FF;border-top:1px solid #dde6f0;padding:7px 12px;align-items:center;gap:8px;">
-        <img id="chat-img-thumb" style="height:40px;width:40px;object-fit:cover;border-radius:4px;border:1px solid #dde6f0;"/>
-        <div style="flex:1;"><div style="font-size:11px;font-weight:600;color:#001F5B;" id="chat-img-name">imagen.jpg</div></div>
-        <button onclick="clearChatImage()" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:15px;">&#10005;</button>
+      <!-- sugerencias rápidas -->
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap;">
+        <button type="button" onclick="useExample('conector recto 1/2 JIC macho a 3/8 NPT macho')" style="background:rgba(255,255,255,.7);border:1px solid #E7ECF3;color:#5A6675;font-size:12px;font-weight:600;padding:7px 13px;border-radius:980px;cursor:pointer;">JIC × NPT ½"</button>
+        <button type="button" onclick="useExample('codo 90 grados 3/4 JIC macho macho')" style="background:rgba(255,255,255,.7);border:1px solid #E7ECF3;color:#5A6675;font-size:12px;font-weight:600;padding:7px 13px;border-radius:980px;cursor:pointer;">Codo 90° ¾"</button>
+        <button type="button" onclick="useExample('tapon BSP 1/2 macho')" style="background:rgba(255,255,255,.7);border:1px solid #E7ECF3;color:#5A6675;font-size:12px;font-weight:600;padding:7px 13px;border-radius:980px;cursor:pointer;">Tapón BSP ½"</button>
       </div>
 
-      <!-- Input bar -->
-      <div style="background:#fff;border-top:1px solid #dde6f0;padding:8px 10px;display:flex;align-items:flex-end;gap:6px;">
-        <!-- Camera -->
-        <label title="Subir foto" style="width:34px;height:34px;border-radius:7px;background:#F0F5FC;border:1px solid #dde6f0;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background .2s;" onmouseover="this.style.background='#dde6f0'" onmouseout="this.style.background='#F0F5FC'">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#001F5B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          <input type="file" accept="image/*" id="chat-img-input" style="display:none" onchange="handleChatImage(this)"/>
-        </label>
-        <!-- Mic -->
-        <button id="chat-voice-btn" title="Hablar" onclick="toggleChatVoice()" style="width:34px;height:34px;border-radius:7px;background:#F0F5FC;border:1px solid #dde6f0;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .2s;">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#001F5B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-        </button>
-        <!-- Textarea -->
-        <textarea id="chat-input" placeholder="Describe tu conector..." style="flex:1;border:none;outline:none;resize:none;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:13px;color:#111;line-height:1.5;min-height:34px;max-height:90px;padding:7px 4px;background:transparent;" rows="1" oninput="autoResize(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}"></textarea>
-        <!-- Send -->
-        <button onclick="sendChatMessage()" style="width:34px;height:34px;border-radius:7px;background:#001F5B;border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background .2s;" onmouseover="this.style.background='#C8102E'" onmouseout="this.style.background='#001F5B'">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-        </button>
-      </div>
-
-    </div>
+      <!-- resultados IA -->
+      <div id="chat-messages" style="display:none;flex-direction:column;gap:12px;background:#fff;border:1px solid #E3E9F3;border-radius:16px;padding:16px;margin-top:16px;text-align:left;max-height:440px;overflow-y:auto;"></div>
 
       <!-- divisor -->
       <div style="display:flex;align-items:center;gap:16px;color:#9AA7B8;font-size:13px;font-weight:600;margin:30px 0 22px;"><span style="flex:1;height:1px;background:#E7ECF3;"></span>o arma el tuyo paso a paso<span style="flex:1;height:1px;background:#E7ECF3;"></span></div>
@@ -1161,6 +1122,7 @@
 
       <!-- chips -->
       <div style="display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap;">
+        <button onclick="showPage('cross')" style="display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:30px;border:1px solid #E7ECF3;background:rgba(255,255,255,.7);font-size:13px;font-weight:600;color:#5A6675;cursor:pointer;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5a1 1 0 0 1 1-1h2M20 7V5a1 1 0 0 0-1-1h-2M4 17v2a1 1 0 0 0 1 1h2M20 17v2a1 1 0 0 1-1 1h-2M8 12h8"/></svg> Buscar por código AT</button>
         <button onclick="showPage('cross')" style="display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:30px;border:1px solid #E7ECF3;background:rgba(255,255,255,.7);font-size:13px;font-weight:600;color:#5A6675;cursor:pointer;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg> Equivalencias (Cross Reference)</button>
       </div>
 
@@ -5152,10 +5114,13 @@ var chatImageBase64 = null;
 var chatImageType   = 'image/jpeg';
 var chatRecognition = null;
 var chatRecording   = false;
+var chatDocBase64   = null;
+var chatDocType     = 'application/pdf';
+var chatDocName     = '';
 
 function scrollToChat() {
-  var el = document.getElementById('ai-chat-section');
-  if (el) el.scrollIntoView({ behavior:'smooth', block:'start' });
+  var el = document.getElementById('chat-input');
+  if (el) el.scrollIntoView({ behavior:'smooth', block:'center' });
   setTimeout(function(){ var i = document.getElementById('chat-input'); if(i) i.focus(); }, 600);
 }
 
@@ -5248,6 +5213,44 @@ function clearChatImage() {
   document.getElementById('chat-img-input').value = '';
 }
 
+function handleChatDoc(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var isPdf = (file.type && file.type.indexOf('pdf') >= 0) || /\.pdf$/i.test(file.name);
+  if (!isPdf) {
+    var st0 = document.getElementById('chat-doc-preview-strip');
+    var nm0 = document.getElementById('chat-doc-name');
+    if (st0) st0.style.display = 'flex';
+    if (nm0) nm0.textContent = 'Solo se admiten archivos PDF por ahora.';
+    return;
+  }
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    chatDocBase64 = (e.target.result || '').split(',')[1];
+    chatDocType   = 'application/pdf';
+    chatDocName   = file.name;
+    var strip = document.getElementById('chat-doc-preview-strip');
+    var name  = document.getElementById('chat-doc-name');
+    if (strip) strip.style.display = 'flex';
+    if (name)  name.textContent = file.name;
+  };
+  reader.onerror = function() {
+    var strip = document.getElementById('chat-doc-preview-strip');
+    var name  = document.getElementById('chat-doc-name');
+    if (strip) strip.style.display = 'flex';
+    if (name)  name.textContent = 'Error al leer el documento.';
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearChatDoc() {
+  chatDocBase64 = null; chatDocName = '';
+  var strip = document.getElementById('chat-doc-preview-strip');
+  if (strip) strip.style.display = 'none';
+  var inp = document.getElementById('chat-doc-input');
+  if (inp) inp.value = '';
+}
+
 var MIC_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#001F5B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
 var MIC_REC = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5" fill="white" opacity="0.3"/><circle cx="12" cy="12" r="3" fill="white"/></svg>';
 
@@ -5291,6 +5294,7 @@ function toggleChatVoice() {
 
 function addUserMessage(text, imgSrc) {
   var msgs = document.getElementById('chat-messages');
+  if (msgs) msgs.style.display = 'flex';
   var d = document.createElement('div');
   d.style.cssText = 'display:flex;justify-content:flex-end;gap:10px;';
   var bubble = document.createElement('div');
@@ -5306,6 +5310,7 @@ function addUserMessage(text, imgSrc) {
 
 function addBotMessage(html, isLoading) {
   var msgs = document.getElementById('chat-messages');
+  if (msgs) msgs.style.display = 'flex';
   var d = document.createElement('div');
   d.style.cssText = 'display:flex;gap:10px;align-items:flex-start;';
   d.innerHTML = '<div style="width:32px;height:32px;border-radius:50%;background:#0d1b2a;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></div>'+
@@ -5321,10 +5326,13 @@ function sendChatMessage() {
   var input  = document.getElementById('chat-input');
   var text   = input.value.trim();
   var hasImg = !!chatImageBase64;
-  if (!text && !hasImg) return;
+  var hasDoc = !!chatDocBase64;
+  if (!text && !hasImg && !hasDoc) return;
 
   var imgSrc = hasImg ? 'data:'+chatImageType+';base64,'+chatImageBase64 : null;
-  addUserMessage(text || '(imagen adjunta)', imgSrc);
+  var userLabel = text || (hasImg ? '(imagen adjunta)' : '(documento adjunto)');
+  if (!text && hasDoc && !hasImg && chatDocName) userLabel = '\uD83D\uDCC4 ' + chatDocName;
+  addUserMessage(userLabel, imgSrc);
   input.value = ''; input.style.height = 'auto';
 
   addBotMessage('<span style="display:inline-flex;gap:4px;align-items:center;">Analizando<span style="display:inline-flex;gap:3px;margin-left:4px;"><span style="width:6px;height:6px;border-radius:50%;background:#001F5B;animation:bounce-dot 1.2s infinite;display:inline-block;"></span><span style="width:6px;height:6px;border-radius:50%;background:#001F5B;animation:bounce-dot 1.2s .2s infinite;display:inline-block;"></span><span style="width:6px;height:6px;border-radius:50%;background:#001F5B;animation:bounce-dot 1.2s .4s infinite;display:inline-block;"></span></span></span>', true);
@@ -5351,20 +5359,24 @@ function sendChatMessage() {
     + ' Si es descripcion: da AT probable con nivel de confianza. Numero AT siempre en **negrita**.'
     + ' Responde en espanol claro y directo.';
 
-  var messages = hasImg
-    ? [{ role:'user', content:[
-        { type:'image', source:{ type:'base64', media_type: (['image/jpeg','image/png','image/gif','image/webp'].indexOf(chatImageType)>=0 ? chatImageType : 'image/jpeg'), data: chatImageBase64 }},
-        { type:'text',  text: imagePrompt }
-      ]}]
-    : [{ role:'user', content: textPrompt }];
+  var docPrompt = 'Eres el experto en adaptadores hidraulicos de Adaptek Mexico. Analiza el documento PDF adjunto (puede ser lista de materiales, requisicion, cotizacion o ficha tecnica).'
+    + (text ? ' El cliente agrega: "' + text + '".' : '')
+    + ' Identifica cada conector o adaptador mencionado y, para cada uno, da el numero AT probable formato AT-[TIPO]-[STD_A]-[GEN_A][MED_A]-[STD_B]-[GEN_B][MED_B] con su nivel de confianza.'
+    + ' Tipos: NR=recto, C90=codo90, C45=codo45, TEE=tee, TAP=tapon, RED=reduccion, GIR=giratoria. Estandares: JIC, NPT, BSPP, BSPT, ORB, ORFS, DIN, JIS, KOM, CAT. M=macho, H=hembra.'
+    + ' El numero AT siempre en **negrita**. Si falta informacion para algun item, indica que medida hace falta. Responde en espanol claro, en forma de lista.';
 
-  // Build Claude request
-  var claudeMessages = hasImg
-    ? [{ role:'user', content:[
-        { type:'image', source:{ type:'base64', media_type: (['image/jpeg','image/png','image/gif','image/webp'].indexOf(chatImageType)>=0 ? chatImageType : 'image/jpeg'), data: chatImageBase64 }},
-        { type:'text', text: imagePrompt }
-      ]}]
-    : [{ role:'user', content: textPrompt }];
+  var mediaType = (['image/jpeg','image/png','image/gif','image/webp'].indexOf(chatImageType)>=0 ? chatImageType : 'image/jpeg');
+  var promptToUse = hasImg ? imagePrompt : (hasDoc ? docPrompt : textPrompt);
+  var claudeMessages;
+  if (hasImg || hasDoc) {
+    var content = [];
+    if (hasImg) content.push({ type:'image', source:{ type:'base64', media_type: mediaType, data: chatImageBase64 }});
+    if (hasDoc) content.push({ type:'document', source:{ type:'base64', media_type:'application/pdf', data: chatDocBase64 }});
+    content.push({ type:'text', text: promptToUse });
+    claudeMessages = [{ role:'user', content: content }];
+  } else {
+    claudeMessages = [{ role:'user', content: textPrompt }];
+  }
 
   fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -5400,6 +5412,7 @@ function sendChatMessage() {
       + '</div>';
     addBotMessage(formatted);
     if (hasImg) clearChatImage();
+    if (hasDoc) clearChatDoc();
   })
   .catch(function(){
     removeLoading();
