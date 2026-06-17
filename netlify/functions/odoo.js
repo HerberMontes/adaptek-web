@@ -322,7 +322,7 @@ async function sendEmail(to, subject, html) {
 // ── Métricas (contadores propios en un partner oculto ADAPTEKK_METRICS) ──
 async function getMetricsPartner(uid) {
   const searchText = await xmlrpc(uid, 'res.partner', 'search',
-    `<value><array><data><value><array><data><value><array><data>${xmlStr('name')}<value><string>=</string></value>${xmlStr('ADAPTEKK_METRICS')}</data></array></value></data></array></value></data></array></value>`
+    `<value><array><data><value><array><data>${xmlStr('name')}<value><string>=</string></value>${xmlStr('ADAPTEKK_METRICS')}</data></array></value></data></array></value>`
   );
   const idMatch = searchText.match(/<value><int>(\d+)<\/int><\/value>/);
   let data = {}, id = idMatch ? parseInt(idMatch[1]) : null;
@@ -463,9 +463,9 @@ exports.handler = async function(event, context) {
       if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
 
       const checkText = await xmlrpc(uid, 'res.partner', 'search',
-        `<value><array><data><value><array><data>
+        `<value><array><data>
           <value><array><data>${xmlStr('email')}<value><string>=</string></value>${xmlStr(email)}</data></array></value>
-        </data></array></value></data></array></value>`
+        </data></array></value>`
       );
       if (hasResults(checkText)) {
         return {statusCode:200, headers, body: JSON.stringify({success:false, error:'Este correo ya está registrado. Inicia sesión, o si olvidaste tu contraseña usa "Crear / olvidé mi contraseña".'})};
@@ -474,9 +474,9 @@ exports.handler = async function(event, context) {
       // Teléfono repetido: no se permiten dos cuentas con el mismo teléfono
       if (phone) {
         const checkPhone = await xmlrpc(uid, 'res.partner', 'search',
-          `<value><array><data><value><array><data>
+          `<value><array><data>
             <value><array><data>${xmlStr('phone')}<value><string>=ilike</string></value>${xmlStr(phone)}</data></array></value>
-          </data></array></value></data></array></value>`
+          </data></array></value>`
         );
         if (hasResults(checkPhone)) {
           return {statusCode:200, headers, body: JSON.stringify({success:false, error:'Este teléfono ya está registrado con otra cuenta. Inicia sesión, o usa "Crear / olvidé mi contraseña".'})};
@@ -533,9 +533,9 @@ exports.handler = async function(event, context) {
       if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
 
       const checkText = await xmlrpc(uid, 'res.partner', 'search',
-        `<value><array><data><value><array><data>
+        `<value><array><data>
           <value><array><data>${xmlStr('email')}<value><string>=ilike</string></value>${xmlStr(email)}</data></array></value>
-        </data></array></value></data></array></value>`
+        </data></array></value>`
       );
       if (!hasResults(checkText)) {
         return {statusCode:200, headers, body: JSON.stringify({success:false, notFound:true, error:'No encontramos una cuenta con ese correo.'})};
@@ -580,9 +580,9 @@ exports.handler = async function(event, context) {
       if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
 
       const text = await xmlrpc(uid, 'res.partner', 'search_read',
-        `<value><array><data><value><array><data>
+        `<value><array><data>
           <value><array><data>${xmlStr('email')}<value><string>=ilike</string></value>${xmlStr(email)}</data></array></value>
-        </data></array></value></data></array></value>`
+        </data></array></value>`
       );
       const get = (field) => { const m = text.match(new RegExp('<name>' + field + '</name>\\s*<value>(?:<(?:string|int|boolean)>)?([^<]*)', 'i')); return m ? m[1].trim() : ''; };
       const id = parseInt(get('id')) || 0;
@@ -599,9 +599,9 @@ exports.handler = async function(event, context) {
       const uid = await odooAuth();
       if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
       const text = await xmlrpc(uid, 'res.partner', 'search_read',
-        `<value><array><data><value><array><data>
+        `<value><array><data>
           <value><array><data>${xmlStr('email')}<value><string>=ilike</string></value>${xmlStr(email)}</data></array></value>
-        </data></array></value></data></array></value>`
+        </data></array></value>`
       );
       const structM = text.match(/<struct>[\s\S]*?<\/struct>/);
       if (!structM) return {statusCode:200, headers, body: JSON.stringify({success:false, notFound:true, error:'No encontramos una cuenta con ese correo.'})};
@@ -633,9 +633,9 @@ exports.handler = async function(event, context) {
       const uid = await odooAuth();
       if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
       const sText = await xmlrpc(uid, 'res.partner', 'search',
-        `<value><array><data><value><array><data>
+        `<value><array><data>
           <value><array><data>${xmlStr('email')}<value><string>=ilike</string></value>${xmlStr(email)}</data></array></value>
-        </data></array></value></data></array></value>`
+        </data></array></value>`
       );
       const idM = sText.match(/<int>(\d+)<\/int>/);
       const pid = idM ? parseInt(idM[1]) : 0;
@@ -656,9 +656,9 @@ exports.handler = async function(event, context) {
 
       // Check duplicate email
       const checkEmail = await xmlrpc(uid, 'res.partner', 'search',
-        `<value><array><data><value><array><data>
+        `<value><array><data>
           <value><array><data>${xmlStr('email')}<value><string>=</string></value>${xmlStr(email)}</data></array></value>
-        </data></array></value></data></array></value>`
+        </data></array></value>`
       );
       if (hasResults(checkEmail)) {
         return {statusCode:200, headers, body: JSON.stringify({success:false, error:'Este correo ya está registrado'})};
@@ -667,9 +667,9 @@ exports.handler = async function(event, context) {
       // Teléfono duplicado (red de seguridad)
       if (phone) {
         const checkPhone2 = await xmlrpc(uid, 'res.partner', 'search',
-          `<value><array><data><value><array><data>
+          `<value><array><data>
             <value><array><data>${xmlStr('phone')}<value><string>=ilike</string></value>${xmlStr(phone)}</data></array></value>
-          </data></array></value></data></array></value>`
+          </data></array></value>`
         );
         if (hasResults(checkPhone2)) {
           return {statusCode:200, headers, body: JSON.stringify({success:false, error:'Este teléfono ya está registrado con otra cuenta'})};
@@ -679,9 +679,9 @@ exports.handler = async function(event, context) {
       // Check duplicate RFC
       if (rfc) {
         const checkRFC = await xmlrpc(uid, 'res.partner', 'search',
-          `<value><array><data><value><array><data>
+          `<value><array><data>
             <value><array><data>${xmlStr('vat')}<value><string>=</string></value>${xmlStr(rfc)}</data></array></value>
-          </data></array></value></data></array></value>`
+          </data></array></value>`
         );
         if (hasResults(checkRFC)) {
           return {statusCode:200, headers, body: JSON.stringify({success:false, error:'Este RFC ya está registrado en Adaptekk'})};
@@ -1268,9 +1268,9 @@ exports.handler = async function(event, context) {
 
       // Search for config partner
       const searchText = await xmlrpc(uid, 'res.partner', 'search',
-        `<value><array><data><value><array><data>
+        `<value><array><data>
           <value><array><data>${xmlStr('name')}<value><string>=</string></value>${xmlStr('ADAPTEKK_CONFIG')}</data></array></value>
-        </data></array></value></data></array></value>`
+        </data></array></value>`
       );
       const idMatch = searchText.match(/<value><int>(\d+)<\/int><\/value>/);
 
@@ -1319,9 +1319,9 @@ exports.handler = async function(event, context) {
       if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
 
       const searchText = await xmlrpc(uid, 'res.partner', 'search',
-        `<value><array><data><value><array><data>
+        `<value><array><data>
           <value><array><data>${xmlStr('name')}<value><string>=</string></value>${xmlStr('ADAPTEKK_CONFIG')}</data></array></value>
-        </data></array></value></data></array></value>`
+        </data></array></value>`
       );
       const idMatch = searchText.match(/<value><int>(\d+)<\/int><\/value>/);
       if (!idMatch) return {statusCode:200, headers, body: JSON.stringify({success:true, passes:{}})};
@@ -1457,12 +1457,12 @@ exports.handler = async function(event, context) {
       // If no exact match, check if AT code exists in catalog (qty=0 = fabricado)
       if (products.length === 0) {
         // Search by partial code
-        const partialXml = `<value><array><data><value><array><data>
+        const partialXml = `<value><array><data>
           <value><array><data>
             ${xmlStr('default_code')}<value><string>like</string></value>
             ${xmlStr('AT-' + tipoCode + '-' + std_a)}
           </data></array></value>
-        </data></array></value></data></array></value>`;
+        </data></array></value>`;
 
         const partialText = await xmlrpc(uid, 'product.product', 'search_read',
           partialXml
@@ -1630,9 +1630,9 @@ exports.handler = async function(event, context) {
       const uid = await odooAuth();
       const query = body.query || '';
       const text = await xmlrpc(uid, 'product.product', 'search_read',
-        `<value><array><data><value><array><data>
+        `<value><array><data>
           <value><array><data>${xmlStr('name')}<value><string>ilike</string></value>${xmlStr(query)}</data></array></value>
-        </data></array></value></data></array></value>`
+        </data></array></value>`
       );
       return {statusCode:200, headers, body: JSON.stringify({success:true, raw: text.substring(0,1000)})};
     }
