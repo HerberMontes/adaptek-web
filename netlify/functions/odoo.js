@@ -940,10 +940,7 @@ exports.handler = async function(event, context) {
       let match;
       while ((match = memberRegex.exec(text)) !== null) {
         const struct = match[1];
-        const getVal = (field) => {
-          const m = struct.match(new RegExp('<name>' + field + '<\/name>\s*<value>(?:<(?:string|int|boolean)>)?([^<]*)', 'i'));
-          return m ? m[1].trim() : '';
-        };
+        const getVal = (field) => xmlExtractField(struct, field);
         const id = parseInt(getVal('id'));
         if (id && id > 0) {
           clients.push({
