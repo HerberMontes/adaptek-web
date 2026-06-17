@@ -4338,6 +4338,24 @@ function setApiKey(k) {
 var pages = ['home','buscar','cfg','cross','tutorials','quote','cart','checkout','pago','gracias','login','register','portal'];
 // Registro de cuenta nueva: recopila los datos del formulario y crea el contacto
 // como prospecto pendiente de aprobación (un ejecutivo lo valida después).
+function showRegistroExito(){
+  var ov = document.createElement('div');
+  ov.id = 'reg-exito-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(10,14,26,.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  ov.innerHTML = '<div style="background:#fff;border-radius:22px;max-width:420px;width:100%;padding:40px 32px 32px;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.3);font-family:-apple-system,BlinkMacSystemFont,Inter,sans-serif;">'
+    + '<div style="width:74px;height:74px;border-radius:50%;background:#EAF3EC;display:flex;align-items:center;justify-content:center;margin:0 auto 22px;">'
+    +   '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#1d7d34" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>'
+    + '</div>'
+    + '<h2 style="font-size:25px;font-weight:800;color:#001F5B;letter-spacing:-.4px;margin:0 0 10px;">Cuenta creada</h2>'
+    + '<p style="color:#3A4656;font-size:15px;line-height:1.6;margin:0 0 6px;">Tu cuenta quedó <strong>pendiente de aprobación</strong>.</p>'
+    + '<p style="color:#8A93A2;font-size:13px;line-height:1.6;margin:0 0 26px;">Un ejecutivo de Adaptekk la revisará y te avisará por correo en menos de 24 horas hábiles.</p>'
+    + '<button id="reg-exito-btn" style="background:#001F5B;color:#fff;border:none;padding:14px 32px;border-radius:30px;cursor:pointer;font-size:15px;font-weight:700;font-family:inherit;">Ir al inicio</button>'
+    + '</div>';
+  document.body.appendChild(ov);
+  var b = document.getElementById('reg-exito-btn');
+  if (b) b.addEventListener('click', function(){ ov.remove(); showPage('home'); });
+}
+
 window.mockRegister = async function(){
   function val(id){ var el = document.getElementById(id); return el ? (el.value||'').trim() : ''; }
   var nombre = val('reg-nombre');
@@ -4383,8 +4401,7 @@ window.mockRegister = async function(){
     var data = await resp.json();
     if (btn){ btn.disabled = false; btn.textContent = 'Crear mi cuenta gratis'; }
     if (data && (data.ok || data.success || data.id || data.partner_id)) {
-      if (typeof showToast==='function') showToast('\u2705 \u00a1Cuenta creada! Un ejecutivo la revisará y te avisará por correo.');
-      showPage('home');
+      showRegistroExito();
     } else {
       if (typeof showToast==='function') showToast('\u26a0 No se pudo crear la cuenta. ' + ((data && data.error) ? data.error : 'Intenta de nuevo.'));
     }
@@ -6183,7 +6200,7 @@ async function verifyOTP(email, nombre, apellido, empresa, phone) {
       var regBody = document.querySelector('#page-register .auth-body');
       if (regBody) {
         regBody.innerHTML = '<div style="text-align:center;padding:20px 0;">'
-          + '<div style="font-size:64px;margin-bottom:16px;">&#127881;</div>'
+          + '<div style="width:74px;height:74px;border-radius:50%;background:#EAF3EC;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#1d7d34" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>'
           + '<h2 style="color:#001F5B;margin-bottom:8px;">¡Registro exitoso!</h2>'
           + '<p style="color:#555;margin-bottom:8px;">Tu cuenta está <strong>pendiente de aprobación</strong>.</p>'
           + '<p style="color:#888;font-size:13px;margin-bottom:24px;">Un ejecutivo de Adaptekk revisará tu cuenta y recibirás una confirmación en tu correo en menos de <strong>24 horas hábiles</strong>.</p>'
