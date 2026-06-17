@@ -3687,6 +3687,13 @@ function payConfirmado(metodo){
 .dsh-setup .t{font-size:13px;color:#6B7785;margin-bottom:4px;font-weight:600;}
 .dsh-setup .d{font-size:11.5px;line-height:1.5;}
 .dsh-nav{font-size:12px;cursor:pointer;padding:5px 13px;border-radius:20px;font-weight:600;transition:background .2s;}
+.dsh-seg-ctrl{display:inline-flex;background:#EDF1F7;border-radius:11px;padding:3px;}
+.dsh-segbtn{border:none;background:transparent;color:#6B7785;font-size:13px;font-weight:600;padding:7px 15px;border-radius:8px;cursor:pointer;transition:all .2s;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;}
+.dsh-segbtn:hover{color:#0A0E1A;}
+.dsh-segbtn.active{background:#fff;color:#001F5B;box-shadow:0 1px 3px rgba(16,32,64,.12);}
+.dsh-spinner{width:26px;height:26px;border:3px solid #E7ECF3;border-top-color:#001F5B;border-radius:50%;margin:0 auto;animation:dshspin .8s linear infinite;}
+@keyframes dshspin{to{transform:rotate(360deg);}}
+body.exec-mode #cart-fab, body.exec-mode .wa-float{display:none!important;}
 .ebtn.in{background:#f0f0f0;color:#333;}
 </style>
 
@@ -3740,25 +3747,21 @@ function payConfirmado(metodo){
 <div id="exec-view-tablero" style="display:none;background:#F4F6FA;min-height:calc(100vh - 60px);"><div class="dsh-wrap"><div class="dsh-eyebrow" style="margin-bottom:13px;">Servicios · uso y límites</div><div class="dsh-grid dsh-r3"><div class="dsh-card"><div class="dsh-ch"><div class="dsh-ct"><span class="dsh-ic"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span>Correos · Resend</div><span class="dsh-pill ok" id="dsh-resend-pill">--</span></div><div class="dsh-gw"><div class="dsh-gauge"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" fill="none" stroke="#EDF1F7" stroke-width="11" stroke-dasharray="235.6 314.2"/><circle id="dsh-resend-g" class="val" cx="60" cy="60" r="50" fill="none" stroke="#1F9D55" stroke-width="11" stroke-dasharray="0 314.2"/></svg><div class="dsh-gc"><div class="dsh-gpct" id="dsh-resend-pct">--</div><div class="dsh-gsub">de 100 / día</div></div></div><div class="dsh-gi"><div class="big" id="dsh-resend-day">-- enviados hoy</div><div class="small" id="dsh-resend-month">-- de 3,000 este mes</div><div class="reset"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9AA7B8" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6 2.3"/><path d="M3 3v4h4"/></svg> Tope diario · aviso al 70%</div></div></div></div><div class="dsh-card"><div class="dsh-ch"><div class="dsh-ct"><span class="dsh-ic"><svg viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="3.2"/></svg></span>IA · Claude</div><span class="dsh-pill off">Configurar</span></div><div class="dsh-ring"><svg viewBox="0 0 138 138"><circle cx="69" cy="69" r="58" fill="none" stroke="#EDF1F7" stroke-width="12"/><circle id="dsh-claude-r" class="val" cx="69" cy="69" r="58" fill="none" stroke="#001F5B" stroke-width="12" stroke-dasharray="0 364.4"/></svg><div class="dsh-rc"><div class="amt" id="dsh-claude-amt">$--</div><div class="lbl">Restante</div></div></div><div class="dsh-setup" style="margin-top:12px;"><div class="d">Dime cuánto compraste de créditos y lo conecto. El gasto se mide al pasar la IA por el backend.</div></div></div><div class="dsh-card"><div class="dsh-ch"><div class="dsh-ct"><span class="dsh-ic"><svg viewBox="0 0 24 24"><path d="M12 21s-6.5-5.5-6.5-10A6.5 6.5 0 0 1 12 4.5 6.5 6.5 0 0 1 18.5 11c0 4.5-6.5 10-6.5 10z"/><circle cx="12" cy="11" r="2.3"/></svg></span>Mapas · Google</div><span class="dsh-pill off">Configurar</span></div><div class="dsh-gw"><div class="dsh-gauge"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" fill="none" stroke="#EDF1F7" stroke-width="11" stroke-dasharray="235.6 314.2"/><circle id="dsh-maps-g" class="val" cx="60" cy="60" r="50" fill="none" stroke="#1F9D55" stroke-width="11" stroke-dasharray="0 314.2"/></svg><div class="dsh-gc"><div class="dsh-gpct" id="dsh-maps-pct">--</div><div class="dsh-gsub">de 10,000</div></div></div><div class="dsh-gi"><div class="big">Sin integrar aún</div><div class="small">Direcciones con Google Places</div><div class="reset"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9AA7B8" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6 2.3"/><path d="M3 3v4h4"/></svg> Alertas en Google Cloud (70%)</div></div></div></div></div><div class="dsh-grid dsh-r4"><div class="dsh-card"><div class="dsh-kn" id="dsh-k-pend">--</div><div class="dsh-kl">Clientes por aprobar</div><div class="dsh-kd down" id="dsh-k-pend-d"></div></div><div class="dsh-card"><div class="dsh-kn" id="dsh-k-veri">--</div><div class="dsh-kl">Clientes verificados</div><div class="dsh-kd flat">Activos con precios</div></div><div class="dsh-card"><div class="dsh-kn" id="dsh-k-prod">--</div><div class="dsh-kl">Productos en catálogo</div><div class="dsh-kd up" id="dsh-k-prod-d"></div></div><div class="dsh-card"><div class="dsh-kn" style="color:#C2CCDA;">--</div><div class="dsh-kl">Visitas este mes</div><div class="dsh-kd flat">Elige analytics para activar</div></div></div><div class="dsh-grid dsh-r2"><div class="dsh-card"><div class="dsh-ch"><div class="dsh-ct"><span class="dsh-ic"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 8.5a3 3 0 0 1 0 5.5M17.5 19a5 5 0 0 0-3-4.6"/></svg></span>Estado de clientes</div></div><div class="dsh-seg"><span id="dsh-seg-p" style="width:0;background:#E0962A;"></span><span id="dsh-seg-v" style="width:0;background:#1F9D55;"></span><span id="dsh-seg-r" style="width:0;background:#C8102E;"></span></div><div class="dsh-leg"><div class="li"><span class="l"><span class="dsh-dot" style="background:#E0962A;"></span>Pendientes</span><span class="n" id="dsh-l-p">--</span></div><div class="li"><span class="l"><span class="dsh-dot" style="background:#1F9D55;"></span>Verificados</span><span class="n" id="dsh-l-v">--</span></div><div class="li"><span class="l"><span class="dsh-dot" style="background:#C8102E;"></span>Rechazados</span><span class="n" id="dsh-l-r">--</span></div></div></div><div class="dsh-card"><div class="dsh-ch"><div class="dsh-ct"><span class="dsh-ic"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.3 7 12 12l8.7-5M12 22V12"/></svg></span>Productos integrados</div><span class="dsh-eyebrow">Últimos 6 meses</span></div><svg id="dsh-prodbars" width="100%" height="96" viewBox="0 0 520 96" preserveAspectRatio="none" style="display:block;margin-bottom:10px;"></svg><div class="dsh-leg"><div class="li"><span class="l">Total en catálogo</span><span class="n" id="dsh-prod-total">--</span></div></div></div></div><div class="dsh-grid dsh-r2"><div class="dsh-card"><div class="dsh-ch"><div class="dsh-ct"><span class="dsh-ic"><svg viewBox="0 0 24 24"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/></svg></span>Verificados por zona</div></div><div id="dsh-zones"><div class="dsh-note">Cargando…</div></div></div><div class="dsh-card"><div class="dsh-ch"><div class="dsh-ct"><span class="dsh-ic"><svg viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="3.2"/></svg></span>Demanda no cubierta</div></div><div class="dsh-kn" id="dsh-noresult" style="color:#C8102E;">--</div><div class="dsh-kl">Búsquedas sin resultado este mes</div><div class="dsh-note"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9AA7B8" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6 2.3"/><path d="M3 3v4h4"/></svg> Lo que la gente buscó y no encontró = productos que te conviene integrar.</div></div></div></div></div>
 
 <div id="exec-view-clientes">
-  <!-- Stats -->
-  <div style="background:#001F5B;padding:16px 24px;border-bottom:3px solid #C8102E;">
-    <div style="max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:16px;text-align:center;">
-      <div><div id="st-total" style="font-size:28px;font-weight:900;color:#fff;">-</div><div style="font-size:10px;color:rgba(255,255,255,.4);letter-spacing:2px;text-transform:uppercase;">Total</div></div>
-      <div><div id="st-pend" style="font-size:28px;font-weight:900;color:#FFC107;">-</div><div style="font-size:10px;color:rgba(255,255,255,.4);letter-spacing:2px;text-transform:uppercase;">Pendientes</div></div>
-      <div><div id="st-veri" style="font-size:28px;font-weight:900;color:#4ADE80;">-</div><div style="font-size:10px;color:rgba(255,255,255,.4);letter-spacing:2px;text-transform:uppercase;">Verificados</div></div>
-      <div><div id="st-rech" style="font-size:28px;font-weight:900;color:#F87171;">-</div><div style="font-size:10px;color:rgba(255,255,255,.4);letter-spacing:2px;text-transform:uppercase;">Rechazados</div></div>
-    </div>
-  </div>
-
   <!-- Body -->
-  <div style="max-width:1100px;margin:0 auto;padding:24px;">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
-      <div style="font-size:18px;font-weight:800;color:#001F5B;">Clientes Registrados</div>
-      <div style="margin-left:auto;display:flex;gap:6px;">
-        <button onclick="filtrar('todos')" id="ft-todos" class="ebtn ap">Todos</button>
-        <button onclick="filtrar('pendiente')" id="ft-pendiente" class="ebtn in">Pendientes</button>
-        <button onclick="filtrar('verificado')" id="ft-verificado" class="ebtn in">Verificados</button>
-        <button onclick="filtrar('rechazado')" id="ft-rechazado" class="ebtn in">Rechazados</button>
+  <div class="dsh-wrap">
+    <div class="dsh-grid dsh-r4">
+      <div class="dsh-card"><div class="dsh-kn" id="st-total">--</div><div class="dsh-kl">Total</div></div>
+      <div class="dsh-card"><div class="dsh-kn" id="st-pend" style="color:#E0962A;">--</div><div class="dsh-kl">Pendientes</div></div>
+      <div class="dsh-card"><div class="dsh-kn" id="st-veri" style="color:#1F9D55;">--</div><div class="dsh-kl">Verificados</div></div>
+      <div class="dsh-card"><div class="dsh-kn" id="st-rech" style="color:#C8102E;">--</div><div class="dsh-kl">Rechazados</div></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;margin:26px 0 16px;flex-wrap:wrap;">
+      <div class="dsh-h1" style="margin:0;">Clientes</div>
+      <div class="dsh-seg-ctrl" style="margin-left:auto;">
+        <button onclick="filtrar('todos')" id="ft-todos" class="dsh-segbtn active">Todos</button>
+        <button onclick="filtrar('pendiente')" id="ft-pendiente" class="dsh-segbtn">Pendientes</button>
+        <button onclick="filtrar('verificado')" id="ft-verificado" class="dsh-segbtn">Verificados</button>
+        <button onclick="filtrar('rechazado')" id="ft-rechazado" class="dsh-segbtn">Rechazados</button>
       </div>
     </div>
     <div style="margin-bottom:16px;position:relative;">
@@ -3767,8 +3770,8 @@ function payConfirmado(metodo){
         onfocus="this.style.borderColor='#001F5B'" onblur="this.style.borderColor='#e0e8f0'"/>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9aa7b8" stroke-width="2" stroke-linecap="round" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     </div>
-    <div id="exec-loading" style="text-align:center;padding:60px;color:#aaa;"><div style="font-size:32px;">&#9200;</div><div style="margin-top:8px;">Cargando desde Odoo...</div></div>
-    <div id="exec-empty" style="display:none;text-align:center;padding:60px;color:#aaa;"><div style="font-size:48px;">&#128219;</div><div style="font-size:16px;font-weight:600;margin-top:8px;">Sin clientes en esta categoria</div></div>
+    <div id="exec-loading" style="text-align:center;padding:70px 0;color:#9AA7B8;"><div class="dsh-spinner"></div><div style="margin-top:14px;font-size:13px;">Cargando clientes…</div></div>
+    <div id="exec-empty" style="display:none;text-align:center;padding:70px 20px;color:#9AA7B8;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#C2CCDA" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto;display:block;"><circle cx="9" cy="8" r="3.2"/><path d="M3 19a6 6 0 0 1 12 0"/><path d="M16 8.5a3 3 0 0 1 0 5.5M17.5 19a5 5 0 0 0-3-4.6"/></svg><div style="font-size:15px;font-weight:600;color:#6B7785;margin-top:14px;">No hay clientes en esta vista</div><div style="font-size:13px;margin-top:4px;">Los registros nuevos aparecen aquí en cuanto entran.</div></div>
     <div id="exec-list"></div>
   </div>
 
@@ -3845,6 +3848,7 @@ async function execLogin() {
     execCurrentUser = Object.assign({}, cuenta, {pass: pass}); // pass solo en memoria para autorizar acciones de admin
     document.getElementById('exec-login-screen').style.display = 'none';
     document.getElementById('exec-portal-screen').style.display = 'block';
+    document.body.classList.add('exec-mode');
     var badge = document.getElementById('exec-role-badge');
     if (badge) { badge.textContent = cuenta.nombre; badge.style.background = cuenta.rol==='gerente'?'#C8102E':'rgba(255,255,255,.1)'; }
     var adminBtn = document.getElementById('btn-admin-users');
@@ -3861,6 +3865,7 @@ async function execLogin() {
 
 function execLogout() {
   document.getElementById('exec-portal-screen').style.display = 'none';
+  document.body.classList.remove('exec-mode');
   document.getElementById('exec-login-screen').style.display = 'flex';
   document.getElementById('exec-user-input').value = '';
   document.getElementById('exec-pass-input').value = '';
@@ -4026,7 +4031,7 @@ function filtrar(f) {
   var btns = ['todos','pendiente','verificado','rechazado'];
   btns.forEach(function(x) {
     var btn = document.getElementById('ft-'+x);
-    if (btn) btn.className = x===f ? 'ebtn ap' : 'ebtn in';
+    if (btn) btn.className = x===f ? 'dsh-segbtn active' : 'dsh-segbtn';
   });
   aplicarFiltros();
 }
