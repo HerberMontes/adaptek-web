@@ -4343,7 +4343,7 @@ async function resendRegCode(){
   try {
     var resp = await fetch('/.netlify/functions/odoo', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ action:'send_verification', email: email, name: nombre })
+      body: JSON.stringify({ action:'send_verification', email: email, name: nombre, phone: phone })
     });
     var data = await resp.json();
     if (err){ err.style.color = (data && data.success) ? '#25a244' : '#C8102E'; err.textContent = (data && data.success) ? 'C\u00f3digo reenviado.' : ((data && data.error) || 'No se pudo reenviar.'); }
