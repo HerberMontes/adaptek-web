@@ -1138,7 +1138,9 @@ exports.handler = async function(event, context) {
         let company = '';
         const cm = st.match(/<name>company_id<\/name>\s*<value><array>[\s\S]*?<value><string>([^<]*)<\/string>/i);
         if (cm) company = cm[1];
-        recent.push({ id, name: g('name'), email: g('email'), customer_rank: g('customer_rank'), company });
+        const comment = g('comment') || '';
+        const estado = /VERIFICADO/i.test(comment) ? 'VERIFICADO' : /RECHAZADO/i.test(comment) ? 'RECHAZADO' : 'PENDIENTE';
+        recent.push({ id, name: g('name'), email: g('email'), customer_rank: g('customer_rank'), company, estado });
       }
       recent.sort(function(a,b){return b.id-a.id;});
       return {statusCode:200, headers, body: JSON.stringify({success:true, totalPartners, customers, webRegs, recent: recent.slice(0,6)})};
