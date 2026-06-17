@@ -1034,15 +1034,15 @@
     </svg>
 
     <div style="position:relative;z-index:1;max-width:760px;margin:0 auto;padding:46px 20px 0;text-align:center;">
-      <h2 style="font-size:clamp(28px,5.2vw,48px);font-weight:800;line-height:1.06;letter-spacing:-1.2px;margin:0 0 28px;background:linear-gradient(95deg,#001F5B 0%,#0A3A8C 45%,#C8102E 118%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">¿Qué conector<br/>buscas hoy?</h2>
+      <h2 style="font-size:clamp(36px,6.6vw,64px);font-weight:800;line-height:1.04;letter-spacing:-1.6px;margin:0 0 36px;background:linear-gradient(95deg,#001F5B 0%,#0A3A8C 45%,#C8102E 118%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">¿Qué conector<br/>buscas hoy?</h2>
 
       <!-- BUSCADOR IA (estilo Canva) -->
-      <div style="background:#fff;border:1px solid #E3E9F3;border-radius:22px;padding:20px 20px 16px;box-shadow:0 18px 50px rgba(16,32,64,.12);text-align:left;">
+      <div style="background:#fff;border:1px solid #E3E9F3;border-radius:22px;padding:28px 28px 22px;box-shadow:0 18px 50px rgba(16,32,64,.12);text-align:left;">
         <div style="display:inline-flex;align-items:center;gap:7px;background:#EEF3FF;color:#001F5B;font-size:11px;font-weight:700;letter-spacing:.4px;padding:5px 11px;border-radius:20px;margin-bottom:12px;">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#001F5B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 4.6L18.5 9l-4.6 1.9L12 15l-1.9-4.1L5.5 9l4.6-1.4L12 3z"/></svg>
           Búsqueda con IA
         </div>
-        <textarea id="chat-input" placeholder="Describe el conector que necesitas: tipo, roscas, medidas… o pega un código." rows="2" oninput="autoResize(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}" style="width:100%;border:none;outline:none;resize:none;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:17px;color:#1a1a2e;line-height:1.5;min-height:58px;max-height:140px;padding:4px 2px;background:transparent;"></textarea>
+        <textarea id="chat-input" placeholder="Describe el conector que necesitas: tipo, roscas, medidas… o pega un código." rows="2" oninput="autoResize(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}" style="width:100%;border:none;outline:none;resize:none;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:18px;color:#1a1a2e;line-height:1.55;min-height:92px;max-height:200px;padding:6px 2px;background:transparent;"></textarea>
 
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;flex-wrap:wrap;">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
@@ -1062,6 +1062,11 @@
             <button type="button" id="chat-voice-btn" title="Hablar" onclick="toggleChatVoice()" style="display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border-radius:30px;border:1px solid #E7ECF3;background:#fff;cursor:pointer;font-size:13px;font-weight:600;color:#5A6675;transition:all .2s;" onmouseover="this.style.borderColor='#BFD0EC';this.style.color='#001F5B'" onmouseout="this.style.borderColor='#E7ECF3';this.style.color='#5A6675'">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
               Audio
+            </button>
+            <!-- Código AT -->
+            <button type="button" title="Buscar por código AT" onclick="var i=document.getElementById('chat-input');i.placeholder='Pega tu código AT, por ejemplo AT-NR-JIC-M08-NPT-M06…';i.focus();i.scrollIntoView({behavior:'smooth',block:'center'});" style="display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border-radius:30px;border:1px solid #E7ECF3;background:#fff;cursor:pointer;font-size:13px;font-weight:600;color:#5A6675;transition:all .2s;" onmouseover="this.style.borderColor='#BFD0EC';this.style.color='#001F5B'" onmouseout="this.style.borderColor='#E7ECF3';this.style.color='#5A6675'">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5a1 1 0 0 1 1-1h2M20 7V5a1 1 0 0 0-1-1h-2M4 17v2a1 1 0 0 0 1 1h2M20 17v2a1 1 0 0 1-1 1h-2M8 12h8"/></svg>
+              Código AT
             </button>
           </div>
           <button type="button" onclick="sendChatMessage()" style="display:inline-flex;align-items:center;gap:9px;background:#001F5B;color:#fff;border:none;padding:13px 24px;border-radius:30px;font-size:15px;font-weight:700;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;transition:background .2s;" onmouseover="this.style.background='#C8102E'" onmouseout="this.style.background='#001F5B'">
@@ -1084,21 +1089,14 @@
         </div>
       </div>
 
-      <!-- sugerencias rápidas -->
-      <div style="display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap;">
-        <button type="button" onclick="useExample('conector recto 1/2 JIC macho a 3/8 NPT macho')" style="background:rgba(255,255,255,.7);border:1px solid #E7ECF3;color:#5A6675;font-size:12px;font-weight:600;padding:7px 13px;border-radius:980px;cursor:pointer;">JIC × NPT ½"</button>
-        <button type="button" onclick="useExample('codo 90 grados 3/4 JIC macho macho')" style="background:rgba(255,255,255,.7);border:1px solid #E7ECF3;color:#5A6675;font-size:12px;font-weight:600;padding:7px 13px;border-radius:980px;cursor:pointer;">Codo 90° ¾"</button>
-        <button type="button" onclick="useExample('tapon BSP 1/2 macho')" style="background:rgba(255,255,255,.7);border:1px solid #E7ECF3;color:#5A6675;font-size:12px;font-weight:600;padding:7px 13px;border-radius:980px;cursor:pointer;">Tapón BSP ½"</button>
-      </div>
-
       <!-- resultados IA -->
       <div id="chat-messages" style="display:none;flex-direction:column;gap:12px;background:#fff;border:1px solid #E3E9F3;border-radius:16px;padding:16px;margin-top:16px;text-align:left;max-height:440px;overflow-y:auto;"></div>
 
-      <!-- divisor -->
-      <div style="display:flex;align-items:center;gap:16px;color:#9AA7B8;font-size:13px;font-weight:600;margin:30px 0 22px;"><span style="flex:1;height:1px;background:#E7ECF3;"></span>o arma el tuyo paso a paso<span style="flex:1;height:1px;background:#E7ECF3;"></span></div>
+      <!-- titulo configurador -->
+      <h2 style="font-size:clamp(36px,6.6vw,64px);font-weight:800;line-height:1.04;letter-spacing:-1.6px;margin:96px 0 36px;background:linear-gradient(95deg,#001F5B 0%,#0A3A8C 45%,#C8102E 118%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Configura tu conector</h2>
 
       <!-- Configurador (Opción B) -->
-      <div class="bus-cfg" style="background:#fff;border:1px solid #E3E9F3;border-radius:22px;padding:30px 28px;box-shadow:0 18px 50px rgba(16,32,64,.10);text-align:left;display:grid;grid-template-columns:1.15fr 1fr;gap:20px;align-items:center;">
+      <div class="bus-cfg" style="background:#fff;border:1px solid #E3E9F3;border-radius:22px;padding:28px 28px;box-shadow:0 18px 50px rgba(16,32,64,.10);text-align:left;display:grid;grid-template-columns:1.15fr 1fr;gap:20px;align-items:center;">
         <div style="position:relative;height:130px;">
           <svg viewBox="0 0 300 130" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;">
             <path d="M58 65 C 120 30, 180 100, 242 65" stroke="#C2D2EC" stroke-width="2" stroke-dasharray="5 6" fill="none"/>
@@ -1114,9 +1112,8 @@
           </div>
         </div>
         <div>
-          <div style="font-size:21px;font-weight:800;color:#0A0E1A;letter-spacing:-.4px;margin-bottom:7px;">Configura tu conector</div>
           <p style="font-size:14px;color:#5A6675;line-height:1.55;margin:0 0 18px;">Define cada extremo: tipo, roscas, género y medidas.</p>
-          <button class="bus-cfgbtn" onclick="showPage('cfg')" style="display:inline-flex;align-items:center;gap:9px;background:#001F5B;color:#fff;border:none;padding:13px 24px;border-radius:30px;font-size:15px;font-weight:700;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;transition:transform .15s;">Abrir configurador <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></button>
+          <div style="text-align:right;"><button class="bus-cfgbtn" onclick="showPage('cfg')" style="display:inline-flex;align-items:center;gap:9px;background:#001F5B;color:#fff;border:none;padding:13px 24px;border-radius:30px;font-size:15px;font-weight:700;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;transition:transform .15s;">Abrir configurador <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></button></div>
         </div>
       </div>
 
