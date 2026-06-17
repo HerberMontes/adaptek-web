@@ -447,6 +447,83 @@ exports.handler = async function(event, context) {
       return {statusCode:200, headers, body: JSON.stringify({success:true})};
     }
 
+    // ── SEND LOGIN OTP (el correo DEBE existir) ──
+    if (action === 'send_login_otp') {
+      const { email } = body;
+      if (!email) return {statusCode:400, headers, body: JSON.stringify({error:'Email requerido'})};
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+
+      const checkText = await xmlrpc(uid, 'res.partner', 'search',
+        `<value><array><data><value><array><data>
+          <value><array><data>${xmlStr('email')}<value><string>=ilike</string></value>${xmlStr(email)}</data></array></value>
+        </data></array></value></data></array></value>`
+      );
+      if (!hasResults(checkText)) {
+        return {statusCode:200, headers, body: JSON.stringify({success:false, notFound:true, error:'No encontramos una cuenta con ese correo.'})};
+      }
+
+      const otp = generateOTP();
+      otpStore[email] = { otp, expires: Date.now() + 15 * 60 * 1000 };
+
+      const emailHtml = `
+        <div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;">
+          <div style="background:#001F5B;padding:24px;text-align:center;">
+            <span style="font-family:Arial Black;font-size:28px;font-weight:900;color:#fff;">ADAP</span><span style="font-family:Arial Black;font-size:28px;font-weight:900;color:#C8102E;">TEK</span><span style="font-family:Arial Black;font-size:28px;font-weight:900;color:#fff;">K</span>
+          </div>
+          <div style="padding:32px;background:#fff;border:1px solid #eee;">
+            <h2 style="color:#001F5B;margin-top:0;">Tu código para iniciar sesión</h2>
+            <p style="color:#555;">Usa este código para entrar a tu cuenta Adaptekk:</p>
+            <div style="background:#f4f8ff;border:2px solid #001F5B;border-radius:10px;padding:24px;text-align:center;margin:24px 0;">
+              <span style="font-size:42px;font-weight:900;letter-spacing:12px;color:#001F5B;">${otp}</span>
+            </div>
+            <p style="color:#888;font-size:13px;">Este código expira en <strong>15 minutos</strong>. Si no intentaste iniciar sesión, ignora este correo.</p>
+          </div>
+          <div style="background:#f5f5f5;padding:16px;text-align:center;font-size:11px;color:#aaa;">© 2026 Adaptekk S.A. de C.V. — Conecta sin límites</div>
+        </div>`;
+
+      const result = await sendEmail(email, 'Tu código de acceso Adaptekk', emailHtml);
+      if (result.id) {
+        return {statusCode:200, headers, body: JSON.stringify({success:true, message:'Código enviado a ' + email})};
+      }
+      return {statusCode:200, headers, body: JSON.stringify({success:false, error:'No se pudo enviar el correo', detail: result})};
+    }
+
+    // ── VERIFY LOGIN OTP (valida código + devuelve datos del cliente y su estado) ──
+    if (action === 'verify_login_otp') {
+      const { email, otp } = body;
+      const stored = otpStore[email];
+      if (!stored) return {statusCode:200, headers, body: JSON.stringify({success:false, error:'Código expirado. Solicita uno nuevo.'})};
+      if (Date.now() > stored.expires) { delete otpStore[email]; return {statusCode:200, headers, body: JSON.stringify({success:false, error:'Código expirado. Solicita uno nuevo.'})}; }
+      if (stored.otp !== otp) return {statusCode:200, headers, body: JSON.stringify({success:false, error:'Código incorrecto.'})};
+      delete otpStore[email];
+
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+
+      const text = await xmlrpc(uid, 'res.partner', 'search_read',
+        `<value><array><data><value><array><data>
+          <value><array><data>${xmlStr('email')}<value><string>=ilike</string></value>${xmlStr(email)}</data></array></value>
+        </data></array></value></data></array></value>`
+        + `<value><struct>
+            <member><name>fields</name><value><array><data>
+              <value><string>id</string></value>
+              <value><string>name</string></value>
+              <value><string>email</string></value>
+              <value><string>company_name</string></value>
+              <value><string>comment</string></value>
+            </data></array></value></member>
+            <member><name>limit</name><value><int>1</int></value></member>
+          </struct></value>`
+      );
+      const get = (field) => { const m = text.match(new RegExp('<name>' + field + '</name>\\s*<value>(?:<(?:string|int|boolean)>)?([^<]*)', 'i')); return m ? m[1].trim() : ''; };
+      const id = parseInt(get('id')) || 0;
+      const comment = get('comment') || '';
+      const verified = /VERIFICADO/i.test(comment);
+      const client = { id, name: get('name'), email: get('email') || email, company_name: get('company_name'), verified };
+      return {statusCode:200, headers, body: JSON.stringify({success:true, client})};
+    }
+
     // ── CREATE CONTACT IN ODOO ──
     if (action === 'create_contact') {
       const { name, email, phone, company, rfc, razon_social, cp_fiscal, regimen_fiscal, email_fiscal, calle, colonia, ciudad, estado, constancia_b64, constancia_name } = body;
@@ -954,10 +1031,21 @@ exports.handler = async function(event, context) {
     }
 
     // ── SAVE USER PASSWORD ──
+    // ── EXEC LOGIN (gerencia: usuario = correo, contraseña en Netlify GERENCIA_PASS) ──
+    if (action === 'exec_login') {
+      const { user, pass } = body;
+      const GERENCIA_USER = (process.env.GERENCIA_USER || 'herber.montes@hydratechgroup.mx').trim().toLowerCase();
+      const GERENCIA_PASS = process.env.GERENCIA_PASS || '';
+      if ((user||'').trim().toLowerCase() === GERENCIA_USER && GERENCIA_PASS && pass === GERENCIA_PASS) {
+        return {statusCode:200, headers, body: JSON.stringify({success:true})};
+      }
+      return {statusCode:200, headers, body: JSON.stringify({success:false, error:'Usuario o contraseña incorrectos'})};
+    }
+
     if (action === 'save_user_pass') {
       const { user_key, new_pass, gerencia_pass } = body;
       // Verify gerencia password
-      if (gerencia_pass !== 'adaptekk2026') {
+      if (!process.env.GERENCIA_PASS || gerencia_pass !== process.env.GERENCIA_PASS) {
         return {statusCode:401, headers, body: JSON.stringify({error:'No autorizado'})};
       }
       if (!user_key || !new_pass || new_pass.length < 6) {
@@ -1016,7 +1104,7 @@ exports.handler = async function(event, context) {
     // ── GET USER PASSWORDS ──
     if (action === 'get_user_passes') {
       const { gerencia_pass } = body;
-      if (gerencia_pass !== 'adaptekk2026') {
+      if (!process.env.GERENCIA_PASS || gerencia_pass !== process.env.GERENCIA_PASS) {
         return {statusCode:401, headers, body: JSON.stringify({error:'No autorizado'})};
       }
       const uid = await odooAuth();
