@@ -3348,9 +3348,17 @@ function payConfirmado(metodo){
         <div id="login-step-email">
           <div class="auth-field">
             <label class="auth-label">Correo electrónico</label>
-            <input id="login-email" type="email" class="auth-input" placeholder="correo@empresa.com" autocomplete="email" onkeydown="if(event.key==='Enter')sendLoginOtp();"/>
+            <input id="login-email" type="email" class="auth-input" placeholder="correo@empresa.com" autocomplete="email" onkeydown="if(event.key==='Enter'){var p=document.getElementById('login-pass');if(p)p.focus();}"/>
           </div>
-          <button class="auth-btn-primary" id="login-send-btn" onclick="sendLoginOtp()">Enviar código</button>
+          <div class="auth-field">
+            <label class="auth-label">Contraseña</label>
+            <input id="login-pass" type="password" class="auth-input" placeholder="Tu contraseña" autocomplete="current-password" onkeydown="if(event.key==='Enter')loginWithPassword();"/>
+          </div>
+          <button class="auth-btn-primary" id="login-pass-btn" onclick="loginWithPassword()">Iniciar sesión</button>
+          <div style="display:flex;justify-content:space-between;margin-top:12px;font-size:12px;">
+            <span class="auth-link" onclick="showCrearPassword()">Crear / olvidé mi contraseña</span>
+            <span class="auth-link" onclick="sendLoginOtp()">Entrar con código</span>
+          </div>
         </div>
 
         <div id="login-step-otp" style="display:none;">
@@ -3447,6 +3455,12 @@ function payConfirmado(metodo){
             <div id="reg-phone-err" style="font-size:10px;color:#C8102E;margin-top:3px;display:none;">Número inválido</div>
           </div>
         </div>
+        <div class="auth-field">
+          <label class="auth-label">Contraseña *</label>
+          <input id="reg-pass" type="password" class="auth-input" placeholder="Mínimo 6 caracteres" autocomplete="new-password"/>
+          <div id="reg-pass-err" style="font-size:10px;color:#C8102E;margin-top:3px;display:none;">La contraseña debe tener al menos 6 caracteres</div>
+        </div>
+
         <!-- Datos fiscales (RFC + constancia): se piden después, ya dentro de la cuenta del cliente -->
 
         <button class="auth-btn-primary" onclick="mockRegister()">Crear mi cuenta gratis</button>
@@ -4254,7 +4268,7 @@ async function finalizeRegistro(){
     var resp = await fetch('/.netlify/functions/odoo', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
-        action:'create_contact', name:p.name, email:p.email, phone:p.phone, company:p.company,
+        action:'create_contact', name:p.name, email:p.email, phone:p.phone, company:p.company, password:p.password,
         rfc:p.rfc, razon_social:p.razon_social, cp_fiscal:p.cp_fiscal, regimen_fiscal:p.regimen_fiscal,
         email_fiscal:p.email_fiscal, calle:p.calle, colonia:p.colonia, ciudad:p.ciudad, estado:p.estado
       })
@@ -4354,6 +4368,12 @@ window.mockRegister = async function(){
     if (typeof showToast==='function') showToast('Revisa tu correo, no parece válido.');
     return;
   }
+  var pass = val('reg-pass');
+  if (pass.length < 6) {
+    var pe = document.getElementById('reg-pass-err'); if (pe) pe.style.display='block';
+    if (typeof showToast==='function') showToast('Crea una contraseña de al menos 6 caracteres.');
+    return;
+  }
 
   // Guardamos los datos y enviamos un codigo de verificacion al correo
   window._regPending = {
@@ -4362,6 +4382,7 @@ window.mockRegister = async function(){
     email: email,
     phone: phone,
     company: empresa,
+    password: pass,
     rfc: val('reg-rfc'),
     razon_social: val('reg-razon'),
     cp_fiscal: val('reg-cp'),
@@ -5996,6 +6017,93 @@ function _setClientSession(c){
   var se=document.getElementById('login-step-email'); if(se) se.style.display='block';
   var so=document.getElementById('login-step-otp'); if(so) so.style.display='none';
   loginSuccess();
+}
+async function loginWithPassword(){
+  var email=(document.getElementById('login-email').value||'').trim().toLowerCase();
+  var pass=(document.getElementById('login-pass').value||'');
+  var e=document.getElementById('login-err'); if(e) e.style.display='none';
+  if(!email || email.indexOf('@')<1){ _loginErr('Ingresa un correo v\u00e1lido.'); return; }
+  if(!pass){ _loginErr('Escribe tu contrase\u00f1a.'); return; }
+  var btn=document.getElementById('login-pass-btn'); if(btn){ btn.disabled=true; btn.textContent='Entrando\u2026'; }
+  try{
+    var r=await fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'login_password',email:email,password:pass})});
+    var d=await r.json();
+    if(d && d.success && d.client){ _setClientSession(d.client); return; }
+    if(btn){ btn.disabled=false; btn.textContent='Iniciar sesi\u00f3n'; }
+    if(d && d.needPassword){ _loginErr('Esta cuenta a\u00fan no tiene contrase\u00f1a. <span class="auth-link" onclick="showCrearPassword()">Cr\u00e9ala aqu\u00ed</span>.'); }
+    else if(d && d.notFound){ _loginErr('No encontramos una cuenta con ese correo. <span class="auth-link" onclick="showPage(\'register\')">Reg\u00edstrate gratis</span>'); }
+    else { _loginErr((d && d.error) || 'Correo o contrase\u00f1a incorrectos.'); }
+  }catch(err){ if(btn){ btn.disabled=false; btn.textContent='Iniciar sesi\u00f3n'; } _loginErr('Error de conexi\u00f3n. Intenta de nuevo.'); }
+}
+
+function cpCerrar(){ var o=document.getElementById('cp-ov'); if(o) o.remove(); }
+function cpErr(msg, ok){ var el=document.getElementById('cp-err'); if(el){ el.style.color = ok ? '#25a244' : '#C8102E'; el.textContent = msg||''; } }
+function showCrearPassword(){
+  cpCerrar();
+  var pre=((document.getElementById('login-email')||{}).value||'').trim();
+  var ov=document.createElement('div');
+  ov.id='cp-ov';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(10,14,26,.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  ov.innerHTML='<div style="background:#fff;border-radius:22px;max-width:420px;width:100%;padding:34px 30px 26px;box-shadow:0 30px 80px rgba(0,0,0,.3);font-family:-apple-system,BlinkMacSystemFont,Inter,sans-serif;">'
+    + '<h2 style="font-size:22px;font-weight:800;color:#001F5B;margin:0 0 6px;">Crear o cambiar contrase\u00f1a</h2>'
+    + '<p style="color:#5A6675;font-size:13px;line-height:1.5;margin:0 0 16px;">Te mandamos un c\u00f3digo a tu correo para confirmar que eres t\u00fa.</p>'
+    + '<div id="cp-err" style="font-size:12px;min-height:16px;margin-bottom:8px;"></div>'
+    + '<div id="cp-step1">'
+    +   '<input id="cp-email" type="email" placeholder="correo@empresa.com" value="'+pre+'" style="width:100%;padding:12px 14px;border:2px solid #dde6f0;border-radius:10px;font-size:15px;outline:none;box-sizing:border-box;margin-bottom:12px;font-family:inherit;"/>'
+    +   '<button id="cp-send" onclick="cpEnviarCodigo()" style="width:100%;background:#001F5B;color:#fff;border:none;padding:13px;border-radius:30px;cursor:pointer;font-size:15px;font-weight:700;font-family:inherit;">Enviar c\u00f3digo</button>'
+    + '</div>'
+    + '<div id="cp-step2" style="display:none;">'
+    +   '<input id="cp-code" type="text" inputmode="numeric" maxlength="6" placeholder="C\u00f3digo de 6 d\u00edgitos" style="width:100%;text-align:center;letter-spacing:6px;font-size:20px;font-weight:700;color:#001F5B;padding:12px;border:2px solid #dde6f0;border-radius:10px;outline:none;box-sizing:border-box;margin-bottom:10px;font-family:inherit;"/>'
+    +   '<input id="cp-pass" type="password" placeholder="Nueva contrase\u00f1a (m\u00edn. 6)" style="width:100%;padding:12px 14px;border:2px solid #dde6f0;border-radius:10px;font-size:15px;outline:none;box-sizing:border-box;margin-bottom:12px;font-family:inherit;"/>'
+    +   '<button id="cp-save" onclick="cpGuardar()" style="width:100%;background:#001F5B;color:#fff;border:none;padding:13px;border-radius:30px;cursor:pointer;font-size:15px;font-weight:700;font-family:inherit;">Guardar contrase\u00f1a</button>'
+    + '</div>'
+    + '<div style="text-align:center;margin-top:14px;"><span onclick="cpCerrar()" style="font-size:12px;color:#b0b8c4;cursor:pointer;">Cancelar</span></div>'
+    + '</div>';
+  document.body.appendChild(ov);
+  setTimeout(function(){ var i=document.getElementById('cp-email'); if(i && !i.value) i.focus(); else { var c=document.getElementById('cp-code'); } }, 80);
+}
+async function cpEnviarCodigo(){
+  var email=((document.getElementById('cp-email')||{}).value||'').trim().toLowerCase();
+  if(!email || email.indexOf('@')<1){ cpErr('Escribe un correo v\u00e1lido.'); return; }
+  var btn=document.getElementById('cp-send'); if(btn){ btn.disabled=true; btn.textContent='Enviando\u2026'; }
+  cpErr('');
+  try{
+    var r=await fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'send_login_otp',email:email})});
+    var d=await r.json();
+    if(btn){ btn.disabled=false; btn.textContent='Enviar c\u00f3digo'; }
+    if(d && d.success){
+      window._cpEmail=email;
+      document.getElementById('cp-step1').style.display='none';
+      document.getElementById('cp-step2').style.display='block';
+      cpErr('C\u00f3digo enviado a '+email, true);
+      setTimeout(function(){ var c=document.getElementById('cp-code'); if(c) c.focus(); }, 60);
+    } else if(d && d.notFound){
+      cpErr('No encontramos una cuenta con ese correo. Reg\u00edstrate primero.');
+    } else {
+      cpErr((d && d.error) || 'No se pudo enviar el c\u00f3digo.');
+    }
+  }catch(e){ if(btn){ btn.disabled=false; btn.textContent='Enviar c\u00f3digo'; } cpErr('Error de conexi\u00f3n.'); }
+}
+async function cpGuardar(){
+  var code=((document.getElementById('cp-code')||{}).value||'').replace(/[^0-9]/g,'');
+  var pass=((document.getElementById('cp-pass')||{}).value||'');
+  if(code.length!==6){ cpErr('Escribe el c\u00f3digo de 6 d\u00edgitos.'); return; }
+  if(pass.length<6){ cpErr('La contrase\u00f1a debe tener al menos 6 caracteres.'); return; }
+  var btn=document.getElementById('cp-save'); if(btn){ btn.disabled=true; btn.textContent='Guardando\u2026'; }
+  cpErr('');
+  try{
+    var r=await fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'reset_password',email:window._cpEmail,otp:code,password:pass})});
+    var d=await r.json();
+    if(d && d.success){
+      cpCerrar();
+      var le=document.getElementById('login-email'); if(le) le.value=window._cpEmail||'';
+      var lp=document.getElementById('login-pass'); if(lp){ lp.value=''; lp.focus(); }
+      if(typeof showToast==='function') showToast('Contrase\u00f1a guardada. Ya puedes iniciar sesi\u00f3n.');
+    } else {
+      if(btn){ btn.disabled=false; btn.textContent='Guardar contrase\u00f1a'; }
+      cpErr((d && d.error) || 'No se pudo guardar la contrase\u00f1a.');
+    }
+  }catch(e){ if(btn){ btn.disabled=false; btn.textContent='Guardar contrase\u00f1a'; } cpErr('Error de conexi\u00f3n.'); }
 }
 function _refreshLoginNav(){
   if(!window.currentClientUser) return;
