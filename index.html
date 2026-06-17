@@ -4388,6 +4388,94 @@ function showRegistroExito(){
   if (b) b.addEventListener('click', function(){ ov.remove(); showPage('home'); });
 }
 
+async function finalizeRegistro(){
+  var p = window._regPending || {};
+  try {
+    var resp = await fetch('/.netlify/functions/odoo', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        action:'create_contact', name:p.name, email:p.email, phone:p.phone, company:p.company,
+        rfc:p.rfc, razon_social:p.razon_social, cp_fiscal:p.cp_fiscal, regimen_fiscal:p.regimen_fiscal,
+        email_fiscal:p.email_fiscal, calle:p.calle, colonia:p.colonia, ciudad:p.ciudad, estado:p.estado
+      })
+    });
+    var data = await resp.json();
+    return data && (data.ok || data.success || data.id || data.partner_id);
+  } catch(e){ return false; }
+}
+
+function showRegVerify(email){
+  var ov = document.createElement('div');
+  ov.id = 'reg-verify-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(10,14,26,.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+  ov.innerHTML = '<div style="background:#fff;border-radius:22px;max-width:420px;width:100%;padding:36px 32px 30px;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.3);font-family:-apple-system,BlinkMacSystemFont,Inter,sans-serif;">'
+    + '<div style="width:68px;height:68px;border-radius:50%;background:#EEF3FF;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#001F5B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></div>'
+    + '<h2 style="font-size:23px;font-weight:800;color:#001F5B;letter-spacing:-.4px;margin:0 0 8px;">Verifica tu correo</h2>'
+    + '<p style="color:#3A4656;font-size:14px;line-height:1.6;margin:0 0 20px;">Te enviamos un c\u00f3digo de 6 d\u00edgitos a<br><strong>' + email + '</strong></p>'
+    + '<input id="reg-code-input" type="text" inputmode="numeric" maxlength="6" placeholder="------" style="width:100%;text-align:center;font-size:30px;font-weight:800;letter-spacing:14px;color:#001F5B;border:2px solid #dde6f0;border-radius:12px;padding:14px 0;outline:none;font-family:inherit;margin-bottom:6px;box-sizing:border-box;">'
+    + '<div id="reg-code-err" style="color:#C8102E;font-size:12px;font-weight:600;min-height:16px;margin-bottom:14px;"></div>'
+    + '<button id="reg-code-btn" style="width:100%;background:#001F5B;color:#fff;border:none;padding:14px;border-radius:30px;cursor:pointer;font-size:15px;font-weight:700;font-family:inherit;margin-bottom:14px;">Verificar y crear cuenta</button>'
+    + '<div style="font-size:13px;color:#8A93A2;">\u00bfNo te lleg\u00f3? <a id="reg-code-resend" style="color:#001F5B;font-weight:700;cursor:pointer;">Reenviar</a> \u00b7 <a id="reg-code-cancel" style="color:#8A93A2;cursor:pointer;">Cambiar correo</a></div>'
+    + '</div>';
+  document.body.appendChild(ov);
+  var inp = document.getElementById('reg-code-input');
+  if (inp){
+    inp.focus();
+    inp.addEventListener('input', function(){ this.value = this.value.replace(/[^0-9]/g,''); });
+    inp.addEventListener('keydown', function(e){ if(e.key==='Enter') verifyRegCode(); });
+  }
+  document.getElementById('reg-code-btn').addEventListener('click', verifyRegCode);
+  document.getElementById('reg-code-resend').addEventListener('click', resendRegCode);
+  document.getElementById('reg-code-cancel').addEventListener('click', function(){ ov.remove(); });
+}
+
+async function verifyRegCode(){
+  var inp = document.getElementById('reg-code-input');
+  var err = document.getElementById('reg-code-err');
+  var btn = document.getElementById('reg-code-btn');
+  var code = (inp && inp.value || '').trim();
+  if (err){ err.style.color = '#C8102E'; }
+  if (code.length !== 6){ if(err) err.textContent = 'Escribe los 6 d\u00edgitos.'; return; }
+  var email = (window._regPending && window._regPending.email) || '';
+  if (btn){ btn.disabled = true; btn.textContent = 'Verificando...'; }
+  if (err) err.textContent = '';
+  try {
+    var resp = await fetch('/.netlify/functions/odoo', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'verify_otp', email: email, otp: code })
+    });
+    var data = await resp.json();
+    if (!(data && data.success)){
+      if (btn){ btn.disabled = false; btn.textContent = 'Verificar y crear cuenta'; }
+      if (err) err.textContent = (data && data.error) ? data.error : 'C\u00f3digo incorrecto.';
+      return;
+    }
+    if (btn) btn.textContent = 'Creando tu cuenta...';
+    var ok = await finalizeRegistro();
+    var ov = document.getElementById('reg-verify-ov'); if (ov) ov.remove();
+    if (ok){ showRegistroExito(); }
+    else if (typeof showToast==='function'){ showToast('Tu correo qued\u00f3 verificado, pero no se pudo crear la cuenta. Intenta de nuevo.'); }
+  } catch(e){
+    if (btn){ btn.disabled = false; btn.textContent = 'Verificar y crear cuenta'; }
+    if (err) err.textContent = 'Error de conexi\u00f3n. Intenta de nuevo.';
+  }
+}
+
+async function resendRegCode(){
+  var email = (window._regPending && window._regPending.email) || '';
+  var nombre = (window._regPending && window._regPending.nombre) || '';
+  var err = document.getElementById('reg-code-err');
+  if (!email) return;
+  try {
+    var resp = await fetch('/.netlify/functions/odoo', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'send_verification', email: email, name: nombre })
+    });
+    var data = await resp.json();
+    if (err){ err.style.color = (data && data.success) ? '#25a244' : '#C8102E'; err.textContent = (data && data.success) ? 'C\u00f3digo reenviado.' : ((data && data.error) || 'No se pudo reenviar.'); }
+  } catch(e){ if (err){ err.style.color = '#C8102E'; err.textContent = 'Error de conexi\u00f3n.'; } }
+}
+
 window.mockRegister = async function(){
   function val(id){ var el = document.getElementById(id); return el ? (el.value||'').trim() : ''; }
   var nombre = val('reg-nombre');
@@ -4407,39 +4495,42 @@ window.mockRegister = async function(){
     return;
   }
 
+  // Guardamos los datos y enviamos un codigo de verificacion al correo
+  window._regPending = {
+    name: (nombre + ' ' + apellido).trim(),
+    nombre: nombre,
+    email: email,
+    phone: phone,
+    company: empresa,
+    rfc: val('reg-rfc'),
+    razon_social: val('reg-razon'),
+    cp_fiscal: val('reg-cp'),
+    regimen_fiscal: val('reg-regimen'),
+    email_fiscal: val('reg-email-fiscal'),
+    calle: val('reg-calle'),
+    colonia: val('reg-colonia'),
+    ciudad: val('reg-ciudad'),
+    estado: val('reg-estado')
+  };
+
   var btn = document.querySelector('.auth-btn-primary');
-  if (btn){ btn.disabled = true; btn.textContent = 'Creando tu cuenta...'; }
+  if (btn){ btn.disabled = true; btn.textContent = 'Enviando codigo...'; }
 
   try {
     var resp = await fetch('/.netlify/functions/odoo', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        action: 'create_contact',
-        name: (nombre + ' ' + apellido).trim(),
-        email: email,
-        phone: phone,
-        company: empresa,
-        rfc: val('reg-rfc'),
-        razon_social: val('reg-razon'),
-        cp_fiscal: val('reg-cp'),
-        regimen_fiscal: val('reg-regimen'),
-        email_fiscal: val('reg-email-fiscal'),
-        calle: val('reg-calle'),
-        colonia: val('reg-colonia'),
-        ciudad: val('reg-ciudad'),
-        estado: val('reg-estado')
-      })
+      body: JSON.stringify({ action:'send_verification', email: email, name: nombre })
     });
     var data = await resp.json();
     if (btn){ btn.disabled = false; btn.textContent = 'Crear mi cuenta gratis'; }
-    if (data && (data.ok || data.success || data.id || data.partner_id)) {
-      showRegistroExito();
+    if (data && data.success) {
+      showRegVerify(email);
     } else {
-      if (typeof showToast==='function') showToast('No se pudo crear la cuenta. ' + ((data && data.error) ? data.error : 'Intenta de nuevo.'));
+      if (typeof showToast==='function') showToast((data && data.error) ? data.error : 'No se pudo enviar el codigo. Intenta de nuevo.');
     }
   } catch(e) {
     if (btn){ btn.disabled = false; btn.textContent = 'Crear mi cuenta gratis'; }
-    if (typeof showToast==='function') showToast('Error de conexión. Intenta de nuevo.');
+    if (typeof showToast==='function') showToast('Error de conexion. Intenta de nuevo.');
   }
 };
 
