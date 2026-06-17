@@ -928,19 +928,27 @@
         Amplio stock disponible y envíos a toda la República Mexicana.
       </p>
 
+      <!-- CTA: Busca tu conector -->
+      <div style="margin-bottom:38px;">
+        <button onclick="showPage('buscar')" style="display:inline-flex;align-items:center;gap:12px;background:#fff;color:#001F5B;padding:16px 34px;border-radius:40px;font-size:19px;font-weight:800;cursor:pointer;border:none;box-shadow:0 16px 40px rgba(0,0,0,.32);transition:all .2s;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;" onmouseover="this.style.background='#C8102E';this.style.color='#fff';this.style.transform='translateY(-3px)'" onmouseout="this.style.background='#fff';this.style.color='#001F5B';this.style.transform='none'">
+          Busca tu conector
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+
       <!-- Stats — centered, no boxes -->
       <div style="display:flex;justify-content:center;align-items:center;gap:0;">
         <div style="padding:0 32px;border-right:1px solid rgba(255,255,255,.2);">
-          <div style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:42px;color:#fff;line-height:1;text-shadow:0 2px 12px rgba(0,0,0,.3);">3,200+</div>
-          <div style="font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-top:4px;">Referencias</div>
+          <div style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:42px;color:#fff;line-height:1;text-shadow:0 2px 12px rgba(0,0,0,.3);">4,298</div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-top:4px;">Conectores en catálogo</div>
         </div>
         <div style="padding:0 32px;border-right:1px solid rgba(255,255,255,.2);">
-          <div style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:42px;color:#fff;line-height:1;text-shadow:0 2px 12px rgba(0,0,0,.3);">15+</div>
-          <div style="font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-top:4px;">Estándares</div>
+          <div style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:42px;color:#fff;line-height:1;text-shadow:0 2px 12px rgba(0,0,0,.3);">12</div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-top:4px;">Tipos y configuraciones</div>
         </div>
         <div style="padding:0 32px;">
-          <div style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:42px;color:#C8102E;line-height:1;text-shadow:0 2px 16px rgba(200,16,46,.4);">24h</div>
-          <div style="font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-top:4px;">Entrega CDMX</div>
+          <div style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:42px;color:#fff;line-height:1;text-shadow:0 2px 12px rgba(0,0,0,.3);">8</div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-top:4px;">Zonas de cobertura</div>
         </div>
       </div>
     </div>
@@ -948,47 +956,88 @@
 
 
 
-  <!-- TWO COLUMN: Seleccionar Conector + Buscador IA -->
-  <div style="display:flex;gap:0;align-items:stretch;border-top:3px solid #C8102E;" id="home-two-col">
+  <!-- Configurador y Buscador IA: ahora en la página Buscar (page-buscar) -->
 
-    <!-- LEFT: Seleccionar Conector -->
-    <div onclick="showPage('cfg')" id="col-cfg"
-      style="flex:0 0 35%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;border-right:1px solid #e0e0e0;background:#fff;cursor:pointer;transition:all .25s;position:relative;overflow:hidden;"
-      onmouseover="this.style.background='#F0F5FC';this.querySelector('.cfg-arrow').style.opacity='1';this.querySelector('.cfg-arrow').style.transform='translateX(4px)';"
-      onmouseout="this.style.background='#fff';this.querySelector('.cfg-arrow').style.opacity='0';this.querySelector('.cfg-arrow').style.transform='translateX(0)';">
-      <!-- Top accent bar -->
-      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(to right,#001F5B,#2557A7);"></div>
-      <!-- Icon -->
-      <div style="width:80px;height:80px;border-radius:16px;background:linear-gradient(135deg,#001F5B,#2557A7);display:flex;align-items:center;justify-content:center;margin-bottom:20px;box-shadow:0 8px 24px rgba(27,58,107,.25);transition:box-shadow .25s;">
-        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
-        </svg>
+  <!-- FOOTER -->
+  <div style="background:#0D1B2A;border-top:3px solid #C8102E;">
+    <div style="max-width:1200px;margin:0 auto;padding:40px 32px;display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:32px;">
+      <div>
+        <div style="font-family:Montserrat,sans-serif;font-weight:900;font-size:24px;margin-bottom:8px;">
+          <span style="color:#fff;">ADAP</span><span style="color:#C8102E;">TEK</span><span style="color:#fff;">K</span>
+        </div>
+        <div style="width:40px;height:2px;background:linear-gradient(to right,#fff 50%,#C8102E 50%);margin-bottom:12px;"></div>
+        <div style="font-size:9px;letter-spacing:3px;color:rgba(255,255,255,.4);text-transform:uppercase;margin-bottom:16px;">Conecta sin limites</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.5);line-height:1.8;">Especialistas en conectores<br/>y adaptadores hidraulicos<br/>para la industria mexicana.</div>
       </div>
-      <!-- Label -->
-      <div style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:26px;letter-spacing:3px;color:#001F5B;margin-bottom:10px;">Seleccionar Conector</div>
-      <!-- Steps -->
-      <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;justify-content:center;">
-        <span style="background:#EEF5FF;color:#001F5B;font-size:10px;font-weight:700;padding:3px 10px;border-radius:12px;letter-spacing:.5px;">Tipo</span>
-        <span style="color:#aaa;font-size:12px;align-self:center;">→</span>
-        <span style="background:#EEF5FF;color:#001F5B;font-size:10px;font-weight:700;padding:3px 10px;border-radius:12px;letter-spacing:.5px;">Estándar</span>
-        <span style="color:#aaa;font-size:12px;align-self:center;">→</span>
-        <span style="background:#EEF5FF;color:#001F5B;font-size:10px;font-weight:700;padding:3px 10px;border-radius:12px;letter-spacing:.5px;">Medida</span>
-        <span style="color:#aaa;font-size:12px;align-self:center;">→</span>
-        <span style="background:#C8102E;color:#fff;font-size:10px;font-weight:700;padding:3px 10px;border-radius:12px;letter-spacing:.5px;">Código AT</span>
+      <div>
+        <div style="font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:16px;">Contacto</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:flex-start;gap:8px;"><span style="color:#C8102E;">&#128205;</span><span style="font-size:12px;color:rgba(255,255,255,.6);line-height:1.5;">Ciudad de Mexico, Mexico</span></div>
+          <div style="display:flex;align-items:center;gap:8px;"><span style="color:#C8102E;">&#128222;</span><a href="tel:+525555550000" style="font-size:12px;color:rgba(255,255,255,.6);text-decoration:none;">+52 (55) 5555-0000</a></div>
+          <div style="display:flex;align-items:center;gap:8px;"><span style="color:#C8102E;">&#128140;</span><a href="mailto:ventas@adaptekk.com" style="font-size:12px;color:rgba(255,255,255,.6);text-decoration:none;">ventas@adaptekk.com</a></div>
+          <div style="display:flex;align-items:center;gap:8px;"><span style="color:#25D366;">&#128241;</span><a href="https://wa.me/525555550000" style="font-size:12px;color:rgba(255,255,255,.6);text-decoration:none;">WhatsApp Ventas</a></div>
+        </div>
       </div>
-      <!-- Description -->
-      <div style="font-size:13px;color:#888;text-align:center;line-height:1.7;max-width:240px;margin-bottom:20px;">
-        Configura tu adaptador paso a paso y obtén tu número de parte AT exacto
+      <div>
+        <div style="font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:16px;">Horarios</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;color:rgba(255,255,255,.6);">
+          <div><span style="color:rgba(255,255,255,.3);">Lun - Vie</span><br/>8:00 am - 6:00 pm</div>
+          <div><span style="color:rgba(255,255,255,.3);">Sabado</span><br/>8:00 am - 12:00 pm</div>
+          <div><span style="color:rgba(255,255,255,.3);">Domingo</span><br/><span style="color:#C8102E;">Cerrado</span></div>
+        </div>
       </div>
-      <!-- CTA -->
-      <div style="display:flex;align-items:center;gap:8px;background:#001F5B;color:#fff;padding:10px 22px;border-radius:6px;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">
-        Configurar ahora
-        <span class="cfg-arrow" style="opacity:0;transition:all .25s;transform:translateX(0);">→</span>
+      <div>
+        <div style="font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:16px;">Navegacion</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <a href="#" onclick="showPage('home');return false;" style="font-size:12px;color:rgba(255,255,255,.6);text-decoration:none;">Inicio</a>
+          <a href="#" onclick="showPage('cfg');return false;" style="font-size:12px;color:rgba(255,255,255,.6);text-decoration:none;">Configurador</a>
+          <a href="#" onclick="showPage('cross');return false;" style="font-size:12px;color:rgba(255,255,255,.6);text-decoration:none;">Cross Reference</a>
+          <a href="#" onclick="showPage('login');return false;" style="font-size:12px;color:rgba(255,255,255,.6);text-decoration:none;">Iniciar Sesion</a>
+          <a href="#" onclick="showPage('register');return false;" style="font-size:12px;color:rgba(255,255,255,.6);text-decoration:none;">Crear Cuenta</a>
+        </div>
       </div>
     </div>
+    <div style="border-top:1px solid rgba(255,255,255,.06);padding:14px 32px;display:flex;align-items:center;justify-content:space-between;max-width:1200px;margin:0 auto;flex-wrap:wrap;gap:8px;">
+      <span style="font-size:11px;color:rgba(255,255,255,.25);">&#169; 2026 Adaptekk S.A. de C.V. | Todos los derechos reservados</span>
+      <div style="display:flex;gap:16px;align-items:center;">
+        <a href="#" style="font-size:10px;color:rgba(255,255,255,.2);text-decoration:none;">Terminos de Uso</a>
+        <a href="#" style="font-size:10px;color:rgba(255,255,255,.2);text-decoration:none;">Privacidad</a>
+        <a href="#" onclick="showPage('portal');return false;" style="font-size:10px;color:rgba(255,255,255,.08);text-decoration:none;letter-spacing:1px;">&#128274;</a>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page-home -->
+
+<!-- ═══════════════════════
+     PAGE: BUSCAR (Buscador IA + Configurador)
+═══════════════════════ -->
+<div id="page-buscar" style="display:none;">
+  <style>
+    @keyframes busPulse{0%,100%{box-shadow:0 0 0 0 rgba(0,31,91,.18);}50%{box-shadow:0 0 0 9px rgba(0,31,91,0);}}
+    #page-buscar .bus-ringA{animation:busPulse 2.6s ease-in-out infinite;}
+    #page-buscar .bus-ringB{animation:busPulse 2.6s ease-in-out .9s infinite;}
+    #page-buscar .bus-cfgbtn:hover{transform:translateY(-2px);}
+    @media(max-width:640px){ #page-buscar .bus-cfg{grid-template-columns:1fr!important;text-align:center;} }
+  </style>
+  <div style="position:relative;overflow:hidden;min-height:calc(100vh - 120px);background:radial-gradient(900px 460px at 50% -10%, #EAF0FF 0%, rgba(234,240,255,0) 60%),radial-gradient(700px 360px at 86% 2%, #FBE9EC 0%, rgba(251,233,236,0) 55%), #fff;padding:0 0 70px;">
+
+    <!-- conector difuminado de fondo -->
+    <svg viewBox="0 0 440 200" style="position:absolute;width:min(1100px,135%);right:-12%;top:14%;opacity:.09;filter:blur(7px);transform:rotate(-12deg);pointer-events:none;z-index:0;" fill="none" stroke="#0A3A8C" stroke-width="6" stroke-linejoin="round">
+      <rect x="20" y="80" width="48" height="40"/>
+      <line x1="30" y1="80" x2="30" y2="120"/><line x1="42" y1="80" x2="42" y2="120"/><line x1="54" y1="80" x2="54" y2="120"/>
+      <polygon points="68,72 104,50 140,72 140,128 104,150 68,128"/>
+      <rect x="140" y="84" width="120" height="32" rx="6"/>
+      <polygon points="260,72 296,50 332,72 332,128 296,150 260,128"/>
+      <path d="M332 84 L420 92 L420 108 L332 116 Z"/>
+      <line x1="352" y1="88" x2="352" y2="112"/><line x1="374" y1="89" x2="374" y2="111"/><line x1="396" y1="90" x2="396" y2="110"/>
+    </svg>
+
+    <div style="position:relative;z-index:1;max-width:760px;margin:0 auto;padding:46px 20px 0;text-align:center;">
+      <h2 style="font-size:clamp(28px,5.2vw,48px);font-weight:800;line-height:1.06;letter-spacing:-1.2px;margin:0 0 28px;background:linear-gradient(95deg,#001F5B 0%,#0A3A8C 45%,#C8102E 118%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">¿Qué conector<br/>buscas hoy?</h2>
 
     <!-- RIGHT: Buscador IA -->
-    <div id="ai-chat-section" style="flex:0 0 65%;background:#fff;display:flex;flex-direction:column;position:relative;">
+    <div id="ai-chat-section" style="background:#fff;display:flex;flex-direction:column;position:relative;border:1px solid #E3E9F3;border-radius:18px;overflow:hidden;box-shadow:0 18px 50px rgba(16,32,64,.12);text-align:left;">
 
       <!-- Header — Redesigned -->
       <div style="position:relative;overflow:hidden;background:#fff;border-bottom:1px solid #e8eef6;">
@@ -1083,58 +1132,42 @@
       </div>
 
     </div>
-  </div>
 
-  <!-- FOOTER -->
-  <div style="background:#0D1B2A;border-top:3px solid #C8102E;">
-    <div style="max-width:1200px;margin:0 auto;padding:40px 32px;display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:32px;">
-      <div>
-        <div style="font-family:Montserrat,sans-serif;font-weight:900;font-size:24px;margin-bottom:8px;">
-          <span style="color:#fff;">ADAP</span><span style="color:#C8102E;">TEK</span><span style="color:#fff;">K</span>
+      <!-- divisor -->
+      <div style="display:flex;align-items:center;gap:16px;color:#9AA7B8;font-size:13px;font-weight:600;margin:30px 0 22px;"><span style="flex:1;height:1px;background:#E7ECF3;"></span>o arma el tuyo paso a paso<span style="flex:1;height:1px;background:#E7ECF3;"></span></div>
+
+      <!-- Configurador (Opción B) -->
+      <div class="bus-cfg" style="background:#fff;border:1px solid #E3E9F3;border-radius:22px;padding:30px 28px;box-shadow:0 18px 50px rgba(16,32,64,.10);text-align:left;display:grid;grid-template-columns:1.15fr 1fr;gap:20px;align-items:center;">
+        <div style="position:relative;height:130px;">
+          <svg viewBox="0 0 300 130" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;">
+            <path d="M58 65 C 120 30, 180 100, 242 65" stroke="#C2D2EC" stroke-width="2" stroke-dasharray="5 6" fill="none"/>
+            <rect x="142" y="55" width="20" height="20" rx="5" transform="rotate(45 150 65)" fill="#001F5B"/>
+          </svg>
+          <div style="position:absolute;top:50%;left:4%;transform:translateY(-50%);text-align:center;">
+            <div class="bus-ringA" style="width:56px;height:56px;border-radius:50%;border:2.5px solid #001F5B;position:relative;margin:0 auto 9px;background:#fff;"><span style="position:absolute;inset:8px;border-radius:50%;border:2px solid #C2D2EC;display:block;"></span></div>
+            <div style="font-size:12px;font-weight:700;color:#001F5B;">Extremo A</div>
+          </div>
+          <div style="position:absolute;top:50%;right:4%;transform:translateY(-50%);text-align:center;">
+            <div class="bus-ringB" style="width:56px;height:56px;border-radius:50%;border:2.5px solid #001F5B;position:relative;margin:0 auto 9px;background:#fff;"><span style="position:absolute;inset:8px;border-radius:50%;border:2px solid #C2D2EC;display:block;"></span></div>
+            <div style="font-size:12px;font-weight:700;color:#001F5B;">Extremo B</div>
+          </div>
         </div>
-        <div style="width:40px;height:2px;background:linear-gradient(to right,#fff 50%,#C8102E 50%);margin-bottom:12px;"></div>
-        <div style="font-size:9px;letter-spacing:3px;color:rgba(255,255,255,.4);text-transform:uppercase;margin-bottom:16px;">Conecta sin limites</div>
-        <div style="font-size:12px;color:rgba(255,255,255,.5);line-height:1.8;">Especialistas en conectores<br/>y adaptadores hidraulicos<br/>para la industria mexicana.</div>
-      </div>
-      <div>
-        <div style="font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:16px;">Contacto</div>
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          <div style="display:flex;align-items:flex-start;gap:8px;"><span style="color:#C8102E;">&#128205;</span><span style="font-size:12px;color:rgba(255,255,255,.6);line-height:1.5;">Ciudad de Mexico, Mexico</span></div>
-          <div style="display:flex;align-items:center;gap:8px;"><span style="color:#C8102E;">&#128222;</span><a href="tel:+525555550000" style="font-size:12px;color:rgba(255,255,255,.6);text-decoration:none;">+52 (55) 5555-0000</a></div>
-          <div style="display:flex;align-items:center;gap:8px;"><span style="color:#C8102E;">&#128140;</span><a href="mailto:ventas@adaptekk.com" style="font-size:12px;color:rgba(255,255,255,.6);text-decoration:none;">ventas@adaptekk.com</a></div>
-          <div style="display:flex;align-items:center;gap:8px;"><span style="color:#25D366;">&#128241;</span><a href="https://wa.me/525555550000" style="font-size:12px;color:rgba(255,255,255,.6);text-decoration:none;">WhatsApp Ventas</a></div>
-        </div>
-      </div>
-      <div>
-        <div style="font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:16px;">Horarios</div>
-        <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;color:rgba(255,255,255,.6);">
-          <div><span style="color:rgba(255,255,255,.3);">Lun - Vie</span><br/>8:00 am - 6:00 pm</div>
-          <div><span style="color:rgba(255,255,255,.3);">Sabado</span><br/>8:00 am - 12:00 pm</div>
-          <div><span style="color:rgba(255,255,255,.3);">Domingo</span><br/><span style="color:#C8102E;">Cerrado</span></div>
+        <div>
+          <div style="font-size:21px;font-weight:800;color:#0A0E1A;letter-spacing:-.4px;margin-bottom:7px;">Configura tu conector</div>
+          <p style="font-size:14px;color:#5A6675;line-height:1.55;margin:0 0 18px;">Define cada extremo: tipo, roscas, género y medidas.</p>
+          <button class="bus-cfgbtn" onclick="showPage('cfg')" style="display:inline-flex;align-items:center;gap:9px;background:#001F5B;color:#fff;border:none;padding:13px 24px;border-radius:30px;font-size:15px;font-weight:700;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;transition:transform .15s;">Abrir configurador <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></button>
         </div>
       </div>
-      <div>
-        <div style="font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:16px;">Navegacion</div>
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          <a href="#" onclick="showPage('home');return false;" style="font-size:12px;color:rgba(255,255,255,.6);text-decoration:none;">Inicio</a>
-          <a href="#" onclick="showPage('cfg');return false;" style="font-size:12px;color:rgba(255,255,255,.6);text-decoration:none;">Configurador</a>
-          <a href="#" onclick="showPage('cross');return false;" style="font-size:12px;color:rgba(255,255,255,.6);text-decoration:none;">Cross Reference</a>
-          <a href="#" onclick="showPage('login');return false;" style="font-size:12px;color:rgba(255,255,255,.6);text-decoration:none;">Iniciar Sesion</a>
-          <a href="#" onclick="showPage('register');return false;" style="font-size:12px;color:rgba(255,255,255,.6);text-decoration:none;">Crear Cuenta</a>
-        </div>
+
+      <!-- chips -->
+      <div style="display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap;">
+        <button onclick="showPage('cross')" style="display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:30px;border:1px solid #E7ECF3;background:rgba(255,255,255,.7);font-size:13px;font-weight:600;color:#5A6675;cursor:pointer;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg> Equivalencias (Cross Reference)</button>
       </div>
-    </div>
-    <div style="border-top:1px solid rgba(255,255,255,.06);padding:14px 32px;display:flex;align-items:center;justify-content:space-between;max-width:1200px;margin:0 auto;flex-wrap:wrap;gap:8px;">
-      <span style="font-size:11px;color:rgba(255,255,255,.25);">&#169; 2026 Adaptekk S.A. de C.V. | Todos los derechos reservados</span>
-      <div style="display:flex;gap:16px;align-items:center;">
-        <a href="#" style="font-size:10px;color:rgba(255,255,255,.2);text-decoration:none;">Terminos de Uso</a>
-        <a href="#" style="font-size:10px;color:rgba(255,255,255,.2);text-decoration:none;">Privacidad</a>
-        <a href="#" onclick="showPage('portal');return false;" style="font-size:10px;color:rgba(255,255,255,.08);text-decoration:none;letter-spacing:1px;">&#128274;</a>
-      </div>
+
     </div>
   </div>
+</div>
 
-</div><!-- /page-home -->
 
 
 <!-- ═══════════════════════
@@ -3880,7 +3913,7 @@ async function execDiag(){
     var r=await fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'debug_partners'})});
     var d=await r.json();
     if(!d.success){ alert('Error: '+(d.error||'sin respuesta de Odoo')); return; }
-    var lines=(d.recent||[]).map(function(c){ return '#'+c.id+'  '+(c.name||'(sin nombre)')+'  ['+(c.email||'\u2014')+']  rank='+c.customer_rank+'  cia='+(c.company||'\u2014'); }).join('\n');
+    var lines=(d.recent||[]).map(function(c){ return '#'+c.id+'  '+(c.name||'(sin nombre)')+'\n   ['+(c.email||'\u2014')+']  rank='+c.customer_rank+'  estado='+(c.estado||'?'); }).join('\n');
     alert('DIAGN\u00d3STICO ODOO\n\nTotal de contactos: '+d.totalPartners+'\nClientes (rank>0): '+d.customers+'\nRegistros web (por comentario): '+d.webRegs+'\n\n\u00daltimos 6 contactos:\n'+(lines||'(ninguno)'));
   }catch(e){ alert('Error de conexi\u00f3n: '+e.message); }
 }
@@ -4343,7 +4376,7 @@ function setApiKey(k) {
 }
 
 /* ── PAGE ROUTER ── */
-var pages = ['home','cfg','cross','tutorials','quote','cart','checkout','pago','gracias','login','register','portal'];
+var pages = ['home','buscar','cfg','cross','tutorials','quote','cart','checkout','pago','gracias','login','register','portal'];
 // Registro de cuenta nueva: recopila los datos del formulario y crea el contacto
 // como prospecto pendiente de aprobación (un ejecutivo lo valida después).
 window.mockRegister = async function(){
