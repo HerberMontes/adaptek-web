@@ -1751,6 +1751,9 @@ exports.handler = async function(event, context) {
       if (body.rfc)     await tryField('rfc',     'vat',  xmlStr(String(body.rfc).toUpperCase()));
       if (body.cp)      await tryField('cp',      'zip',  xmlStr(body.cp));
       if (body.razon)   await tryField('razon',   'name', xmlStr(body.razon));
+      if (body.calle || body.num) await tryField('calle', 'street', xmlStr(((body.calle||'') + ' ' + (body.num||'')).trim()));
+      if (body.colonia) await tryField('colonia', 'street2', xmlStr(body.colonia));
+      if (body.ciudad)  await tryField('ciudad',  'city',  xmlStr(body.ciudad));
       if (body.regimen) await tryField('regimen', 'l10n_mx_edi_fiscal_regime', xmlStr(body.regimen));
       if (body.uso)     await tryField('uso',     'l10n_mx_edi_usage', xmlStr(body.uso));
       return {statusCode:200, headers, body: JSON.stringify({ok: saved.length>0, partner_id:pid, partner_name:pname, saved, errors})};
