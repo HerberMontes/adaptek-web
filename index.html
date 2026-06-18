@@ -4169,28 +4169,23 @@ async function cambiarPass(key) {
 .pcl-wrap{max-width:1200px;margin:0 auto;padding:24px 22px 64px;display:flex;gap:22px;align-items:flex-start}
 
 /* ── Sidebar (navy card) ── */
-.pcl-side{width:236px;flex:none;background:var(--pcl-card);border:1px solid var(--pcl-line);border-radius:18px;color:var(--pcl-ink);position:sticky;top:16px;box-shadow:var(--pcl-sh);overflow:hidden}
-.pcl-sbrand{padding:17px 18px 4px}
-.pcl-slogo{font-family:var(--pcl-display);font-weight:800;font-size:17px;letter-spacing:-.4px;color:var(--pcl-navy)}
-.pcl-stag{font-size:9px;letter-spacing:2.2px;color:var(--pcl-muted2);text-transform:uppercase;margin-top:3px;font-weight:600}
-.pcl-nav{padding:8px 10px}
-.pcl-nsec{font-size:9.5px;letter-spacing:1.3px;text-transform:uppercase;color:var(--pcl-muted2);padding:12px 10px 6px;font-weight:600}
-.pcl-nav-item{position:relative;display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:10px;color:var(--pcl-muted);font-weight:500;font-size:13.5px;cursor:pointer;transition:background .15s,color .15s;margin-bottom:1px}
+.pcl-side{width:240px;flex:none;background:var(--pcl-card);border:1px solid var(--pcl-line);border-radius:18px;color:var(--pcl-ink);position:sticky;top:16px;box-shadow:var(--pcl-sh);overflow:hidden}
+.pcl-prof{display:flex;align-items:center;gap:12px;padding:18px 16px;border-bottom:1px solid var(--pcl-line)}
+.pcl-pavatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#06245f,#0a3a8f);box-shadow:0 0 0 3px var(--pcl-soft);display:flex;align-items:center;justify-content:center;font-family:var(--pcl-display);font-weight:700;font-size:15px;color:#fff;flex:none;letter-spacing:.3px}
+.pcl-pinfo{min-width:0}
+.pcl-pinfo .nm{font-weight:700;font-size:14px;color:var(--pcl-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pcl-pinfo .co{font-size:11.5px;color:var(--pcl-muted2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.pcl-nav{padding:10px}
+.pcl-nav-item{position:relative;display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:11px;color:var(--pcl-muted);font-weight:500;font-size:13.5px;cursor:pointer;transition:background .15s,color .15s;margin-bottom:2px}
 .pcl-nav-item svg{width:18px;height:18px;flex:none;stroke:currentColor;stroke-width:1.7;fill:none}
 .pcl-nav-item:hover{background:#F4F7FB;color:var(--pcl-ink)}
 .pcl-nav-item.active{background:var(--pcl-soft);color:var(--pcl-navy);font-weight:600}
-.pcl-nav-item.active::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:0 2px 2px 0;background:var(--pcl-navy)}
-.pcl-nav-item .ct{margin-left:auto;background:#E7ECF3;color:var(--pcl-muted);font-size:10.5px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 5px}
-.pcl-nav-item.active .ct{background:var(--pcl-navy);color:#fff}
-.pcl-sfoot{padding:10px;border-top:1px solid var(--pcl-line)}
-.pcl-suser{display:flex;align-items:center;gap:10px;padding:6px 8px}
-.pcl-savatar{width:34px;height:34px;border-radius:50%;background:var(--pcl-navy);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12.5px;color:#fff;flex:none}
-.pcl-suser .nm{font-weight:600;font-size:12.5px;color:var(--pcl-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pcl-suser .co{font-size:11px;color:var(--pcl-muted2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pcl-slinks{display:flex;gap:7px;margin-top:8px}
-.pcl-slink{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px;border-radius:9px;background:#F4F7FB;border:1px solid var(--pcl-line);color:var(--pcl-muted);font-size:11.5px;font-weight:600;cursor:pointer}
+.pcl-nav-item.active::before{content:"";position:absolute;left:0;top:9px;bottom:9px;width:3px;border-radius:0 2px 2px 0;background:var(--pcl-navy)}
+.pcl-nav-item .ct{margin-left:auto;background:var(--pcl-navy);color:#fff;font-size:10.5px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 5px}
+.pcl-sfoot{display:flex;gap:8px;padding:10px;border-top:1px solid var(--pcl-line)}
+.pcl-slink{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:9px;border-radius:10px;background:#F4F7FB;border:1px solid var(--pcl-line);color:var(--pcl-muted);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
 .pcl-slink:hover{background:#fff;border-color:#cfdbec;color:var(--pcl-navy)}
-.pcl-slink svg{width:14px;height:14px;stroke:currentColor;stroke-width:1.7;fill:none}
+.pcl-slink svg{width:15px;height:15px;stroke:currentColor;stroke-width:1.8;fill:none}
 
 /* ── Main ── */
 .pcl-main{flex:1;min-width:0}
@@ -4321,13 +4316,11 @@ async function cambiarPass(key) {
 }
 @media(max-width:760px){
   .pcl-wrap{flex-direction:column}
-  .pcl-side{width:100%;position:static;display:flex;flex-direction:column}
+  .pcl-side{width:100%;position:static}
+  .pcl-prof{border-bottom:1px solid var(--pcl-line)}
   .pcl-nav{display:flex;overflow-x:auto;padding:8px;gap:4px}
-  .pcl-nsec{display:none}
   .pcl-nav-item{white-space:nowrap;margin-bottom:0}
   .pcl-nav-item.active::before{display:none}
-  .pcl-sfoot{display:flex;align-items:center;justify-content:space-between;gap:10px}
-  .pcl-slinks{margin-top:0}
 }
 @media(max-width:560px){
   .pcl-wrap{padding:16px}
@@ -4339,38 +4332,30 @@ async function cambiarPass(key) {
 <div class="pcl-wrap">
   <!-- Sidebar -->
   <aside class="pcl-side">
-    <div class="pcl-sbrand">
-      <div class="pcl-slogo">ADAP<span style="color:var(--pcl-red)">TEKK</span></div>
-      <div class="pcl-stag">Portal de Cliente</div>
+    <div class="pcl-prof">
+      <div class="pcl-pavatar" id="pcl-avatar">CL</div>
+      <div class="pcl-pinfo">
+        <div class="nm" id="pcl-name">Cliente</div>
+        <div class="co" id="pcl-company">Adaptekk</div>
+      </div>
     </div>
     <nav class="pcl-nav">
-      <div class="pcl-nsec">Mi actividad</div>
       <div class="pcl-nav-item active" data-pview="resumen" onclick="pclGo('resumen')">
         <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Resumen</div>
       <div class="pcl-nav-item" data-pview="pedidos" onclick="pclGo('pedidos')">
         <svg viewBox="0 0 24 24"><path d="M3 6h18M3 6l1.5 13a1 1 0 0 0 1 .9h11a1 1 0 0 0 1-.9L19 6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Mis pedidos <span class="ct" id="pcl-badge-pedidos" style="display:none">0</span></div>
       <div class="pcl-nav-item" data-pview="cotizaciones" onclick="pclGo('cotizaciones')">
         <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg>Cotizaciones <span class="ct" id="pcl-badge-cotiz" style="display:none">0</span></div>
-      <div class="pcl-nsec">Mi cuenta</div>
       <div class="pcl-nav-item" data-pview="facturacion" onclick="pclGo('facturacion')">
         <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M7 15h4"/></svg>Facturación</div>
       <div class="pcl-nav-item" data-pview="direcciones" onclick="pclGo('direcciones')">
-        <svg viewBox="0 0 24 24"><path d="M12 21s-7-5.7-7-11a7 7 0 0 1 14 0c0 5.3-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Direcciones de envío</div>
+        <svg viewBox="0 0 24 24"><path d="M12 21s-7-5.7-7-11a7 7 0 0 1 14 0c0 5.3-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Direcciones</div>
       <div class="pcl-nav-item" data-pview="cuenta" onclick="pclGo('cuenta')">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Mi cuenta</div>
     </nav>
     <div class="pcl-sfoot">
-      <div class="pcl-suser">
-        <div class="pcl-savatar" id="pcl-avatar">CL</div>
-        <div style="min-width:0">
-          <div class="nm" id="pcl-name">Cliente</div>
-          <div class="co" id="pcl-company">Adaptekk</div>
-        </div>
-      </div>
-      <div class="pcl-slinks">
-        <div class="pcl-slink" onclick="showPage('home')"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Tienda</div>
-        <div class="pcl-slink" onclick="portalLogout()"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Salir</div>
-      </div>
+      <div class="pcl-slink" onclick="showPage('home')"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Tienda</div>
+      <div class="pcl-slink" onclick="portalLogout()"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Salir</div>
     </div>
   </aside>
 
