@@ -2161,16 +2161,17 @@ cartUpdateBadge();
       </div>
 
       <!-- Confirmación: cuando el cliente ya tiene datos fiscales en su perfil -->
-      <div id="co-fiscal-confirm" style="display:none;background:#F2FBF4;border:1px solid #BEE7C8;border-radius:12px;padding:18px;">
-        <div style="font-weight:600;color:#065F46;font-size:14px;margin-bottom:10px;">Tu pedido se facturará automáticamente a:</div>
-        <div style="font-size:16px;font-weight:700;color:#001F5B;" id="co-confirm-razon">&mdash;</div>
-        <div style="font-size:13px;color:#5A6675;margin-top:3px;">RFC: <span id="co-confirm-rfc">&mdash;</span></div>
-        <div style="font-size:12.5px;color:#1d7d34;margin-top:8px;">&#10003; Constancia de Situación Fiscal en archivo</div>
-        <label style="display:flex;align-items:center;gap:9px;cursor:pointer;font-size:13.5px;color:#001F5B;margin-top:14px;">
-          <input type="checkbox" id="co-confirm-fact" checked style="width:16px;height:16px;accent-color:#001F5B;"/>
-          Facturar este pedido
+      <div id="co-fiscal-confirm" style="display:none;background:#fff;border:1px solid #E3E8F0;border-radius:14px;padding:22px;">
+        <div style="font-size:11px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:#8A93A3;margin-bottom:11px;">Datos de facturación</div>
+        <div style="font-size:17px;font-weight:700;color:#001F5B;letter-spacing:-.2px;" id="co-confirm-razon">&mdash;</div>
+        <div style="font-size:13.5px;color:#5A6675;margin-top:5px;">RFC&nbsp;&nbsp;<span id="co-confirm-rfc" style="color:#001F5B;font-weight:600;letter-spacing:.2px;">&mdash;</span></div>
+        <div style="font-size:13px;color:#7A8499;margin-top:7px;">Constancia de Situación Fiscal en archivo</div>
+        <div style="height:1px;background:#EEF1F6;margin:18px 0 16px;"></div>
+        <label style="display:flex;align-items:center;gap:11px;cursor:pointer;font-size:14px;color:#001F5B;font-weight:500;">
+          <input type="checkbox" id="co-confirm-fact" checked style="width:17px;height:17px;accent-color:#001F5B;"/>
+          Facturar este pedido a estos datos
         </label>
-        <a onclick="coEditFiscal()" style="display:inline-block;margin-top:10px;color:#0071e3;font-size:13px;cursor:pointer;">Usar otros datos fiscales</a>
+        <a onclick="coEditFiscal()" style="display:inline-block;margin-top:13px;color:#0071e3;font-size:13px;cursor:pointer;font-weight:500;">Usar otros datos fiscales</a>
       </div>
 
       <div id="co-fact-form" style="display:none;background:#FAFBFF;border-radius:8px;padding:14px;">
@@ -2253,7 +2254,26 @@ cartUpdateBadge();
 
   <!-- ── STEP 3: dirección + paquetería ── -->
   <div id="co-step-3" style="display:none;">
-    <div class="co-card">
+    <!-- Dirección guardada (clientes con dirección en su perfil) -->
+    <div class="co-card" id="co-saved-addr-card" style="display:none;">
+      <div class="co-title">Direcci&#243;n de env&#237;o</div>
+      <div class="co-sub">Enviaremos tu pedido a la direcci&#243;n que tienes registrada.</div>
+      <div id="co-addr-saved-opt" onclick="coAddrMode('saved')" style="border:1.5px solid #0071e3;background:#F5F9FF;border-radius:12px;padding:16px;cursor:pointer;">
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <span id="co-addr-saved-dot" style="width:18px;height:18px;border-radius:50%;border:2px solid #0071e3;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;"><span style="width:9px;height:9px;border-radius:50%;background:#0071e3;display:block;"></span></span>
+          <div>
+            <div style="font-size:14px;font-weight:600;color:#001F5B;" id="co-saved-name">Direcci&#243;n registrada</div>
+            <div style="font-size:13px;color:#5A6675;margin-top:3px;line-height:1.55;" id="co-saved-lines">&mdash;</div>
+          </div>
+        </div>
+      </div>
+      <div id="co-addr-other-opt" onclick="coAddrMode('other')" style="display:flex;align-items:center;gap:12px;border:1.5px solid #e8e8ed;border-radius:12px;padding:16px;cursor:pointer;margin-top:10px;">
+        <span id="co-addr-other-dot" style="width:18px;height:18px;border-radius:50%;border:2px solid #c5c5cc;flex-shrink:0;display:flex;align-items:center;justify-content:center;"></span>
+        <div style="font-size:14px;font-weight:600;color:#001F5B;">Enviar a otra direcci&#243;n</div>
+      </div>
+    </div>
+
+    <div class="co-card" id="co-addr-form-card">
       <div class="co-title">Direcci&#243;n de env&#237;o</div>
       <div class="co-sub">Ingresa tu CP y autocompletamos colonia, ciudad y estado.</div>
       <div style="display:grid;grid-template-columns:140px 1fr;gap:10px;">
@@ -2457,8 +2477,11 @@ window.coSetFactura = function(si, silent){
 window.coLoadFiscalProfile = function(){
   if (!window.currentClientUser) return;
   window._coFiscalComplete = false;
+  window._coUseSavedAddr = false;
   var ask0=document.getElementById('co-fact-ask'); if(ask0) ask0.style.display='';
   var conf0=document.getElementById('co-fiscal-confirm'); if(conf0) conf0.style.display='none';
+  var sc0=document.getElementById('co-saved-addr-card'); if(sc0) sc0.style.display='none';
+  var fc0=document.getElementById('co-addr-form-card'); if(fc0) fc0.style.display='block';
   var extra = document.getElementById('co-fiscal-extra'); if (extra) extra.style.display = 'block';
   var ref = window.currentClientUser || {};
   fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},
@@ -2488,9 +2511,35 @@ window.coLoadFiscalProfile = function(){
         var cr=document.getElementById('co-confirm-razon'); if(cr) cr.textContent = d.name || '(tu razón social)';
         var cf=document.getElementById('co-confirm-rfc'); if(cf) cf.textContent = (d.vat||'').toUpperCase();
       }
+      // Dirección guardada para el paso de envío
+      if (d.street || d.zip) {
+        window._coSavedAddr = {street:d.street||'', street2:d.street2||'', city:d.city||'', zip:d.zip||'', name:d.name||''};
+        var nm2=document.getElementById('co-saved-name');
+        if(nm2) nm2.textContent = d.name || ((window.currentClientUser&&window.currentClientUser.name)||'Dirección registrada');
+        var ln2=document.getElementById('co-saved-lines');
+        if(ln2){
+          var parts=[]; if(d.street) parts.push(d.street); if(d.street2) parts.push(d.street2);
+          var cz=[d.city, d.zip?('C.P. '+d.zip):''].filter(Boolean).join('  ·  '); if(cz) parts.push(cz);
+          ln2.innerHTML = parts.join('<br>') || 'Dirección registrada';
+        }
+        var sc=document.getElementById('co-saved-addr-card'); if(sc) sc.style.display='block';
+        coAddrMode('saved');
+      }
     }).catch(function(){});
 };
 
+window.coAddrMode = function(mode){
+  var saved = (mode==='saved');
+  window._coUseSavedAddr = saved;
+  var formCard=document.getElementById('co-addr-form-card'); if(formCard) formCard.style.display = saved ? 'none' : 'block';
+  var so=document.getElementById('co-addr-saved-opt'), oo=document.getElementById('co-addr-other-opt');
+  var sd=document.getElementById('co-addr-saved-dot'), od=document.getElementById('co-addr-other-dot');
+  var dot='<span style="width:9px;height:9px;border-radius:50%;background:#0071e3;display:block;"></span>';
+  if(so){ so.style.borderColor = saved?'#0071e3':'#e8e8ed'; so.style.background = saved?'#F5F9FF':'#fff'; }
+  if(oo){ oo.style.borderColor = saved?'#e8e8ed':'#0071e3'; oo.style.background = saved?'#fff':'#F5F9FF'; }
+  if(sd){ sd.style.borderColor = saved?'#0071e3':'#c5c5cc'; sd.innerHTML = saved?dot:''; }
+  if(od){ od.style.borderColor = saved?'#c5c5cc':'#0071e3'; od.innerHTML = saved?'':dot; }
+};
 window.coEditFiscal = function(){
   window._coFiscalComplete = false;
   var conf=document.getElementById('co-fiscal-confirm'); if(conf) conf.style.display='none';
@@ -2669,6 +2718,15 @@ window.coNext = function(from){
     coSave(); coGoStep(3); return;
   }
   if (from === 3) {
+    // Si el cliente eligió su dirección guardada
+    if (window._coUseSavedAddr && window._coSavedAddr) {
+      if (!window.CHECKOUT.envio) { coShowErr('co-err-3', true); return; }
+      var a = window._coSavedAddr;
+      coShowErr('co-err-3', false);
+      window.CHECKOUT.direccion = { cp:a.zip, calle:a.street, colonia:a.street2||'', ciudad:a.city, estado:'',
+        ref: (document.getElementById('co-ref') ? document.getElementById('co-ref').value.trim() : '') };
+      coSave(); coRenderSummary(); coGoStep(4); return;
+    }
     var cp = document.getElementById('co-cp').value.trim();
     var calle = document.getElementById('co-calle').value.trim();
     var colonia = document.getElementById('co-colonia').value;
