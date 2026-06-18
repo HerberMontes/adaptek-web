@@ -1803,9 +1803,10 @@ exports.handler = async function(event, context) {
       const out = { found:true, partner_id:pid };
       const idDom = `<value><array><data>${xmlStr('id')}<value><string>=</string></value><value><int>${pid}</int></value></data></array></value>`;
       try {
-        const r = await odooSearchRead(uid, 'res.partner', idDom, ['vat','zip','name'], 1);
+        const r = await odooSearchRead(uid, 'res.partner', idDom, ['vat','zip','name','street','street2','city'], 1);
         const st = (r.split('<struct>')[1]||'').split('</struct>')[0];
         out.vat = clean(xmlExtractField(st,'vat')); out.zip = clean(xmlExtractField(st,'zip')); out.name = xmlExtractField(st,'name');
+        out.street = clean(xmlExtractField(st,'street')); out.street2 = clean(xmlExtractField(st,'street2')); out.city = clean(xmlExtractField(st,'city'));
       } catch(_){}
       try {
         const r2 = await odooSearchRead(uid, 'res.partner', idDom, ['l10n_mx_edi_fiscal_regime','l10n_mx_edi_usage'], 1);
