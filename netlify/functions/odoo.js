@@ -1706,6 +1706,15 @@ exports.handler = async function(event, context) {
       return {statusCode:200, headers, body: JSON.stringify({ ok:true, location_id:locationId, price_set:price, products:result })};
     }
 
+    // ── LOOKUP POR CÓDIGO (para 'Pedir por código AT') ──
+    if (action === 'lookup_code') {
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+      const p = await lookupProductByCode(uid, (body.code || '').trim());
+      if (!p) return {statusCode:200, headers, body: JSON.stringify({found:false})};
+      return {statusCode:200, headers, body: JSON.stringify({found:true, product:p})};
+    }
+
     // ── SEARCH PRODUCTS ──
     if (action === 'search_products') {
       const uid = await odooAuth();
