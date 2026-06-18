@@ -1630,6 +1630,10 @@ window.LEADTIMES = {
 window.clientLevel = function(){
   return window.currentClientUser ? 'registered' : 'guest';
 };
+// ¿La cuenta está VERIFICADA por gerencia? Solo verificados ven stock.
+window.clientVerified = function(){
+  return !!(window.currentClientUser && window.currentClientUser.verified);
+};
 
 window.fmtMXN = function(n){ return '$' + Number(n||0).toFixed(2); };
 
@@ -1778,9 +1782,9 @@ window.renderCart = function() {
         + '<div style="font-size:10px;color:#aaa;text-align:right;">' + pd.sub + '</div>';
     }
 
-    // Stock / fabricación: SOLO registrados — badges sutiles estilo Apple
+    // Stock / disponibilidad: SOLO cuentas verificadas
     var statusBadge = '';
-    if (registered) {
+    if (window.clientVerified()) {
       if (item.status === 'stock') {
         var pzas = item.qty_available > 0 ? ' · ' + item.qty_available + ' pzas' : '';
         statusBadge = '<span style="color:#1d7d34;font-size:12px;font-weight:500;">&#10003; En stock' + pzas + '</span>';
@@ -2535,7 +2539,9 @@ function coRenderSummary(){
     var lt = window.LEADTIMES[p.status] || window.LEADTIMES.especial;
     if (lt.max > maxLead) maxLead = lt.max;
     var avail;
-    if (p.status === 'stock') {
+    if (!window.clientVerified()) {
+      avail = '<span style="color:#86868b;">Disponibilidad con cuenta verificada</span>';
+    } else if (p.status === 'stock') {
       var pzas = (p.qty_available > 0) ? (' (' + p.qty_available + ' pzas)') : '';
       avail = '<span style="color:#065F46;">\u2713 En stock' + pzas + '</span>';
     } else if (p.status === 'fabricado') {
@@ -5528,23 +5534,31 @@ function renderResultPanel(p, data, params){
   if (data.found && data.products && data.products.length > 0) {
     var prod = data.products[0];
     var inStock = prod.qty_available > 0;
+    var verStock = window.clientVerified();   // solo verificados ven stock
 
     statusDiv.style.cssText='border-radius:18px;padding:28px;margin-bottom:20px;background:#f5f5f7;border:none;text-align:center;';
 
-    var dispLine = inStock
-      ? '<span style="display:inline-flex;align-items:center;gap:7px;font-size:15px;color:#1d7d34;font-weight:500;"><span style="width:8px;height:8px;border-radius:50%;background:#1d7d34;display:inline-block;"></span>Disponible · '+prod.qty_available+' en stock</span>'
-      : '<span style="display:inline-flex;align-items:center;gap:7px;font-size:15px;color:#9a6a00;font-weight:500;"><span style="width:8px;height:8px;border-radius:50%;background:#e6a700;display:inline-block;"></span>Fabricado bajo pedido</span>';
+    var dispLine;
+    if (verStock) {
+      dispLine = inStock
+        ? '<span style="display:inline-flex;align-items:center;gap:7px;font-size:15px;color:#1d7d34;font-weight:500;"><span style="width:8px;height:8px;border-radius:50%;background:#1d7d34;display:inline-block;"></span>Disponible · '+prod.qty_available+' en stock</span>'
+        : '<span style="display:inline-flex;align-items:center;gap:7px;font-size:15px;color:#9a6a00;font-weight:500;"><span style="width:8px;height:8px;border-radius:50%;background:#e6a700;display:inline-block;"></span>Fabricado bajo pedido</span>';
+    } else {
+      dispLine = '<span style="display:inline-flex;align-items:center;gap:7px;font-size:15px;color:#86868b;font-weight:500;"><span style="width:8px;height:8px;border-radius:50%;background:#c7c7cc;display:inline-block;"></span>Disponibilidad con cuenta verificada</span>';
+    }
 
     var priceBlock = prod.price > 0
       ? '<div style="font-size:34px;font-weight:600;color:#001F5B;letter-spacing:-.5px;line-height:1.1;">$'+prod.price.toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div>'
-        +'<div style="font-size:14px;color:#86868b;margin-top:2px;">MXN'+(inStock?'':' · precio de referencia')+'</div>'
+        +'<div style="font-size:14px;color:#86868b;margin-top:2px;">MXN'+((verStock && !inStock)?' \u00b7 precio de referencia':'')+'</div>'
       : '<div style="font-size:19px;font-weight:600;color:#001F5B;">Precio bajo cotización</div>'
         +'<div style="font-size:14px;color:#86868b;margin-top:4px;">Contacta a tu ejecutivo para confirmar precio</div>';
 
     statusDiv.innerHTML = '<div style="margin-bottom:16px;">'+dispLine+'</div>' + priceBlock
-      + (inStock
-          ? '<div style="font-size:13px;color:#86868b;margin-top:10px;">Entrega inmediata desde almacén</div>'
-          : '<div style="font-size:13px;color:#86868b;margin-top:10px;">Lo fabricamos con tus especificaciones exactas</div>');
+      + (verStock
+          ? (inStock
+              ? '<div style="font-size:13px;color:#86868b;margin-top:10px;">Entrega inmediata desde almac\u00e9n</div>'
+              : '<div style="font-size:13px;color:#86868b;margin-top:10px;">Lo fabricamos con tus especificaciones exactas</div>')
+          : '<div style="font-size:13px;color:#86868b;margin-top:10px;">Verifica tu cuenta para ver stock y tiempos de entrega</div>');
 
   } else if (data.status === 'fabricacion_nueva') {
     statusDiv.style.cssText='border-radius:14px;padding:22px;margin-bottom:20px;background:#f5f5f7;border:none;';
@@ -7201,7 +7215,7 @@ function renderDrawer() {
     var priceStr = pd ? pd.text : '—';
 
     var statusLine = '';
-    if (registered) {
+    if (window.clientVerified()) {
       var statusDot = item.status === 'stock'
         ? '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#25a244;margin-right:4px;"></span>'
         : '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#FFA000;margin-right:4px;"></span>';
