@@ -857,10 +857,10 @@
   </a>
   <ul class="nav-links">
     <li><a href="#" onclick="showPage('home');return false;">Inicio</a></li>
+    <li><a href="#" onclick="navIrIA();return false;" class="nav-ia"><span style="display:inline-flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.7 6.3L20 10l-6.3 1.7L12 18l-1.7-6.3L4 10l6.3-1.7z"/></svg>Buscar con IA</span></a></li>
     <li><a href="#" onclick="showPage('cfg');return false;">Configurador</a></li>
     <li><a href="#" onclick="showPage('cross');return false;">Cross Reference</a></li>
     <li><a href="#" onclick="showPage('tutorials');return false;">Catálogo</a></li>
-    <li><a href="#" onclick="navIrIA();return false;" class="nav-ia"><span style="display:inline-flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.7 6.3L20 10l-6.3 1.7L12 18l-1.7-6.3L4 10l6.3-1.7z"/></svg>Buscar con IA</span></a></li>
     <li class="nav-acct" id="nav-acct" style="padding:0 4px;display:flex;align-items:center;position:relative;">
       <a href="#" onclick="showPage('login');return false;" id="nav-login-btn"
         style="font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#001F5B;text-decoration:none;padding:7px 12px;border-radius:5px;border:2px solid #001F5B;display:block;transition:all .2s;"
@@ -1196,7 +1196,7 @@
     <div class="cross-search-box">
       <div style="font-size:13px;color:#86868b;font-weight:500;letter-spacing:0;text-transform:none;margin-bottom:8px;">Número de parte de otra marca</div>
       <div class="cross-input-row">
-        <input class="cross-input" id="cross-input" type="text" placeholder="Ej: 9500-08-08, 10343-08-08, SS-400-1-4..." oninput="crossSearch(this.value)" onkeydown="if(event.key==='Enter')crossSearch(document.getElementById('cross-input').value)"/>
+        <input class="cross-input" id="cross-input" type="text" placeholder="Código AT (AT-...) o de otra marca: 9500-08-08, SS-400-1-4..." oninput="crossInput(this.value)" onkeydown="if(event.key==='Enter')crossSearch(document.getElementById('cross-input').value)"/>
         <button class="cross-btn" onclick="crossSearch(document.getElementById('cross-input').value)">Buscar</button>
       </div>
       <div style="margin-top:16px;">
@@ -1215,12 +1215,13 @@
 
     <!-- RESULT -->
     <div class="cross-result" id="cross-result">
-      <div style="font-size:12px;font-weight:500;letter-spacing:0;text-transform:none;color:#0071e3;margin-bottom:6px;">Equivalente AT encontrado</div>
+      <div style="font-size:12px;font-weight:500;letter-spacing:0;text-transform:none;color:#0071e3;margin-bottom:6px;" id="cr-head">Producto encontrado</div>
       <div style="font-size:12px;font-weight:500;letter-spacing:0;color:#86868b;text-transform:none;margin-bottom:4px;" id="cr-brand"></div><div class="cross-result-part" id="cr-part"></div>
       <div class="cross-result-name" id="cr-name"></div>
+      <div id="cr-stockprice" style="font-size:14px;color:#001F5B;font-weight:600;margin:2px 0 12px;"></div>
       <div class="cross-specs" id="cr-specs"></div>
       <div class="cross-actions">
-        <button class="cross-btn" onclick="alert('Cotizacion enviada. En produccion esto abre el formulario.')">Solicitar cotización</button>
+        <button class="cross-btn" id="cr-cart" style="display:none;" onclick="crossAddToCart()">Agregar al carrito</button>
         <a class="btn-result-wa" id="cr-wa" href="#" target="_blank" style="padding:0 18px;display:flex;align-items:center;">WhatsApp</a>
       </div>
     </div>
@@ -5300,28 +5301,81 @@ var crossDB = {
   '24m48r87omlo':{part:'AT-NR-ORFS-M24-BSPP-M48',name:'Parker → Conector Recto ORFS 24mm × BSPP 48mm',brand:'Parker',specs:['ORFS','BSPP','M×M','Acero']}
 };
 
-function crossSearch(val) {
-  if(!val || val.trim().length < 3) return;
-  var key = val.trim().toLowerCase();
-  var result = null;
-  Object.keys(crossDB).forEach(function(k){ if(k.toLowerCase()===key) result=crossDB[k]; });
+var _crossTimer = null;
+function crossInput(val){
+  clearTimeout(_crossTimer);
+  if(!val || val.trim().length < 3){
+    var cr=document.getElementById('cross-result'); if(cr) cr.classList.remove('show');
+    var nf=document.getElementById('cross-not-found'); if(nf) nf.classList.remove('show');
+    return;
+  }
+  _crossTimer = setTimeout(function(){ crossSearch(val); }, 500);
+}
 
+async function crossSearch(val) {
+  if(!val || val.trim().length < 3) return;
+  var raw = val.trim();
+  var key = raw.toLowerCase();
+  document.getElementById('cross-input').value = raw;
   document.getElementById('cross-result').classList.remove('show');
   document.getElementById('cross-not-found').classList.remove('show');
-  document.getElementById('cross-input').value = val;
 
-  if(result){
-    document.getElementById('cr-part').textContent = result.part;
-    document.getElementById('cr-name').textContent = result.name;
-    var brandEl = document.getElementById('cr-brand');
-    if(brandEl) brandEl.textContent = result.brand ? '🏷 Marca: ' + result.brand : '';
-    var specs = document.getElementById('cr-specs');
-    specs.innerHTML = result.specs.map(function(s){return '<span class="cross-spec">'+s+'</span>';}).join('');
-    document.getElementById('cr-wa').href='https://wa.me/5215555550000?text='+encodeURIComponent('Hola Adaptek, quiero cotizar el equivalente AT de: '+val+' ('+( result.brand||'')+') → '+result.part+' — '+result.name);
+  // 1) ¿está en la base local de marcas? -> tomar su equivalente AT
+  var local = null;
+  Object.keys(crossDB).forEach(function(k){ if(k.toLowerCase()===key) local=crossDB[k]; });
+  var atCode = local ? local.part : raw.toUpperCase();
+  var brandLabel = local ? (local.brand||'') : '';
+
+  // 2) consultar ese código AT en Odoo
+  var prod = null;
+  try {
+    var r = await fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'lookup_code',code:atCode})});
+    var d = await r.json();
+    if(d && d.found && d.product) prod = d.product;
+  } catch(e){}
+
+  var cartBtn = document.getElementById('cr-cart');
+  var specsEl = document.getElementById('cr-specs');
+  var headEl  = document.getElementById('cr-head');
+
+  if(prod){
+    window._crossProduct = prod;
+    if(headEl) headEl.textContent = local ? 'Equivalente AT encontrado' : 'Producto encontrado';
+    document.getElementById('cr-brand').textContent = brandLabel ? ('Equivale a tu ' + brandLabel) : '';
+    document.getElementById('cr-part').textContent = prod.at_code;
+    document.getElementById('cr-name').textContent = prod.name || '';
+    var priceTxt = prod.price>0 ? ('$'+Number(prod.price).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2})+' MXN') : 'Precio bajo cotización';
+    var stockTxt = '';
+    if(window.clientVerified && window.clientVerified()){
+      stockTxt = prod.qty_available>0 ? ('   \u00b7   \u2713 '+prod.qty_available+' en stock') : ('   \u00b7   Fabricado bajo pedido');
+    }
+    document.getElementById('cr-stockprice').textContent = priceTxt + stockTxt;
+    if(specsEl) specsEl.innerHTML = (local && local.specs) ? local.specs.map(function(s){return '<span class="cross-spec">'+s+'</span>';}).join('') : '';
+    if(cartBtn) cartBtn.style.display = '';
+    var wa=document.getElementById('cr-wa'); if(wa) wa.href='https://wa.me/5215555550000?text='+encodeURIComponent('Hola Adaptek, quiero cotizar '+prod.at_code+' \u2014 '+(prod.name||''));
+    document.getElementById('cross-result').classList.add('show');
+  } else if(local){
+    // mapeo de marca existe, pero ese AT no está en Odoo: mostrar sin carrito
+    window._crossProduct = null;
+    if(headEl) headEl.textContent = 'Equivalente AT encontrado';
+    document.getElementById('cr-brand').textContent = brandLabel ? ('Equivale a tu ' + brandLabel) : '';
+    document.getElementById('cr-part').textContent = local.part;
+    document.getElementById('cr-name').textContent = local.name || '';
+    document.getElementById('cr-stockprice').textContent = '';
+    if(specsEl) specsEl.innerHTML = (local.specs||[]).map(function(s){return '<span class="cross-spec">'+s+'</span>';}).join('');
+    if(cartBtn) cartBtn.style.display = 'none';
+    var wa2=document.getElementById('cr-wa'); if(wa2) wa2.href='https://wa.me/5215555550000?text='+encodeURIComponent('Hola Adaptek, quiero el equivalente AT de '+raw+' \u2192 '+local.part);
     document.getElementById('cross-result').classList.add('show');
   } else {
+    if(cartBtn) cartBtn.style.display = 'none';
     document.getElementById('cross-not-found').classList.add('show');
   }
+}
+
+function crossAddToCart(){
+  var p = window._crossProduct;
+  if(!p || !window.cartAdd){ return; }
+  window.cartAdd({at_code:p.at_code, name:p.name, price:p.price, qty_available:p.qty_available, status:p.status});
 }
 
 var CONNECTOR_IMGS={"bspt":"assets/conn-bspt.png","bspp":"assets/conn-bspp.png","orfs":"assets/conn-orfs.png","npt":"assets/conn-npt.png","jic":"assets/conn-jic.png","orb":"assets/conn-orb.png","tee":"assets/conn-tee.jpg","c45":"assets/conn-c45.jpg","c90":"assets/conn-c90.jpg","tap":"assets/conn-tap.jpg","nr":"assets/conn-nr.png","jico":"assets/conn-jico.png","bite":"assets/conn-bite.png","jis":"assets/conn-jis.png","komatsu":"assets/conn-komatsu.png","crx":"assets/conn-crx.png","bh":"assets/conn-bh.png","bh90":"assets/conn-bh90.png","bh45":"assets/conn-bh45.png","bhtee":"assets/conn-bhtee.png"};
