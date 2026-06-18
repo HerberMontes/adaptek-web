@@ -4403,7 +4403,7 @@ async function cambiarPass(key) {
 
       <div class="pcl-codebox" style="margin-top:18px">
         <div class="t"><b>Pedir por código AT</b><span>¿Ya sabes qué necesitas? Escríbelo y lo agregamos.</span></div>
-        <div class="pcl-codein"><input type="text" placeholder="AT-NPT-08-JIC-12"/><button>Agregar</button></div>
+        <div class="pcl-codein"><input type="text" id="pcl-codein-input" placeholder="AT-NPT-08-JIC-12" onkeydown="if(event.key==='Enter'){event.preventDefault();pclAddByCode();}"/><button id="pcl-codein-btn" onclick="pclAddByCode()">Agregar</button></div>
       </div>
 
       <div class="pcl-sh"><h2>Accesos rápidos</h2></div>
@@ -4564,6 +4564,25 @@ function pclClosePerfil(){
   if(dash) dash.style.display='block';
   _pclSetActive('resumen');
   window.scrollTo({top:0,behavior:'auto'});
+}
+async function pclAddByCode(){
+  var inp=document.getElementById('pcl-codein-input');
+  if(!inp) return;
+  var code=(inp.value||'').trim().toUpperCase();
+  if(!code){ inp.focus(); return; }
+  var btn=document.getElementById('pcl-codein-btn');
+  if(btn){ btn.disabled=true; btn.textContent='Buscando\u2026'; }
+  try{
+    var r=await fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'lookup_code',code:code})});
+    var d=await r.json();
+    if(d && d.found && d.product){
+      window.cartAdd({at_code:d.product.at_code, name:d.product.name, price:d.product.price, qty_available:d.product.qty_available, status:d.product.status});
+      inp.value='';
+    } else {
+      alert('No encontramos el c\u00f3digo '+code+'. Revisa que est\u00e9 bien escrito.');
+    }
+  }catch(e){ alert('Hubo un error al buscar. Intenta de nuevo.'); }
+  if(btn){ btn.disabled=false; btn.textContent='Agregar'; }
 }
 function pclHydrate(){
   var c=window.currentClientUser||{};
