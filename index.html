@@ -1864,7 +1864,12 @@ window.irACheckout = function() {
   // Asegurar paso 1 visible como última acción
   pc.style.display = 'block';
   var s1 = document.getElementById('co-step-1'); if (s1) s1.style.display = 'block';
-  var ac = document.getElementById('co-account-choice'); if (ac) ac.style.display = 'block';
+  // Si ya hay sesión, saltar la pregunta de cuenta/invitado y mostrar el formulario directo
+  var ac = document.getElementById('co-account-choice');
+  if (ac) ac.style.display = window.currentClientUser ? 'none' : 'block';
+  if (window.currentClientUser) {
+    var cf = document.getElementById('co-contact-form'); if (cf) cf.style.display = 'block';
+  }
   try { window.scrollTo(0,0); } catch(e){}
 };
 
@@ -2319,6 +2324,13 @@ window.checkoutInit = function() {
       showEl('co-contact-form', 'block');
     }
   } catch(e){ if (typeof console !== 'undefined') console.warn('checkout prefill:', e); }
+
+  // Con sesión iniciada: nunca mostrar la pregunta cuenta/invitado
+  if (window.currentClientUser) {
+    window.CHECKOUT.mode = 'account';
+    var _acc = document.getElementById('co-account-choice'); if (_acc) _acc.style.display = 'none';
+    var _cf = document.getElementById('co-contact-form'); if (_cf) _cf.style.display = 'block';
+  }
 
   coRenderShipping();
   coGoStep(1);
