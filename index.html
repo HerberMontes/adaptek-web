@@ -4338,6 +4338,9 @@ async function cambiarPass(key) {
 
 /* upload */
 .pcl-up{display:flex;align-items:center;gap:13px;padding:15px;border:1.5px dashed var(--pcl-line);border-radius:12px;cursor:pointer}
+.pcl-up.drag{border-color:var(--pcl-navy);background:var(--pcl-soft)}
+.pcl-up.req-error{border-color:#C8102E;background:#FEF2F3}
+.pcl-fac-req{color:#C8102E;font-size:12.5px;font-weight:600;margin:2px 0 10px;text-align:right}
 .pcl-up:hover{border-color:var(--pcl-navy)}
 .pcl-up .uic{width:40px;height:40px;border-radius:10px;background:var(--pcl-soft);display:flex;align-items:center;justify-content:center;flex:none}
 .pcl-up .uic svg{width:20px;height:20px;stroke:var(--pcl-navy);stroke-width:1.7;fill:none}
@@ -4520,17 +4523,19 @@ async function cambiarPass(key) {
         <div class="pcl-card pcl-pad">
           <div class="pcl-sh" style="margin:0 0 16px"><h2>Datos fiscales (CFDI)</h2></div>
           <div class="pcl-fg">
-            <div class="pcl-field"><label>RFC</label><input placeholder="Tu RFC"/></div>
-            <div class="pcl-field"><label>Razón social</label><input placeholder="Razón social"/></div>
-            <div class="pcl-field"><label>Régimen fiscal</label><select><option>601 — General de Ley Personas Morales</option><option>612 — Personas Físicas con Act. Empresariales</option><option>626 — RESICO</option><option>603 — Personas Morales sin Fines de Lucro</option></select></div>
-            <div class="pcl-field"><label>Uso de CFDI</label><select><option>G03 — Gastos en general</option><option>G01 — Adquisición de mercancías</option><option>I04 — Equipo de cómputo</option></select></div>
-            <div class="pcl-field"><label>Código postal fiscal</label><input placeholder="CP"/></div>
-            <div class="pcl-field"><label>Correo para facturas</label><input placeholder="facturas@empresa.com"/></div>
+            <div class="pcl-field"><label>RFC</label><input id="pcl-fac-rfc" placeholder="Tu RFC" maxlength="13"/></div>
+            <div class="pcl-field"><label>Razón social</label><input id="pcl-fac-razon" placeholder="Razón social"/></div>
+            <div class="pcl-field"><label>Régimen fiscal</label><select id="pcl-fac-regimen"><option value="601">601 — General de Ley Personas Morales</option><option value="612">612 — Personas Físicas con Act. Empresariales</option><option value="626">626 — RESICO</option><option value="603">603 — Personas Morales sin Fines de Lucro</option></select></div>
+            <div class="pcl-field"><label>Uso de CFDI</label><select id="pcl-fac-uso"><option value="G03">G03 — Gastos en general</option><option value="G01">G01 — Adquisición de mercancías</option><option value="I04">I04 — Equipo de cómputo</option></select></div>
+            <div class="pcl-field"><label>Código postal fiscal</label><input id="pcl-fac-cp" placeholder="CP" maxlength="5"/></div>
+            <div class="pcl-field"><label>Correo para facturas</label><input id="pcl-fac-email" placeholder="facturas@empresa.com"/></div>
             <div class="pcl-field pcl-full"><label>Constancia de Situación Fiscal</label>
-              <div class="pcl-up"><div class="uic"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div><div><b>Subir constancia (PDF)</b><br><span>Arrástrala aquí o haz clic</span></div></div>
+              <input type="file" id="pcl-fac-file" accept="application/pdf,.pdf" style="display:none" onchange="pclUploadConstancia(this)"/>
+              <div class="pcl-up" id="pcl-fac-up" onclick="document.getElementById('pcl-fac-file').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="pclDropConstancia(event)"><div class="uic"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div><div><b id="pcl-fac-upt">Subir constancia (PDF)</b><br><span id="pcl-fac-ups">Arrástrala aquí o haz clic</span></div></div>
             </div>
           </div>
-          <div class="pcl-savebar"><button class="pcl-btn primary">Guardar datos</button></div>
+          <div class="pcl-fac-req" id="pcl-fac-req" style="display:none">⚠ Adjunta tu Constancia de Situación Fiscal (PDF) para poder guardar.</div>
+          <div class="pcl-savebar"><button class="pcl-btn primary" id="pcl-fac-save" onclick="pclSaveFiscal()">Guardar datos</button></div>
         </div>
         <div class="pcl-card pcl-pad">
           <div class="pcl-sh" style="margin:0 0 16px"><h2>Mis facturas</h2></div>
@@ -4611,6 +4616,74 @@ async function pclAddByCode(){
     }
   }catch(e){ alert('Hubo un error al buscar. Intenta de nuevo.'); }
   if(btn){ btn.disabled=false; btn.textContent='Agregar'; }
+}
+function _pclPartnerRef(){
+  var c = window.currentClientUser || {};
+  return { partner_id: (c.id != null ? c.id : 0), email: c.email || '' };
+}
+function _pclReadFileB64(file, cb){
+  var fr = new FileReader();
+  fr.onload = function(){ cb(String(fr.result).replace(/^data:[^,]*,/, '')); };
+  fr.onerror = function(){ cb(null); };
+  fr.readAsDataURL(file);
+}
+function pclDropConstancia(ev){
+  ev.preventDefault();
+  var up = document.getElementById('pcl-fac-up'); if(up) up.classList.remove('drag');
+  var f = ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0];
+  if (f) _pclHandleConstancia(f);
+}
+function pclUploadConstancia(input){
+  var f = input.files && input.files[0];
+  if (f) _pclHandleConstancia(f);
+}
+function _pclHandleConstancia(f){
+  if (f.type !== 'application/pdf' && !/\.pdf$/i.test(f.name)) { alert('La constancia debe ser un PDF.'); return; }
+  if (f.size > 5*1024*1024) { alert('El archivo es muy grande (máx. 5 MB).'); return; }
+  var t = document.getElementById('pcl-fac-upt'), s = document.getElementById('pcl-fac-ups');
+  if (t) t.textContent = 'Subiendo…'; if (s) s.textContent = f.name;
+  _pclReadFileB64(f, function(b64){
+    if (!b64) { if(t) t.textContent='Subir constancia (PDF)'; alert('No se pudo leer el archivo.'); return; }
+    var ref = _pclPartnerRef();
+    fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({action:'upload_constancia', partner_id:ref.partner_id, email:ref.email, filename:f.name, data:b64})})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if (d && d.ok) { window._pclConstanciaOk = true; var rq=document.getElementById('pcl-fac-req'); if(rq) rq.style.display='none'; var up2=document.getElementById('pcl-fac-up'); if(up2) up2.classList.remove('req-error'); if(t) t.textContent='\u2713 Constancia guardada'; if(s) s.textContent=f.name+' \u2014 guardada en Odoo'; }
+        else { window._pclConstanciaOk = false; if(t) t.textContent='Subir constancia (PDF)'; if(s) s.textContent='Arr\u00e1strala aqu\u00ed o haz clic'; alert('No se pudo guardar la constancia.'); }
+      })
+      .catch(function(){ if(t) t.textContent='Subir constancia (PDF)'; alert('Error de conexión al subir.'); });
+  });
+}
+function pclSaveFiscal(){
+  var btn = document.getElementById('pcl-fac-save');
+  function val(id){ var e=document.getElementById(id); return e ? e.value.trim() : ''; }
+  var payload = {
+    action:'save_fiscal_data',
+    rfc: val('pcl-fac-rfc'),
+    razon: val('pcl-fac-razon'),
+    regimen: val('pcl-fac-regimen'),
+    uso: val('pcl-fac-uso'),
+    cp: val('pcl-fac-cp'),
+    invoice_email: val('pcl-fac-email')
+  };
+  var ref = _pclPartnerRef();
+  payload.partner_id = ref.partner_id; payload.email = ref.email;
+  if (!payload.rfc) { alert('Escribe tu RFC.'); return; }
+  // Regla: la Constancia (PDF) es obligatoria para guardar
+  if (!window._pclConstanciaOk) {
+    var rq = document.getElementById('pcl-fac-req'); if (rq) rq.style.display='block';
+    var up = document.getElementById('pcl-fac-up'); if (up){ up.classList.add('req-error'); up.scrollIntoView({behavior:'smooth', block:'center'}); }
+    return;
+  }
+  if (btn){ btn.disabled=true; btn.textContent='Guardando…'; }
+  fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if (d && d.ok) { if(btn){ btn.textContent='✓ Datos guardados'; setTimeout(function(){ btn.disabled=false; btn.textContent='Guardar datos'; }, 2200); } }
+      else { if(btn){ btn.disabled=false; btn.textContent='Guardar datos'; } alert('No se pudieron guardar los datos.'); }
+    })
+    .catch(function(){ if(btn){ btn.disabled=false; btn.textContent='Guardar datos'; } alert('Error de conexión al guardar.'); });
 }
 function pclHydrate(){
   var c=window.currentClientUser||{};
