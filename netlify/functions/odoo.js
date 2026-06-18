@@ -1715,6 +1715,66 @@ exports.handler = async function(event, context) {
       return {statusCode:200, headers, body: JSON.stringify({found:true, product:p})};
     }
 
+    // ── GUARDAR DATOS FISCALES en el partner (alimenta timbrado) ──
+    if (action === 'save_fiscal_data') {
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+      let pid = parseInt(body.partner_id) || 0;
+      if (!pid && body.email) {
+        const r = await odooSearchRead(uid, 'res.partner',
+          `<value><array><data>${xmlStr('email')}<value><string>=ilike</string></value>${xmlStr(body.email)}</data></array></value>`, ['id'], 1);
+        const m = r.match(/<int>(\d+)<\/int>/); if (m) pid = parseInt(m[1]);
+      }
+      if (!pid) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'partner_no_encontrado'})};
+      const saved = [];
+      // Campos seguros (existen siempre): vat (RFC) y zip (CP fiscal)
+      const vals = [];
+      if (body.rfc)  { vals.push(`<member><name>vat</name>${xmlStr(String(body.rfc).toUpperCase())}</member>`); saved.push('rfc'); }
+      if (body.cp)   { vals.push(`<member><name>zip</name>${xmlStr(body.cp)}</member>`); saved.push('cp'); }
+      if (vals.length) {
+        await xmlrpc(uid, 'res.partner', 'write',
+          `<value><array><data><value><int>${pid}</int></value></data></array></value><value><struct>${vals.join('')}</struct></value>`);
+      }
+      // Mejor esfuerzo: régimen y uso CFDI (cada uno aislado por si el campo no existe)
+      async function tryWrite(field, value){
+        try {
+          await xmlrpc(uid, 'res.partner', 'write',
+            `<value><array><data><value><int>${pid}</int></value></data></array></value><value><struct><member><name>${field}</name>${xmlStr(value)}</member></struct></value>`);
+          return true;
+        } catch(e){ return false; }
+      }
+      if (body.regimen) { if (await tryWrite('l10n_mx_edi_fiscal_regime', body.regimen)) saved.push('regimen'); }
+      if (body.uso)     { if (await tryWrite('l10n_mx_edi_usage', body.uso)) saved.push('uso'); }
+      return {statusCode:200, headers, body: JSON.stringify({ok:true, partner_id:pid, saved})};
+    }
+
+    // ── SUBIR CONSTANCIA DE SITUACIÓN FISCAL (PDF) como adjunto del partner ──
+    if (action === 'upload_constancia') {
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+      let pid = parseInt(body.partner_id) || 0;
+      if (!pid && body.email) {
+        const r = await odooSearchRead(uid, 'res.partner',
+          `<value><array><data>${xmlStr('email')}<value><string>=ilike</string></value>${xmlStr(body.email)}</data></array></value>`, ['id'], 1);
+        const m = r.match(/<int>(\d+)<\/int>/); if (m) pid = parseInt(m[1]);
+      }
+      if (!pid) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'partner_no_encontrado'})};
+      const b64 = (body.data || '').replace(/^data:[^,]*,/, '');
+      if (!b64) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'archivo_vacio'})};
+      const fname = body.filename || 'Constancia.pdf';
+      const createText = await xmlrpc(uid, 'ir.attachment', 'create',
+        `<value><struct>` +
+        `<member><name>name</name>${xmlStr(fname)}</member>` +
+        `<member><name>type</name>${xmlStr('binary')}</member>` +
+        `<member><name>datas</name><value><string>${b64}</string></value></member>` +
+        `<member><name>res_model</name>${xmlStr('res.partner')}</member>` +
+        `<member><name>res_id</name><value><int>${pid}</int></value></member>` +
+        `<member><name>mimetype</name>${xmlStr('application/pdf')}</member>` +
+        `</struct></value>`);
+      const m = createText.match(/<value><int>(\d+)<\/int><\/value>/);
+      return {statusCode:200, headers, body: JSON.stringify({ok:true, partner_id:pid, attachment_id: m ? parseInt(m[1]) : null})};
+    }
+
     // ── SEARCH PRODUCTS ──
     if (action === 'search_products') {
       const uid = await odooAuth();
