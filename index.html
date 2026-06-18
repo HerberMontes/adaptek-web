@@ -1676,6 +1676,10 @@ window.clientLevel = function(){
 window.clientVerified = function(){
   return !!(window.currentClientUser && window.currentClientUser.verified);
 };
+// ¿Ve la CANTIDAD de piezas? Solo cuentas premium/distribuidor (a futuro). Normal: solo "En stock".
+window.clientSeesStockQty = function(){
+  return !!(window.currentClientUser && window.currentClientUser.premium);
+};
 
 window.fmtMXN = function(n){ return '$' + Number(n||0).toFixed(2); };
 
@@ -1831,7 +1835,7 @@ window.renderCart = function() {
     var statusBadge = '';
     if (window.clientVerified()) {
       if (item.status === 'stock') {
-        var pzas = item.qty_available > 0 ? ' · ' + item.qty_available + ' pzas' : '';
+        var pzas = (window.clientSeesStockQty() && item.qty_available > 0) ? ' · ' + item.qty_available + ' pzas' : '';
         statusBadge = '<span style="color:#1d7d34;font-size:12px;font-weight:500;">&#10003; En stock' + pzas + '</span>';
       } else if (item.status === 'fabricado') {
         statusBadge = '<span style="color:#9a6a00;font-size:12px;font-weight:500;">Fabricado bajo pedido</span>';
@@ -2147,11 +2151,26 @@ cartUpdateBadge();
   <!-- ── STEP 2: factura ── -->
   <div id="co-step-2" style="display:none;">
     <div class="co-card">
-      <div class="co-title">&#191;Requieres factura?</div>
-      <div class="co-sub">Si la necesitas, captura tus datos fiscales. Puedes facturar despu&#233;s si lo prefieres.</div>
-      <div class="co-toggle">
-        <button id="co-fact-si" onclick="coSetFactura(true)">S&#237;, facturar</button>
-        <button id="co-fact-no" onclick="coSetFactura(false)">No, sin factura</button>
+      <div id="co-fact-ask">
+        <div class="co-title">&#191;Requieres factura?</div>
+        <div class="co-sub">Si la necesitas, captura tus datos fiscales. Puedes facturar despu&#233;s si lo prefieres.</div>
+        <div class="co-toggle">
+          <button id="co-fact-si" onclick="coSetFactura(true)">S&#237;, facturar</button>
+          <button id="co-fact-no" onclick="coSetFactura(false)">No, sin factura</button>
+        </div>
+      </div>
+
+      <!-- Confirmación: cuando el cliente ya tiene datos fiscales en su perfil -->
+      <div id="co-fiscal-confirm" style="display:none;background:#F2FBF4;border:1px solid #BEE7C8;border-radius:12px;padding:18px;">
+        <div style="font-weight:600;color:#065F46;font-size:14px;margin-bottom:10px;">Tu pedido se facturará automáticamente a:</div>
+        <div style="font-size:16px;font-weight:700;color:#001F5B;" id="co-confirm-razon">&mdash;</div>
+        <div style="font-size:13px;color:#5A6675;margin-top:3px;">RFC: <span id="co-confirm-rfc">&mdash;</span></div>
+        <div style="font-size:12.5px;color:#1d7d34;margin-top:8px;">&#10003; Constancia de Situación Fiscal en archivo</div>
+        <label style="display:flex;align-items:center;gap:9px;cursor:pointer;font-size:13.5px;color:#001F5B;margin-top:14px;">
+          <input type="checkbox" id="co-confirm-fact" checked style="width:16px;height:16px;accent-color:#001F5B;"/>
+          Facturar este pedido
+        </label>
+        <a onclick="coEditFiscal()" style="display:inline-block;margin-top:10px;color:#0071e3;font-size:13px;cursor:pointer;">Usar otros datos fiscales</a>
       </div>
 
       <div id="co-fact-form" style="display:none;background:#FAFBFF;border-radius:8px;padding:14px;">
@@ -2437,6 +2456,9 @@ window.coSetFactura = function(si, silent){
 // Prellenar datos fiscales desde el perfil (Odoo) cuando hay sesión
 window.coLoadFiscalProfile = function(){
   if (!window.currentClientUser) return;
+  window._coFiscalComplete = false;
+  var ask0=document.getElementById('co-fact-ask'); if(ask0) ask0.style.display='';
+  var conf0=document.getElementById('co-fiscal-confirm'); if(conf0) conf0.style.display='none';
   var extra = document.getElementById('co-fiscal-extra'); if (extra) extra.style.display = 'block';
   var ref = window.currentClientUser || {};
   fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},
@@ -2456,9 +2478,25 @@ window.coLoadFiscalProfile = function(){
         if(t) t.textContent='\u2713 Constancia en archivo'; if(s) s.textContent='Ya la tienes guardada en tu perfil';
         var box=document.getElementById('co-constancia-box'); if(box){ box.style.borderColor='#1d7d34'; box.style.background='#F2FBF4'; }
       }
+      // Si los datos están COMPLETOS (RFC + constancia) -> mostrar confirmación, ocultar pregunta y formulario
+      if (d.vat && d.has_constancia){
+        window._coFiscalComplete = true;
+        window.CHECKOUT.facturar = true;
+        var ask=document.getElementById('co-fact-ask'); if(ask) ask.style.display='none';
+        var form=document.getElementById('co-fact-form'); if(form) form.style.display='none';
+        var conf=document.getElementById('co-fiscal-confirm'); if(conf) conf.style.display='block';
+        var cr=document.getElementById('co-confirm-razon'); if(cr) cr.textContent = d.name || '(tu razón social)';
+        var cf=document.getElementById('co-confirm-rfc'); if(cf) cf.textContent = (d.vat||'').toUpperCase();
+      }
     }).catch(function(){});
 };
 
+window.coEditFiscal = function(){
+  window._coFiscalComplete = false;
+  var conf=document.getElementById('co-fiscal-confirm'); if(conf) conf.style.display='none';
+  var ask=document.getElementById('co-fact-ask'); if(ask) ask.style.display='';
+  if(typeof coSetFactura==='function') coSetFactura(true);
+};
 window.coConstanciaPick = function(input){
   var f = input.files && input.files[0]; if(!f) return;
   if (f.type!=='application/pdf' && !/\.pdf$/i.test(f.name)){ alert('La constancia debe ser un PDF.'); return; }
@@ -2581,6 +2619,25 @@ window.coNext = function(from){
     coSave(); coGoStep(2); return;
   }
   if (from === 2) {
+    // Cliente con datos completos: solo confirmar
+    if (window._coFiscalComplete) {
+      var doFact = document.getElementById('co-confirm-fact');
+      if (doFact && doFact.checked) {
+        window.CHECKOUT.facturar = true;
+        window.CHECKOUT.factura = {
+          rfc: (document.getElementById('co-rfc').value||'').trim().toUpperCase(),
+          razon: (document.getElementById('co-razon').value||'').trim(),
+          regimen: document.getElementById('co-regimen').value,
+          uso: document.getElementById('co-uso').value,
+          cp: (document.getElementById('co-cpfiscal').value||'').trim()
+        };
+      } else {
+        window.CHECKOUT.facturar = false;
+        window.CHECKOUT.factura = {};
+      }
+      coShowErr('co-err-2', false);
+      coSave(); coGoStep(3); return;
+    }
     if (window.CHECKOUT.facturar === null || window.CHECKOUT.facturar === undefined) {
       coShowErr('co-err-2', true); return;
     }
@@ -2684,7 +2741,7 @@ function coRenderSummary(){
     if (!window.clientVerified()) {
       avail = '<span style="color:#86868b;">Disponibilidad con cuenta verificada</span>';
     } else if (p.status === 'stock') {
-      var pzas = (p.qty_available > 0) ? (' (' + p.qty_available + ' pzas)') : '';
+      var pzas = (window.clientSeesStockQty() && p.qty_available > 0) ? (' (' + p.qty_available + ' pzas)') : '';
       avail = '<span style="color:#065F46;">\u2713 En stock' + pzas + '</span>';
     } else if (p.status === 'fabricado') {
       avail = '<span style="color:#856404;">\u2699 Fabricado ' + lt.min + '\u2013' + lt.max + ' d\u00edas h\u00e1biles</span>';
@@ -4637,11 +4694,53 @@ async function cambiarPass(key) {
         <div class="pcl-card pcl-pad">
           <div class="pcl-sh" style="margin:0 0 16px"><h2>Datos fiscales (CFDI)</h2></div>
           <div class="pcl-fg">
-            <div class="pcl-field"><label>RFC</label><input id="pcl-fac-rfc" placeholder="Tu RFC" maxlength="13"/></div>
+            <div class="pcl-field"><label>RFC</label><input id="pcl-fac-rfc" placeholder="Tu RFC" maxlength="13" style="text-transform:uppercase"/></div>
             <div class="pcl-field"><label>Razón social</label><input id="pcl-fac-razon" placeholder="Razón social"/></div>
-            <div class="pcl-field"><label>Régimen fiscal</label><select id="pcl-fac-regimen"><option value="601">601 — General de Ley Personas Morales</option><option value="612">612 — Personas Físicas con Act. Empresariales</option><option value="626">626 — RESICO</option><option value="603">603 — Personas Morales sin Fines de Lucro</option></select></div>
-            <div class="pcl-field"><label>Uso de CFDI</label><select id="pcl-fac-uso"><option value="G03">G03 — Gastos en general</option><option value="G01">G01 — Adquisición de mercancías</option><option value="I04">I04 — Equipo de cómputo</option></select></div>
-            <div class="pcl-field"><label>Código postal fiscal</label><input id="pcl-fac-cp" placeholder="CP" maxlength="5"/></div>
+            <div class="pcl-field"><label>Régimen fiscal</label><select id="pcl-fac-regimen">
+              <option value="">-- Selecciona --</option>
+              <optgroup label="Personas Morales">
+                <option value="601">601 - General de Ley Personas Morales</option>
+                <option value="603">603 - Personas Morales con Fines no Lucrativos</option>
+                <option value="620">620 - Sociedades Cooperativas de Producción</option>
+                <option value="622">622 - Agrícolas, Ganaderas, Silvícolas y Pesqueras</option>
+                <option value="623">623 - Opcional para Grupos de Sociedades</option>
+                <option value="624">624 - Coordinados</option>
+                <option value="626">626 - RESICO</option>
+              </optgroup>
+              <optgroup label="Personas Físicas">
+                <option value="605">605 - Sueldos y Salarios e Ingresos Asimilados</option>
+                <option value="606">606 - Arrendamiento</option>
+                <option value="607">607 - Enajenación o Adquisición de Bienes</option>
+                <option value="608">608 - Demás ingresos</option>
+                <option value="611">611 - Ingresos por Dividendos</option>
+                <option value="612">612 - Actividades Empresariales y Profesionales</option>
+                <option value="614">614 - Ingresos por intereses</option>
+                <option value="615">615 - Ingresos por obtención de premios</option>
+                <option value="616">616 - Sin obligaciones fiscales</option>
+                <option value="621">621 - Incorporación Fiscal</option>
+                <option value="625">625 - Actividades con plataformas tecnológicas</option>
+                <option value="626">626 - RESICO</option>
+              </optgroup>
+            </select></div>
+            <div class="pcl-field"><label>Uso de CFDI</label><select id="pcl-fac-uso">
+              <option value="">-- Selecciona --</option>
+              <option value="G01">G01 - Adquisición de mercancías</option>
+              <option value="G02">G02 - Devoluciones, descuentos o bonificaciones</option>
+              <option value="G03">G03 - Gastos en general</option>
+              <option value="I01">I01 - Construcciones</option>
+              <option value="I02">I02 - Mobiliario y equipo de oficina</option>
+              <option value="I03">I03 - Equipo de transporte</option>
+              <option value="I04">I04 - Equipo de cómputo y accesorios</option>
+              <option value="I08">I08 - Otra maquinaria y equipo</option>
+              <option value="P01">P01 - Por definir</option>
+              <option value="S01">S01 - Sin efectos fiscales</option>
+            </select></div>
+            <div class="pcl-field"><label>Código postal fiscal</label><input id="pcl-fac-cp" placeholder="CP" maxlength="5" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'');if(this.value.length===5)pclFacCP(this.value);"/></div>
+            <div class="pcl-field"><label>Calle</label><input id="pcl-fac-calle" placeholder="Calle"/></div>
+            <div class="pcl-field"><label>Número (ext / int)</label><input id="pcl-fac-num" placeholder="Ext / Int"/></div>
+            <div class="pcl-field"><label>Colonia</label><input id="pcl-fac-colonia" list="pcl-fac-colonia-list" placeholder="Colonia"/><datalist id="pcl-fac-colonia-list"></datalist></div>
+            <div class="pcl-field"><label>Ciudad / Municipio</label><input id="pcl-fac-ciudad" placeholder="Ciudad"/></div>
+            <div class="pcl-field"><label>Estado</label><input id="pcl-fac-estado" placeholder="Estado"/></div>
             <div class="pcl-field"><label>Correo para facturas</label><input id="pcl-fac-email" placeholder="facturas@empresa.com"/></div>
             <div class="pcl-field pcl-full"><label>Constancia de Situación Fiscal</label>
               <input type="file" id="pcl-fac-file" accept="application/pdf,.pdf" style="display:none" onchange="pclUploadConstancia(this)"/>
@@ -4769,6 +4868,19 @@ function _pclHandleConstancia(f){
       .catch(function(){ if(t) t.textContent='Subir constancia (PDF)'; alert('Error de conexión al subir.'); });
   });
 }
+function pclFacCP(cp){
+  if(!cp || cp.length!==5) return;
+  fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'buscar_cp',cp:cp})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d && d.success){
+        var dl=document.getElementById('pcl-fac-colonia-list');
+        if(dl && d.colonias){ dl.innerHTML=d.colonias.map(function(c){return '<option value="'+String(c).replace(/"/g,'')+'"></option>';}).join(''); }
+        var ci=document.getElementById('pcl-fac-ciudad'); if(ci && !ci.value) ci.value=d.municipio||d.ciudad||'';
+        var es=document.getElementById('pcl-fac-estado'); if(es && !es.value) es.value=d.estado||'';
+      }
+    }).catch(function(){});
+}
 function pclSaveFiscal(){
   var btn = document.getElementById('pcl-fac-save');
   function val(id){ var e=document.getElementById(id); return e ? e.value.trim() : ''; }
@@ -4779,6 +4891,11 @@ function pclSaveFiscal(){
     regimen: val('pcl-fac-regimen'),
     uso: val('pcl-fac-uso'),
     cp: val('pcl-fac-cp'),
+    calle: val('pcl-fac-calle'),
+    num: val('pcl-fac-num'),
+    colonia: val('pcl-fac-colonia'),
+    ciudad: val('pcl-fac-ciudad'),
+    estado: val('pcl-fac-estado'),
     invoice_email: val('pcl-fac-email')
   };
   var ref = _pclPartnerRef();
@@ -5347,7 +5464,7 @@ async function crossSearch(val) {
     var priceTxt = prod.price>0 ? ('$'+Number(prod.price).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2})+' MXN') : 'Precio bajo cotización';
     var stockTxt = '';
     if(window.clientVerified && window.clientVerified()){
-      stockTxt = prod.qty_available>0 ? ('   \u00b7   \u2713 '+prod.qty_available+' en stock') : ('   \u00b7   Fabricado bajo pedido');
+      stockTxt = prod.qty_available>0 ? ('   \u00b7   \u2713 En stock' + (window.clientSeesStockQty()? (' \u00b7 '+prod.qty_available+' pzas'):'')) : ('   \u00b7   Fabricado bajo pedido');
     }
     document.getElementById('cr-stockprice').textContent = priceTxt + stockTxt;
     if(specsEl) specsEl.innerHTML = (local && local.specs) ? local.specs.map(function(s){return '<span class="cross-spec">'+s+'</span>';}).join('') : '';
@@ -5828,7 +5945,7 @@ function renderResultPanel(p, data, params){
     var dispLine;
     if (verStock) {
       dispLine = inStock
-        ? '<span style="display:inline-flex;align-items:center;gap:7px;font-size:15px;color:#1d7d34;font-weight:500;"><span style="width:8px;height:8px;border-radius:50%;background:#1d7d34;display:inline-block;"></span>Disponible · '+prod.qty_available+' en stock</span>'
+        ? '<span style="display:inline-flex;align-items:center;gap:7px;font-size:15px;color:#1d7d34;font-weight:500;"><span style="width:8px;height:8px;border-radius:50%;background:#1d7d34;display:inline-block;"></span>En stock'+(window.clientSeesStockQty()? (' \u00b7 '+prod.qty_available+' pzas'):'')+'</span>'
         : '<span style="display:inline-flex;align-items:center;gap:7px;font-size:15px;color:#9a6a00;font-weight:500;"><span style="width:8px;height:8px;border-radius:50%;background:#e6a700;display:inline-block;"></span>Fabricado bajo pedido</span>';
     } else {
       dispLine = '<span style="display:inline-flex;align-items:center;gap:7px;font-size:15px;color:#86868b;font-weight:500;"><span style="width:8px;height:8px;border-radius:50%;background:#c7c7cc;display:inline-block;"></span>Disponibilidad con cuenta verificada</span>';
