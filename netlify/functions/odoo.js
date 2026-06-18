@@ -1639,25 +1639,35 @@ exports.handler = async function(event, context) {
       })};
     }
 
-    // ── SEMBRAR STOCK DE PRUEBA: stock aleatorio en N productos (default 5) ──
+    // ── SEMBRAR PRODUCTOS DE PRUEBA: stock aleatorio (+ precio opcional) ──
     if (action === 'seed_test_stock') {
       const uid = await odooAuth();
       if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
-      const count = Math.min(parseInt(body.count) || 5, 20);
-      // 1) ubicación WH/Stock
+      const count = Math.min(parseInt(body.count) || 5, 50);
+      const price = (body.price !== undefined && body.price !== null) ? Number(body.price) : null;
+      // 1) ubicación de stock: usar lot_stock_id del almacén (robusto, sin depender del nombre)
       let locationId = 8;
       try {
-        const locResp = await odooSearchRead(uid, 'stock.location',
-          `<value><array><data>${xmlStr('complete_name')}<value><string>=</string></value>${xmlStr('WH/Stock')}</data></array></value>`, ['id'], 1);
-        const lm = locResp.match(/<int>(\d+)<\/int>/);
-        if (lm) locationId = parseInt(lm[1]);
+        const whResp = await odooSearchRead(uid, 'stock.warehouse', '', ['id','lot_stock_id'], 1);
+        const m = whResp.match(/<name>lot_stock_id<\/name>\s*<value>\s*<array>\s*<data>\s*<value>\s*<int>(\d+)<\/int>/);
+        if (m) locationId = parseInt(m[1]);
       } catch(_){}
-      // 2) productos: usar codes dados o tomar N vendibles
+      // 1b) respaldo: primera ubicación interna
+      if (locationId === 8) {
+        try {
+          const locResp = await odooSearchRead(uid, 'stock.location',
+            `<value><array><data>${xmlStr('usage')}<value><string>=</string></value>${xmlStr('internal')}</data></array></value>`, ['id','complete_name'], 1);
+          const lm = locResp.match(/<int>(\d+)<\/int>/);
+          if (lm) locationId = parseInt(lm[1]);
+        } catch(_){}
+      }
+      // 2) productos: usar codes dados (todos) o tomar N vendibles
       let prods = [];
       if (Array.isArray(body.codes) && body.codes.length) {
-        for (const code of body.codes.slice(0, count)) {
+        for (const code of body.codes.slice(0, 50)) {
           const p = await lookupProductByCode(uid, code);
           if (p && p.id) prods.push({ id:p.id, name:p.name, code:p.at_code });
+          else prods.push({ id:null, name:'(no encontrado)', code, notFound:true });
         }
       } else {
         const text = await odooSearchRead(uid, 'product.product',
@@ -1669,11 +1679,20 @@ exports.handler = async function(event, context) {
           if (id>0) prods.push({ id, name: xmlExtractField(st,'name'), code: xmlExtractField(st,'default_code') });
         }
       }
-      // 3) stock aleatorio (10..200) vía stock.quant
+      // 3) stock aleatorio (10..200) + precio opcional
       const result = [];
       for (const p of prods) {
+        if (!p.id) { result.push({ code:p.code, name:p.name, qty:0, notFound:true }); continue; }
         const qty = Math.floor(Math.random()*191) + 10;
+        let priceSet = null;
         try {
+          // precio
+          if (price !== null && !isNaN(price)) {
+            await xmlrpc(uid, 'product.product', 'write',
+              `<value><array><data><value><int>${p.id}</int></value></data></array></value><value><struct><member><name>list_price</name><value><double>${price}</double></value></member></struct></value>`);
+            priceSet = price;
+          }
+          // stock
           const createText = await xmlrpc(uid, 'stock.quant', 'create',
             `<value><struct><member><name>product_id</name><value><int>${p.id}</int></value></member><member><name>location_id</name><value><int>${locationId}</int></value></member><member><name>inventory_quantity</name><value><double>${qty}</double></value></member></struct></value>`);
           const qm = createText.match(/<value><int>(\d+)<\/int><\/value>/);
@@ -1681,10 +1700,10 @@ exports.handler = async function(event, context) {
             await xmlrpc(uid, 'stock.quant', 'action_apply_inventory',
               `<value><array><data><value><int>${parseInt(qm[1])}</int></value></data></array></value>`);
           }
-          result.push({ code:p.code, name:p.name, qty });
+          result.push({ code:p.code, name:p.name, qty, price:priceSet });
         } catch(e){ result.push({ code:p.code, name:p.name, qty:0, error:true }); }
       }
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, location_id:locationId, products:result })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, location_id:locationId, price_set:price, products:result })};
     }
 
     // ── SEARCH PRODUCTS ──
