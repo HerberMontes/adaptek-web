@@ -1476,6 +1476,7 @@
 .cart-pagetitle{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:44px;line-height:1.05;color:#001F5B;letter-spacing:.5px;margin:0 0 6px;}
 .cart-pagesub{font-size:17px;color:#86868b;margin:0 0 38px;font-weight:400;}
 .cart-grid{display:grid;grid-template-columns:1fr 340px;gap:48px;align-items:start;}
+.cart-grid.cart-grid--empty{grid-template-columns:1fr;}
 
 /* Item: separado por líneas finísimas, sin tarjetas pesadas */
 .cart-item{background:transparent;border:none;border-bottom:1px solid #e8e8ed;border-radius:0;box-shadow:none;padding:26px 4px;margin:0;display:flex;align-items:center;gap:22px;}
@@ -1764,17 +1765,20 @@ window.renderCart = function() {
   var empty = document.getElementById('cart-empty');
   var summary = document.getElementById('cart-summary-panel');
   var subtitle = document.getElementById('cart-subtitle');
+  var grid = document.querySelector('.cart-grid');
 
   if (!window.CART || window.CART.length === 0) {
     list.innerHTML = '';
     empty.style.display = 'block';
     summary.style.display = 'none';
+    if (grid) grid.classList.add('cart-grid--empty');
     subtitle.textContent = '0 productos';
     return;
   }
 
   empty.style.display = 'none';
   summary.style.display = 'block';
+  if (grid) grid.classList.remove('cart-grid--empty');
 
   var totalItems = window.CART.reduce(function(s,p){ return s + (p.qty||1); }, 0);
   subtitle.textContent = totalItems + ' producto' + (totalItems !== 1 ? 's' : '');
