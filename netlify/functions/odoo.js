@@ -245,6 +245,20 @@ async function crearOrdenOdoo(uid, orden, estado) {
     const partnerId = await findOrCreatePartner(uid, co.contacto || {});
     if (!partnerId) return { ok:false, error:'No se pudo crear/recuperar el cliente' };
 
+    // Datos fiscales para timbrado en Odoo: guarda RFC (campo estándar vat) y CP.
+    // NO se toca 'comment' (ahí vive el estado de gerencia). Régimen/uso CFDI se
+    // escriben aparte una vez confirmados los nombres de campo (debug_fiscal_fields).
+    try {
+      const fac = co.factura || {};
+      const rfc = String(fac.rfc || '').trim().toUpperCase();
+      if (rfc) {
+        let fm = `<member><name>vat</name>${xmlStr(rfc)}</member>`;
+        if (fac.cp) fm += `<member><name>zip</name>${xmlStr(String(fac.cp))}</member>`;
+        await xmlrpc(uid, 'res.partner', 'write',
+          `<value><array><data><value><int>${partnerId}</int></value></data></array></value><value><struct>${fm}</struct></value>`);
+      }
+    } catch(_){ /* no bloquear la orden si falla el fiscal */ }
+
     // Construir líneas con precio real de Odoo
     const lineXmls = [];
     let total = 0;
@@ -1905,6 +1919,83 @@ exports.handler = async function(event, context) {
         odoo_id: parseInt(idMatch[1]),
         odoo_name: nameMatch ? nameMatch[1].trim() : ''
       })};
+    }
+
+    // ── LISTAR PEDIDOS DE UN CLIENTE (para "Mis pedidos" del portal) ──
+    if (action === 'get_client_orders') {
+      const email = (body.email || '').trim();
+      const pidIn = parseInt(body.partner_id) || 0;
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+      let pid = pidIn;
+      if (!pid && email) {
+        const pf = await xmlrpc(uid, 'res.partner', 'search',
+          `<value><array><data><value><array><data>${xmlStr('email')}<value><string>=ilike</string></value>${xmlStr(email)}</data></array></value></data></array></value>`);
+        const pm = pf.match(/<int>(\d+)<\/int>/);
+        pid = pm ? parseInt(pm[1]) : 0;
+      }
+      if (!pid) return {statusCode:200, headers, body: JSON.stringify({ok:true, orders:[]})};
+      const domain = `<value><array><data>${xmlStr('partner_id')}<value><string>=</string></value>${xmlInt(pid)}</data></array></value>`;
+      const text = await odooSearchRead(uid, 'sale.order', domain, ['name','client_order_ref','date_order','state','amount_total','order_line'], 50);
+      const structs = text.match(/<struct>[\s\S]*?<\/struct>/g) || [];
+      const orders = [];
+      for (const st of structs) {
+        let items = 0;
+        const olm = st.match(/<name>\s*order_line\s*<\/name>\s*<value>\s*<array>\s*<data>([\s\S]*?)<\/data>/);
+        if (olm) items = (olm[1].match(/<int>/g) || []).length;
+        orders.push({
+          name: xmlExtractField(st, 'name'),
+          folio: xmlExtractField(st, 'client_order_ref'),
+          date: xmlExtractField(st, 'date_order'),
+          state: xmlExtractField(st, 'state'),
+          total: parseFloat(xmlExtractField(st, 'amount_total')) || 0,
+          items: items
+        });
+      }
+      orders.sort((a,b)=> (b.date||'').localeCompare(a.date||''));
+      return {statusCode:200, headers, body: JSON.stringify({ok:true, orders})};
+    }
+
+    // ── PRECIOS DE PRUEBA: poner TODOS los productos a un precio (default $1) ──
+    //  ⚠ Sobrescribe el list_price real. Solo para pruebas de pago.
+    if (action === 'bulk_set_price') {
+      const price = (body.price != null) ? parseFloat(body.price) : 1.0;
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+      const idsText = await xmlrpc(uid, 'product.template', 'search',
+        `<value><array><data><value><array><data>${xmlStr('sale_ok')}<value><string>=</string></value><value><boolean>1</boolean></value></data></array></value></data></array></value>`);
+      const ids = (idsText.match(/<int>(\d+)<\/int>/g) || []).map(s => parseInt(s.replace(/\D/g,'')));
+      if (!ids.length) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'No se encontraron productos', updated:0})};
+      let updated = 0;
+      for (let i = 0; i < ids.length; i += 200) {
+        const batch = ids.slice(i, i + 200);
+        const idsXml = batch.map(id => `<value><int>${id}</int></value>`).join('');
+        const valXml = `<value><struct><member><name>list_price</name><value><double>${price.toFixed(2)}</double></value></member></struct></value>`;
+        try {
+          await xmlrpc(uid, 'product.template', 'write',
+            `<value><array><data>${idsXml}</data></array></value>${valXml}`);
+          updated += batch.length;
+        } catch(e){ /* sigue */ }
+      }
+      return {statusCode:200, headers, body: JSON.stringify({ok:true, updated, price})};
+    }
+
+    // ── DIAGNÓSTICO: campos fiscales (CFDI/MX) disponibles en tu Odoo ──
+    if (action === 'debug_fiscal_fields') {
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+      const model = body.model || 'res.partner';
+      const domain = `<value><array><data>${xmlStr('model')}<value><string>=</string></value>${xmlStr(model)}</data></array></value>`;
+      const text = await odooSearchRead(uid, 'ir.model.fields', domain, ['name','field_description','ttype'], 400);
+      const structs = text.match(/<struct>[\s\S]*?<\/struct>/g) || [];
+      const fields = [];
+      for (const st of structs) {
+        const nm = xmlExtractField(st, 'name');
+        if (/l10n_mx|vat|fiscal|cfdi|regime|usage/i.test(nm)) {
+          fields.push({ name: nm, label: xmlExtractField(st, 'field_description'), type: xmlExtractField(st, 'ttype') });
+        }
+      }
+      return {statusCode:200, headers, body: JSON.stringify({ok:true, model, fields})};
     }
 
     // ═══════════════════════════════════════════════════════════════
