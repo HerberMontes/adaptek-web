@@ -4179,6 +4179,18 @@ async function cambiarPass(key) {
 .pcl-tbtn{display:flex;align-items:center;gap:7px;padding:9px 15px;border-radius:11px;background:#fff;border:1px solid var(--pcl-line);color:var(--pcl-muted);font-size:12.5px;font-weight:600;cursor:pointer;font-family:var(--pcl-body);transition:all .15s}
 .pcl-tbtn:hover{border-color:#cfdbec;color:var(--pcl-navy)}
 .pcl-tbtn svg{width:15px;height:15px;stroke:currentColor;stroke-width:1.8;fill:none}
+.pcl-tprof-click{cursor:pointer;border-radius:14px;padding:6px 10px 6px 6px;margin:-6px;transition:background .15s}
+.pcl-tprof-click:hover{background:#fff;box-shadow:var(--pcl-sh)}
+.pcl-tchev{width:16px;height:16px;stroke:var(--pcl-muted2);stroke-width:2;fill:none;margin-left:2px;flex:none}
+.pcl-tbtn.primary{background:var(--pcl-navy);color:#fff;border-color:var(--pcl-navy)}
+.pcl-tbtn.primary:hover{background:#0a2a6e;color:#fff}
+.pcl-tbtn.primary svg{stroke:#fff}
+.pcl-back{display:inline-flex;align-items:center;gap:7px;padding:9px 15px;border-radius:11px;background:#fff;border:1px solid var(--pcl-line);color:var(--pcl-muted);font-size:12.5px;font-weight:600;cursor:pointer;font-family:var(--pcl-body);transition:all .15s}
+.pcl-back:hover{border-color:#cfdbec;color:var(--pcl-navy)}
+.pcl-back svg{width:15px;height:15px;stroke:currentColor;stroke-width:1.8;fill:none}
+.pcl-pftitle{margin:8px 0 18px}
+.pcl-pftitle h1{font-family:var(--pcl-display);font-size:26px;font-weight:700;letter-spacing:-.5px;color:var(--pcl-ink)}
+.pcl-pftitle p{color:var(--pcl-muted);font-size:13.5px;margin-top:4px}
 
 /* ── Barra de pestañas sticky (estilo Apple) ── */
 .pcl-anchnav{position:sticky;top:60px;z-index:50;background:rgba(245,247,250,.82);backdrop-filter:saturate(180%) blur(14px);-webkit-backdrop-filter:saturate(180%) blur(14px);border-bottom:1px solid var(--pcl-line);margin:0 -22px 26px;padding:0 22px}
@@ -4331,16 +4343,19 @@ async function cambiarPass(key) {
 </style>
 
 <div class="pcl-wrap">
+  <div id="pcl-dash">
   <!-- Encabezado de perfil -->
   <header class="pcl-topbar">
-    <div class="pcl-tprof">
+    <div class="pcl-tprof pcl-tprof-click" onclick="pclOpenPerfil()" title="Ver mi cuenta">
       <div class="pcl-tavatar" id="pcl-avatar">CL</div>
       <div class="pcl-tinfo">
         <div class="nm" id="pcl-name">Cliente</div>
         <div class="co" id="pcl-company">Adaptekk</div>
       </div>
+      <svg class="pcl-tchev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
     </div>
     <div class="pcl-tacts">
+      <button class="pcl-tbtn primary" onclick="pclOpenPerfil()"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Mi cuenta</button>
       <button class="pcl-tbtn" onclick="showPage('home')"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Tienda</button>
       <button class="pcl-tbtn" onclick="portalLogout()"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Salir</button>
     </div>
@@ -4352,9 +4367,6 @@ async function cambiarPass(key) {
       <a class="pcl-pill active" data-pview="resumen" onclick="pclGo('resumen');return false;">Resumen</a>
       <a class="pcl-pill" data-pview="pedidos" onclick="pclGo('pedidos');return false;">Mis pedidos <span class="ct" id="pcl-badge-pedidos" style="display:none">0</span></a>
       <a class="pcl-pill" data-pview="cotizaciones" onclick="pclGo('cotizaciones');return false;">Cotizaciones <span class="ct" id="pcl-badge-cotiz" style="display:none">0</span></a>
-      <a class="pcl-pill" data-pview="facturacion" onclick="pclGo('facturacion');return false;">Facturación</a>
-      <a class="pcl-pill" data-pview="direcciones" onclick="pclGo('direcciones');return false;">Direcciones</a>
-      <a class="pcl-pill" data-pview="cuenta" onclick="pclGo('cuenta');return false;">Mi cuenta</a>
     </div>
   </nav>
 
@@ -4426,6 +4438,48 @@ async function cambiarPass(key) {
       <div id="pcl-quotes-empty" style="display:none"></div>
     </section>
 
+
+  </div>
+  </div>
+  <!-- ===== PÁGINA MI CUENTA (perfil) ===== -->
+  <div id="pcl-perfil" style="display:none">
+    <header class="pcl-topbar">
+      <button class="pcl-back" onclick="pclClosePerfil()"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Volver al portal</button>
+      <div class="pcl-tacts"><button class="pcl-tbtn" onclick="portalLogout()"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Salir</button></div>
+    </header>
+    <div class="pcl-pftitle"><h1>Mi cuenta</h1><p>Tus datos, facturación, direcciones y contraseña.</p></div>
+    <nav class="pcl-anchnav">
+      <div class="pcl-anchinner">
+        <a class="pcl-pill active" data-pview="cuenta" onclick="pclGo('cuenta');return false;">Perfil</a>
+        <a class="pcl-pill" data-pview="facturacion" onclick="pclGo('facturacion');return false;">Datos fiscales</a>
+        <a class="pcl-pill" data-pview="direcciones" onclick="pclGo('direcciones');return false;">Direcciones</a>
+      </div>
+    </nav>
+    <div class="pcl-main">
+    <!-- MI CUENTA -->
+    <section class="pcl-view" id="pcl-v-cuenta">
+      <div class="pcl-two">
+        <div class="pcl-card pcl-pad">
+          <div class="pcl-sh" style="margin:0 0 16px"><h2>Datos de la cuenta</h2></div>
+          <div class="pcl-fg">
+            <div class="pcl-field"><label>Nombre</label><input id="pcl-acc-name"/></div>
+            <div class="pcl-field"><label>Empresa</label><input id="pcl-acc-company"/></div>
+            <div class="pcl-field"><label>Correo</label><input id="pcl-acc-email"/></div>
+            <div class="pcl-field"><label>WhatsApp / Teléfono</label><input placeholder="Tu teléfono"/></div>
+          </div>
+          <div class="pcl-savebar"><button class="pcl-btn primary">Guardar cambios</button></div>
+        </div>
+        <div class="pcl-card pcl-pad">
+          <div class="pcl-sh" style="margin:0 0 16px"><h2>Seguridad</h2></div>
+          <div class="pcl-fg" style="grid-template-columns:1fr">
+            <div class="pcl-field"><label>Contraseña actual</label><input type="password" placeholder="••••••••"/></div>
+            <div class="pcl-field"><label>Nueva contraseña</label><input type="password" placeholder="Mínimo 6 caracteres"/></div>
+          </div>
+          <div class="pcl-savebar"><button class="pcl-btn primary">Cambiar contraseña</button></div>
+        </div>
+      </div>
+    </section>
+
     <!-- FACTURACIÓN -->
     <section class="pcl-view" id="pcl-v-facturacion">
       <div class="pcl-two">
@@ -4468,31 +4522,7 @@ async function cambiarPass(key) {
         <div class="pcl-aadd"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><b>Agregar dirección</b></div>
       </div>
     </section>
-
-    <!-- MI CUENTA -->
-    <section class="pcl-view" id="pcl-v-cuenta">
-      <div class="pcl-two">
-        <div class="pcl-card pcl-pad">
-          <div class="pcl-sh" style="margin:0 0 16px"><h2>Datos de la cuenta</h2></div>
-          <div class="pcl-fg">
-            <div class="pcl-field"><label>Nombre</label><input id="pcl-acc-name"/></div>
-            <div class="pcl-field"><label>Empresa</label><input id="pcl-acc-company"/></div>
-            <div class="pcl-field"><label>Correo</label><input id="pcl-acc-email"/></div>
-            <div class="pcl-field"><label>WhatsApp / Teléfono</label><input placeholder="Tu teléfono"/></div>
-          </div>
-          <div class="pcl-savebar"><button class="pcl-btn primary">Guardar cambios</button></div>
-        </div>
-        <div class="pcl-card pcl-pad">
-          <div class="pcl-sh" style="margin:0 0 16px"><h2>Seguridad</h2></div>
-          <div class="pcl-fg" style="grid-template-columns:1fr">
-            <div class="pcl-field"><label>Contraseña actual</label><input type="password" placeholder="••••••••"/></div>
-            <div class="pcl-field"><label>Nueva contraseña</label><input type="password" placeholder="Mínimo 6 caracteres"/></div>
-          </div>
-          <div class="pcl-savebar"><button class="pcl-btn primary">Cambiar contraseña</button></div>
-        </div>
-      </div>
-    </section>
-
+    </div>
   </div>
 </div>
 
@@ -4515,6 +4545,20 @@ function _pclScrollSpy(){
   },{ rootMargin:'-48% 0px -50% 0px', threshold:0 });
   root.querySelectorAll('.pcl-view').forEach(function(s){ obs.observe(s); });
 }
+function pclOpenPerfil(){
+  var dash=document.getElementById('pcl-dash'), perf=document.getElementById('pcl-perfil');
+  if(dash) dash.style.display='none';
+  if(perf) perf.style.display='block';
+  _pclSetActive('cuenta');
+  window.scrollTo({top:0,behavior:'auto'});
+}
+function pclClosePerfil(){
+  var dash=document.getElementById('pcl-dash'), perf=document.getElementById('pcl-perfil');
+  if(perf) perf.style.display='none';
+  if(dash) dash.style.display='block';
+  _pclSetActive('resumen');
+  window.scrollTo({top:0,behavior:'auto'});
+}
 function pclHydrate(){
   var c=window.currentClientUser||{};
   var name=c.name||'Cliente', company=c.company_name||'Adaptekk', email=c.email||'';
@@ -4523,6 +4567,10 @@ function pclHydrate(){
   set('pcl-avatar',initials); set('pcl-name',name); set('pcl-company',company);
   set('pcl-greet',(name.split(' ')[0]||'cliente')); 
   set('pcl-acc-name',name); set('pcl-acc-company',company); set('pcl-acc-email',email);
+  // entrar siempre al dashboard (no al perfil)
+  var dash=document.getElementById('pcl-dash'), perf=document.getElementById('pcl-perfil');
+  if(perf) perf.style.display='none';
+  if(dash) dash.style.display='block';
   _pclSetActive('resumen');
   _pclScrollSpy();
   pclLoadOrders();
