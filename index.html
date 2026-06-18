@@ -4148,6 +4148,393 @@ async function cambiarPass(key) {
 
 </div><!-- /page-portal -->
 
+<div id="page-miportal" style="display:none;">
+<style>
+#page-miportal{
+  --pcl-navy:#001F5B; --pcl-red:#C8102E;
+  --pcl-bg:#F5F7FA; --pcl-card:#FFFFFF; --pcl-line:#E9EEF4; --pcl-line2:#F0F3F8;
+  --pcl-ink:#10182A; --pcl-muted:#6B7686; --pcl-muted2:#97A1B0;
+  --pcl-good:#1B9E5A; --pcl-good-bg:#EAF6EF;
+  --pcl-soft:#EEF2FA; --pcl-chip:#F1F4F8;
+  --pcl-display:'Montserrat',-apple-system,sans-serif;
+  --pcl-body:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  --pcl-mono:'Roboto Mono',ui-monospace,monospace;
+  --pcl-sh:0 1px 2px rgba(16,24,42,.04),0 10px 26px rgba(16,24,42,.05);
+  background:var(--pcl-bg);min-height:100vh;font-family:var(--pcl-body);color:var(--pcl-ink);
+}
+#page-miportal *{box-sizing:border-box}
+#page-miportal svg{display:block}
+.pcl-mono{font-family:var(--pcl-mono);letter-spacing:-.3px}
+
+.pcl-wrap{max-width:1200px;margin:0 auto;padding:24px 22px 64px;display:flex;gap:22px;align-items:flex-start}
+
+/* ── Sidebar (navy card) ── */
+.pcl-side{width:232px;flex:none;background:var(--pcl-navy);border-radius:18px;color:#fff;position:sticky;top:16px;overflow:hidden}
+.pcl-sbrand{padding:18px 18px 12px}
+.pcl-slogo{font-family:var(--pcl-display);font-weight:800;font-size:18px;letter-spacing:-.4px}
+.pcl-stag{font-size:9px;letter-spacing:2.4px;color:#9fb0d6;text-transform:uppercase;margin-top:2px;font-weight:600}
+.pcl-nav{padding:6px 10px 10px}
+.pcl-nsec{font-size:9.5px;letter-spacing:1.4px;text-transform:uppercase;color:#7e91bd;padding:12px 10px 6px;font-weight:600}
+.pcl-nav-item{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:10px;color:#c9d5ef;font-weight:500;font-size:13.5px;cursor:pointer;transition:background .15s,color .15s;margin-bottom:1px}
+.pcl-nav-item svg{width:18px;height:18px;flex:none;stroke:currentColor;stroke-width:1.7;fill:none}
+.pcl-nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.pcl-nav-item.active{background:#fff;color:var(--pcl-navy);font-weight:600}
+.pcl-nav-item .ct{margin-left:auto;background:rgba(255,255,255,.16);color:#fff;font-size:10.5px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 5px}
+.pcl-nav-item.active .ct{background:var(--pcl-red)}
+.pcl-sfoot{padding:10px;border-top:1px solid rgba(255,255,255,.1)}
+.pcl-suser{display:flex;align-items:center;gap:10px;padding:6px 8px}
+.pcl-savatar{width:34px;height:34px;border-radius:50%;background:var(--pcl-red);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12.5px;color:#fff;flex:none}
+.pcl-suser .nm{font-weight:600;font-size:12.5px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pcl-suser .co{font-size:11px;color:#9fb0d6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pcl-slinks{display:flex;gap:7px;margin-top:8px}
+.pcl-slink{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px;border-radius:9px;background:rgba(255,255,255,.07);color:#c9d5ef;font-size:11.5px;font-weight:500;cursor:pointer}
+.pcl-slink:hover{background:rgba(255,255,255,.13);color:#fff}
+.pcl-slink svg{width:14px;height:14px;stroke:currentColor;stroke-width:1.7;fill:none}
+
+/* ── Main ── */
+.pcl-main{flex:1;min-width:0}
+.pcl-view{display:none}
+.pcl-view.active{display:block;animation:pclFade .26s ease}
+@keyframes pclFade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.pcl-card{background:var(--pcl-card);border:1px solid var(--pcl-line);border-radius:16px;box-shadow:var(--pcl-sh)}
+.pcl-pad{padding:22px}
+
+/* welcome */
+.pcl-welcome{display:flex;align-items:flex-start;justify-content:space-between;gap:22px;margin-bottom:20px;flex-wrap:wrap}
+.pcl-welcome h1{font-family:var(--pcl-display);font-size:24px;font-weight:700;letter-spacing:-.4px}
+.pcl-welcome p{color:var(--pcl-muted);margin-top:5px;font-size:13.5px}
+.pcl-status{display:inline-flex;align-items:center;gap:7px;background:var(--pcl-good-bg);color:var(--pcl-good);padding:5px 12px;border-radius:20px;font-weight:600;font-size:11.5px;margin-top:11px}
+.pcl-status .dot{width:6px;height:6px;border-radius:50%;background:var(--pcl-good)}
+.pcl-member{background:linear-gradient(125deg,#001a4d,#0a3a8f);color:#fff;border-radius:16px;padding:18px 22px;display:flex;align-items:center;gap:16px;min-width:290px;position:relative;overflow:hidden}
+.pcl-member .ring{position:absolute;right:-44px;top:-44px;width:150px;height:150px;border:16px solid rgba(255,255,255,.05);border-radius:50%}
+.pcl-member .pct{font-family:var(--pcl-display);font-size:36px;font-weight:800;line-height:1;color:#8fe0ac}
+.pcl-member .mt b{display:block;font-weight:700;font-size:14px;margin-bottom:3px}
+.pcl-member .mt span{font-size:12px;color:#cfdcf5;line-height:1.45}
+
+/* stats */
+.pcl-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:6px}
+.pcl-stat{padding:17px 18px}
+.pcl-stat .lbl{display:flex;align-items:center;gap:8px;color:var(--pcl-muted);font-size:12px;font-weight:500}
+.pcl-stat .lbl svg{width:15px;height:15px;stroke:var(--pcl-navy);stroke-width:1.7;fill:none;opacity:.8}
+.pcl-stat .val{font-family:var(--pcl-display);font-size:25px;font-weight:700;margin-top:8px;letter-spacing:-.5px}
+.pcl-stat .sub{font-size:11px;color:var(--pcl-muted2);margin-top:3px}
+.pcl-stat .sub.up{color:var(--pcl-good)}
+
+/* section head */
+.pcl-sh{display:flex;align-items:center;justify-content:space-between;margin:24px 0 12px}
+.pcl-sh h2{font-family:var(--pcl-display);font-size:15.5px;font-weight:700}
+.pcl-sh .link{color:var(--pcl-navy);font-weight:600;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px}
+.pcl-sh .link svg{width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none}
+
+/* code box (signature) */
+.pcl-codebox{background:#06163b;border-radius:16px;padding:20px 22px;color:#fff;display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:4px}
+.pcl-codebox .t b{font-family:var(--pcl-display);font-size:15px;font-weight:700;display:block}
+.pcl-codebox .t span{font-size:12px;color:#a9bbe0}
+.pcl-codein{flex:1;min-width:220px;display:flex;gap:9px}
+.pcl-codein input{flex:1;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:11px 14px;color:#fff;font-family:var(--pcl-mono);font-size:13.5px;letter-spacing:.4px}
+.pcl-codein input::placeholder{color:#8197c3}
+.pcl-codein button{background:var(--pcl-red);color:#fff;border:none;border-radius:10px;padding:0 19px;font-weight:600;font-size:13px;cursor:pointer;font-family:var(--pcl-body)}
+.pcl-codein button:hover{background:#a50d26}
+
+/* quick actions (monochrome) */
+.pcl-qa{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.pcl-qacard{padding:17px;display:flex;align-items:center;gap:13px;cursor:pointer;transition:border-color .15s,transform .15s}
+.pcl-qacard:hover{border-color:#cfdbec;transform:translateY(-2px)}
+.pcl-qaic{width:42px;height:42px;border-radius:12px;background:var(--pcl-soft);display:flex;align-items:center;justify-content:center;flex:none}
+.pcl-qaic svg{width:21px;height:21px;stroke:var(--pcl-navy);stroke-width:1.7;fill:none}
+.pcl-qat b{display:block;font-weight:600;font-size:13px}
+.pcl-qat span{font-size:11.5px;color:var(--pcl-muted)}
+
+/* products (clean) */
+.pcl-prods{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.pcl-prod{padding:0;overflow:hidden;cursor:pointer;transition:border-color .15s,transform .15s}
+.pcl-prod:hover{border-color:#cfdbec;transform:translateY(-2px)}
+.pcl-prod .img{height:108px;background:linear-gradient(135deg,#f0f4fa,#e2eaf5);display:flex;align-items:center;justify-content:center}
+.pcl-prod .img svg{width:48px;height:48px;stroke:var(--pcl-navy);stroke-width:1.3;fill:none;opacity:.45}
+.pcl-prod .pb{padding:12px 13px 14px}
+.pcl-prod .code{font-family:var(--pcl-mono);font-size:10.5px;color:var(--pcl-muted2);font-weight:600}
+.pcl-prod .nm{font-weight:600;font-size:12.5px;margin:4px 0 9px;line-height:1.35;min-height:33px}
+.pcl-prod .price{display:flex;align-items:baseline;gap:6px}
+.pcl-prod .price .now{font-family:var(--pcl-display);font-weight:700;font-size:15px;color:var(--pcl-navy)}
+.pcl-prod .price .was{font-size:11px;color:var(--pcl-muted2);text-decoration:line-through}
+.pcl-prod .price .off{font-size:10px;color:var(--pcl-good);font-weight:700}
+
+/* tables */
+.pcl-tbl{overflow-x:auto;border:1px solid var(--pcl-line);border-radius:16px;background:#fff;box-shadow:var(--pcl-sh)}
+.pcl-tbl table{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}
+.pcl-tbl thead th{text-align:left;padding:13px 18px;font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;color:var(--pcl-muted2);font-weight:600;border-bottom:1px solid var(--pcl-line);background:#fbfcfe}
+.pcl-tbl tbody td{padding:14px 18px;border-bottom:1px solid var(--pcl-line2);vertical-align:middle}
+.pcl-tbl tbody tr:last-child td{border-bottom:none}
+.pcl-tbl tbody tr:hover{background:#fafcff}
+.pcl-onum{font-family:var(--pcl-mono);font-weight:600;color:var(--pcl-navy)}
+.pcl-oprods{color:var(--pcl-muted);font-size:12.5px}
+.pcl-ototal{font-weight:700;font-family:var(--pcl-display)}
+/* quiet status: neutral chip + colored dot */
+.pcl-st{display:inline-flex;align-items:center;gap:7px;padding:4px 11px;border-radius:20px;font-size:11.5px;font-weight:600;background:var(--pcl-chip);color:#46505f}
+.pcl-st .dot{width:6px;height:6px;border-radius:50%}
+.pcl-st.green .dot{background:var(--pcl-good)} .pcl-st.blue .dot{background:#3B6FE0}
+.pcl-st.amber .dot{background:#D08A1C} .pcl-st.gray .dot{background:var(--pcl-muted2)}
+.pcl-act{display:flex;gap:8px}
+.pcl-mini{padding:6px 12px;border-radius:8px;border:1px solid var(--pcl-line);background:#fff;font-size:12px;font-weight:600;color:var(--pcl-navy);cursor:pointer;font-family:var(--pcl-body);white-space:nowrap}
+.pcl-mini:hover{border-color:#cfdbec;background:#f7faff}
+.pcl-mini.solid{background:var(--pcl-navy);color:#fff;border-color:var(--pcl-navy)}
+.pcl-mini.solid:hover{background:#0a2a6e}
+
+/* forms */
+.pcl-fg{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.pcl-field label{display:block;font-size:11.5px;font-weight:600;color:var(--pcl-muted);margin-bottom:6px}
+.pcl-field input,.pcl-field select{width:100%;padding:11px 13px;border:1.5px solid var(--pcl-line);border-radius:10px;font-size:13.5px;font-family:var(--pcl-body);color:var(--pcl-ink);background:#fff}
+.pcl-field input:focus,.pcl-field select:focus{outline:none;border-color:var(--pcl-navy)}
+.pcl-full{grid-column:1/-1}
+.pcl-savebar{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
+.pcl-btn{padding:11px 22px;border-radius:10px;font-weight:600;font-size:13.5px;cursor:pointer;border:none;font-family:var(--pcl-body)}
+.pcl-btn.primary{background:var(--pcl-navy);color:#fff} .pcl-btn.primary:hover{background:#0a2a6e}
+.pcl-btn.ghost{background:#fff;border:1.5px solid var(--pcl-line);color:var(--pcl-muted)}
+.pcl-two{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;align-items:start}
+
+/* upload */
+.pcl-up{display:flex;align-items:center;gap:13px;padding:15px;border:1.5px dashed var(--pcl-line);border-radius:12px;cursor:pointer}
+.pcl-up:hover{border-color:var(--pcl-navy)}
+.pcl-up .uic{width:40px;height:40px;border-radius:10px;background:var(--pcl-soft);display:flex;align-items:center;justify-content:center;flex:none}
+.pcl-up .uic svg{width:20px;height:20px;stroke:var(--pcl-navy);stroke-width:1.7;fill:none}
+.pcl-up b{font-size:12.5px;font-weight:600}.pcl-up span{font-size:11px;color:var(--pcl-muted2)}
+
+/* addresses */
+.pcl-addr{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.pcl-acard{padding:17px 19px;position:relative}
+.pcl-acard.def{border-color:var(--pcl-navy);box-shadow:0 0 0 1px var(--pcl-navy) inset,var(--pcl-sh)}
+.pcl-acard .deft{position:absolute;top:14px;right:15px;font-size:10px;font-weight:700;color:var(--pcl-navy);background:var(--pcl-soft);padding:3px 9px;border-radius:6px}
+.pcl-acard .an{font-weight:700;font-size:13.5px;margin-bottom:7px;display:flex;align-items:center;gap:8px}
+.pcl-acard .an svg{width:15px;height:15px;stroke:var(--pcl-navy);stroke-width:1.7;fill:none}
+.pcl-acard .al{color:var(--pcl-muted);font-size:12.5px;line-height:1.6}
+.pcl-acard .aa{display:flex;gap:8px;margin-top:13px}
+.pcl-aadd{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;border:2px dashed var(--pcl-line);border-radius:16px;color:var(--pcl-muted);cursor:pointer;min-height:150px;background:#fff}
+.pcl-aadd:hover{border-color:var(--pcl-navy);color:var(--pcl-navy)}
+.pcl-aadd svg{width:28px;height:28px;stroke:currentColor;stroke-width:1.6;fill:none}
+
+@media(max-width:980px){
+  .pcl-wrap{flex-direction:column}
+  .pcl-side{width:100%;position:static;display:flex;flex-direction:column}
+  .pcl-nav{display:flex;overflow-x:auto;padding:8px;gap:4px}
+  .pcl-nsec{display:none}
+  .pcl-nav-item{white-space:nowrap;margin-bottom:0}
+  .pcl-sfoot{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .pcl-slinks{margin-top:0}
+  .pcl-stats{grid-template-columns:repeat(2,1fr)}
+  .pcl-prods{grid-template-columns:repeat(2,1fr)}
+  .pcl-qa{grid-template-columns:1fr}
+  .pcl-fg,.pcl-addr,.pcl-two{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  .pcl-wrap{padding:16px}
+  .pcl-stats,.pcl-prods{grid-template-columns:1fr 1fr}
+  .pcl-welcome h1{font-size:21px}
+}
+</style>
+
+<div class="pcl-wrap">
+  <!-- Sidebar -->
+  <aside class="pcl-side">
+    <div class="pcl-sbrand">
+      <div class="pcl-slogo">ADAP<span style="color:var(--pcl-red)">TEKK</span></div>
+      <div class="pcl-stag">Portal de Cliente</div>
+    </div>
+    <nav class="pcl-nav">
+      <div class="pcl-nsec">Mi actividad</div>
+      <div class="pcl-nav-item active" data-pview="resumen" onclick="pclGo('resumen')">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Resumen</div>
+      <div class="pcl-nav-item" data-pview="pedidos" onclick="pclGo('pedidos')">
+        <svg viewBox="0 0 24 24"><path d="M3 6h18M3 6l1.5 13a1 1 0 0 0 1 .9h11a1 1 0 0 0 1-.9L19 6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Mis pedidos <span class="ct">2</span></div>
+      <div class="pcl-nav-item" data-pview="cotizaciones" onclick="pclGo('cotizaciones')">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg>Cotizaciones <span class="ct">1</span></div>
+      <div class="pcl-nsec">Mi cuenta</div>
+      <div class="pcl-nav-item" data-pview="facturacion" onclick="pclGo('facturacion')">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M7 15h4"/></svg>Facturación</div>
+      <div class="pcl-nav-item" data-pview="direcciones" onclick="pclGo('direcciones')">
+        <svg viewBox="0 0 24 24"><path d="M12 21s-7-5.7-7-11a7 7 0 0 1 14 0c0 5.3-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Direcciones de envío</div>
+      <div class="pcl-nav-item" data-pview="cuenta" onclick="pclGo('cuenta')">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Mi cuenta</div>
+    </nav>
+    <div class="pcl-sfoot">
+      <div class="pcl-suser">
+        <div class="pcl-savatar" id="pcl-avatar">CL</div>
+        <div style="min-width:0">
+          <div class="nm" id="pcl-name">Cliente</div>
+          <div class="co" id="pcl-company">Adaptekk</div>
+        </div>
+      </div>
+      <div class="pcl-slinks">
+        <div class="pcl-slink" onclick="showPage('home')"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Tienda</div>
+        <div class="pcl-slink" onclick="portalLogout()"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Salir</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="pcl-main">
+
+    <!-- RESUMEN -->
+    <section class="pcl-view active" id="pcl-v-resumen">
+      <div class="pcl-welcome">
+        <div>
+          <h1>Hola, <span id="pcl-greet">cliente</span></h1>
+          <p>Aquí tienes tus pedidos, cotizaciones y accesos rápidos.</p>
+          <span class="pcl-status"><span class="dot"></span>Cuenta verificada · precios activos</span>
+        </div>
+        <div class="pcl-member">
+          <div class="ring"></div>
+          <div class="pct">&minus;5%</div>
+          <div class="mt"><b>Precio socio activo</b><span>Por estar registrado, todos los precios<br>llevan 5% de descuento.</span></div>
+        </div>
+      </div>
+
+      <div class="pcl-stats">
+        <div class="pcl-card pcl-stat"><div class="lbl"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 6l1.5 13a1 1 0 0 0 1 .9h11a1 1 0 0 0 1-.9L19 6"/></svg>Pedidos activos</div><div class="val">2</div><div class="sub">1 en tránsito · 1 en proceso</div></div>
+        <div class="pcl-card pcl-stat"><div class="lbl"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Cotizaciones</div><div class="val">1</div><div class="sub">Vence en 13 días</div></div>
+        <div class="pcl-card pcl-stat"><div class="lbl"><svg viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Compras del mes</div><div class="val">$6,750</div><div class="sub up">+18% vs. mayo</div></div>
+        <div class="pcl-card pcl-stat"><div class="lbl"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Ahorro socio</div><div class="val" style="color:var(--pcl-good)">$355</div><div class="sub">Este mes (5%)</div></div>
+      </div>
+
+      <div class="pcl-codebox" style="margin-top:18px">
+        <div class="t"><b>Pedir por código AT</b><span>¿Ya sabes qué necesitas? Escríbelo y lo agregamos.</span></div>
+        <div class="pcl-codein"><input type="text" placeholder="AT-NPT-08-JIC-12"/><button>Agregar</button></div>
+      </div>
+
+      <div class="pcl-sh"><h2>Accesos rápidos</h2></div>
+      <div class="pcl-qa">
+        <div class="pcl-card pcl-qacard" onclick="showPage('cfg')"><div class="pcl-qaic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></div><div class="pcl-qat"><b>Configurador</b><span>Arma tu conector paso a paso</span></div></div>
+        <div class="pcl-card pcl-qacard" onclick="showPage('cross')"><div class="pcl-qaic"><svg viewBox="0 0 24 24"><path d="M16 3h5v5M21 3l-7 7M8 21H3v-5M3 21l7-7"/></svg></div><div class="pcl-qat"><b>Cross Reference</b><span>Encuentra tu equivalente</span></div></div>
+        <div class="pcl-card pcl-qacard" onclick="showPage('home')"><div class="pcl-qaic"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg></div><div class="pcl-qat"><b>Ver catálogo</b><span>4,298 conectores</span></div></div>
+      </div>
+
+      <div class="pcl-sh"><h2>Vuelve a pedir</h2><span class="link" onclick="pclGo('pedidos')">Ver pedidos <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span></div>
+      <div class="pcl-prods">
+        <div class="pcl-card pcl-prod"><div class="img"><svg viewBox="0 0 24 24"><rect x="3" y="9" width="6" height="6" rx="1"/><rect x="15" y="9" width="6" height="6" rx="1"/><path d="M9 12h6"/></svg></div><div class="pb"><div class="code">AT-NPT-08-JIC-12</div><div class="nm">Adaptador recto NPT 1/2&quot; a JIC 3/4&quot;</div><div class="price"><span class="now">$152.00</span><span class="was">$160.00</span><span class="off">&minus;5%</span></div></div></div>
+        <div class="pcl-card pcl-prod"><div class="img"><svg viewBox="0 0 24 24"><path d="M4 14V6a2 2 0 0 1 2-2h6"/><path d="M12 4v8a2 2 0 0 0 2 2h6"/></svg></div><div class="pb"><div class="code">AT-C90-JIC-08</div><div class="nm">Codo 90° JIC #8 macho-hembra</div><div class="price"><span class="now">$214.70</span><span class="was">$226.00</span><span class="off">&minus;5%</span></div></div></div>
+        <div class="pcl-card pcl-prod"><div class="img"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M6 12h12"/></svg></div><div class="pb"><div class="code">AT-TAP-BSP-06</div><div class="nm">Tapón hidráulico BSP 3/8&quot;</div><div class="price"><span class="now">$60.80</span><span class="was">$64.00</span><span class="off">&minus;5%</span></div></div></div>
+        <div class="pcl-card pcl-prod"><div class="img"><svg viewBox="0 0 24 24"><path d="M12 3v6M12 15v6M3 12h6M15 12h6"/><circle cx="12" cy="12" r="3"/></svg></div><div class="pb"><div class="code">AT-TEE-JIC-10</div><div class="nm">Tee JIC #10 tres vías</div><div class="price"><span class="now">$298.30</span><span class="was">$314.00</span><span class="off">&minus;5%</span></div></div></div>
+      </div>
+    </section>
+
+    <!-- PEDIDOS -->
+    <section class="pcl-view" id="pcl-v-pedidos">
+      <div class="pcl-sh" style="margin-top:0"><h2>Mis pedidos</h2></div>
+      <div class="pcl-tbl"><table>
+        <thead><tr><th>Pedido</th><th>Fecha</th><th>Artículos</th><th>Total</th><th>Estatus</th><th></th></tr></thead>
+        <tbody>
+          <tr><td class="pcl-onum">#ADK-1042</td><td>14 jun 2026</td><td class="pcl-oprods">Adaptador NPT→JIC + 3 más</td><td class="pcl-ototal">$4,820.00</td><td><span class="pcl-st blue"><span class="dot"></span>En tránsito</span></td><td><div class="pcl-act"><button class="pcl-mini">Rastrear</button><button class="pcl-mini">Detalle</button></div></td></tr>
+          <tr><td class="pcl-onum">#ADK-1039</td><td>9 jun 2026</td><td class="pcl-oprods">Codo 90° JIC #8 (x12)</td><td class="pcl-ototal">$2,576.40</td><td><span class="pcl-st amber"><span class="dot"></span>En proceso</span></td><td><div class="pcl-act"><button class="pcl-mini">Detalle</button></div></td></tr>
+          <tr><td class="pcl-onum">#ADK-1031</td><td>2 jun 2026</td><td class="pcl-oprods">Tapón BSP + Tee JIC</td><td class="pcl-ototal">$1,290.00</td><td><span class="pcl-st green"><span class="dot"></span>Entregado</span></td><td><div class="pcl-act"><button class="pcl-mini solid">Reordenar</button><button class="pcl-mini">Factura</button></div></td></tr>
+          <tr><td class="pcl-onum">#ADK-1018</td><td>21 may 2026</td><td class="pcl-oprods">Manguera + adaptadores (6)</td><td class="pcl-ototal">$8,140.00</td><td><span class="pcl-st green"><span class="dot"></span>Entregado</span></td><td><div class="pcl-act"><button class="pcl-mini solid">Reordenar</button><button class="pcl-mini">Factura</button></div></td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <!-- COTIZACIONES -->
+    <section class="pcl-view" id="pcl-v-cotizaciones">
+      <div class="pcl-sh" style="margin-top:0"><h2>Cotizaciones</h2><span class="link">Nueva cotización <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></div>
+      <div class="pcl-tbl"><table>
+        <thead><tr><th>Cotización</th><th>Fecha</th><th>Vigencia</th><th>Total</th><th>Estatus</th><th></th></tr></thead>
+        <tbody>
+          <tr><td class="pcl-onum">#COT-2208</td><td>15 jun 2026</td><td>Vence 30 jun</td><td class="pcl-ototal">$8,450.00</td><td><span class="pcl-st amber"><span class="dot"></span>Pendiente</span></td><td><div class="pcl-act"><button class="pcl-mini solid">Convertir a pedido</button><button class="pcl-mini">PDF</button></div></td></tr>
+          <tr><td class="pcl-onum">#COT-2199</td><td>10 jun 2026</td><td>Vence 25 jun</td><td class="pcl-ototal">$3,180.00</td><td><span class="pcl-st blue"><span class="dot"></span>En revisión</span></td><td><div class="pcl-act"><button class="pcl-mini">Detalle</button><button class="pcl-mini">PDF</button></div></td></tr>
+          <tr><td class="pcl-onum">#COT-2185</td><td>28 may 2026</td><td>Vencida</td><td class="pcl-ototal">$2,100.00</td><td><span class="pcl-st gray"><span class="dot"></span>Vencida</span></td><td><div class="pcl-act"><button class="pcl-mini">Re-cotizar</button></div></td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <!-- FACTURACIÓN -->
+    <section class="pcl-view" id="pcl-v-facturacion">
+      <div class="pcl-two">
+        <div class="pcl-card pcl-pad">
+          <div class="pcl-sh" style="margin:0 0 16px"><h2>Datos fiscales (CFDI)</h2></div>
+          <div class="pcl-fg">
+            <div class="pcl-field"><label>RFC</label><input placeholder="Tu RFC"/></div>
+            <div class="pcl-field"><label>Razón social</label><input placeholder="Razón social"/></div>
+            <div class="pcl-field"><label>Régimen fiscal</label><select><option>601 — General de Ley Personas Morales</option><option>612 — Personas Físicas con Act. Empresariales</option><option>626 — RESICO</option><option>603 — Personas Morales sin Fines de Lucro</option></select></div>
+            <div class="pcl-field"><label>Uso de CFDI</label><select><option>G03 — Gastos en general</option><option>G01 — Adquisición de mercancías</option><option>I04 — Equipo de cómputo</option></select></div>
+            <div class="pcl-field"><label>Código postal fiscal</label><input placeholder="CP"/></div>
+            <div class="pcl-field"><label>Correo para facturas</label><input placeholder="facturas@empresa.com"/></div>
+            <div class="pcl-field pcl-full"><label>Constancia de Situación Fiscal</label>
+              <div class="pcl-up"><div class="uic"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div><div><b>Subir constancia (PDF)</b><br><span>Arrástrala aquí o haz clic</span></div></div>
+            </div>
+          </div>
+          <div class="pcl-savebar"><button class="pcl-btn primary">Guardar datos</button></div>
+        </div>
+        <div class="pcl-card pcl-pad">
+          <div class="pcl-sh" style="margin:0 0 16px"><h2>Mis facturas</h2></div>
+          <div class="pcl-tbl" style="border:none;box-shadow:none"><table style="min-width:0">
+            <tbody>
+              <tr><td class="pcl-onum">A-1042</td><td>$4,820.00</td><td style="text-align:right"><button class="pcl-mini">XML</button> <button class="pcl-mini">PDF</button></td></tr>
+              <tr><td class="pcl-onum">A-1031</td><td>$1,290.00</td><td style="text-align:right"><button class="pcl-mini">XML</button> <button class="pcl-mini">PDF</button></td></tr>
+              <tr><td class="pcl-onum">A-1018</td><td>$8,140.00</td><td style="text-align:right"><button class="pcl-mini">XML</button> <button class="pcl-mini">PDF</button></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DIRECCIONES -->
+    <section class="pcl-view" id="pcl-v-direcciones">
+      <div class="pcl-sh" style="margin-top:0"><h2>Direcciones de envío</h2></div>
+      <div class="pcl-addr">
+        <div class="pcl-card pcl-acard def"><span class="deft">Predeterminada</span>
+          <div class="an"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Planta principal</div>
+          <div class="al">Agrega tu dirección de entrega<br>para agilizar tus pedidos.</div>
+          <div class="aa"><button class="pcl-mini">Editar</button></div></div>
+        <div class="pcl-aadd"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><b>Agregar dirección</b></div>
+      </div>
+    </section>
+
+    <!-- MI CUENTA -->
+    <section class="pcl-view" id="pcl-v-cuenta">
+      <div class="pcl-two">
+        <div class="pcl-card pcl-pad">
+          <div class="pcl-sh" style="margin:0 0 16px"><h2>Datos de la cuenta</h2></div>
+          <div class="pcl-fg">
+            <div class="pcl-field"><label>Nombre</label><input id="pcl-acc-name"/></div>
+            <div class="pcl-field"><label>Empresa</label><input id="pcl-acc-company"/></div>
+            <div class="pcl-field"><label>Correo</label><input id="pcl-acc-email"/></div>
+            <div class="pcl-field"><label>WhatsApp / Teléfono</label><input placeholder="Tu teléfono"/></div>
+          </div>
+          <div class="pcl-savebar"><button class="pcl-btn primary">Guardar cambios</button></div>
+        </div>
+        <div class="pcl-card pcl-pad">
+          <div class="pcl-sh" style="margin:0 0 16px"><h2>Seguridad</h2></div>
+          <div class="pcl-fg" style="grid-template-columns:1fr">
+            <div class="pcl-field"><label>Contraseña actual</label><input type="password" placeholder="••••••••"/></div>
+            <div class="pcl-field"><label>Nueva contraseña</label><input type="password" placeholder="Mínimo 6 caracteres"/></div>
+          </div>
+          <div class="pcl-savebar"><button class="pcl-btn primary">Cambiar contraseña</button></div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+function pclGo(view){
+  var root=document.getElementById('page-miportal'); if(!root) return;
+  root.querySelectorAll('.pcl-nav-item').forEach(function(n){ n.classList.toggle('active', n.getAttribute('data-pview')===view); });
+  root.querySelectorAll('.pcl-view').forEach(function(v){ v.classList.remove('active'); });
+  var el=document.getElementById('pcl-v-'+view); if(el) el.classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function pclHydrate(){
+  var c=window.currentClientUser||{};
+  var name=c.name||'Cliente', company=c.company_name||'Adaptekk', email=c.email||'';
+  var initials=(name||'CL').trim().split(/\s+/).map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase()||'CL';
+  function set(id,val){ var e=document.getElementById(id); if(e){ if(e.tagName==='INPUT') e.value=val; else e.textContent=val; } }
+  set('pcl-avatar',initials); set('pcl-name',name); set('pcl-company',company);
+  set('pcl-greet',(name.split(' ')[0]||'cliente')); 
+  set('pcl-acc-name',name); set('pcl-acc-company',company); set('pcl-acc-email',email);
+  pclGo('resumen');
+}
+</script>
+</div><!-- /page-miportal -->
+
+
 
 <!-- ═══════════════════════
      PAGE: CATÁLOGOS / TUTORIALES
@@ -4241,7 +4628,7 @@ function setApiKey(k) {
 }
 
 /* ── PAGE ROUTER ── */
-var pages = ['home','buscar','cfg','cross','tutorials','quote','cart','checkout','pago','gracias','login','register','portal'];
+var pages = ['home','buscar','cfg','cross','tutorials','quote','cart','checkout','pago','gracias','login','register','portal','miportal'];
 // Registro de cuenta nueva: recopila los datos del formulario y crea el contacto
 // como prospecto pendiente de aprobación (un ejecutivo lo valida después).
 function showRegistroExito(){
@@ -6109,9 +6496,9 @@ function _refreshLoginNav(){
   if(!window.currentClientUser) return;
   var cu=currentUser||{ initials:(window.currentClientUser.name||'?').substring(0,2).toUpperCase(), name:window.currentClientUser.name };
   var btn=document.getElementById('nav-login-btn');
-  if(btn){ btn.textContent=cu.initials; btn.style.background='#C8102E'; btn.onclick=function(){ showPage('portal'); return false; }; btn.title=cu.name; }
+  if(btn){ btn.textContent=cu.initials; btn.style.background='#C8102E'; btn.onclick=function(){ showPage('miportal'); return false; }; btn.title=cu.name; }
   var mob=document.getElementById('mob-login-btn');
-  if(mob){ mob.textContent='\uD83D\uDC64 '+cu.name; mob.onclick=function(){ showPage('portal'); if(typeof toggleMenu==='function') toggleMenu(); return false; }; }
+  if(mob){ mob.textContent='\uD83D\uDC64 '+cu.name; mob.onclick=function(){ showPage('miportal'); if(typeof toggleMenu==='function') toggleMenu(); return false; }; }
 }
 function _restoreClientSession(){
   try{
@@ -6132,19 +6519,6 @@ function mockGoogleLogin() {
     initials: 'UG'
   };
   loginSuccess();
-}
-
-function handleConstanciaUpload(input) {
-  var file = input.files[0];
-  if (!file) return;
-  if (file.size > 5 * 1024 * 1024) {
-    showToast('\u26a0 El archivo es muy grande. Máximo 5MB.');
-    input.value = '';
-    return;
-  }
-  document.getElementById('reg-constancia-placeholder').style.display = 'none';
-  document.getElementById('reg-constancia-preview').style.display = 'block';
-  document.getElementById('reg-constancia-name').textContent = file.name;
 }
 
 async function buscarCP(cp) {
@@ -6331,24 +6705,16 @@ function loginSuccess() {
   if (btn) {
     btn.textContent = currentUser.initials;
     btn.style.background = '#C8102E';
-    btn.onclick = function(){ showPage('portal'); return false; };
+    btn.onclick = function(){ showPage('miportal'); return false; };
     btn.title = currentUser.name;
   }
   // Update mobile login button
   var mobBtn = document.getElementById('mob-login-btn');
   if (mobBtn) {
     mobBtn.textContent = '\uD83D\uDC64 ' + currentUser.name;
-    mobBtn.onclick = function(){ showPage('portal'); toggleMenu(); return false; };
+    mobBtn.onclick = function(){ showPage('miportal'); toggleMenu(); return false; };
   }
-  // Update portal UI
-  var av = document.getElementById('portal-avatar');
-  var un = document.getElementById('portal-username');
-  var ue = document.getElementById('portal-useremail');
-  var dn = document.getElementById('dash-name');
-  if (av) av.textContent = currentUser.initials;
-  if (un) un.textContent = currentUser.name;
-  if (ue) ue.textContent = currentUser.email;
-  if (dn) dn.textContent = currentUser.name.split(' ')[0];
+  // Update portal UI: ahora lo gestiona pclHydrate() con los datos de la sesión
   // Sesión de cliente para carrito/checkout (precios visibles si verified)
   window.currentClientUser = window.currentClientUser || { name: currentUser.name, email: currentUser.email, verified: false };
   // Si el login se inició desde el checkout, regresar al flujo
@@ -6359,8 +6725,8 @@ function loginSuccess() {
     showToast('\u2713 Sesi\u00F3n iniciada \u2014 continuemos tu pedido');
     return;
   }
-  showPage('portal');
-  portalTab('dashboard');
+  showPage('miportal');
+  if(typeof pclHydrate==='function') pclHydrate();
   showToast('\u2713 Bienvenido, ' + currentUser.name);
 }
 
@@ -6375,19 +6741,6 @@ function portalLogout() {
   }
   showPage('home');
   showToast('Sesión cerrada');
-}
-
-function portalTab(tab) {
-  document.querySelectorAll('.portal-panel').forEach(function(p){ p.classList.remove('active'); });
-  document.querySelectorAll('.portal-nav-item').forEach(function(n){ n.classList.remove('active'); });
-  var panel = document.getElementById('ptab-' + tab);
-  if (panel) panel.classList.add('active');
-  // Activate nav item
-  document.querySelectorAll('.portal-nav-item').forEach(function(n){
-    if (n.getAttribute('onclick') && n.getAttribute('onclick').indexOf("'" + tab + "'") >= 0) {
-      n.classList.add('active');
-    }
-  });
 }
 
 function showForgot() {
@@ -6411,28 +6764,6 @@ function regValPhone() {
   if (raw) wrap.style.borderColor = ok ? '#25a244' : '#C8102E';
   err.style.display = (raw && !ok) ? 'block' : 'none';
 }
-
-function regValPass() {
-  var passEl = document.getElementById('reg-pass');
-  if (!passEl) return;
-  var val = passEl.value;
-  var bars = ['pb1','pb2','pb3','pb4'];
-  var colors = ['#C8102E','#F4A800','#25a244','#001F5B'];
-  var labels = ['Muy débil','Débil','Buena','Fuerte'];
-  var score = 0;
-  if (val.length >= 8) score++;
-  if (/[A-Z]/.test(val)) score++;
-  if (/[0-9]/.test(val)) score++;
-  if (/[^A-Za-z0-9]/.test(val)) score++;
-  bars.forEach(function(id, i) {
-    var el = document.getElementById(id);
-    if (el) el.style.background = i < score ? colors[score-1] : '#e0e0e0';
-  });
-  var txt = document.getElementById('reg-pass-txt');
-  if (txt && val) txt.textContent = labels[score-1] || 'Muy débil';
-}
-
-
 
 </script>
 
