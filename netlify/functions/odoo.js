@@ -1639,6 +1639,54 @@ exports.handler = async function(event, context) {
       })};
     }
 
+    // ── SEMBRAR STOCK DE PRUEBA: stock aleatorio en N productos (default 5) ──
+    if (action === 'seed_test_stock') {
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+      const count = Math.min(parseInt(body.count) || 5, 20);
+      // 1) ubicación WH/Stock
+      let locationId = 8;
+      try {
+        const locResp = await odooSearchRead(uid, 'stock.location',
+          `<value><array><data>${xmlStr('complete_name')}<value><string>=</string></value>${xmlStr('WH/Stock')}</data></array></value>`, ['id'], 1);
+        const lm = locResp.match(/<int>(\d+)<\/int>/);
+        if (lm) locationId = parseInt(lm[1]);
+      } catch(_){}
+      // 2) productos: usar codes dados o tomar N vendibles
+      let prods = [];
+      if (Array.isArray(body.codes) && body.codes.length) {
+        for (const code of body.codes.slice(0, count)) {
+          const p = await lookupProductByCode(uid, code);
+          if (p && p.id) prods.push({ id:p.id, name:p.name, code:p.at_code });
+        }
+      } else {
+        const text = await odooSearchRead(uid, 'product.product',
+          `<value><array><data>${xmlStr('sale_ok')}<value><string>=</string></value><value><boolean>1</boolean></value></data></array></value>`,
+          ['id','name','default_code'], count);
+        const structs = text.match(/<struct>[\s\S]*?<\/struct>/g) || [];
+        for (const st of structs) {
+          const id = parseInt(xmlExtractField(st,'id'));
+          if (id>0) prods.push({ id, name: xmlExtractField(st,'name'), code: xmlExtractField(st,'default_code') });
+        }
+      }
+      // 3) stock aleatorio (10..200) vía stock.quant
+      const result = [];
+      for (const p of prods) {
+        const qty = Math.floor(Math.random()*191) + 10;
+        try {
+          const createText = await xmlrpc(uid, 'stock.quant', 'create',
+            `<value><struct><member><name>product_id</name><value><int>${p.id}</int></value></member><member><name>location_id</name><value><int>${locationId}</int></value></member><member><name>inventory_quantity</name><value><double>${qty}</double></value></member></struct></value>`);
+          const qm = createText.match(/<value><int>(\d+)<\/int><\/value>/);
+          if (qm) {
+            await xmlrpc(uid, 'stock.quant', 'action_apply_inventory',
+              `<value><array><data><value><int>${parseInt(qm[1])}</int></value></data></array></value>`);
+          }
+          result.push({ code:p.code, name:p.name, qty });
+        } catch(e){ result.push({ code:p.code, name:p.name, qty:0, error:true }); }
+      }
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, location_id:locationId, products:result })};
+    }
+
     // ── SEARCH PRODUCTS ──
     if (action === 'search_products') {
       const uid = await odooAuth();
