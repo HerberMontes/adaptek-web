@@ -4169,26 +4169,27 @@ async function cambiarPass(key) {
 .pcl-wrap{max-width:1200px;margin:0 auto;padding:24px 22px 64px;display:flex;gap:22px;align-items:flex-start}
 
 /* ── Sidebar (navy card) ── */
-.pcl-side{width:232px;flex:none;background:var(--pcl-navy);border-radius:18px;color:#fff;position:sticky;top:16px;overflow:hidden}
-.pcl-sbrand{padding:18px 18px 12px}
-.pcl-slogo{font-family:var(--pcl-display);font-weight:800;font-size:18px;letter-spacing:-.4px}
-.pcl-stag{font-size:9px;letter-spacing:2.4px;color:#9fb0d6;text-transform:uppercase;margin-top:2px;font-weight:600}
-.pcl-nav{padding:6px 10px 10px}
-.pcl-nsec{font-size:9.5px;letter-spacing:1.4px;text-transform:uppercase;color:#7e91bd;padding:12px 10px 6px;font-weight:600}
-.pcl-nav-item{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:10px;color:#c9d5ef;font-weight:500;font-size:13.5px;cursor:pointer;transition:background .15s,color .15s;margin-bottom:1px}
+.pcl-side{width:236px;flex:none;background:var(--pcl-card);border:1px solid var(--pcl-line);border-radius:18px;color:var(--pcl-ink);position:sticky;top:16px;box-shadow:var(--pcl-sh);overflow:hidden}
+.pcl-sbrand{padding:17px 18px 4px}
+.pcl-slogo{font-family:var(--pcl-display);font-weight:800;font-size:17px;letter-spacing:-.4px;color:var(--pcl-navy)}
+.pcl-stag{font-size:9px;letter-spacing:2.2px;color:var(--pcl-muted2);text-transform:uppercase;margin-top:3px;font-weight:600}
+.pcl-nav{padding:8px 10px}
+.pcl-nsec{font-size:9.5px;letter-spacing:1.3px;text-transform:uppercase;color:var(--pcl-muted2);padding:12px 10px 6px;font-weight:600}
+.pcl-nav-item{position:relative;display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:10px;color:var(--pcl-muted);font-weight:500;font-size:13.5px;cursor:pointer;transition:background .15s,color .15s;margin-bottom:1px}
 .pcl-nav-item svg{width:18px;height:18px;flex:none;stroke:currentColor;stroke-width:1.7;fill:none}
-.pcl-nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
-.pcl-nav-item.active{background:#fff;color:var(--pcl-navy);font-weight:600}
-.pcl-nav-item .ct{margin-left:auto;background:rgba(255,255,255,.16);color:#fff;font-size:10.5px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 5px}
-.pcl-nav-item.active .ct{background:var(--pcl-red)}
-.pcl-sfoot{padding:10px;border-top:1px solid rgba(255,255,255,.1)}
+.pcl-nav-item:hover{background:#F4F7FB;color:var(--pcl-ink)}
+.pcl-nav-item.active{background:var(--pcl-soft);color:var(--pcl-navy);font-weight:600}
+.pcl-nav-item.active::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:0 2px 2px 0;background:var(--pcl-navy)}
+.pcl-nav-item .ct{margin-left:auto;background:#E7ECF3;color:var(--pcl-muted);font-size:10.5px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 5px}
+.pcl-nav-item.active .ct{background:var(--pcl-navy);color:#fff}
+.pcl-sfoot{padding:10px;border-top:1px solid var(--pcl-line)}
 .pcl-suser{display:flex;align-items:center;gap:10px;padding:6px 8px}
-.pcl-savatar{width:34px;height:34px;border-radius:50%;background:var(--pcl-red);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12.5px;color:#fff;flex:none}
-.pcl-suser .nm{font-weight:600;font-size:12.5px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pcl-suser .co{font-size:11px;color:#9fb0d6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pcl-savatar{width:34px;height:34px;border-radius:50%;background:var(--pcl-navy);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12.5px;color:#fff;flex:none}
+.pcl-suser .nm{font-weight:600;font-size:12.5px;color:var(--pcl-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pcl-suser .co{font-size:11px;color:var(--pcl-muted2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pcl-slinks{display:flex;gap:7px;margin-top:8px}
-.pcl-slink{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px;border-radius:9px;background:rgba(255,255,255,.07);color:#c9d5ef;font-size:11.5px;font-weight:500;cursor:pointer}
-.pcl-slink:hover{background:rgba(255,255,255,.13);color:#fff}
+.pcl-slink{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px;border-radius:9px;background:#F4F7FB;border:1px solid var(--pcl-line);color:var(--pcl-muted);font-size:11.5px;font-weight:600;cursor:pointer}
+.pcl-slink:hover{background:#fff;border-color:#cfdbec;color:var(--pcl-navy)}
 .pcl-slink svg{width:14px;height:14px;stroke:currentColor;stroke-width:1.7;fill:none}
 
 /* ── Main ── */
@@ -4205,11 +4206,11 @@ async function cambiarPass(key) {
 .pcl-welcome p{color:var(--pcl-muted);margin-top:5px;font-size:13.5px}
 .pcl-status{display:inline-flex;align-items:center;gap:7px;background:var(--pcl-good-bg);color:var(--pcl-good);padding:5px 12px;border-radius:20px;font-weight:600;font-size:11.5px;margin-top:11px}
 .pcl-status .dot{width:6px;height:6px;border-radius:50%;background:var(--pcl-good)}
-.pcl-member{background:linear-gradient(125deg,#001a4d,#0a3a8f);color:#fff;border-radius:16px;padding:18px 22px;display:flex;align-items:center;gap:16px;min-width:290px;position:relative;overflow:hidden}
-.pcl-member .ring{position:absolute;right:-44px;top:-44px;width:150px;height:150px;border:16px solid rgba(255,255,255,.05);border-radius:50%}
-.pcl-member .pct{font-family:var(--pcl-display);font-size:36px;font-weight:800;line-height:1;color:#8fe0ac}
-.pcl-member .mt b{display:block;font-weight:700;font-size:14px;margin-bottom:3px}
-.pcl-member .mt span{font-size:12px;color:#cfdcf5;line-height:1.45}
+.pcl-member{background:var(--pcl-soft);border:1px solid #DCE6F5;color:var(--pcl-navy);border-radius:16px;padding:18px 22px;display:flex;align-items:center;gap:16px;min-width:290px;position:relative;overflow:hidden}
+.pcl-member .ring{position:absolute;right:-44px;top:-44px;width:150px;height:150px;border:16px solid rgba(0,31,91,.04);border-radius:50%}
+.pcl-member .pct{font-family:var(--pcl-display);font-size:36px;font-weight:800;line-height:1;color:var(--pcl-good)}
+.pcl-member .mt b{display:block;font-weight:700;font-size:14px;margin-bottom:3px;color:var(--pcl-navy)}
+.pcl-member .mt span{font-size:12px;color:var(--pcl-muted);line-height:1.45}
 
 /* stats */
 .pcl-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:6px}
@@ -4313,17 +4314,20 @@ async function cambiarPass(key) {
 .pcl-aadd svg{width:28px;height:28px;stroke:currentColor;stroke-width:1.6;fill:none}
 
 @media(max-width:980px){
+  .pcl-stats{grid-template-columns:repeat(2,1fr)}
+  .pcl-prods{grid-template-columns:repeat(2,1fr)}
+  .pcl-qa{grid-template-columns:1fr}
+  .pcl-fg,.pcl-addr,.pcl-two{grid-template-columns:1fr}
+}
+@media(max-width:760px){
   .pcl-wrap{flex-direction:column}
   .pcl-side{width:100%;position:static;display:flex;flex-direction:column}
   .pcl-nav{display:flex;overflow-x:auto;padding:8px;gap:4px}
   .pcl-nsec{display:none}
   .pcl-nav-item{white-space:nowrap;margin-bottom:0}
+  .pcl-nav-item.active::before{display:none}
   .pcl-sfoot{display:flex;align-items:center;justify-content:space-between;gap:10px}
   .pcl-slinks{margin-top:0}
-  .pcl-stats{grid-template-columns:repeat(2,1fr)}
-  .pcl-prods{grid-template-columns:repeat(2,1fr)}
-  .pcl-qa{grid-template-columns:1fr}
-  .pcl-fg,.pcl-addr,.pcl-two{grid-template-columns:1fr}
 }
 @media(max-width:560px){
   .pcl-wrap{padding:16px}
@@ -4344,9 +4348,9 @@ async function cambiarPass(key) {
       <div class="pcl-nav-item active" data-pview="resumen" onclick="pclGo('resumen')">
         <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Resumen</div>
       <div class="pcl-nav-item" data-pview="pedidos" onclick="pclGo('pedidos')">
-        <svg viewBox="0 0 24 24"><path d="M3 6h18M3 6l1.5 13a1 1 0 0 0 1 .9h11a1 1 0 0 0 1-.9L19 6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Mis pedidos <span class="ct">2</span></div>
+        <svg viewBox="0 0 24 24"><path d="M3 6h18M3 6l1.5 13a1 1 0 0 0 1 .9h11a1 1 0 0 0 1-.9L19 6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Mis pedidos <span class="ct" id="pcl-badge-pedidos" style="display:none">0</span></div>
       <div class="pcl-nav-item" data-pview="cotizaciones" onclick="pclGo('cotizaciones')">
-        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg>Cotizaciones <span class="ct">1</span></div>
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg>Cotizaciones <span class="ct" id="pcl-badge-cotiz" style="display:none">0</span></div>
       <div class="pcl-nsec">Mi cuenta</div>
       <div class="pcl-nav-item" data-pview="facturacion" onclick="pclGo('facturacion')">
         <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M7 15h4"/></svg>Facturación</div>
@@ -4389,10 +4393,10 @@ async function cambiarPass(key) {
       </div>
 
       <div class="pcl-stats">
-        <div class="pcl-card pcl-stat"><div class="lbl"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 6l1.5 13a1 1 0 0 0 1 .9h11a1 1 0 0 0 1-.9L19 6"/></svg>Pedidos activos</div><div class="val">2</div><div class="sub">1 en tránsito · 1 en proceso</div></div>
-        <div class="pcl-card pcl-stat"><div class="lbl"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Cotizaciones</div><div class="val">1</div><div class="sub">Vence en 13 días</div></div>
-        <div class="pcl-card pcl-stat"><div class="lbl"><svg viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Compras del mes</div><div class="val">$6,750</div><div class="sub up">+18% vs. mayo</div></div>
-        <div class="pcl-card pcl-stat"><div class="lbl"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Ahorro socio</div><div class="val" style="color:var(--pcl-good)">$355</div><div class="sub">Este mes (5%)</div></div>
+        <div class="pcl-card pcl-stat"><div class="lbl"><svg viewBox="0 0 24 24"><path d="M3 6h18M3 6l1.5 13a1 1 0 0 0 1 .9h11a1 1 0 0 0 1-.9L19 6"/></svg>Pedidos activos</div><div class="val" id="pcl-st-pedidos">0</div><div class="sub" id="pcl-st-pedidos-sub">Sin pedidos activos</div></div>
+        <div class="pcl-card pcl-stat"><div class="lbl"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Cotizaciones</div><div class="val" id="pcl-st-cotiz">0</div><div class="sub" id="pcl-st-cotiz-sub">Ninguna abierta</div></div>
+        <div class="pcl-card pcl-stat"><div class="lbl"><svg viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Compras del mes</div><div class="val" id="pcl-st-compras">$0</div><div class="sub" id="pcl-st-compras-sub">Este mes</div></div>
+        <div class="pcl-card pcl-stat"><div class="lbl"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Ahorro socio</div><div class="val" style="color:var(--pcl-good)" id="pcl-st-ahorro">$0</div><div class="sub">Este mes (5%)</div></div>
       </div>
 
       <div class="pcl-codebox" style="margin-top:18px">
@@ -4407,12 +4411,14 @@ async function cambiarPass(key) {
         <div class="pcl-card pcl-qacard" onclick="showPage('home')"><div class="pcl-qaic"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg></div><div class="pcl-qat"><b>Ver catálogo</b><span>4,298 conectores</span></div></div>
       </div>
 
+      <div id="pcl-reorder-wrap" style="display:none">
       <div class="pcl-sh"><h2>Vuelve a pedir</h2><span class="link" onclick="pclGo('pedidos')">Ver pedidos <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span></div>
       <div class="pcl-prods">
         <div class="pcl-card pcl-prod"><div class="img"><svg viewBox="0 0 24 24"><rect x="3" y="9" width="6" height="6" rx="1"/><rect x="15" y="9" width="6" height="6" rx="1"/><path d="M9 12h6"/></svg></div><div class="pb"><div class="code">AT-NPT-08-JIC-12</div><div class="nm">Adaptador recto NPT 1/2&quot; a JIC 3/4&quot;</div><div class="price"><span class="now">$152.00</span><span class="was">$160.00</span><span class="off">&minus;5%</span></div></div></div>
         <div class="pcl-card pcl-prod"><div class="img"><svg viewBox="0 0 24 24"><path d="M4 14V6a2 2 0 0 1 2-2h6"/><path d="M12 4v8a2 2 0 0 0 2 2h6"/></svg></div><div class="pb"><div class="code">AT-C90-JIC-08</div><div class="nm">Codo 90° JIC #8 macho-hembra</div><div class="price"><span class="now">$214.70</span><span class="was">$226.00</span><span class="off">&minus;5%</span></div></div></div>
         <div class="pcl-card pcl-prod"><div class="img"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M6 12h12"/></svg></div><div class="pb"><div class="code">AT-TAP-BSP-06</div><div class="nm">Tapón hidráulico BSP 3/8&quot;</div><div class="price"><span class="now">$60.80</span><span class="was">$64.00</span><span class="off">&minus;5%</span></div></div></div>
         <div class="pcl-card pcl-prod"><div class="img"><svg viewBox="0 0 24 24"><path d="M12 3v6M12 15v6M3 12h6M15 12h6"/><circle cx="12" cy="12" r="3"/></svg></div><div class="pb"><div class="code">AT-TEE-JIC-10</div><div class="nm">Tee JIC #10 tres vías</div><div class="price"><span class="now">$298.30</span><span class="was">$314.00</span><span class="off">&minus;5%</span></div></div></div>
+      </div>
       </div>
     </section>
 
@@ -4421,26 +4427,19 @@ async function cambiarPass(key) {
       <div class="pcl-sh" style="margin-top:0"><h2>Mis pedidos</h2></div>
       <div class="pcl-tbl"><table>
         <thead><tr><th>Pedido</th><th>Fecha</th><th>Artículos</th><th>Total</th><th>Estatus</th><th></th></tr></thead>
-        <tbody>
-          <tr><td class="pcl-onum">#ADK-1042</td><td>14 jun 2026</td><td class="pcl-oprods">Adaptador NPT→JIC + 3 más</td><td class="pcl-ototal">$4,820.00</td><td><span class="pcl-st blue"><span class="dot"></span>En tránsito</span></td><td><div class="pcl-act"><button class="pcl-mini">Rastrear</button><button class="pcl-mini">Detalle</button></div></td></tr>
-          <tr><td class="pcl-onum">#ADK-1039</td><td>9 jun 2026</td><td class="pcl-oprods">Codo 90° JIC #8 (x12)</td><td class="pcl-ototal">$2,576.40</td><td><span class="pcl-st amber"><span class="dot"></span>En proceso</span></td><td><div class="pcl-act"><button class="pcl-mini">Detalle</button></div></td></tr>
-          <tr><td class="pcl-onum">#ADK-1031</td><td>2 jun 2026</td><td class="pcl-oprods">Tapón BSP + Tee JIC</td><td class="pcl-ototal">$1,290.00</td><td><span class="pcl-st green"><span class="dot"></span>Entregado</span></td><td><div class="pcl-act"><button class="pcl-mini solid">Reordenar</button><button class="pcl-mini">Factura</button></div></td></tr>
-          <tr><td class="pcl-onum">#ADK-1018</td><td>21 may 2026</td><td class="pcl-oprods">Manguera + adaptadores (6)</td><td class="pcl-ototal">$8,140.00</td><td><span class="pcl-st green"><span class="dot"></span>Entregado</span></td><td><div class="pcl-act"><button class="pcl-mini solid">Reordenar</button><button class="pcl-mini">Factura</button></div></td></tr>
-        </tbody>
+        <tbody id="pcl-orders-body"></tbody>
       </table></div>
+      <div id="pcl-orders-empty" style="display:none"></div>
     </section>
 
     <!-- COTIZACIONES -->
     <section class="pcl-view" id="pcl-v-cotizaciones">
       <div class="pcl-sh" style="margin-top:0"><h2>Cotizaciones</h2><span class="link">Nueva cotización <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span></div>
       <div class="pcl-tbl"><table>
-        <thead><tr><th>Cotización</th><th>Fecha</th><th>Vigencia</th><th>Total</th><th>Estatus</th><th></th></tr></thead>
-        <tbody>
-          <tr><td class="pcl-onum">#COT-2208</td><td>15 jun 2026</td><td>Vence 30 jun</td><td class="pcl-ototal">$8,450.00</td><td><span class="pcl-st amber"><span class="dot"></span>Pendiente</span></td><td><div class="pcl-act"><button class="pcl-mini solid">Convertir a pedido</button><button class="pcl-mini">PDF</button></div></td></tr>
-          <tr><td class="pcl-onum">#COT-2199</td><td>10 jun 2026</td><td>Vence 25 jun</td><td class="pcl-ototal">$3,180.00</td><td><span class="pcl-st blue"><span class="dot"></span>En revisión</span></td><td><div class="pcl-act"><button class="pcl-mini">Detalle</button><button class="pcl-mini">PDF</button></div></td></tr>
-          <tr><td class="pcl-onum">#COT-2185</td><td>28 may 2026</td><td>Vencida</td><td class="pcl-ototal">$2,100.00</td><td><span class="pcl-st gray"><span class="dot"></span>Vencida</span></td><td><div class="pcl-act"><button class="pcl-mini">Re-cotizar</button></div></td></tr>
-        </tbody>
+        <thead><tr><th>Cotización</th><th>Fecha</th><th>Total</th><th>Estatus</th><th></th></tr></thead>
+        <tbody id="pcl-quotes-body"></tbody>
       </table></div>
+      <div id="pcl-quotes-empty" style="display:none"></div>
     </section>
 
     <!-- FACTURACIÓN -->
@@ -4530,6 +4529,85 @@ function pclHydrate(){
   set('pcl-greet',(name.split(' ')[0]||'cliente')); 
   set('pcl-acc-name',name); set('pcl-acc-company',company); set('pcl-acc-email',email);
   pclGo('resumen');
+  pclLoadOrders();
+}
+
+function _pclMoney(n){ return '$' + (Number(n)||0).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function _pclDate(s){ if(!s) return '—'; var d=new Date(String(s).replace(' ','T')); if(isNaN(d)) return s; return d.toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'}); }
+function _pclEstado(state){
+  // sale.order: draft/sent = cotización; sale = confirmado; done = cerrado; cancel = cancelado
+  var map={ draft:['amber','Pendiente'], sent:['amber','Enviada'], sale:['blue','Confirmado'], done:['green','Entregado'], cancel:['gray','Cancelado'] };
+  return map[state]||['gray', state||'—'];
+}
+async function pclLoadOrders(){
+  var c=window.currentClientUser||{};
+  var body=document.getElementById('pcl-orders-body');
+  var qbody=document.getElementById('pcl-quotes-body');
+  if(body) body.innerHTML='<tr><td colspan="6" style="text-align:center;color:#97A1B0;padding:26px">Cargando…</td></tr>';
+  if(qbody) qbody.innerHTML='';
+  var orders=[];
+  try{
+    var r=await fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'get_client_orders', email:(c.email||''), partner_id:(c.id||0)})});
+    var d=await r.json();
+    orders=(d && d.ok && Array.isArray(d.orders))?d.orders:[];
+  }catch(e){ orders=[]; }
+
+  var pedidos=orders.filter(function(o){ return o.state==='sale'||o.state==='done'||o.state==='cancel'; });
+  var cotiz=orders.filter(function(o){ return o.state==='draft'||o.state==='sent'; });
+
+  // ── Tabla de pedidos ──
+  function rowPedido(o){
+    var st=_pclEstado(o.state);
+    var folio=o.folio||o.name||'—';
+    var puedeFactura=(o.state==='sale'||o.state==='done');
+    return '<tr><td class="pcl-onum">'+folio+'</td><td>'+_pclDate(o.date)+'</td>'
+      +'<td class="pcl-oprods">'+(o.items||0)+' artículo'+(o.items===1?'':'s')+'</td>'
+      +'<td class="pcl-ototal">'+_pclMoney(o.total)+'</td>'
+      +'<td><span class="pcl-st '+st[0]+'"><span class="dot"></span>'+st[1]+'</span></td>'
+      +'<td><div class="pcl-act"><button class="pcl-mini">Detalle</button>'+(puedeFactura?'<button class="pcl-mini">Factura</button>':'')+'</div></td></tr>';
+  }
+  if(body){
+    if(pedidos.length) body.innerHTML=pedidos.map(rowPedido).join('');
+    else body.innerHTML='<tr><td colspan="6" style="text-align:center;color:#97A1B0;padding:34px 20px">Aún no tienes pedidos. <span class="pcl-link" style="color:var(--pcl-navy);font-weight:600;cursor:pointer" onclick="showPage(\'home\')">Explora el catálogo</span> para hacer el primero.</td></tr>';
+  }
+
+  // ── Tabla de cotizaciones ──
+  function rowCotiz(o){
+    var st=_pclEstado(o.state);
+    var folio=o.folio||o.name||'—';
+    return '<tr><td class="pcl-onum">'+folio+'</td><td>'+_pclDate(o.date)+'</td>'
+      +'<td class="pcl-ototal">'+_pclMoney(o.total)+'</td>'
+      +'<td><span class="pcl-st '+st[0]+'"><span class="dot"></span>'+st[1]+'</span></td>'
+      +'<td><div class="pcl-act"><button class="pcl-mini">Detalle</button></div></td></tr>';
+  }
+  if(qbody){
+    if(cotiz.length) qbody.innerHTML=cotiz.map(rowCotiz).join('');
+    else qbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#97A1B0;padding:34px 20px">No tienes cotizaciones abiertas.</td></tr>';
+  }
+
+  // ── Contadores del resumen ──
+  var activos=pedidos.filter(function(o){ return o.state==='sale'; }).length;
+  var now=new Date();
+  var comprasMes=orders.filter(function(o){
+    if(o.state!=='sale'&&o.state!=='done') return false;
+    var dd=new Date(String(o.date||'').replace(' ','T'));
+    return !isNaN(dd) && dd.getMonth()===now.getMonth() && dd.getFullYear()===now.getFullYear();
+  }).reduce(function(a,o){ return a+(Number(o.total)||0); },0);
+  function setTxt(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; }
+  setTxt('pcl-st-pedidos', activos);
+  setTxt('pcl-st-pedidos-sub', activos? (activos+' en proceso') : 'Sin pedidos activos');
+  setTxt('pcl-st-cotiz', cotiz.length);
+  setTxt('pcl-st-cotiz-sub', cotiz.length? (cotiz.length+' abierta'+(cotiz.length===1?'':'s')) : 'Ninguna abierta');
+  setTxt('pcl-st-compras', _pclMoney(comprasMes));
+  setTxt('pcl-st-ahorro', _pclMoney(comprasMes*0.05));
+
+  // ── Badges del sidebar ──
+  function badge(id,n){ var e=document.getElementById(id); if(e){ if(n>0){ e.textContent=n; e.style.display=''; } else e.style.display='none'; } }
+  badge('pcl-badge-pedidos', pedidos.length);
+  badge('pcl-badge-cotiz', cotiz.length);
+
+  // ── "Vuelve a pedir" solo si hay pedidos ──
+  var rw=document.getElementById('pcl-reorder-wrap'); if(rw) rw.style.display = orders.length? '' : 'none';
 }
 </script>
 </div><!-- /page-miportal -->
