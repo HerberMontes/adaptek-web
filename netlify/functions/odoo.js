@@ -119,6 +119,15 @@ async function xmlrpc(uid, model, method, argsXml) {
   return await resp.text();
 }
 
+// Detecta un <fault> de Odoo y devuelve el mensaje (o null si todo OK)
+function xmlFault(text){
+  if (text && text.indexOf('<fault>') !== -1) {
+    const m = text.match(/<name>faultString<\/name>\s*<value>\s*<string>([\s\S]*?)<\/string>/);
+    return m ? m[1].replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').slice(0,400) : 'Odoo fault';
+  }
+  return null;
+}
+
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
@@ -1720,32 +1729,31 @@ exports.handler = async function(event, context) {
       const uid = await odooAuth();
       if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
       let pid = parseInt(body.partner_id) || 0;
+      let pname = '';
       if (!pid && body.email) {
         const r = await odooSearchRead(uid, 'res.partner',
-          `<value><array><data>${xmlStr('email')}<value><string>=ilike</string></value>${xmlStr(body.email)}</data></array></value>`, ['id'], 1);
+          `<value><array><data>${xmlStr('email')}<value><string>=ilike</string></value>${xmlStr(body.email)}</data></array></value>`, ['id','name'], 1);
         const m = r.match(/<int>(\d+)<\/int>/); if (m) pid = parseInt(m[1]);
+        const st = (r.split('<struct>')[1]||'').split('</struct>')[0]; pname = xmlExtractField(st,'name');
       }
       if (!pid) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'partner_no_encontrado'})};
-      const saved = [];
-      // Campos seguros (existen siempre): vat (RFC) y zip (CP fiscal)
-      const vals = [];
-      if (body.rfc)  { vals.push(`<member><name>vat</name>${xmlStr(String(body.rfc).toUpperCase())}</member>`); saved.push('rfc'); }
-      if (body.cp)   { vals.push(`<member><name>zip</name>${xmlStr(body.cp)}</member>`); saved.push('cp'); }
-      if (vals.length) {
-        await xmlrpc(uid, 'res.partner', 'write',
-          `<value><array><data><value><int>${pid}</int></value></data></array></value><value><struct>${vals.join('')}</struct></value>`);
+      // Escribe un solo campo y captura el error de Odoo si lo hay
+      async function writeField(field, valueXml){
+        const w = await xmlrpc(uid, 'res.partner', 'write',
+          `<value><array><data><value><int>${pid}</int></value></data></array></value><value><struct><member><name>${field}</name>${valueXml}</member></struct></value>`);
+        return xmlFault(w);
       }
-      // Mejor esfuerzo: régimen y uso CFDI (cada uno aislado por si el campo no existe)
-      async function tryWrite(field, value){
-        try {
-          await xmlrpc(uid, 'res.partner', 'write',
-            `<value><array><data><value><int>${pid}</int></value></data></array></value><value><struct><member><name>${field}</name>${xmlStr(value)}</member></struct></value>`);
-          return true;
-        } catch(e){ return false; }
+      const saved = [], errors = {};
+      async function tryField(key, field, valueXml){
+        try { const f = await writeField(field, valueXml); if (f) errors[key] = f; else saved.push(key); }
+        catch(e){ errors[key] = String(e).slice(0,200); }
       }
-      if (body.regimen) { if (await tryWrite('l10n_mx_edi_fiscal_regime', body.regimen)) saved.push('regimen'); }
-      if (body.uso)     { if (await tryWrite('l10n_mx_edi_usage', body.uso)) saved.push('uso'); }
-      return {statusCode:200, headers, body: JSON.stringify({ok:true, partner_id:pid, saved})};
+      if (body.rfc)     await tryField('rfc',     'vat',  xmlStr(String(body.rfc).toUpperCase()));
+      if (body.cp)      await tryField('cp',      'zip',  xmlStr(body.cp));
+      if (body.razon)   await tryField('razon',   'name', xmlStr(body.razon));
+      if (body.regimen) await tryField('regimen', 'l10n_mx_edi_fiscal_regime', xmlStr(body.regimen));
+      if (body.uso)     await tryField('uso',     'l10n_mx_edi_usage', xmlStr(body.uso));
+      return {statusCode:200, headers, body: JSON.stringify({ok: saved.length>0, partner_id:pid, partner_name:pname, saved, errors})};
     }
 
     // ── SUBIR CONSTANCIA DE SITUACIÓN FISCAL (PDF) como adjunto del partner ──
@@ -1771,8 +1779,45 @@ exports.handler = async function(event, context) {
         `<member><name>res_id</name><value><int>${pid}</int></value></member>` +
         `<member><name>mimetype</name>${xmlStr('application/pdf')}</member>` +
         `</struct></value>`);
+      const fault = xmlFault(createText);
+      if (fault) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:fault})};
       const m = createText.match(/<value><int>(\d+)<\/int><\/value>/);
       return {statusCode:200, headers, body: JSON.stringify({ok:true, partner_id:pid, attachment_id: m ? parseInt(m[1]) : null})};
+    }
+
+    // ── LEER DATOS FISCALES del partner (para prellenar checkout) ──
+    if (action === 'get_fiscal_data') {
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+      let pid = parseInt(body.partner_id) || 0;
+      if (!pid && body.email) {
+        const r = await odooSearchRead(uid, 'res.partner',
+          `<value><array><data>${xmlStr('email')}<value><string>=ilike</string></value>${xmlStr(body.email)}</data></array></value>`, ['id'], 1);
+        const m = r.match(/<int>(\d+)<\/int>/); if (m) pid = parseInt(m[1]);
+      }
+      if (!pid) return {statusCode:200, headers, body: JSON.stringify({found:false})};
+      const clean = function(v){ return (v==='0' || v==='false' || v==null) ? '' : v; };
+      const out = { found:true, partner_id:pid };
+      const idDom = `<value><array><data>${xmlStr('id')}<value><string>=</string></value><value><int>${pid}</int></value></data></array></value>`;
+      try {
+        const r = await odooSearchRead(uid, 'res.partner', idDom, ['vat','zip','name'], 1);
+        const st = (r.split('<struct>')[1]||'').split('</struct>')[0];
+        out.vat = clean(xmlExtractField(st,'vat')); out.zip = clean(xmlExtractField(st,'zip')); out.name = xmlExtractField(st,'name');
+      } catch(_){}
+      try {
+        const r2 = await odooSearchRead(uid, 'res.partner', idDom, ['l10n_mx_edi_fiscal_regime','l10n_mx_edi_usage'], 1);
+        const st2 = (r2.split('<struct>')[1]||'').split('</struct>')[0];
+        out.regime = clean(xmlExtractField(st2,'l10n_mx_edi_fiscal_regime')); out.usage = clean(xmlExtractField(st2,'l10n_mx_edi_usage'));
+      } catch(_){}
+      try {
+        const att = await odooSearchRead(uid, 'ir.attachment',
+          `<value><array><data>${xmlStr('res_model')}<value><string>=</string></value>${xmlStr('res.partner')}</data></array></value>` +
+          `<value><array><data>${xmlStr('res_id')}<value><string>=</string></value><value><int>${pid}</int></value></data></array></value>` +
+          `<value><array><data>${xmlStr('mimetype')}<value><string>=</string></value>${xmlStr('application/pdf')}</data></array></value>`,
+          ['id'], 1);
+        out.has_constancia = /<int>\d+<\/int>/.test(att);
+      } catch(_){ out.has_constancia = false; }
+      return {statusCode:200, headers, body: JSON.stringify(out)};
     }
 
     // ── SEARCH PRODUCTS ──
