@@ -10,8 +10,8 @@
 
 const ODOO_URL  = process.env.ODOO_URL  || 'https://hydratechgroup.odoo.com';
 const ODOO_DB   = process.env.ODOO_DB   || 'hydratechgroup';
-const ODOO_USER = process.env.ODOO_USER || '';
-const ODOO_KEY  = process.env.ODOO_API_KEY || '';
+const ODOO_USER = process.env.ODOO_USER || 'herber.montes@hydratechgroup.mx';
+const ODOO_KEY  = process.env.ODOO_API_KEY || process.env.ODOO_KEY || '';
 const MP_TOKEN  = process.env.MP_ACCESS_TOKEN || '';
 
 function xmlStr(v){ return `<value><string>${String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</string></value>`; }
