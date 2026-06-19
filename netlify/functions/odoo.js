@@ -2503,7 +2503,13 @@ exports.handler = async function(event, context) {
       // Intentar CLABE dinámica en Mercado Pago (opcional). Si no está configurado o falla,
       // igual reservamos el pedido y mostramos la cuenta fija de la empresa para transferir.
       let ticketUrl='', clabe='', banco='', referencia='', beneficiario='', expira='', paymentId=null, payStatus='pending';
-      let mpDebug = { mp_token_presente: !!MP_TOKEN };
+      let mpDebug = { mp_token_presente: !!MP_TOKEN, enviado: {
+        transaction_amount: paymentBody.transaction_amount,
+        payment_method_id: paymentBody.payment_method_id,
+        notification_url: paymentBody.notification_url,
+        payer_email: paymentBody.payer && paymentBody.payer.email,
+        payer_entity_type: paymentBody.payer && paymentBody.payer.entity_type
+      } };
       if (MP_TOKEN) {
         try {
           const mpResp = await fetch('https://api.mercadopago.com/v1/payments', {
