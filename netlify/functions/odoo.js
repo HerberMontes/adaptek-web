@@ -2176,24 +2176,153 @@ exports.handler = async function(event, context) {
       }
       if (!pid) return {statusCode:200, headers, body: JSON.stringify({ok:true, orders:[]})};
       const domain = `<value><array><data>${xmlStr('partner_id')}<value><string>=</string></value>${xmlInt(pid)}</data></array></value>`;
-      const text = await odooSearchRead(uid, 'sale.order', domain, ['name','client_order_ref','date_order','state','amount_total','order_line'], 50);
+      const text = await odooSearchRead(uid, 'sale.order', domain, ['name','client_order_ref','date_order','state','amount_total','invoice_status','invoice_ids','order_line'], 50);
       const structs = text.match(/<struct>[\s\S]*?<\/struct>/g) || [];
       const orders = [];
       for (const st of structs) {
         let items = 0;
         const olm = st.match(/<name>\s*order_line\s*<\/name>\s*<value>\s*<array>\s*<data>([\s\S]*?)<\/data>/);
         if (olm) items = (olm[1].match(/<int>/g) || []).length;
+        const invStatus = xmlExtractField(st, 'invoice_status');
+        const invm = st.match(/<name>\s*invoice_ids\s*<\/name>\s*<value>\s*<array>\s*<data>([\s\S]*?)<\/data>/);
+        const invCount = invm ? (invm[1].match(/<int>/g) || []).length : 0;
         orders.push({
           name: xmlExtractField(st, 'name'),
           folio: xmlExtractField(st, 'client_order_ref'),
           date: xmlExtractField(st, 'date_order'),
           state: xmlExtractField(st, 'state'),
           total: parseFloat(xmlExtractField(st, 'amount_total')) || 0,
-          items: items
+          items: items,
+          facturado: (invStatus === 'invoiced') || (invCount > 0)
         });
       }
       orders.sort((a,b)=> (b.date||'').localeCompare(a.date||''));
       return {statusCode:200, headers, body: JSON.stringify({ok:true, orders})};
+    }
+
+    // ── DETALLE de un pedido/cotización (líneas + totales + estado de factura) ──
+    if (action === 'get_order_detail') {
+      const folio = (body.folio || '').trim();
+      const email = (body.email || '').trim();
+      let pid = parseInt(body.partner_id) || 0;
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+      if (!folio) return {statusCode:400, headers, body: JSON.stringify({ok:false, error:'Folio requerido'})};
+      if (!pid && email) {
+        const pf = await xmlrpc(uid, 'res.partner', 'search',
+          `<value><array><data><value><array><data>${xmlStr('email')}<value><string>=ilike</string></value>${xmlStr(email)}</data></array></value></data></array></value>`);
+        const pm = pf.match(/<int>(\d+)<\/int>/);
+        pid = pm ? parseInt(pm[1]) : 0;
+      }
+      // Buscar la orden por folio (y por partner, como control de acceso)
+      let domain = `<value><array><data>${xmlStr('client_order_ref')}<value><string>=</string></value>${xmlStr(folio)}`;
+      if (pid) domain += `${xmlStr('partner_id')}<value><string>=</string></value>${xmlInt(pid)}`;
+      domain += `</data></array></value>`;
+      const text = await odooSearchRead(uid, 'sale.order', domain,
+        ['id','name','client_order_ref','date_order','state','amount_untaxed','amount_tax','amount_total','invoice_status','invoice_ids'], 1);
+      const st = (text.match(/<struct>[\s\S]*?<\/struct>/) || [])[0];
+      if (!st) return {statusCode:200, headers, body: JSON.stringify({ok:true, found:false})};
+      const orderId = parseInt(xmlExtractField(st, 'id')) || 0;
+      // Líneas del pedido
+      const lineDomain = `<value><array><data>${xmlStr('order_id')}<value><string>=</string></value>${xmlInt(orderId)}</data></array></value>`;
+      const lt = await odooSearchRead(uid, 'sale.order.line', lineDomain, ['name','product_uom_qty','price_unit','price_subtotal'], 100);
+      const lstructs = lt.match(/<struct>[\s\S]*?<\/struct>/g) || [];
+      const lines = lstructs.map(s => ({
+        name: xmlExtractField(s, 'name'),
+        qty: parseFloat(xmlExtractField(s, 'product_uom_qty')) || 0,
+        price: parseFloat(xmlExtractField(s, 'price_unit')) || 0,
+        subtotal: parseFloat(xmlExtractField(s, 'price_subtotal')) || 0
+      }));
+      const invStatus = xmlExtractField(st, 'invoice_status');
+      const invm = st.match(/<name>\s*invoice_ids\s*<\/name>\s*<value>\s*<array>\s*<data>([\s\S]*?)<\/data>/);
+      const invIds = invm ? (invm[1].match(/<int>(\d+)<\/int>/g) || []).map(x => parseInt(x.replace(/\D/g,''))) : [];
+      const facturado = (invStatus === 'invoiced') || (invIds.length > 0);
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, found:true, order:{
+        folio: folio,
+        name: xmlExtractField(st, 'name'),
+        date: xmlExtractField(st, 'date_order'),
+        state: xmlExtractField(st, 'state'),
+        subtotal: parseFloat(xmlExtractField(st, 'amount_untaxed')) || 0,
+        tax: parseFloat(xmlExtractField(st, 'amount_tax')) || 0,
+        total: parseFloat(xmlExtractField(st, 'amount_total')) || 0,
+        lines: lines,
+        facturado: facturado
+      }})};
+    }
+
+    // ── DESCARGAR FACTURA (XML/PDF) de un pedido facturado ──
+    if (action === 'descargar_factura') {
+      const folio = (body.folio || '').trim();
+      let pid = parseInt(body.partner_id) || 0;
+      const email = (body.email || '').trim();
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+      if (!folio) return {statusCode:400, headers, body: JSON.stringify({ok:false, error:'Folio requerido'})};
+      if (!pid && email) {
+        const pf = await xmlrpc(uid, 'res.partner', 'search',
+          `<value><array><data><value><array><data>${xmlStr('email')}<value><string>=ilike</string></value>${xmlStr(email)}</data></array></value></data></array></value>`);
+        const pm = pf.match(/<int>(\d+)<\/int>/);
+        pid = pm ? parseInt(pm[1]) : 0;
+      }
+      let domain = `<value><array><data>${xmlStr('client_order_ref')}<value><string>=</string></value>${xmlStr(folio)}`;
+      if (pid) domain += `${xmlStr('partner_id')}<value><string>=</string></value>${xmlInt(pid)}`;
+      domain += `</data></array></value>`;
+      const text = await odooSearchRead(uid, 'sale.order', domain, ['id','invoice_ids'], 1);
+      const st = (text.match(/<struct>[\s\S]*?<\/struct>/) || [])[0];
+      if (!st) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'Pedido no encontrado'})};
+      const invm = st.match(/<name>\s*invoice_ids\s*<\/name>\s*<value>\s*<array>\s*<data>([\s\S]*?)<\/data>/);
+      const invIds = invm ? (invm[1].match(/<int>(\d+)<\/int>/g) || []).map(x => parseInt(x.replace(/\D/g,''))) : [];
+      if (!invIds.length) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'Este pedido aún no tiene factura'})};
+      // Buscar los adjuntos (XML CFDI y/o PDF) de la(s) factura(s)
+      const invIdsXml = invIds.map(id => xmlInt(id)).join('');
+      const attDomain = `<value><array><data>
+        ${xmlStr('res_model')}<value><string>=</string></value>${xmlStr('account.move')}
+        ${xmlStr('res_id')}<value><string>in</string></value><value><array><data>${invIdsXml}</data></array></value>
+      </data></array></value>`;
+      const at = await odooSearchRead(uid, 'ir.attachment', attDomain, ['name','mimetype','datas'], 20);
+      const astructs = at.match(/<struct>[\s\S]*?<\/struct>/g) || [];
+      const files = astructs.map(s => ({
+        name: xmlExtractField(s, 'name'),
+        mimetype: xmlExtractField(s, 'mimetype'),
+        datas: xmlExtractField(s, 'datas')
+      })).filter(f => f.datas && (/(xml|pdf)/i.test(f.mimetype) || /\.(xml|pdf)$/i.test(f.name)));
+      if (!files.length) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'La factura no tiene archivos disponibles todavía'})};
+      return {statusCode:200, headers, body: JSON.stringify({ok:true, files})};
+    }
+
+    // ── ELIMINAR (cancelar) una cotización del cliente ──
+    if (action === 'eliminar_cotizacion') {
+      const folio = (body.folio || '').trim();
+      let pid = parseInt(body.partner_id) || 0;
+      const email = (body.email || '').trim();
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+      if (!folio) return {statusCode:400, headers, body: JSON.stringify({ok:false, error:'Folio requerido'})};
+      if (!pid && email) {
+        const pf = await xmlrpc(uid, 'res.partner', 'search',
+          `<value><array><data><value><array><data>${xmlStr('email')}<value><string>=ilike</string></value>${xmlStr(email)}</data></array></value></data></array></value>`);
+        const pm = pf.match(/<int>(\d+)<\/int>/);
+        pid = pm ? parseInt(pm[1]) : 0;
+      }
+      let domain = `<value><array><data>${xmlStr('client_order_ref')}<value><string>=</string></value>${xmlStr(folio)}`;
+      if (pid) domain += `${xmlStr('partner_id')}<value><string>=</string></value>${xmlInt(pid)}`;
+      domain += `</data></array></value>`;
+      const text = await odooSearchRead(uid, 'sale.order', domain, ['id','state'], 1);
+      const st = (text.match(/<struct>[\s\S]*?<\/struct>/) || [])[0];
+      if (!st) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'Cotización no encontrada'})};
+      const id = parseInt(xmlExtractField(st, 'id')) || 0;
+      const state = xmlExtractField(st, 'state');
+      // Seguridad: solo se pueden eliminar cotizaciones (no pedidos confirmados)
+      if (state !== 'draft' && state !== 'sent') {
+        return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'Solo se pueden eliminar cotizaciones, no pedidos confirmados'})};
+      }
+      try {
+        await xmlrpc(uid, 'sale.order', 'action_cancel',
+          `<value><array><data><value><int>${id}</int></value></data></array></value>`);
+      } catch(e) {
+        return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'No se pudo eliminar: ' + (e.message||'')})};
+      }
+      return {statusCode:200, headers, body: JSON.stringify({ok:true})};
     }
 
     // ── PRECIOS DE PRUEBA: poner TODOS los productos a un precio (default $1) ──
@@ -2500,16 +2629,9 @@ exports.handler = async function(event, context) {
         }
       };
 
-      // Intentar CLABE dinámica en Mercado Pago (opcional). Si no está configurado o falla,
-      // igual reservamos el pedido y mostramos la cuenta fija de la empresa para transferir.
+      // Generar CLABE dinámica en Mercado Pago. Si el monto es muy bajo u otro motivo,
+      // igual reservamos el pedido (el cliente verá la opción de transferencia / contacto).
       let ticketUrl='', clabe='', banco='', referencia='', beneficiario='', expira='', paymentId=null, payStatus='pending';
-      let mpDebug = { mp_token_presente: !!MP_TOKEN, enviado: {
-        transaction_amount: paymentBody.transaction_amount,
-        payment_method_id: paymentBody.payment_method_id,
-        notification_url: paymentBody.notification_url,
-        payer_email: paymentBody.payer && paymentBody.payer.email,
-        payer_entity_type: paymentBody.payer && paymentBody.payer.entity_type
-      } };
       if (MP_TOKEN) {
         try {
           const mpResp = await fetch('https://api.mercadopago.com/v1/payments', {
@@ -2522,14 +2644,6 @@ exports.handler = async function(event, context) {
             body: JSON.stringify(paymentBody)
           });
           const pay = await mpResp.json();
-          mpDebug.http_status = mpResp.status;
-          mpDebug.mp_status = pay && pay.status;
-          mpDebug.mp_status_detail = pay && pay.status_detail;
-          mpDebug.mp_message = pay && pay.message;
-          mpDebug.mp_cause = pay && pay.cause;
-          mpDebug.mp_payment_id = pay && pay.id;
-          mpDebug.point_of_interaction = pay && pay.point_of_interaction;
-          mpDebug.transaction_details = pay && pay.transaction_details;
           if (pay && pay.status) {
             payStatus = pay.status; paymentId = pay.id || null;
             try {
@@ -2546,7 +2660,7 @@ exports.handler = async function(event, context) {
               expira = pay.date_of_expiration || '';
             } catch(_){}
           }
-        } catch(e){ mpDebug.fetch_error = String(e && e.message || e); }
+        } catch(_){}
       }
 
       // Respaldo: si no hay CLABE dinámica, usar la cuenta fija de la empresa (variables de entorno)
@@ -2569,8 +2683,7 @@ exports.handler = async function(event, context) {
         banco: banco,
         referencia: referencia,
         beneficiario: beneficiario,
-        expira: expira,
-        mp_debug: mpDebug
+        expira: expira
       })};
     }
 
