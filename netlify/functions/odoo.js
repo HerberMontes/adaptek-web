@@ -2503,6 +2503,7 @@ exports.handler = async function(event, context) {
       // Intentar CLABE dinámica en Mercado Pago (opcional). Si no está configurado o falla,
       // igual reservamos el pedido y mostramos la cuenta fija de la empresa para transferir.
       let ticketUrl='', clabe='', banco='', referencia='', beneficiario='', expira='', paymentId=null, payStatus='pending';
+      let mpDebug = { mp_token_presente: !!MP_TOKEN };
       if (MP_TOKEN) {
         try {
           const mpResp = await fetch('https://api.mercadopago.com/v1/payments', {
@@ -2515,6 +2516,14 @@ exports.handler = async function(event, context) {
             body: JSON.stringify(paymentBody)
           });
           const pay = await mpResp.json();
+          mpDebug.http_status = mpResp.status;
+          mpDebug.mp_status = pay && pay.status;
+          mpDebug.mp_status_detail = pay && pay.status_detail;
+          mpDebug.mp_message = pay && pay.message;
+          mpDebug.mp_cause = pay && pay.cause;
+          mpDebug.mp_payment_id = pay && pay.id;
+          mpDebug.point_of_interaction = pay && pay.point_of_interaction;
+          mpDebug.transaction_details = pay && pay.transaction_details;
           if (pay && pay.status) {
             payStatus = pay.status; paymentId = pay.id || null;
             try {
@@ -2531,7 +2540,7 @@ exports.handler = async function(event, context) {
               expira = pay.date_of_expiration || '';
             } catch(_){}
           }
-        } catch(_){}
+        } catch(e){ mpDebug.fetch_error = String(e && e.message || e); }
       }
 
       // Respaldo: si no hay CLABE dinámica, usar la cuenta fija de la empresa (variables de entorno)
@@ -2554,7 +2563,8 @@ exports.handler = async function(event, context) {
         banco: banco,
         referencia: referencia,
         beneficiario: beneficiario,
-        expira: expira
+        expira: expira,
+        mp_debug: mpDebug
       })};
     }
 
