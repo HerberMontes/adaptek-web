@@ -1803,10 +1803,11 @@ exports.handler = async function(event, context) {
       const out = { found:true, partner_id:pid };
       const idDom = `<value><array><data>${xmlStr('id')}<value><string>=</string></value><value><int>${pid}</int></value></data></array></value>`;
       try {
-        const r = await odooSearchRead(uid, 'res.partner', idDom, ['vat','zip','name','street','street2','city'], 1);
+        const r = await odooSearchRead(uid, 'res.partner', idDom, ['vat','zip','name','street','street2','city','phone','mobile','company_name'], 1);
         const st = (r.split('<struct>')[1]||'').split('</struct>')[0];
         out.vat = clean(xmlExtractField(st,'vat')); out.zip = clean(xmlExtractField(st,'zip')); out.name = xmlExtractField(st,'name');
         out.street = clean(xmlExtractField(st,'street')); out.street2 = clean(xmlExtractField(st,'street2')); out.city = clean(xmlExtractField(st,'city'));
+        out.phone = clean(xmlExtractField(st,'phone')) || clean(xmlExtractField(st,'mobile')); out.company_name = clean(xmlExtractField(st,'company_name'));
       } catch(_){}
       try {
         const r2 = await odooSearchRead(uid, 'res.partner', idDom, ['l10n_mx_edi_fiscal_regime','l10n_mx_edi_usage'], 1);
@@ -1822,6 +1823,33 @@ exports.handler = async function(event, context) {
         out.has_constancia = /<int>\d+<\/int>/.test(att);
       } catch(_){ out.has_constancia = false; }
       return {statusCode:200, headers, body: JSON.stringify(out)};
+    }
+
+    // ── ACTUALIZAR DATOS DE LA CUENTA (nombre, empresa, teléfono) ──
+    if (action === 'update_account') {
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+      let pid = parseInt(body.partner_id) || 0;
+      if (!pid && body.email) {
+        const r = await odooSearchRead(uid, 'res.partner',
+          `<value><array><data>${xmlStr('email')}<value><string>=ilike</string></value>${xmlStr(body.email)}</data></array></value>`, ['id'], 1);
+        const m = r.match(/<int>(\d+)<\/int>/); if (m) pid = parseInt(m[1]);
+      }
+      if (!pid) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'partner_no_encontrado'})};
+      async function writeFieldA(field, valueXml){
+        const w = await xmlrpc(uid, 'res.partner', 'write',
+          `<value><array><data><value><int>${pid}</int></value></data></array></value><value><struct><member><name>${field}</name>${valueXml}</member></struct></value>`);
+        return xmlFault(w);
+      }
+      const saved = [], errors = {};
+      async function tryA(key, field, valueXml){
+        try { const f = await writeFieldA(field, valueXml); if (f) errors[key] = f; else saved.push(key); }
+        catch(e){ errors[key] = String(e).slice(0,200); }
+      }
+      if (body.name != null && String(body.name).trim())    await tryA('name',    'name',         xmlStr(String(body.name).trim()));
+      if (body.company != null)                              await tryA('company', 'company_name', xmlStr(String(body.company).trim()));
+      if (body.phone != null)                                await tryA('phone',   'phone',        xmlStr(String(body.phone).trim()));
+      return {statusCode:200, headers, body: JSON.stringify({ ok: Object.keys(errors).length===0, partner_id:pid, saved, errors })};
     }
 
     // ── SEARCH PRODUCTS ──
@@ -2490,6 +2518,13 @@ exports.handler = async function(event, context) {
           banco = (tdata.bank_info && (tdata.bank_info.collector && tdata.bank_info.collector.long_name)) || '';
           expira = pay.date_of_expiration || '';
         } catch(_){}
+
+        // Respaldo: si Mercado Pago no expone la CLABE, usar la cuenta fija de la empresa
+        if (!clabe && process.env.SPEI_CLABE) {
+          clabe = process.env.SPEI_CLABE;
+          if (!banco)        banco = process.env.SPEI_BANCO || '';
+          if (!beneficiario) beneficiario = process.env.SPEI_BENEFICIARIO || '';
+        }
 
         return {statusCode:200, headers, body: JSON.stringify({
           success: true,
