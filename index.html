@@ -3436,7 +3436,12 @@ window.pagarConSPEI = async function(){
     });
     var data = await resp.json();
     if (typeof console!=='undefined') console.log('crear_pago_spei respuesta:', data);
-    try { console.log('%cMP DEBUG (cópialo y pásamelo):', 'color:#fff;background:#C8102E;padding:2px 6px;border-radius:4px;font-weight:700;', JSON.stringify(data && data.mp_debug)); } catch(_){}
+    try {
+      var dbg = (data && data.mp_debug) || {};
+      console.log('%cMP MESSAGE:', 'color:#fff;background:#C8102E;padding:2px 6px;border-radius:4px;font-weight:700;', dbg.mp_message || '(sin mensaje)');
+      console.log('%cMP CAUSE:', 'color:#fff;background:#C8102E;padding:2px 6px;border-radius:4px;font-weight:700;', JSON.stringify(dbg.mp_cause));
+      console.log('%cMP ENVIADO:', 'color:#fff;background:#001F5B;padding:2px 6px;border-radius:4px;font-weight:700;', JSON.stringify(dbg.enviado));
+    } catch(_){}
 
     if (data && data.success) {
       window._speiGenerado = true;
