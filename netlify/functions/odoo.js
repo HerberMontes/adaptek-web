@@ -166,29 +166,67 @@ async function facturarOrden(uid, saleId) {
     const invIds = invm ? (invm[1].match(/<int>(\d+)<\/int>/g) || []).map(x => parseInt(x.replace(/\D/g,''))) : [];
     if (!invIds.length) return { ok:false, error:'No se generó factura en la orden' };
     const invoiceId = invIds[invIds.length - 1];
-    // 4) Validar (publicar) la factura: borrador -> publicada
-    let posted = false;
-    try {
-      const postText = await xmlrpc(uid, 'account.move', 'action_post',
-        `<value><array><data><value><int>${invoiceId}</int></value></data></array></value>`);
-      posted = !xmlFault(postText);
-    } catch(_){}
-    // 5) Intentar timbrar el CFDI (best-effort; depende de tu PAC configurado en Odoo).
-    let stamped = false;
-    if (posted) {
-      const tryMethods = ['l10n_mx_edi_cfdi_try_send', 'action_process_edi_web_services'];
-      for (const mth of tryMethods) {
-        try {
-          const tText = await xmlrpc(uid, 'account.move', mth,
-            `<value><array><data><value><int>${invoiceId}</int></value></data></array></value>`);
-          if (!xmlFault(tText)) { stamped = true; break; }
-        } catch(_){}
-      }
-    }
-    return { ok:true, invoiceId, posted, stamped };
+    // 4) Preparar campos CFDI, validar y timbrar (helper reusable)
+    const pr = await publicarYTimbrar(uid, invoiceId);
+    return { ok:true, invoiceId, posted:pr.posted, stamped:pr.stamped, post_error:pr.post_error, stamp_error:pr.stamp_error };
   } catch(e) {
     return { ok:false, error: String(e && e.message || e) };
   }
+}
+
+// Prepara los campos CFDI requeridos, valida (publica) y timbra una factura existente.
+// Sirve tanto para una factura recién creada como para un borrador que quedó pendiente.
+async function publicarYTimbrar(uid, invoiceId) {
+  let posted = false, stamped = false, post_error = '', stamp_error = '';
+  // Estado actual de la factura
+  let state = 'draft';
+  try {
+    const mt = await odooSearchRead(uid, 'account.move',
+      `<value><array><data>${xmlStr('id')}<value><string>=</string></value>${xmlInt(invoiceId)}</data></array></value>`, ['state'], 1);
+    state = xmlExtractField((mt.match(/<struct>[\s\S]*?<\/struct>/) || [''])[0], 'state') || 'draft';
+  } catch(_){}
+
+  if (state === 'posted') {
+    posted = true;
+  } else {
+    // Fecha de factura = hoy
+    try {
+      const today = new Date().toISOString().slice(0,10);
+      await xmlrpc(uid, 'account.move', 'write',
+        `<value><array><data><value><int>${invoiceId}</int></value></data></array></value><value><struct><member><name>invoice_date</name><value><string>${today}</string></value></member></struct></value>`);
+    } catch(_){}
+    // Forma de pago CFDI: método '03' (Transferencia electrónica de fondos)
+    try {
+      const pmText = await xmlrpc(uid, 'l10n_mx_edi.payment.method', 'search',
+        `<value><array><data><value><array><data>${xmlStr('code')}<value><string>=</string></value>${xmlStr('03')}</data></array></value></data></array></value>`);
+      const pmm = pmText.match(/<int>(\d+)<\/int>/);
+      if (pmm) {
+        await xmlrpc(uid, 'account.move', 'write',
+          `<value><array><data><value><int>${invoiceId}</int></value></data></array></value><value><struct><member><name>l10n_mx_edi_payment_method_id</name><value><int>${pmm[1]}</int></value></member></struct></value>`);
+      }
+    } catch(_){}
+    // Validar (publicar): borrador -> publicada
+    try {
+      const postText = await xmlrpc(uid, 'account.move', 'action_post',
+        `<value><array><data><value><int>${invoiceId}</int></value></data></array></value>`);
+      const pf = xmlFault(postText);
+      if (pf) post_error = pf; else posted = true;
+    } catch(e){ post_error = String(e && e.message || e); }
+  }
+
+  // Timbrar el CFDI (best-effort; depende del PAC configurado en Odoo)
+  if (posted) {
+    const tryMethods = ['l10n_mx_edi_cfdi_try_send', 'action_process_edi_web_services'];
+    for (const mth of tryMethods) {
+      try {
+        const tText = await xmlrpc(uid, 'account.move', mth,
+          `<value><array><data><value><int>${invoiceId}</int></value></data></array></value>`);
+        const tf = xmlFault(tText);
+        if (!tf) { stamped = true; break; } else { stamp_error = tf; }
+      } catch(e){ stamp_error = String(e && e.message || e); }
+    }
+  }
+  return { posted, stamped, post_error, stamp_error };
 }
 
 // Envía la factura (XML + PDF) por correo al cliente del pedido.
@@ -2480,7 +2518,14 @@ exports.handler = async function(event, context) {
       const note = xmlExtractField(st, 'note') || '';
       const invm = st.match(/<name>\s*invoice_ids\s*<\/name>\s*<value>\s*<array>\s*<data>([\s\S]*?)<\/data>/);
       const invIds = invm ? (invm[1].match(/<int>(\d+)<\/int>/g) || []) : [];
-      if (invIds.length) return {statusCode:200, headers, body: JSON.stringify({ok:true, already_invoiced:true})};
+      // Si ya hay factura, intentar publicarla/timbrarla (por si quedó en borrador).
+      if (invIds.length) {
+        const existingId = parseInt(invIds[invIds.length-1].replace(/\D/g,'')) || 0;
+        const pr = await publicarYTimbrar(uid, existingId);
+        // Si quedó publicada (y con archivos), enviarla por correo.
+        if (pr.posted) { try { await enviarFacturaCorreo(uid, id, existingId, folio); } catch(_){} }
+        return {statusCode:200, headers, body: JSON.stringify({ ok:true, already_invoiced:true, invoiceId:existingId, posted:pr.posted, stamped:pr.stamped, post_error:pr.post_error, stamp_error:pr.stamp_error })};
+      }
       if (state !== 'sale' && state !== 'done') {
         return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'El pedido aún no está confirmado (pago pendiente)'})};
       }
