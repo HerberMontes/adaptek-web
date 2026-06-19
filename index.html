@@ -2165,7 +2165,7 @@ cartUpdateBadge();
         <div style="font-size:11px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:#8A93A3;margin-bottom:11px;">Datos de facturación</div>
         <div style="font-size:17px;font-weight:700;color:#001F5B;letter-spacing:-.2px;" id="co-confirm-razon">&mdash;</div>
         <div style="font-size:13.5px;color:#5A6675;margin-top:5px;">RFC&nbsp;&nbsp;<span id="co-confirm-rfc" style="color:#001F5B;font-weight:600;letter-spacing:.2px;">&mdash;</span></div>
-        <div style="font-size:13px;color:#7A8499;margin-top:7px;">Constancia de Situación Fiscal en archivo</div>
+        <div style="font-size:13px;color:#7A8499;margin-top:7px;" id="co-confirm-const">Constancia de Situación Fiscal en archivo</div>
         <div style="height:1px;background:#EEF1F6;margin:18px 0 16px;"></div>
         <label style="display:flex;align-items:center;gap:11px;cursor:pointer;font-size:14px;color:#001F5B;font-weight:500;">
           <input type="checkbox" id="co-confirm-fact" checked style="width:17px;height:17px;accent-color:#001F5B;"/>
@@ -2501,8 +2501,8 @@ window.coLoadFiscalProfile = function(){
         if(t) t.textContent='\u2713 Constancia en archivo'; if(s) s.textContent='Ya la tienes guardada en tu perfil';
         var box=document.getElementById('co-constancia-box'); if(box){ box.style.borderColor='#1d7d34'; box.style.background='#F2FBF4'; }
       }
-      // Si los datos están COMPLETOS (RFC + constancia) -> mostrar confirmación, ocultar pregunta y formulario
-      if (d.vat && d.has_constancia){
+      // Si ya hay RFC guardado -> mostrar confirmación, ocultar pregunta y formulario
+      if (d.vat){
         window._coFiscalComplete = true;
         window.CHECKOUT.facturar = true;
         var ask=document.getElementById('co-fact-ask'); if(ask) ask.style.display='none';
@@ -2510,6 +2510,7 @@ window.coLoadFiscalProfile = function(){
         var conf=document.getElementById('co-fiscal-confirm'); if(conf) conf.style.display='block';
         var cr=document.getElementById('co-confirm-razon'); if(cr) cr.textContent = d.name || '(tu razón social)';
         var cf=document.getElementById('co-confirm-rfc'); if(cf) cf.textContent = (d.vat||'').toUpperCase();
+        var cc=document.getElementById('co-confirm-const'); if(cc) cc.style.display = d.has_constancia ? '' : 'none';
       }
       // Dirección guardada para el paso de envío
       if (d.street || d.zip) {
@@ -4861,6 +4862,7 @@ function pclOpenPerfil(){
   _pclSetActive('cuenta');
   if(typeof pclLockAccount==='function') pclLockAccount();
   if(typeof pclLoadAccount==='function') pclLoadAccount();
+  if(typeof pclLoadFiscal==='function') pclLoadFiscal();
   window.scrollTo({top:0,behavior:'auto'});
 }
 function pclClosePerfil(){
@@ -4976,6 +4978,32 @@ function pclSaveFiscal(){
     .catch(function(){ if(btn){ btn.disabled=false; btn.textContent='Guardar datos'; } alert('Error de conexión al guardar.'); });
 }
 function _pclClean(v){ return (v==='0'||v==='false'||v==null)?'':v; }
+function pclLoadFiscal(){
+  var ref=_pclPartnerRef();
+  fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'get_fiscal_data', partner_id:(ref.partner_id!=null?ref.partner_id:0), email:ref.email||''})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(!d||!d.found) return;
+      function sv(id,v){ var e=document.getElementById(id); if(e && v!=null && v!=='' && v!=='0' && v!=='false') e.value=v; }
+      sv('pcl-fac-rfc',(d.vat||'').toUpperCase());
+      sv('pcl-fac-razon',d.name);
+      var rg=document.getElementById('pcl-fac-regimen'); if(rg && d.regime) rg.value=d.regime;
+      var us=document.getElementById('pcl-fac-uso'); if(us && d.usage) us.value=d.usage;
+      sv('pcl-fac-cp',d.zip);
+      sv('pcl-fac-calle',d.street);
+      sv('pcl-fac-colonia',d.street2);
+      sv('pcl-fac-ciudad',d.city);
+      if(d.has_constancia){
+        window._pclConstanciaOk=true;
+        var t=document.getElementById('pcl-fac-upt'), s=document.getElementById('pcl-fac-ups');
+        if(t) t.textContent='\u2713 Constancia en archivo';
+        if(s) s.textContent='Ya la tienes guardada. Sube otra solo si deseas reemplazarla.';
+        var up=document.getElementById('pcl-fac-up'); if(up){ up.style.borderColor='#1d7d34'; }
+        var rq=document.getElementById('pcl-fac-req'); if(rq) rq.style.display='none';
+      }
+    }).catch(function(){});
+}
 function pclLoadAccount(){
   var ref=_pclPartnerRef();
   var c=window.currentClientUser||{};
@@ -7188,8 +7216,8 @@ function navAcctGo(view){
   }, 90);
 }
 function navIrIA(){
-  showPage('home');
-  setTimeout(function(){ var i=document.getElementById('chat-input'); if(i){ i.scrollIntoView({behavior:'smooth',block:'center'}); i.focus(); } }, 200);
+  showPage('buscar');
+  setTimeout(function(){ var i=document.getElementById('chat-input'); if(i){ i.focus(); i.scrollIntoView({behavior:'smooth',block:'center'}); } }, 250);
 }
 document.addEventListener('click', function(e){
   var m=document.getElementById('nav-acct-menu'); var u=document.getElementById('nav-user');
