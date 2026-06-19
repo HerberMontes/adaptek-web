@@ -1792,20 +1792,47 @@ exports.handler = async function(event, context) {
     if (action === 'get_fiscal_data') {
       const uid = await odooAuth();
       if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
-      let pid = parseInt(body.partner_id) || 0;
-      if (!pid && body.email) {
-        const r = await odooSearchRead(uid, 'res.partner',
-          `<value><array><data>${xmlStr('email')}<value><string>=ilike</string></value>${xmlStr(body.email)}</data></array></value>`, ['id'], 1);
-        const m = r.match(/<int>(\d+)<\/int>/); if (m) pid = parseInt(m[1]);
-      }
-      if (!pid) return {statusCode:200, headers, body: JSON.stringify({found:false})};
       const clean = function(v){ return (v==='0' || v==='false' || v==null) ? '' : v; };
-      const out = { found:true, partner_id:pid };
-      const idDom = `<value><array><data>${xmlStr('id')}<value><string>=</string></value><value><int>${pid}</int></value></data></array></value>`;
+      const domId = function(id){ return `<value><array><data>${xmlStr('id')}<value><string>=</string></value><value><int>${id}</int></value></data></array></value>`; };
+      // Lee RFC/CP/razón de un contacto
+      async function readCore(id){
+        try {
+          const r = await odooSearchRead(uid, 'res.partner', domId(id), ['vat','zip','name'], 1);
+          const st = (r.split('<struct>')[1]||'').split('</struct>')[0];
+          return { vat:clean(xmlExtractField(st,'vat')), zip:clean(xmlExtractField(st,'zip')), name:xmlExtractField(st,'name') };
+        } catch(_){ return { vat:'', zip:'', name:'' }; }
+      }
+      // Resuelve contacto por correo
+      async function pidByEmail(email){
+        try {
+          const r = await odooSearchRead(uid, 'res.partner',
+            `<value><array><data>${xmlStr('email')}<value><string>=ilike</string></value>${xmlStr(email)}</data></array></value>`, ['id','vat'], 5);
+          // Preferir el que tenga RFC
+          const ids = [...r.matchAll(/<int>(\d+)<\/int>/g)].map(m=>parseInt(m[1]));
+          return ids;
+        } catch(_){ return []; }
+      }
+
+      let pid = parseInt(body.partner_id) || 0;
+      let emailIds = body.email ? await pidByEmail(body.email) : [];
+      if (!pid && emailIds.length) pid = emailIds[0];
+      if (!pid) return {statusCode:200, headers, body: JSON.stringify({found:false})};
+
+      // Leer RFC del partner_id; si no trae RFC, probar los contactos del correo y quedarse con el que tenga RFC
+      let core = await readCore(pid);
+      if (!core.vat && body.email) {
+        for (const cand of emailIds) {
+          if (cand === pid) continue;
+          const c2 = await readCore(cand);
+          if (c2.vat) { pid = cand; core = c2; break; }
+        }
+      }
+
+      const out = { found:true, partner_id:pid, vat:core.vat, zip:core.zip, name:core.name };
+      const idDom = domId(pid);
       try {
-        const r = await odooSearchRead(uid, 'res.partner', idDom, ['vat','zip','name','street','street2','city','phone','mobile','company_name'], 1);
+        const r = await odooSearchRead(uid, 'res.partner', idDom, ['street','street2','city','phone','mobile','company_name'], 1);
         const st = (r.split('<struct>')[1]||'').split('</struct>')[0];
-        out.vat = clean(xmlExtractField(st,'vat')); out.zip = clean(xmlExtractField(st,'zip')); out.name = xmlExtractField(st,'name');
         out.street = clean(xmlExtractField(st,'street')); out.street2 = clean(xmlExtractField(st,'street2')); out.city = clean(xmlExtractField(st,'city'));
         out.phone = clean(xmlExtractField(st,'phone')) || clean(xmlExtractField(st,'mobile')); out.company_name = clean(xmlExtractField(st,'company_name'));
       } catch(_){}
