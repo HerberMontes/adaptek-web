@@ -3096,8 +3096,8 @@ window.payComprobante = function(input){
   }
   window.PAGO.comprobante = file;
   var nm = document.getElementById('pay-comprobante-name');
-  nm.textContent = '\u2713 ' + file.name + ' listo para enviar';
-  nm.style.display = 'block';
+  if (nm) { nm.textContent = '\u2713 ' + file.name + ' listo para enviar'; nm.style.display = 'block'; }
+  else if (typeof showToast==='function') { showToast('\u2713 ' + file.name + ' listo para enviar'); }
 };
 
 // Renderiza el formulario de pago de Mercado Pago (Payment Brick) DENTRO de la página.
@@ -4726,14 +4726,19 @@ async function cambiarPass(key) {
     <section class="pcl-view" id="pcl-v-cuenta">
       <div class="pcl-two">
         <div class="pcl-card pcl-pad">
-          <div class="pcl-sh" style="margin:0 0 16px"><h2>Datos de la cuenta</h2></div>
-          <div class="pcl-fg">
-            <div class="pcl-field"><label>Nombre</label><input id="pcl-acc-name"/></div>
-            <div class="pcl-field"><label>Empresa</label><input id="pcl-acc-company"/></div>
-            <div class="pcl-field"><label>Correo</label><input id="pcl-acc-email"/></div>
-            <div class="pcl-field"><label>WhatsApp / Teléfono</label><input placeholder="Tu teléfono"/></div>
+          <div class="pcl-sh" style="margin:0 0 16px;display:flex;align-items:center;justify-content:space-between;"><h2>Datos de la cuenta</h2>
+            <button class="pcl-mini" id="pcl-acc-editbtn" onclick="pclAccEdit()">Editar</button>
           </div>
-          <div class="pcl-savebar"><button class="pcl-btn primary">Guardar cambios</button></div>
+          <div class="pcl-fg">
+            <div class="pcl-field"><label>Nombre</label><input id="pcl-acc-name" readonly/></div>
+            <div class="pcl-field"><label>Empresa</label><input id="pcl-acc-company" readonly placeholder="&mdash;"/></div>
+            <div class="pcl-field"><label>Correo</label><input id="pcl-acc-email" readonly title="El correo es tu acceso; para cambiarlo contacta a un ejecutivo."/></div>
+            <div class="pcl-field"><label>WhatsApp / Tel&#233;fono</label><input id="pcl-acc-tel" readonly placeholder="Tu tel&#233;fono"/></div>
+          </div>
+          <div class="pcl-savebar" id="pcl-acc-savebar" style="display:none;gap:10px;">
+            <button class="pcl-btn ghost" onclick="pclAccCancel()">Cancelar</button>
+            <button class="pcl-btn primary" id="pcl-acc-savebtn" onclick="pclSaveAccount()">Guardar cambios</button>
+          </div>
         </div>
         <div class="pcl-card pcl-pad">
           <div class="pcl-sh" style="margin:0 0 16px"><h2>Seguridad</h2></div>
@@ -4810,13 +4815,7 @@ async function cambiarPass(key) {
         </div>
         <div class="pcl-card pcl-pad">
           <div class="pcl-sh" style="margin:0 0 16px"><h2>Mis facturas</h2></div>
-          <div class="pcl-tbl" style="border:none;box-shadow:none"><table style="min-width:0">
-            <tbody>
-              <tr><td class="pcl-onum">A-1042</td><td>$4,820.00</td><td style="text-align:right"><button class="pcl-mini">XML</button> <button class="pcl-mini">PDF</button></td></tr>
-              <tr><td class="pcl-onum">A-1031</td><td>$1,290.00</td><td style="text-align:right"><button class="pcl-mini">XML</button> <button class="pcl-mini">PDF</button></td></tr>
-              <tr><td class="pcl-onum">A-1018</td><td>$8,140.00</td><td style="text-align:right"><button class="pcl-mini">XML</button> <button class="pcl-mini">PDF</button></td></tr>
-            </tbody>
-          </table></div>
+          <div id="pcl-facturas-empty" style="text-align:center;padding:26px 10px;color:#86868b;font-size:14px;">A&#250;n no tienes facturas. Cuando se timbre un pedido, aparecer&#225; aqu&#237; para descargar tu XML y PDF.</div>
         </div>
       </div>
     </section>
@@ -4860,6 +4859,8 @@ function pclOpenPerfil(){
   if(dash) dash.style.display='none';
   if(perf) perf.style.display='block';
   _pclSetActive('cuenta');
+  if(typeof pclLockAccount==='function') pclLockAccount();
+  if(typeof pclLoadAccount==='function') pclLoadAccount();
   window.scrollTo({top:0,behavior:'auto'});
 }
 function pclClosePerfil(){
@@ -4974,12 +4975,84 @@ function pclSaveFiscal(){
     })
     .catch(function(){ if(btn){ btn.disabled=false; btn.textContent='Guardar datos'; } alert('Error de conexión al guardar.'); });
 }
+function _pclClean(v){ return (v==='0'||v==='false'||v==null)?'':v; }
+function pclLoadAccount(){
+  var ref=_pclPartnerRef();
+  var c=window.currentClientUser||{};
+  function sv(id,v){ var e=document.getElementById(id); if(e) e.value=v||''; }
+  sv('pcl-acc-name', c.name||'');
+  sv('pcl-acc-company', _pclClean(c.company_name));
+  sv('pcl-acc-email', c.email||'');
+  sv('pcl-acc-tel', c.phone||'');
+  fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'get_fiscal_data', partner_id:(ref.partner_id!=null?ref.partner_id:0), email:ref.email||''})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(!d||!d.found) return;
+      if(d.name) sv('pcl-acc-name', d.name);
+      sv('pcl-acc-company', _pclClean(d.company_name));
+      if(d.phone) sv('pcl-acc-tel', d.phone);
+      if(window.currentClientUser){ window.currentClientUser.company_name=_pclClean(d.company_name); window.currentClientUser.phone=d.phone||''; }
+    }).catch(function(){});
+}
+function pclAccEdit(){
+  window._pclAccOrig = {
+    name:(document.getElementById('pcl-acc-name')||{}).value||'',
+    company:(document.getElementById('pcl-acc-company')||{}).value||'',
+    tel:(document.getElementById('pcl-acc-tel')||{}).value||''
+  };
+  ['pcl-acc-name','pcl-acc-company','pcl-acc-tel'].forEach(function(id){ var e=document.getElementById(id); if(e){ e.removeAttribute('readonly'); e.style.background='#fff'; } });
+  var bar=document.getElementById('pcl-acc-savebar'); if(bar) bar.style.display='flex';
+  var eb=document.getElementById('pcl-acc-editbtn'); if(eb) eb.style.display='none';
+  var n=document.getElementById('pcl-acc-name'); if(n) n.focus();
+}
+function pclLockAccount(){
+  ['pcl-acc-name','pcl-acc-company','pcl-acc-email','pcl-acc-tel'].forEach(function(id){ var e=document.getElementById(id); if(e){ e.setAttribute('readonly','readonly'); e.style.background=''; } });
+  var bar=document.getElementById('pcl-acc-savebar'); if(bar) bar.style.display='none';
+  var eb=document.getElementById('pcl-acc-editbtn'); if(eb) eb.style.display='';
+}
+function pclAccCancel(){
+  var o=window._pclAccOrig||{};
+  function sv(id,v){ var e=document.getElementById(id); if(e) e.value=v||''; }
+  sv('pcl-acc-name',o.name); sv('pcl-acc-company',o.company); sv('pcl-acc-tel',o.tel);
+  pclLockAccount();
+}
+function pclSaveAccount(){
+  var btn=document.getElementById('pcl-acc-savebtn');
+  var name=((document.getElementById('pcl-acc-name')||{}).value||'').trim();
+  var company=((document.getElementById('pcl-acc-company')||{}).value||'').trim();
+  var tel=((document.getElementById('pcl-acc-tel')||{}).value||'').trim();
+  if(!name){ alert('Escribe tu nombre.'); return; }
+  var ref=_pclPartnerRef();
+  if(btn){ btn.disabled=true; btn.textContent='Guardando…'; }
+  fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'update_account', partner_id:ref.partner_id, email:ref.email, name:name, company:company, phone:tel})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d&&d.ok){
+        if(window.currentClientUser){ window.currentClientUser.name=name; window.currentClientUser.company_name=company; window.currentClientUser.phone=tel; }
+        try{ var s=JSON.parse(localStorage.getItem('adk_client_session')||'{}'); s.name=name; s.company_name=company; localStorage.setItem('adk_client_session',JSON.stringify(s)); }catch(e){}
+        // refrescar nombre/empresa visibles arriba
+        var pn=document.getElementById('pcl-name'); if(pn) pn.textContent=name;
+        var pc=document.getElementById('pcl-company'); if(pc) pc.textContent=company||'Cuenta Adaptekk';
+        var av=document.getElementById('pcl-avatar'); if(av) av.textContent=(name||'CL').trim().split(/\s+/).map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase()||'CL';
+        pclLockAccount();
+        if(btn){ btn.disabled=false; btn.textContent='Guardar cambios'; }
+      } else {
+        if(btn){ btn.disabled=false; btn.textContent='Guardar cambios'; }
+        alert('No se pudieron guardar los cambios.');
+      }
+    })
+    .catch(function(){ if(btn){ btn.disabled=false; btn.textContent='Guardar cambios'; } alert('Error de conexión al guardar.'); });
+}
 function pclHydrate(){
   var c=window.currentClientUser||{};
-  var name=c.name||'Cliente', company=c.company_name||'Adaptekk', email=c.email||'';
+  var rawCompany=c.company_name||'';
+  if(rawCompany==='0'||rawCompany==='false') rawCompany='';
+  var name=c.name||'Cliente', company=rawCompany, email=c.email||'';
   var initials=(name||'CL').trim().split(/\s+/).map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase()||'CL';
   function set(id,val){ var e=document.getElementById(id); if(e){ if(e.tagName==='INPUT') e.value=val; else e.textContent=val; } }
-  set('pcl-avatar',initials); set('pcl-name',name); set('pcl-company',company);
+  set('pcl-avatar',initials); set('pcl-name',name); set('pcl-company',company||'Cuenta Adaptekk');
   set('pcl-greet',(name.split(' ')[0]||'cliente')); 
   set('pcl-acc-name',name); set('pcl-acc-company',company); set('pcl-acc-email',email);
   // entrar siempre al dashboard (no al perfil)
@@ -7141,76 +7214,6 @@ function mockGoogleLogin() {
     initials: 'UG'
   };
   loginSuccess();
-}
-
-async function buscarCP(cp) {
-  if (cp.length !== 5) return;
-  
-  var spinner = document.getElementById('reg-cp-spinner');
-  var msg = document.getElementById('reg-cp-msg');
-  var coloniaSelect = document.getElementById('reg-colonia');
-  var ciudadInput = document.getElementById('reg-ciudad');
-  var estadoInput = document.getElementById('reg-estado');
-  
-  spinner.style.display = 'block';
-  msg.textContent = 'Buscando...';
-  msg.style.color = '#888';
-  coloniaSelect.innerHTML = '<option value="">Buscando colonias...</option>';
-
-  try {
-    var resp = await fetch('/.netlify/functions/odoo', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ action: 'buscar_cp', cp: cp })
-    });
-    var data = await resp.json();
-
-    if (data.success && data.colonias && data.colonias.length > 0) {
-      coloniaSelect.innerHTML = '<option value="">-- Selecciona tu colonia --</option>';
-      data.colonias.forEach(function(col) {
-        var opt = document.createElement('option');
-        opt.value = col;
-        opt.textContent = col;
-        coloniaSelect.appendChild(opt);
-      });
-      // Ciudad is now editable - just set estado automatically
-      ciudadInput.value = data.municipio || data.ciudad || '';
-      ciudadInput.style.background = '#fff';
-      estadoInput.value = data.estado || '';
-      msg.textContent = '\u2713 ' + data.colonias.length + ' colonias encontradas';
-      msg.style.color = '#25a244';
-      document.getElementById('reg-cp').style.borderColor = '#25a244';
-    } else {
-      habilitarManual(coloniaSelect, ciudadInput, estadoInput, msg);
-    }
-  } catch(e) {
-    habilitarManual(coloniaSelect, ciudadInput, estadoInput, msg);
-  }
-  spinner.style.display = 'none';
-}
-
-
-function habilitarManual(coloniaSelect, ciudadInput, estadoInput, msg) {
-  coloniaSelect.innerHTML = '<option value="">-- Escribe tu colonia abajo --</option>';
-  var wrap = document.getElementById('reg-colonia-wrap');
-  if (!document.getElementById('reg-colonia-manual')) {
-    var manualInput = document.createElement('input');
-    manualInput.type = 'text';
-    manualInput.id = 'reg-colonia-manual';
-    manualInput.className = 'auth-input';
-    manualInput.placeholder = 'Escribe tu colonia';
-    manualInput.style.marginTop = '6px';
-    wrap.appendChild(manualInput);
-  }
-  // Enable municipio for manual entry
-  ciudadInput.style.background = '#fff';
-  ciudadInput.removeAttribute('readonly');
-  ciudadInput.placeholder = 'Ingresa tu municipio';
-  estadoInput.removeAttribute('readonly');
-  estadoInput.style.background = '#fff';
-  estadoInput.placeholder = 'Ingresa tu estado';
-  msg.textContent = 'CP no encontrado en la API — ingresa los datos manualmente';
-  msg.style.color = '#C8102E';
 }
 
 
