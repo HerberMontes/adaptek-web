@@ -2488,6 +2488,7 @@ window.coLoadFiscalProfile = function(){
     body: JSON.stringify({action:'get_fiscal_data', partner_id:(ref.id!=null?ref.id:0), email:ref.email||''})})
     .then(function(r){return r.json();})
     .then(function(d){
+      try{ console.log('[checkout fiscal] respuesta get_fiscal_data:', {found:d&&d.found, vat:d&&d.vat, has_constancia:d&&d.has_constancia, name:d&&d.name, partner_id:d&&d.partner_id, enviado:{partner_id:(ref.id!=null?ref.id:0), email:ref.email||''}}); }catch(_){}
       if (!d || !d.found) return;
       function set(id,v){ var e=document.getElementById(id); if(e && v) e.value=v; }
       set('co-rfc', (d.vat||'').toUpperCase());
@@ -4756,7 +4757,7 @@ async function cambiarPass(key) {
     <section class="pcl-view" id="pcl-v-facturacion">
       <div class="pcl-two">
         <div class="pcl-card pcl-pad">
-          <div class="pcl-sh" style="margin:0 0 16px"><h2>Datos fiscales (CFDI)</h2></div>
+          <div class="pcl-sh" style="margin:0 0 16px;display:flex;align-items:center;justify-content:space-between"><h2>Datos fiscales (CFDI)</h2><button class="pcl-mini" id="pcl-fac-editbtn" onclick="pclFacEdit()">Editar</button></div>
           <div class="pcl-fg">
             <div class="pcl-field"><label>RFC</label><input id="pcl-fac-rfc" placeholder="Tu RFC" maxlength="13" style="text-transform:uppercase"/></div>
             <div class="pcl-field"><label>Razón social</label><input id="pcl-fac-razon" placeholder="Razón social"/></div>
@@ -4812,7 +4813,7 @@ async function cambiarPass(key) {
             </div>
           </div>
           <div class="pcl-fac-req" id="pcl-fac-req" style="display:none">⚠ Adjunta tu Constancia de Situación Fiscal (PDF) para poder guardar.</div>
-          <div class="pcl-savebar"><button class="pcl-btn primary" id="pcl-fac-save" onclick="pclSaveFiscal()">Guardar datos</button></div>
+          <div class="pcl-savebar" id="pcl-fac-savebar" style="display:none"><button class="pcl-btn ghost" onclick="pclFacCancel()">Cancelar</button><button class="pcl-btn primary" id="pcl-fac-save" onclick="pclSaveFiscal()">Guardar datos</button></div>
         </div>
         <div class="pcl-card pcl-pad">
           <div class="pcl-sh" style="margin:0 0 16px"><h2>Mis facturas</h2></div>
@@ -4972,11 +4973,22 @@ function pclSaveFiscal(){
   fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
     .then(function(r){return r.json();})
     .then(function(d){
-      if (d && d.ok) { if(btn){ btn.textContent='✓ Datos guardados'; setTimeout(function(){ btn.disabled=false; btn.textContent='Guardar datos'; }, 2200); } }
+      if (d && d.ok) { if(btn){ btn.textContent='✓ Datos guardados'; setTimeout(function(){ btn.disabled=false; btn.textContent='Guardar datos'; if(typeof pclFacSetLocked==='function') pclFacSetLocked(true); }, 1400); } }
       else { if(btn){ btn.disabled=false; btn.textContent='Guardar datos'; } alert('No se pudieron guardar los datos.'); }
     })
     .catch(function(){ if(btn){ btn.disabled=false; btn.textContent='Guardar datos'; } alert('Error de conexión al guardar.'); });
 }
+function pclFacSetLocked(locked){
+  ['pcl-fac-rfc','pcl-fac-razon','pcl-fac-cp','pcl-fac-calle','pcl-fac-num','pcl-fac-colonia','pcl-fac-ciudad','pcl-fac-estado','pcl-fac-email'].forEach(function(id){
+    var e=document.getElementById(id); if(e){ if(locked) e.setAttribute('readonly','readonly'); else e.removeAttribute('readonly'); e.style.background=locked?'':'#fff'; }
+  });
+  ['pcl-fac-regimen','pcl-fac-uso'].forEach(function(id){ var e=document.getElementById(id); if(e) e.disabled=locked; });
+  var up=document.getElementById('pcl-fac-up'); if(up){ up.style.pointerEvents=locked?'none':''; up.style.opacity=locked?'.6':''; }
+  var bar=document.getElementById('pcl-fac-savebar'); if(bar) bar.style.display=locked?'none':'flex';
+  var eb=document.getElementById('pcl-fac-editbtn'); if(eb) eb.style.display=locked?'':'none';
+}
+function pclFacEdit(){ pclFacSetLocked(false); var r=document.getElementById('pcl-fac-rfc'); if(r) r.focus(); }
+function pclFacCancel(){ pclFacSetLocked(true); if(typeof pclLoadFiscal==='function') pclLoadFiscal(); }
 function _pclClean(v){ return (v==='0'||v==='false'||v==null)?'':v; }
 function pclLoadFiscal(){
   var ref=_pclPartnerRef();
@@ -5002,6 +5014,7 @@ function pclLoadFiscal(){
         var up=document.getElementById('pcl-fac-up'); if(up){ up.style.borderColor='#1d7d34'; }
         var rq=document.getElementById('pcl-fac-req'); if(rq) rq.style.display='none';
       }
+      if(typeof pclFacSetLocked==='function') pclFacSetLocked(true);
     }).catch(function(){});
 }
 function pclLoadAccount(){
