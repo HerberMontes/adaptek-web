@@ -191,6 +191,43 @@ async function facturarOrden(uid, saleId) {
   }
 }
 
+// Envía la factura (XML + PDF) por correo al cliente del pedido.
+async function enviarFacturaCorreo(uid, saleId, invoiceId, folio) {
+  try {
+    if (!RESEND_KEY) return;
+    // Email del cliente (desde el partner de la orden)
+    const ot = await odooSearchRead(uid, 'sale.order',
+      `<value><array><data>${xmlStr('id')}<value><string>=</string></value>${xmlInt(saleId)}</data></array></value>`,
+      ['partner_id'], 1);
+    const ost = (ot.match(/<struct>[\s\S]*?<\/struct>/) || [''])[0];
+    const pm = ost.match(/<name>\s*partner_id\s*<\/name>\s*<value>\s*<array>\s*<data>\s*<value>\s*<int>\s*(\d+)/);
+    const partnerId = pm ? parseInt(pm[1]) : 0;
+    if (!partnerId) return;
+    const pt = await odooSearchRead(uid, 'res.partner',
+      `<value><array><data>${xmlStr('id')}<value><string>=</string></value>${xmlInt(partnerId)}</data></array></value>`,
+      ['email','name'], 1);
+    const pst = (pt.match(/<struct>[\s\S]*?<\/struct>/) || [''])[0];
+    const email = xmlExtractField(pst, 'email');
+    const nombre = xmlExtractField(pst, 'name') || 'Cliente';
+    if (!email || email === 'false') return;
+    // Adjuntos de la factura (XML CFDI + PDF)
+    const attDomain = `<value><array><data>${xmlStr('res_model')}<value><string>=</string></value>${xmlStr('account.move')}${xmlStr('res_id')}<value><string>=</string></value>${xmlInt(invoiceId)}</data></array></value>`;
+    const at = await odooSearchRead(uid, 'ir.attachment', attDomain, ['name','mimetype','datas'], 20);
+    const astructs = at.match(/<struct>[\s\S]*?<\/struct>/g) || [];
+    const attachments = astructs
+      .map(s => ({ filename: xmlExtractField(s,'name'), content: xmlExtractField(s,'datas'), mt: xmlExtractField(s,'mimetype') }))
+      .filter(a => a.content && (/(xml|pdf)/i.test(a.mt) || /\.(xml|pdf)$/i.test(a.filename)))
+      .map(a => ({ filename: a.filename, content: a.content }));
+    if (!attachments.length) return; // si aún no hay XML/PDF (timbrado pendiente), no mandamos
+    const html = `<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;">
+      <div style="background:#001F5B;padding:20px;text-align:center;"><span style="color:#fff;font-size:22px;font-weight:bold;">ADAP<span style="color:#C8102E;">TEK</span>K</span></div>
+      <div style="padding:24px;"><h2 style="color:#001F5B;margin:0 0 8px;">Tu factura está lista</h2>
+      <p style="font-size:14px;color:#555;line-height:1.6;">Hola ${nombre}, adjuntamos la factura (CFDI) de tu pedido <b>${folio}</b>: el <b>PDF</b> y el <b>XML</b> con validez fiscal.</p>
+      <p style="font-size:12px;color:#888;margin-top:18px;">Gracias por tu compra en Adaptekk.</p></div></div>`;
+    await sendEmailAtt(email, `Tu factura — ${folio} | Adaptekk`, html, attachments);
+  } catch(_){}
+}
+
 // Detecta un <fault> de Odoo y devuelve el mensaje (o null si todo OK)
 function xmlFault(text){
   if (text && text.indexOf('<fault>') !== -1) {
@@ -409,6 +446,20 @@ async function sendEmail(to, subject, html) {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ from: `Adaptekk <${FROM_EMAIL}>`, to: [to], subject, html })
+  });
+  const result = await resp.json();
+  if (result && result.id) { try { await bumpMetric('email'); } catch(e) {} }
+  return result;
+}
+
+// Igual que sendEmail pero con archivos adjuntos: [{ filename, content(base64) }]
+async function sendEmailAtt(to, subject, html, attachments) {
+  const body = { from: `Adaptekk <${FROM_EMAIL}>`, to: [to], subject, html };
+  if (attachments && attachments.length) body.attachments = attachments;
+  const resp = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
   });
   const result = await resp.json();
   if (result && result.id) { try { await bumpMetric('email'); } catch(e) {} }
@@ -2436,6 +2487,10 @@ exports.handler = async function(event, context) {
       const wantsInvoice = force || /AUTOFACTURA/i.test(note);
       if (!wantsInvoice) return {statusCode:200, headers, body: JSON.stringify({ok:true, skipped:true, reason:'El cliente no solicitó factura'})};
       const res = await facturarOrden(uid, id);
+      // Si se generó la factura, enviarla por correo (XML + PDF) al cliente.
+      if (res && res.ok && res.invoiceId) {
+        try { await enviarFacturaCorreo(uid, id, res.invoiceId, folio); } catch(_){}
+      }
       return {statusCode:200, headers, body: JSON.stringify(res)};
     }
 
