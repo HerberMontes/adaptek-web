@@ -1655,7 +1655,7 @@ window.EMPRESA = {
   whatsapp: '5215555550000',
   email: 'ventas@adaptekk.com',
   web: 'www.adaptekk.mx',
-  banco: { banco:'BBVA', titular:'Adaptekk S.A. de C.V.', cuenta:'', clabe:'(captura tu CLABE de 18 dígitos)' }
+  banco: { banco:'BBVA', titular:'Adaptekk S.A. de C.V.', cuenta:'', clabe:'' }
 };
 
 // Invitados ven RANGO de precios (precio base a base + factor). Registrados ven precio exacto.
@@ -2488,7 +2488,6 @@ window.coLoadFiscalProfile = function(){
     body: JSON.stringify({action:'get_fiscal_data', partner_id:(ref.id!=null?ref.id:0), email:ref.email||''})})
     .then(function(r){return r.json();})
     .then(function(d){
-      try{ console.log('[checkout fiscal] respuesta get_fiscal_data:', {found:d&&d.found, vat:d&&d.vat, has_constancia:d&&d.has_constancia, name:d&&d.name, partner_id:d&&d.partner_id, enviado:{partner_id:(ref.id!=null?ref.id:0), email:ref.email||''}}); }catch(_){}
       if (!d || !d.found) return;
       function set(id,v){ var e=document.getElementById(id); if(e && v) e.value=v; }
       set('co-rfc', (d.vat||'').toUpperCase());
@@ -3435,13 +3434,6 @@ window.pagarConSPEI = async function(){
       })
     });
     var data = await resp.json();
-    if (typeof console!=='undefined') console.log('crear_pago_spei respuesta:', data);
-    try {
-      var dbg = (data && data.mp_debug) || {};
-      console.log('%cMP MESSAGE:', 'color:#fff;background:#C8102E;padding:2px 6px;border-radius:4px;font-weight:700;', dbg.mp_message || '(sin mensaje)');
-      console.log('%cMP CAUSE:', 'color:#fff;background:#C8102E;padding:2px 6px;border-radius:4px;font-weight:700;', JSON.stringify(dbg.mp_cause));
-      console.log('%cMP ENVIADO:', 'color:#fff;background:#001F5B;padding:2px 6px;border-radius:4px;font-weight:700;', JSON.stringify(dbg.enviado));
-    } catch(_){}
 
     if (data && data.success) {
       window._speiGenerado = true;
@@ -3471,22 +3463,19 @@ window.pagarConSPEI = async function(){
         + '</div>';
 
       var FX = (window.EMPRESA && window.EMPRESA.banco) || {};
-      var fxClabeRaw = (FX.clabe || '').replace(/\s/g,'');
-      var fxClabeOk = /^\d{18}$/.test(fxClabeRaw);          // CLABE válida = 18 dígitos
-      var speiClabe = data.clabe || fxClabeRaw;             // mostrar aunque sea pendiente
-      var speiClabeOk = !!data.clabe || fxClabeOk;          // ¿es real (copiable)?
+      var fxClabe = (FX.clabe || '').replace(/\s/g,'');
+      var fxClabeOk = /^\d{18}$/.test(fxClabe);   // CLABE fija válida = 18 dígitos
+      var speiClabe = data.clabe || (fxClabeOk ? fxClabe : '');
       var speiBanco = data.banco || FX.banco || '';
       var speiBenef = data.beneficiario || FX.titular || '';
-      var speiCuenta = (!data.clabe && FX.cuenta && FX.cuenta !== '0123456789') ? FX.cuenta : '';
-      window._speiClabeActual = speiClabe;
+      var speiCuenta = (!data.clabe && FX.cuenta) ? FX.cuenta : '';
       if (speiClabe) {
         html += '<div style="background:#fff;border:1px dashed #009EE3;border-radius:8px;padding:14px;margin-bottom:10px;">'
           + '<div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.5px;">CLABE para transferir</div>'
           + '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px;">'
           + '<span id="spei-clabe-val" style="font-size:20px;font-weight:800;color:#001F5B;letter-spacing:1px;">' + speiClabe + '</span>'
-          + (speiClabeOk ? '<button onclick="window.copiarCLABE()" style="background:#009EE3;color:#fff;border:none;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:700;font-size:12px;">Copiar</button>' : '')
+          + '<button onclick="window.copiarCLABE()" style="background:#009EE3;color:#fff;border:none;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:700;font-size:12px;">Copiar</button>'
           + '</div></div>';
-        if (!speiClabeOk) html += '<div style="background:#fff3cd;border:1px solid #f0ad4e;border-radius:8px;padding:10px;margin-bottom:10px;font-size:12px;color:#856404;text-align:center;">CLABE pendiente de configurar. Captúrala en el código (window.EMPRESA.banco) para que aparezca aquí.</div>';
         if (speiBanco)   html += '<div style="font-size:13px;color:#444;margin:4px 0;"><b>Banco:</b> ' + speiBanco + '</div>';
         if (speiBenef)   html += '<div style="font-size:13px;color:#444;margin:4px 0;"><b>Beneficiario:</b> ' + speiBenef + '</div>';
         if (speiCuenta)  html += '<div style="font-size:13px;color:#444;margin:4px 0;"><b>Cuenta:</b> ' + speiCuenta + '</div>';
@@ -3559,7 +3548,6 @@ window.copiarMonto = function(monto){
 window._sondeoPago = null;
 window.iniciarSondeoPago = function(folio, monto){
   if (!folio) return;
-  if (typeof console!=='undefined') console.log('[sondeo] INICIANDO para folio=' + folio);
   if (window._sondeoPago) { clearInterval(window._sondeoPago); window._sondeoPago = null; }
 
   var intentos = 0;
@@ -3574,7 +3562,6 @@ window.iniciarSondeoPago = function(folio, monto){
         body: JSON.stringify({ action:'consultar_estado_orden', folio: folio })
       });
       var data = await resp.json();
-      if (typeof console!=='undefined') console.log('[sondeo] folio=' + folio + ' intento=' + intentos + ' respuesta=', data);
       if (data && data.ok && data.confirmada) {
         // ¡Pago confirmado! Detener sondeo.
         clearInterval(window._sondeoPago); window._sondeoPago = null;
@@ -4589,6 +4576,34 @@ async function cambiarPass(key) {
 .pcl-mini:hover{border-color:#cfdbec;background:#f7faff}
 .pcl-mini.solid{background:var(--pcl-navy);color:#fff;border-color:var(--pcl-navy)}
 .pcl-mini.solid:hover{background:#0a2a6e}
+.pcl-mini-off{color:#aeb6c4;background:#f4f6fa;border-color:#e7ebf2;cursor:not-allowed}
+.pcl-mini-off:hover{background:#f4f6fa;border-color:#e7ebf2}
+.pcl-mini-danger{color:#9aa3b2}
+.pcl-mini-danger:hover{border-color:#f3c2c8;background:#fff5f6;color:var(--pcl-red)}
+/* Modal de detalle de pedido/cotización */
+.pcl-ov{position:fixed;inset:0;background:rgba(8,18,40,.46);display:none;align-items:center;justify-content:center;z-index:9000;padding:20px}
+.pcl-ov.open{display:flex}
+.pcl-dt{background:#fff;border-radius:16px;max-width:560px;width:100%;max-height:88vh;overflow:auto;box-shadow:0 24px 60px rgba(8,18,40,.28)}
+.pcl-dt-hd{display:flex;align-items:flex-start;justify-content:space-between;padding:22px 24px 14px;border-bottom:1px solid var(--pcl-line)}
+.pcl-dt-eyebrow{font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:#97A1B0;font-weight:600}
+.pcl-dt-folio{font-family:var(--pcl-mono);font-size:18px;font-weight:700;color:var(--pcl-navy);margin-top:2px}
+.pcl-dt-x{border:none;background:#f4f6fa;width:30px;height:30px;border-radius:8px;cursor:pointer;color:#6b7588;font-size:16px;line-height:1;flex:none}
+.pcl-dt-x:hover{background:#eaeef5;color:var(--pcl-navy)}
+.pcl-dt-bd{padding:18px 24px 8px}
+.pcl-dt-line{display:flex;justify-content:space-between;gap:14px;padding:11px 0;border-bottom:1px solid #f0f3f8}
+.pcl-dt-lname{font-size:13.5px;color:#2b3447;line-height:1.4}
+.pcl-dt-lqty{font-size:12px;color:#97A1B0;margin-top:2px}
+.pcl-dt-lsub{font-size:13.5px;font-weight:700;color:var(--pcl-navy);white-space:nowrap}
+.pcl-dt-tot{padding:14px 24px 4px}
+.pcl-dt-trow{display:flex;justify-content:space-between;font-size:13px;color:#5a6477;padding:3px 0}
+.pcl-dt-trow.grand{font-size:16px;font-weight:800;color:var(--pcl-navy);border-top:1px solid var(--pcl-line);margin-top:6px;padding-top:10px}
+.pcl-dt-ft{padding:16px 24px 22px;display:flex;gap:10px;flex-wrap:wrap}
+.pcl-dt-btn{flex:1;min-width:140px;text-align:center;padding:12px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;border:1px solid var(--pcl-navy);background:var(--pcl-navy);color:#fff;font-family:var(--pcl-body)}
+.pcl-dt-btn:hover{background:#0a2a6e}
+.pcl-dt-btn.ghost{background:#fff;color:var(--pcl-navy)}
+.pcl-dt-btn.ghost:hover{background:#f7faff}
+.pcl-dt-btn.off{background:#f4f6fa;color:#aeb6c4;border-color:#e7ebf2;cursor:not-allowed}
+.pcl-dt-btn.off:hover{background:#f4f6fa}
 
 /* forms */
 .pcl-fg{display:grid;grid-template-columns:1fr 1fr;gap:16px}
@@ -5160,19 +5175,21 @@ async function pclLoadOrders(){
     orders=(d && d.ok && Array.isArray(d.orders))?d.orders:[];
   }catch(e){ orders=[]; }
 
-  var pedidos=orders.filter(function(o){ return o.state==='sale'||o.state==='done'||o.state==='cancel'; });
+  var pedidos=orders.filter(function(o){ return o.state==='sale'||o.state==='done'; });
   var cotiz=orders.filter(function(o){ return o.state==='draft'||o.state==='sent'; });
 
   // ── Tabla de pedidos ──
   function rowPedido(o){
     var st=_pclEstado(o.state);
     var folio=o.folio||o.name||'—';
-    var puedeFactura=(o.state==='sale'||o.state==='done');
+    var fb = o.facturado
+      ? '<button class="pcl-mini" onclick="window.pclDescargarFactura(\''+folio+'\')">Factura</button>'
+      : '<button class="pcl-mini pcl-mini-off" disabled title="Este pedido aún no tiene factura">Factura</button>';
     return '<tr><td class="pcl-onum">'+folio+'</td><td>'+_pclDate(o.date)+'</td>'
       +'<td class="pcl-oprods">'+(o.items||0)+' artículo'+(o.items===1?'':'s')+'</td>'
       +'<td class="pcl-ototal">'+_pclMoney(o.total)+'</td>'
       +'<td><span class="pcl-st '+st[0]+'"><span class="dot"></span>'+st[1]+'</span></td>'
-      +'<td><div class="pcl-act"><button class="pcl-mini">Detalle</button>'+(puedeFactura?'<button class="pcl-mini">Factura</button>':'')+'</div></td></tr>';
+      +'<td><div class="pcl-act"><button class="pcl-mini" onclick="window.pclVerDetalle(\''+folio+'\')">Detalle</button>'+fb+'</div></td></tr>';
   }
   if(body){
     if(pedidos.length) body.innerHTML=pedidos.map(rowPedido).join('');
@@ -5186,7 +5203,8 @@ async function pclLoadOrders(){
     return '<tr><td class="pcl-onum">'+folio+'</td><td>'+_pclDate(o.date)+'</td>'
       +'<td class="pcl-ototal">'+_pclMoney(o.total)+'</td>'
       +'<td><span class="pcl-st '+st[0]+'"><span class="dot"></span>'+st[1]+'</span></td>'
-      +'<td><div class="pcl-act"><button class="pcl-mini">Detalle</button></div></td></tr>';
+      +'<td><div class="pcl-act"><button class="pcl-mini" onclick="window.pclVerDetalle(\''+folio+'\')">Detalle</button>'
+      +'<button class="pcl-mini pcl-mini-danger" onclick="window.pclEliminarCotiz(\''+folio+'\')">Eliminar</button></div></td></tr>';
   }
   if(qbody){
     if(cotiz.length) qbody.innerHTML=cotiz.map(rowCotiz).join('');
@@ -7868,6 +7886,132 @@ updateFAB();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fixFloaters);
   else fixFloaters();
+})();
+</script>
+<!-- Modal reutilizable: detalle de pedido / cotización -->
+<div class="pcl-ov" id="pcl-detalle-ov" onclick="if(event.target===this)window.pclCerrarDetalle()">
+  <div class="pcl-dt" id="pcl-detalle-box" role="dialog" aria-modal="true"></div>
+</div>
+<script>
+(function(){
+  function money(n){ try{ return '$'+Number(n||0).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2}); }catch(e){ return '$'+(n||0); } }
+  function fechaLarga(s){
+    if(!s) return '';
+    try{ var d=new Date(s.replace(' ','T')); if(isNaN(d)) return s;
+      return d.toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'}); }catch(e){ return s; }
+  }
+  function estadoTxt(st){
+    var m={draft:'Cotización',sent:'Cotización enviada',sale:'Confirmado',done:'Completado',cancel:'Cancelado'};
+    return m[st]||st||'';
+  }
+  function _cli(){ try{ return (window.currentClientUser)||{}; }catch(e){ return {}; } }
+
+  window.pclCerrarDetalle = function(){
+    var ov=document.getElementById('pcl-detalle-ov');
+    if(ov) ov.classList.remove('open');
+  };
+
+  window.pclVerDetalle = async function(folio){
+    var ov=document.getElementById('pcl-detalle-ov');
+    var box=document.getElementById('pcl-detalle-box');
+    if(!ov||!box) return;
+    box.innerHTML='<div class="pcl-dt-hd"><div><div class="pcl-dt-eyebrow">Pedido</div>'
+      +'<div class="pcl-dt-folio">'+folio+'</div></div>'
+      +'<button class="pcl-dt-x" onclick="window.pclCerrarDetalle()">&times;</button></div>'
+      +'<div class="pcl-dt-bd" style="padding:40px 24px;text-align:center;color:#97A1B0;font-size:13px">Cargando detalle…</div>';
+    ov.classList.add('open');
+    var c=_cli();
+    var d={};
+    try{
+      var r=await fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'get_order_detail',folio:folio,partner_id:(c.id||0),email:(c.email||'')})});
+      d=await r.json();
+    }catch(e){ d={ok:false}; }
+
+    if(!d||!d.ok||!d.found||!d.order){
+      box.innerHTML='<div class="pcl-dt-hd"><div><div class="pcl-dt-eyebrow">Pedido</div>'
+        +'<div class="pcl-dt-folio">'+folio+'</div></div>'
+        +'<button class="pcl-dt-x" onclick="window.pclCerrarDetalle()">&times;</button></div>'
+        +'<div class="pcl-dt-bd" style="padding:40px 24px;text-align:center;color:#97A1B0;font-size:13px">No pudimos cargar el detalle. Intenta de nuevo.</div>';
+      return;
+    }
+    var o=d.order;
+    var esCotiz=(o.state==='draft'||o.state==='sent');
+    var lineas=(o.lines||[]).map(function(l){
+      return '<div class="pcl-dt-line"><div><div class="pcl-dt-lname">'+(l.name||'—')+'</div>'
+        +'<div class="pcl-dt-lqty">'+(l.qty||0)+' × '+money(l.price)+'</div></div>'
+        +'<div class="pcl-dt-lsub">'+money(l.subtotal)+'</div></div>';
+    }).join('') || '<div class="pcl-dt-bd" style="padding:14px 0;color:#97A1B0;font-size:13px">Sin artículos.</div>';
+
+    var pie;
+    if(esCotiz){
+      pie='<button class="pcl-dt-btn ghost" onclick="window.pclCerrarDetalle()">Cerrar</button>'
+        +'<button class="pcl-dt-btn" style="border-color:var(--pcl-red);background:var(--pcl-red)" onclick="window.pclEliminarCotiz(\''+folio+'\')">Eliminar cotización</button>';
+    } else if(o.facturado){
+      pie='<button class="pcl-dt-btn ghost" onclick="window.pclCerrarDetalle()">Cerrar</button>'
+        +'<button class="pcl-dt-btn" onclick="window.pclDescargarFactura(\''+folio+'\')">Descargar factura</button>';
+    } else {
+      pie='<button class="pcl-dt-btn ghost" onclick="window.pclCerrarDetalle()">Cerrar</button>'
+        +'<button class="pcl-dt-btn off" disabled title="Este pedido aún no tiene factura">Factura no disponible</button>';
+    }
+
+    box.innerHTML='<div class="pcl-dt-hd"><div>'
+      +'<div class="pcl-dt-eyebrow">'+(esCotiz?'Cotización':'Pedido')+' · '+estadoTxt(o.state)+'</div>'
+      +'<div class="pcl-dt-folio">'+folio+'</div>'
+      +'<div style="font-size:12px;color:#97A1B0;margin-top:4px">'+fechaLarga(o.date)+'</div></div>'
+      +'<button class="pcl-dt-x" onclick="window.pclCerrarDetalle()">&times;</button></div>'
+      +'<div class="pcl-dt-bd">'+lineas+'</div>'
+      +'<div class="pcl-dt-tot">'
+        +'<div class="pcl-dt-trow"><span>Subtotal</span><span>'+money(o.subtotal)+'</span></div>'
+        +'<div class="pcl-dt-trow"><span>IVA (16%)</span><span>'+money(o.tax)+'</span></div>'
+        +'<div class="pcl-dt-trow grand"><span>Total</span><span>'+money(o.total)+'</span></div>'
+      +'</div>'
+      +'<div class="pcl-dt-ft">'+pie+'</div>';
+  };
+
+  function bajarArchivo(nombre, mimetype, b64){
+    try{
+      var bin=atob(b64); var len=bin.length; var bytes=new Uint8Array(len);
+      for(var i=0;i<len;i++) bytes[i]=bin.charCodeAt(i);
+      var blob=new Blob([bytes],{type:mimetype||'application/octet-stream'});
+      var url=URL.createObjectURL(blob);
+      var a=document.createElement('a'); a.href=url; a.download=nombre||'factura'; document.body.appendChild(a); a.click();
+      setTimeout(function(){ URL.revokeObjectURL(url); a.remove(); },1500);
+    }catch(e){ if(window.showToast) showToast('No se pudo descargar el archivo'); }
+  }
+
+  window.pclDescargarFactura = async function(folio){
+    var c=_cli();
+    if(window.showToast) showToast('Preparando tu factura…');
+    try{
+      var r=await fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'descargar_factura',folio:folio,partner_id:(c.id||0),email:(c.email||'')})});
+      var d=await r.json();
+      if(!d||!d.ok||!d.files||!d.files.length){
+        if(window.showToast) showToast((d&&d.error)||'Aún no hay factura disponible para este pedido');
+        return;
+      }
+      d.files.forEach(function(f,i){ setTimeout(function(){ bajarArchivo(f.name,f.mimetype,f.datas); }, i*400); });
+      if(window.showToast) showToast('Factura descargada');
+    }catch(e){ if(window.showToast) showToast('No se pudo obtener la factura'); }
+  };
+
+  window.pclEliminarCotiz = async function(folio){
+    if(!window.confirm('¿Eliminar la cotización '+folio+'? Ya no aparecerá en tu lista.')) return;
+    var c=_cli();
+    try{
+      var r=await fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'eliminar_cotizacion',folio:folio,partner_id:(c.id||0),email:(c.email||'')})});
+      var d=await r.json();
+      if(d&&d.ok){
+        window.pclCerrarDetalle();
+        if(window.showToast) showToast('Cotización eliminada');
+        if(typeof pclLoadOrders==='function') pclLoadOrders();
+      } else {
+        if(window.showToast) showToast((d&&d.error)||'No se pudo eliminar');
+      }
+    }catch(e){ if(window.showToast) showToast('No se pudo eliminar la cotización'); }
+  };
 })();
 </script>
 </body>
