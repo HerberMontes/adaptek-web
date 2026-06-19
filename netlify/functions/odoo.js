@@ -1877,6 +1877,11 @@ exports.handler = async function(event, context) {
       return {statusCode:200, headers, body: JSON.stringify({ ok:true, location_id:locationId, price_set:price, products:result })};
     }
 
+    // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
+    if (action === 'ping' || action === 'version') {
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-19-facturacion-v3', features:['facturar_pedido','folio_only_search','publicar_y_timbrar'] })};
+    }
+
     // ── LOOKUP POR CÓDIGO (para 'Pedir por código AT') ──
     if (action === 'lookup_code') {
       const uid = await odooAuth();
@@ -2507,17 +2512,31 @@ exports.handler = async function(event, context) {
       }
       // force exige dueño (partner) para evitar abuso desde el navegador
       if (force && !pid) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'Se requiere identificar al cliente'})};
-      let domain = `<value><array><data>${xmlStr('client_order_ref')}<value><string>=</string></value>${xmlStr(folio)}`;
-      if (pid) domain += `${xmlStr('partner_id')}<value><string>=</string></value>${xmlInt(pid)}`;
-      domain += `</data></array></value>`;
-      const text = await odooSearchRead(uid, 'sale.order', domain, ['id','state','note','invoice_ids'], 1);
-      const st = (text.match(/<struct>[\s\S]*?<\/struct>/) || [])[0];
-      if (!st) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'Pedido no encontrado'})};
-      const id = parseInt(xmlExtractField(st, 'id')) || 0;
-      const state = xmlExtractField(st, 'state');
-      const note = xmlExtractField(st, 'note') || '';
-      const invm = st.match(/<name>\s*invoice_ids\s*<\/name>\s*<value>\s*<array>\s*<data>([\s\S]*?)<\/data>/);
-      const invIds = invm ? (invm[1].match(/<int>(\d+)<\/int>/g) || []) : [];
+      // Buscamos por FOLIO (el folio es la clave del pedido). No filtramos por ficha de
+      // cliente porque a veces el pedido queda ligado a un registro distinto al del login.
+      let domain = `<value><array><data>${xmlStr('client_order_ref')}<value><string>=</string></value>${xmlStr(folio)}</data></array></value>`;
+      const text = await odooSearchRead(uid, 'sale.order', domain, ['id','state','note','invoice_ids'], 10);
+      const structs = text.match(/<struct>[\s\S]*?<\/struct>/g) || [];
+      if (!structs.length) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'Pedido no encontrado'})};
+      // Puede haber duplicados con el mismo folio: elegir el que ya tiene factura,
+      // si no, el confirmado (sale/done), si no, el primero.
+      function _parseOrden(s){
+        const im = s.match(/<name>\s*invoice_ids\s*<\/name>\s*<value>\s*<array>\s*<data>([\s\S]*?)<\/data>/);
+        return {
+          id: parseInt(xmlExtractField(s, 'id')) || 0,
+          state: xmlExtractField(s, 'state'),
+          note: xmlExtractField(s, 'note') || '',
+          invIds: im ? (im[1].match(/<int>(\d+)<\/int>/g) || []) : []
+        };
+      }
+      const parsed = structs.map(_parseOrden);
+      const chosen = parsed.find(o => o.invIds.length)
+                  || parsed.find(o => o.state === 'sale' || o.state === 'done')
+                  || parsed[0];
+      const id = chosen.id;
+      const state = chosen.state;
+      const note = chosen.note;
+      const invIds = chosen.invIds;
       // Si ya hay factura, intentar publicarla/timbrarla (por si quedó en borrador).
       if (invIds.length) {
         const existingId = parseInt(invIds[invIds.length-1].replace(/\D/g,'')) || 0;
