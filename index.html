@@ -3447,28 +3447,38 @@ window.pagarConSPEI = async function(){
         + '<div style="font-size:11px;color:#856404;margin-top:6px;">Si transfieres un monto distinto, tu pago no se podr&#225; confirmar autom&#225;ticamente.</div>'
         + '</div>';
 
-      if (data.clabe) {
-        // Tenemos la CLABE: mostrarla con botón de copiar (sin salir de la página)
+      var FX = (window.EMPRESA && window.EMPRESA.banco) || {};
+      var fxClabe = (FX.clabe && !/PENDIENTE|XXXX/i.test(FX.clabe)) ? FX.clabe : '';
+      var speiClabe = data.clabe || fxClabe;
+      var speiBanco = data.banco || FX.banco || '';
+      var speiBenef = data.beneficiario || FX.titular || '';
+      var speiCuenta = (!data.clabe && FX.cuenta && !/^0123456789$/.test(FX.cuenta)) ? FX.cuenta : '';
+      window._speiClabeActual = speiClabe;
+      if (speiClabe) {
+        // Mostrar la CLABE (dinámica de MP o la cuenta fija de la empresa) con botón de copiar
         html += '<div style="background:#fff;border:1px dashed #009EE3;border-radius:8px;padding:14px;margin-bottom:10px;">'
           + '<div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.5px;">CLABE para transferir</div>'
           + '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px;">'
-          + '<span id="spei-clabe-val" style="font-size:20px;font-weight:800;color:#001F5B;letter-spacing:1px;">' + data.clabe + '</span>'
+          + '<span id="spei-clabe-val" style="font-size:20px;font-weight:800;color:#001F5B;letter-spacing:1px;">' + speiClabe + '</span>'
           + '<button onclick="window.copiarCLABE()" style="background:#009EE3;color:#fff;border:none;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:700;font-size:12px;">Copiar</button>'
           + '</div></div>';
-        if (data.banco)        html += '<div style="font-size:13px;color:#444;margin:4px 0;"><b>Banco:</b> ' + data.banco + '</div>';
-        if (data.beneficiario) html += '<div style="font-size:13px;color:#444;margin:4px 0;"><b>Beneficiario:</b> ' + data.beneficiario + '</div>';
-        html += '<div style="font-size:12px;color:#666;margin-top:10px;line-height:1.5;">Transfiere el <b>monto exacto</b> desde tu app bancaria a esta CLABE. Tu pedido se confirma automáticamente al recibir el pago' + (data.expira ? ' (vence pronto, transfiere hoy)' : '') + '.</div>';
-        // Enlace de respaldo al comprobante oficial
+        if (speiBanco)   html += '<div style="font-size:13px;color:#444;margin:4px 0;"><b>Banco:</b> ' + speiBanco + '</div>';
+        if (speiBenef)   html += '<div style="font-size:13px;color:#444;margin:4px 0;"><b>Beneficiario:</b> ' + speiBenef + '</div>';
+        if (speiCuenta)  html += '<div style="font-size:13px;color:#444;margin:4px 0;"><b>Cuenta:</b> ' + speiCuenta + '</div>';
+        if (data.folio)  html += '<div style="font-size:13px;color:#444;margin:4px 0;"><b>Concepto / referencia:</b> ' + data.folio + '</div>';
+        html += '<div style="font-size:12px;color:#666;margin-top:10px;line-height:1.5;">Transfiere el <b>monto exacto</b> desde tu app bancaria a esta CLABE' + (data.folio ? ' usando el <b>concepto</b> indicado' : '') + '. En cuanto recibamos tu pago confirmamos tu pedido' + (data.expira ? ' (vence pronto, transfiere hoy)' : '') + '.</div>';
         if (data.ticket_url) {
-          html += '<div style="text-align:center;margin-top:12px;"><a href="' + data.ticket_url + '" target="_blank" rel="noopener" style="font-size:12px;color:#009EE3;text-decoration:underline;">Ver comprobante oficial de Mercado Pago &#8599;</a></div>';
+          html += '<div style="text-align:center;margin-top:12px;"><a href="' + data.ticket_url + '" target="_blank" rel="noopener" style="font-size:12px;color:#009EE3;text-decoration:underline;">Ver comprobante oficial de Mercado Pago</a></div>';
         }
       } else if (data.ticket_url) {
         // No vino la CLABE en la respuesta: mostrar el botón al comprobante de MP
         html += '<div style="text-align:center;font-size:13px;color:#444;margin-bottom:14px;">Haz clic abajo para ver tu <b>CLABE</b> y los pasos para transferir.</div>'
-          + '<div style="text-align:center;"><a href="' + data.ticket_url + '" target="_blank" rel="noopener" style="display:inline-block;background:#009EE3;color:#fff;font-weight:700;padding:12px 22px;border-radius:8px;text-decoration:none;">Ver datos de transferencia &#8599;</a></div>';
+          + '<div style="text-align:center;"><a href="' + data.ticket_url + '" target="_blank" rel="noopener" style="display:inline-block;background:#009EE3;color:#fff;font-weight:700;padding:12px 22px;border-radius:8px;text-decoration:none;">Ver datos de transferencia</a></div>';
       } else {
         html += '<div style="text-align:center;font-size:13px;color:#444;">Tu pedido quedó reservado. Un ejecutivo te enviará los datos de transferencia.</div>';
       }
+      // Opción de cambiar de método: volver a tarjeta
+      html += '<div style="text-align:center;margin-top:14px;"><a onclick="window.volverATarjeta()" style="font-size:13px;color:#0071e3;cursor:pointer;text-decoration:underline;">Mejor pagar con tarjeta</a></div>';
       // Botón para descargar el comprobante del pedido en PDF
       html += '<div style="text-align:center;margin-top:16px;"><button onclick="window.descargarComprobantePDF()" style="background:#0071e3;color:#fff;border:none;padding:12px 24px;border-radius:980px;font-weight:600;cursor:pointer;font-size:15px;">Descargar comprobante</button></div>';
       // Aviso de espera de confirmación automática
@@ -3510,6 +3520,14 @@ window.copiarCLABE = function(){
   var txt = el.textContent.trim();
   if (navigator.clipboard) navigator.clipboard.writeText(txt);
   if (typeof showToast === 'function') showToast('\u2713 CLABE copiada: ' + txt);
+};
+window.volverATarjeta = function(){
+  var resultBox=document.getElementById('spei-result'); if(resultBox){ resultBox.style.display='none'; resultBox.innerHTML=''; }
+  var brickCont=document.getElementById('mp-brick-container'); if(brickCont) brickCont.style.display='';
+  var brickStatus=document.getElementById('mp-brick-status'); if(brickStatus) brickStatus.style.display='none';
+  var btn=document.getElementById('btn-spei'); if(btn) btn.style.display='';
+  var speiIntro=document.getElementById('spei-wrap'); if(speiIntro){ var introTxt=speiIntro.querySelector('div'); if(introTxt) introTxt.style.display=''; }
+  var methods=document.getElementById('pay-methods-card'); if(methods) methods.scrollIntoView({behavior:'smooth',block:'start'});
 };
 
 // Copiar el monto EXACTO (solo el número, ej. 100.00) para evitar errores al transferir
