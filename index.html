@@ -1599,6 +1599,10 @@
         <span id="cart-item-count">0 productos</span>
         <span id="cart-subtotal">$0.00</span>
       </div>
+      <div class="cart-total-row" id="cart-iva-row" style="display:none;">
+        <span>IVA (16%)</span>
+        <span id="cart-iva">$0.00</span>
+      </div>
       <div class="cart-total-row">
         <span>Envío</span>
         <span style="color:#86868b;">Se calcula al pagar</span>
@@ -1704,6 +1708,16 @@ window.cartTotals = function(){
   });
   if (window.clientLevel() === 'registered') return { exact:min, sinPrecio:sinPrecio };
   return { min:min, max:min*(1+window.PRECIO_RANGO), sinPrecio:sinPrecio };
+};
+
+// Los precios capturados YA incluyen IVA (precio final). Este helper saca el desglose:
+// base (subtotal sin IVA) = total / 1.16, e IVA = total - base.
+window.IVA_RATE = 0.16;
+window.desgloseIVA = function(totalConIva){
+  var t = (+totalConIva) || 0;
+  var base = Math.round((t / (1 + window.IVA_RATE)) * 100) / 100;
+  var iva = Math.round((t - base) * 100) / 100;
+  return { base: base, iva: iva, total: t };
 };
 
 // Contactar ejecutivo con el contenido del carrito por WhatsApp
@@ -1865,11 +1879,18 @@ window.renderCart = function() {
   document.getElementById('cart-price-note').style.display = showPriceNote ? 'block' : 'none';
 
   var t = window.cartTotals();
+  var ivaRow = document.getElementById('cart-iva-row');
   if (registered) {
-    document.getElementById('cart-subtotal').textContent = window.fmtMXN(t.exact) + ' MXN';
-    document.getElementById('cart-total').textContent = window.fmtMXN(t.exact) + ' MXN';
+    var d = window.desgloseIVA(t.exact);
+    document.getElementById('cart-item-count').textContent = 'Subtotal (' + totalItems + ' producto' + (totalItems!==1?'s':'') + ')';
+    document.getElementById('cart-subtotal').textContent = window.fmtMXN(d.base) + ' MXN';
+    if (document.getElementById('cart-iva')) document.getElementById('cart-iva').textContent = window.fmtMXN(d.iva) + ' MXN';
+    if (ivaRow) ivaRow.style.display = 'flex';
+    document.getElementById('cart-total').textContent = window.fmtMXN(d.total) + ' MXN';
   } else {
+    document.getElementById('cart-item-count').textContent = totalItems + ' producto' + (totalItems!==1?'s':'');
     document.getElementById('cart-subtotal').textContent = window.fmtMXN(t.min) + ' \u2013 ' + window.fmtMXN(t.max);
+    if (ivaRow) ivaRow.style.display = 'none';
     document.getElementById('cart-total').textContent = window.fmtMXN(t.min) + ' \u2013 ' + window.fmtMXN(t.max) + ' MXN';
   }
 
@@ -2334,6 +2355,7 @@ cartUpdateBadge();
       <div id="co-sum-items"></div>
       <div style="margin-top:12px;">
         <div class="co-sum-row"><span id="co-sum-count">0 productos</span><span id="co-sum-subtotal">$0.00</span></div>
+        <div class="co-sum-row" id="co-sum-iva-row"><span>IVA (16%)</span><span id="co-sum-iva">$0.00</span></div>
         <div class="co-sum-row"><span>Env&#237;o <span id="co-sum-shipname" style="color:#aaa;"></span></span><span id="co-sum-ship">$0.00</span></div>
         <div class="co-sum-row final"><span>Total</span><span id="co-sum-total">$0.00</span></div>
       </div>
@@ -2830,16 +2852,22 @@ function coRenderSummary(){
   }
 
   var ship = c.envio ? c.envio.price : 0;
-  document.getElementById('co-sum-count').textContent = count + ' producto' + (count!==1?'s':'');
+  document.getElementById('co-sum-count').textContent = 'Subtotal (' + count + ' producto' + (count!==1?'s':'') + ')';
   document.getElementById('co-sum-shipname').textContent = c.envio ? '('+c.envio.name+')' : '';
   document.getElementById('co-sum-ship').textContent = window.fmtMXN(ship);
+  var coIvaRow = document.getElementById('co-sum-iva-row');
   if (registered) {
-    document.getElementById('co-sum-subtotal').textContent = window.fmtMXN(subtotal);
-    document.getElementById('co-sum-total').textContent = window.fmtMXN(subtotal+ship) + ' MXN';
+    var d = window.desgloseIVA(subtotal);
+    document.getElementById('co-sum-subtotal').textContent = window.fmtMXN(d.base);
+    if (document.getElementById('co-sum-iva')) document.getElementById('co-sum-iva').textContent = window.fmtMXN(d.iva);
+    if (coIvaRow) coIvaRow.style.display = 'flex';
+    document.getElementById('co-sum-total').textContent = window.fmtMXN(d.total+ship) + ' MXN';
     document.getElementById('co-sum-pricenote').style.display = 'none';
   } else {
+    document.getElementById('co-sum-count').textContent = count + ' producto' + (count!==1?'s':'');
     var lo = subtotal, hi = subtotal*(1+window.PRECIO_RANGO);
     document.getElementById('co-sum-subtotal').textContent = window.fmtMXN(lo) + ' \u2013 ' + window.fmtMXN(hi);
+    if (coIvaRow) coIvaRow.style.display = 'none';
     document.getElementById('co-sum-total').textContent = window.fmtMXN(lo+ship) + ' \u2013 ' + window.fmtMXN(hi+ship) + ' MXN';
     document.getElementById('co-sum-pricenote').style.display = 'block';
   }
@@ -2924,7 +2952,7 @@ window.coConfirmar = function(){
       <span class="pay-folio" id="pay-folio">PED-XXXXX</span>
     </div>
     <div class="pay-total-box">
-      <span class="lbl">Total a pagar</span>
+      <span class="lbl">Total a pagar<br><span style="font-size:11px;color:#a0a0a8;">IVA incluido</span></span>
       <span class="amt" id="pay-total">$0.00 MXN</span>
     </div>
     <div id="pay-guest-warn" class="pay-warn" style="display:none;">
