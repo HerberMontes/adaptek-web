@@ -2610,13 +2610,25 @@ exports.handler = async function(event, context) {
 
       // Crear la orden en Odoo como borrador (el webhook la confirma cuando llegue la transferencia)
       try { await crearOrdenOdoo(uid, orden, 'draft'); } catch(_){}
+
+      // Leer el TOTAL REAL de la orden en Odoo (amount_total ya trae el IVA según la config de
+      // impuestos). El SPEI cobra EXACTAMENTE ese total, para que el pago coincida con la factura.
+      let montoCobro = serverTotal;
+      try {
+        const odom = `<value><array><data>${xmlStr('client_order_ref')}<value><string>=</string></value>${xmlStr(folio)}</data></array></value>`;
+        const ot = await odooSearchRead(uid, 'sale.order', odom, ['amount_total'], 1);
+        const ost = (ot.match(/<struct>[\s\S]*?<\/struct>/) || [''])[0];
+        const at = parseFloat(xmlExtractField(ost, 'amount_total'));
+        if (at > 0) montoCobro = Math.round(at * 100) / 100;
+      } catch(_){}
+
       // Aviso SOLO al equipo (pedido entrante pendiente de pago). Al cliente NO se le manda
       // correo todavía: lo recibirá cuando el pago se acredite (vía webhook).
-      try { await enviarCorreosPedido(orden, folio, serverTotal, 'spei', 'pendiente', 'solo_equipo'); } catch(_){}
+      try { await enviarCorreosPedido(orden, folio, montoCobro, 'spei', 'pendiente', 'solo_equipo'); } catch(_){}
 
       // Crear el pago SPEI (clabe) en Mercado Pago
       const paymentBody = {
-        transaction_amount: serverTotal,
+        transaction_amount: montoCobro,
         description: 'Adaptekk pedido ' + folio,
         payment_method_id: 'clabe',
         external_reference: folio,
@@ -2677,7 +2689,7 @@ exports.handler = async function(event, context) {
         status: payStatus,
         payment_id: paymentId,
         folio: folio,
-        monto: serverTotal,
+        monto: montoCobro,
         ticket_url: ticketUrl,
         clabe: clabe,
         banco: banco,
