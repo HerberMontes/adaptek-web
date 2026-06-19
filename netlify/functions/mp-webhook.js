@@ -13,6 +13,7 @@ const ODOO_DB   = process.env.ODOO_DB   || 'hydratechgroup';
 const ODOO_USER = process.env.ODOO_USER || 'herber.montes@hydratechgroup.mx';
 const ODOO_KEY  = process.env.ODOO_API_KEY || process.env.ODOO_KEY || '';
 const MP_TOKEN  = process.env.MP_ACCESS_TOKEN || '';
+const SITE_URL  = process.env.SITE_URL || 'https://cheery-fenglisu-0daf09.netlify.app';
 
 function xmlStr(v){ return `<value><string>${String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</string></value>`; }
 
@@ -174,6 +175,16 @@ exports.handler = async function(event){
         }
         // Avisar por correo que el pago (SPEI) se acreditó y el pedido está confirmado
         try { await avisarPagoAcreditado(folio, pay); console.log('[webhook] correos enviados'); } catch(ee){ console.log('[webhook] correo falló: ' + ee.message); }
+        // Facturación automática: solo se factura si la orden trae la marca [AUTOFACTURA]
+        // (el cliente eligió "Sí, facturar"). Lo decide la acción facturar_pedido en odoo.js.
+        try {
+          const facResp = await fetch(SITE_URL + '/.netlify/functions/odoo', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ action:'facturar_pedido', folio: folio })
+          });
+          const facJson = await facResp.json().catch(function(){ return {}; });
+          console.log('[webhook] facturar_pedido folio=' + folio + ' -> ' + JSON.stringify(facJson));
+        } catch(fe) { console.log('[webhook] facturar_pedido falló: ' + fe.message); }
       } else {
         console.log('[webhook] NO se encontró orden con folio=' + folio + ' para confirmar');
       }

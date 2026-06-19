@@ -119,6 +119,78 @@ async function xmlrpc(uid, model, method, argsXml) {
   return await resp.text();
 }
 
+// Igual que xmlrpc pero permite enviar kwargs (p.ej. context). kwargsInnerXml = members del struct.
+async function xmlrpcKw(uid, model, method, argsXml, kwargsInnerXml) {
+  const xml = `<?xml version="1.0"?>
+<methodCall><methodName>execute_kw</methodName><params>
+  <param><value><string>${ODOO_DB}</string></value></param>
+  <param><value><int>${uid}</int></value></param>
+  <param><value><string>${ODOO_KEY}</string></value></param>
+  <param><value><string>${model}</string></value></param>
+  <param><value><string>${method}</string></value></param>
+  <param><value><array><data>${argsXml}</data></array></value></param>
+  <param><value><struct>${kwargsInnerXml || ''}</struct></value></param>
+</params></methodCall>`;
+  const resp = await fetch(`${ODOO_URL}/xmlrpc/2/object`, {
+    method: 'POST', headers: {'Content-Type':'text/xml'}, body: xml
+  });
+  return await resp.text();
+}
+
+// Crea la factura desde una orden de venta confirmada, la valida (publica) e intenta timbrar (CFDI MX).
+// Devuelve { ok, invoiceId, posted, stamped, error }.
+async function facturarOrden(uid, saleId) {
+  try {
+    // Contexto que el asistente de facturación necesita para saber sobre qué orden actuar.
+    const ctx = `<member><name>context</name><value><struct>`
+      + `<member><name>active_model</name><value><string>sale.order</string></value></member>`
+      + `<member><name>active_ids</name><value><array><data><value><int>${saleId}</int></value></data></array></value></member>`
+      + `<member><name>active_id</name><value><int>${saleId}</int></value></member>`
+      + `</struct></value></member>`;
+    // 1) Crear el asistente "Crear factura" con método 'delivered' (factura lo entregado/pedido)
+    const wizArgs = `<value><struct><member><name>advance_payment_method</name><value><string>delivered</string></value></member></struct></value>`;
+    const wizText = await xmlrpcKw(uid, 'sale.advance.payment.inv', 'create', wizArgs, ctx);
+    const wm = wizText.match(/<value><int>(\d+)<\/int><\/value>/);
+    const wizId = wm ? parseInt(wm[1]) : null;
+    if (!wizId) return { ok:false, error:'No se pudo crear el asistente de factura: ' + (xmlFault(wizText) || wizText.slice(0,180)) };
+    // 2) Ejecutar la creación de la(s) factura(s)
+    const ciText = await xmlrpcKw(uid, 'sale.advance.payment.inv', 'create_invoices',
+      `<value><array><data><value><int>${wizId}</int></value></data></array></value>`, ctx);
+    const ciFault = xmlFault(ciText);
+    if (ciFault) return { ok:false, error:'create_invoices: ' + ciFault };
+    // 3) Leer la factura recién creada en la orden
+    const odom = `<value><array><data>${xmlStr('id')}<value><string>=</string></value>${xmlInt(saleId)}</data></array></value>`;
+    const ot = await odooSearchRead(uid, 'sale.order', odom, ['invoice_ids'], 1);
+    const ost = (ot.match(/<struct>[\s\S]*?<\/struct>/) || [''])[0];
+    const invm = ost.match(/<name>\s*invoice_ids\s*<\/name>\s*<value>\s*<array>\s*<data>([\s\S]*?)<\/data>/);
+    const invIds = invm ? (invm[1].match(/<int>(\d+)<\/int>/g) || []).map(x => parseInt(x.replace(/\D/g,''))) : [];
+    if (!invIds.length) return { ok:false, error:'No se generó factura en la orden' };
+    const invoiceId = invIds[invIds.length - 1];
+    // 4) Validar (publicar) la factura: borrador -> publicada
+    let posted = false;
+    try {
+      const postText = await xmlrpc(uid, 'account.move', 'action_post',
+        `<value><array><data><value><int>${invoiceId}</int></value></data></array></value>`);
+      posted = !xmlFault(postText);
+    } catch(_){}
+    // 5) Intentar timbrar el CFDI (best-effort; depende de tu PAC configurado en Odoo).
+    let stamped = false;
+    if (posted) {
+      const tryMethods = ['l10n_mx_edi_cfdi_try_send', 'action_process_edi_web_services'];
+      for (const mth of tryMethods) {
+        try {
+          const tText = await xmlrpc(uid, 'account.move', mth,
+            `<value><array><data><value><int>${invoiceId}</int></value></data></array></value>`);
+          if (!xmlFault(tText)) { stamped = true; break; }
+        } catch(_){}
+      }
+    }
+    return { ok:true, invoiceId, posted, stamped };
+  } catch(e) {
+    return { ok:false, error: String(e && e.message || e) };
+  }
+}
+
 // Detecta un <fault> de Odoo y devuelve el mensaje (o null si todo OK)
 function xmlFault(text){
   if (text && text.indexOf('<fault>') !== -1) {
@@ -308,6 +380,7 @@ async function crearOrdenOdoo(uid, orden, estado) {
     const orderStruct = `<value><struct>
       <member><name>partner_id</name>${xmlInt(partnerId)}</member>
       <member><name>client_order_ref</name>${xmlStr(folio)}</member>
+      ${(co.facturar === true) ? `<member><name>note</name>${xmlStr('[AUTOFACTURA] Pedido marcado para facturacion automatica.')}</member>` : ''}
       <member><name>order_line</name><value><array><data>${lineXmls.join('')}</data></array></value></member>
     </struct></value>`;
     const createText = await xmlrpc(uid, 'sale.order', 'create', orderStruct);
@@ -2323,6 +2396,47 @@ exports.handler = async function(event, context) {
         return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'No se pudo eliminar: ' + (e.message||'')})};
       }
       return {statusCode:200, headers, body: JSON.stringify({ok:true})};
+    }
+
+    // ── FACTURAR un pedido confirmado (crear + validar + timbrar la factura en Odoo) ──
+    //  - El webhook la llama (sin force) tras confirmar el pago: solo factura si la orden
+    //    trae la marca [AUTOFACTURA] (el cliente eligió facturar).
+    //  - Con force:true + partner_id (del dueño) se puede facturar a mano para pruebas.
+    if (action === 'facturar_pedido') {
+      const folio = (body.folio || '').trim();
+      const force = body.force === true;
+      let pid = parseInt(body.partner_id) || 0;
+      const email = (body.email || '').trim();
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+      if (!folio) return {statusCode:400, headers, body: JSON.stringify({ok:false, error:'Folio requerido'})};
+      if (!pid && email) {
+        const pf = await xmlrpc(uid, 'res.partner', 'search',
+          `<value><array><data><value><array><data>${xmlStr('email')}<value><string>=ilike</string></value>${xmlStr(email)}</data></array></value></data></array></value>`);
+        const pm = pf.match(/<int>(\d+)<\/int>/);
+        pid = pm ? parseInt(pm[1]) : 0;
+      }
+      // force exige dueño (partner) para evitar abuso desde el navegador
+      if (force && !pid) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'Se requiere identificar al cliente'})};
+      let domain = `<value><array><data>${xmlStr('client_order_ref')}<value><string>=</string></value>${xmlStr(folio)}`;
+      if (pid) domain += `${xmlStr('partner_id')}<value><string>=</string></value>${xmlInt(pid)}`;
+      domain += `</data></array></value>`;
+      const text = await odooSearchRead(uid, 'sale.order', domain, ['id','state','note','invoice_ids'], 1);
+      const st = (text.match(/<struct>[\s\S]*?<\/struct>/) || [])[0];
+      if (!st) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'Pedido no encontrado'})};
+      const id = parseInt(xmlExtractField(st, 'id')) || 0;
+      const state = xmlExtractField(st, 'state');
+      const note = xmlExtractField(st, 'note') || '';
+      const invm = st.match(/<name>\s*invoice_ids\s*<\/name>\s*<value>\s*<array>\s*<data>([\s\S]*?)<\/data>/);
+      const invIds = invm ? (invm[1].match(/<int>(\d+)<\/int>/g) || []) : [];
+      if (invIds.length) return {statusCode:200, headers, body: JSON.stringify({ok:true, already_invoiced:true})};
+      if (state !== 'sale' && state !== 'done') {
+        return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'El pedido aún no está confirmado (pago pendiente)'})};
+      }
+      const wantsInvoice = force || /AUTOFACTURA/i.test(note);
+      if (!wantsInvoice) return {statusCode:200, headers, body: JSON.stringify({ok:true, skipped:true, reason:'El cliente no solicitó factura'})};
+      const res = await facturarOrden(uid, id);
+      return {statusCode:200, headers, body: JSON.stringify(res)};
     }
 
     // ── PRECIOS DE PRUEBA: poner TODOS los productos a un precio (default $1) ──
