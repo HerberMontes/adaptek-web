@@ -1863,7 +1863,78 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-19-facturacion-v3', features:['facturar_pedido','folio_only_search','publicar_y_timbrar'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-20-sat-code-all-v2', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all'] })};
+    }
+
+    // ── SET MASIVO de la Clave Producto/Servicio del SAT (UNSPSC) en TODOS los productos ──
+    // Idempotente y resumible: solo toca productos que aún NO tienen esa clave.
+    // body: { code?:'40141734', dry_run?:bool, batch_size?:int }
+    if (action === 'set_sat_code_all') {
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+      const code = String(body.code || '40141734').trim();
+      const dryRun = !!body.dry_run;
+      const batchSize = Math.min(Math.max(parseInt(body.batch_size) || 500, 50), 1000);
+
+      // 1) Localizar el registro product.unspsc.code con ese código
+      const codeSearch = await xmlrpc(uid, 'product.unspsc.code', 'search',
+        `<value><array><data><value><array><data>${xmlStr('code')}${xmlStr('=')}${xmlStr(code)}</data></array></value></data></array></value>`);
+      const cf = xmlFault(codeSearch);
+      if (cf) return {statusCode:200, headers, body: JSON.stringify({ok:false, step:'find_code', error:cf})};
+      const codeIdM = codeSearch.match(/<int>(\d+)<\/int>/);
+      const unspscId = codeIdM ? parseInt(codeIdM[1]) : 0;
+      if (!unspscId) {
+        return {statusCode:200, headers, body: JSON.stringify({ok:false, step:'find_code',
+          error:'No existe la clave ' + code + ' en el catálogo SAT (product.unspsc.code) de tu Odoo. Verifica el código o que el catálogo SAT esté cargado.'})};
+      }
+      // nombre de la clave (confirmación)
+      const nameRead = await odooSearchRead(uid, 'product.unspsc.code',
+        `<value><array><data>${xmlStr('id')}${xmlStr('=')}${xmlInt(unspscId)}</data></array></value>`, ['code','name'], 1);
+      const unspscName = (xmlExtractField(nameRead, 'name') || '').toString();
+
+      // 2) Productos que AÚN no tienen esa clave (incluye los que no tienen ninguna)
+      const prodSearch = await xmlrpc(uid, 'product.template', 'search',
+        `<value><array><data><value><array><data>${xmlStr('unspsc_code_id')}${xmlStr('!=')}${xmlInt(unspscId)}</data></array></value></data></array></value>`);
+      const pf = xmlFault(prodSearch);
+      if (pf) return {statusCode:200, headers, body: JSON.stringify({ok:false, step:'find_products', error:pf})};
+      const ids = (prodSearch.match(/<int>(\d+)<\/int>/g) || []).map(s => parseInt(s.replace(/[^0-9]/g,'')));
+
+      if (dryRun) {
+        return {statusCode:200, headers, body: JSON.stringify({ok:true, dry_run:true, code, unspsc_id:unspscId, unspsc_name:unspscName, pending:ids.length})};
+      }
+
+      // 3) Escribir por lotes (resumible: si corta por timeout, re-ejecuta y continúa)
+      let updated = 0, lastError = '';
+      for (let i = 0; i < ids.length; i += batchSize) {
+        const chunk = ids.slice(i, i + batchSize);
+        const idsXml = `<value><array><data>${chunk.map(id => `<value><int>${id}</int></value>`).join('')}</data></array></value>`;
+        const valXml = `<value><struct><member><name>unspsc_code_id</name>${xmlInt(unspscId)}</member></struct></value>`;
+        const wr = await xmlrpc(uid, 'product.template', 'write', idsXml + valXml);
+        const wf = xmlFault(wr);
+        if (wf) { lastError = wf; break; }
+        updated += chunk.length;
+      }
+      const remaining = ids.length - updated;
+      // Dejar la clave como valor por defecto para PRODUCTOS NUEVOS (best-effort)
+      let defaultSet = false, defaultError = '';
+      if (!lastError) {
+        try {
+          const dres = await xmlrpc(uid, 'ir.default', 'set',
+            `${xmlStr('product.template')}${xmlStr('unspsc_code_id')}${xmlInt(unspscId)}`);
+          const dfa = xmlFault(dres);
+          if (dfa) defaultError = dfa; else defaultSet = true;
+        } catch(e){ defaultError = String(e && e.message || e); }
+      }
+      return {statusCode:200, headers, body: JSON.stringify({
+        ok: !lastError, code, unspsc_id:unspscId, unspsc_name:unspscName,
+        total_pending: ids.length, updated, remaining,
+        default_for_new: defaultSet,
+        note: remaining > 0
+          ? 'Quedaron pendientes (probable timeout). Vuelve a correr la MISMA acción para continuar.'
+          : 'Listo: todos los productos quedaron con la clave SAT' + (defaultSet ? ' y se fijó como valor por defecto para productos nuevos.' : '.'),
+        error: lastError || undefined,
+        default_error: defaultError || undefined
+      })};
     }
 
     // ── LOOKUP POR CÓDIGO (para 'Pedir por código AT') ──
