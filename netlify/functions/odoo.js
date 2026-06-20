@@ -301,6 +301,25 @@ function xmlExtractField(xml, field) {
   return end >= 0 ? content.substring(0, end).trim() : content.trim();
 }
 
+// ── SKYDROPX (PRO): obtiene un bearer token vía OAuth client_credentials ──
+// Requiere variables de entorno: SKYDROPX_CLIENT_ID, SKYDROPX_CLIENT_SECRET.
+// SKYDROPX_BASE opcional (default producción; usa https://sb-pro.skydropx.com para sandbox).
+async function skydropxToken() {
+  const base = (process.env.SKYDROPX_BASE || 'https://pro.skydropx.com').replace(/\/+$/,'');
+  const id = process.env.SKYDROPX_CLIENT_ID || '';
+  const secret = process.env.SKYDROPX_CLIENT_SECRET || '';
+  if (!id || !secret) return { error: 'Faltan credenciales SKYDROPX_CLIENT_ID / SKYDROPX_CLIENT_SECRET en variables de entorno' };
+  try {
+    const resp = await fetch(base + '/api/v1/oauth/token', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ grant_type:'client_credentials', client_id:id, client_secret:secret })
+    });
+    const data = await resp.json();
+    if (data && data.access_token) return { token: data.access_token, base };
+    return { error: (data && (data.error_description || data.error)) || ('No se obtuvo token (HTTP '+resp.status+')') };
+  } catch(e){ return { error: String(e && e.message || e) }; }
+}
+
 // ── Busca un producto en Odoo por código AT (default_code) y devuelve precio/stock REALES ──
 // Nunca confiamos en el precio que manda el navegador: se recalcula aquí contra Odoo.
 async function lookupProductByCode(uid, code) {
@@ -1863,7 +1882,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-20-weights-v5', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-20-skydropx-v1', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all'] })};
     }
 
     // ── SET MASIVO de la Clave Producto/Servicio del SAT (UNSPSC) en TODOS los productos ──
@@ -2054,6 +2073,85 @@ exports.handler = async function(event, context) {
               : 'Aún faltan ' + (remaining==null?'?':remaining) + '. Vuelve a correr la MISMA acción para continuar.',
         error: lastError || undefined
       })};
+    }
+
+    // ── SKYDROPX (PRO): prueba de conexión ──
+    if (action === 'skydropx_test') {
+      const t = await skydropxToken();
+      if (t.error) return {statusCode:200, headers, body: JSON.stringify({ ok:false, error:t.error })};
+      try {
+        const r = await fetch(t.base + '/api/v1/finance/credits', { headers:{'Authorization':'Bearer '+t.token,'Content-Type':'application/json'} });
+        const d = await r.json();
+        return {statusCode:200, headers, body: JSON.stringify({ ok:true, token_ok:true, base:t.base, credits:(d&&d.data)||d })};
+      } catch(e){ return {statusCode:200, headers, body: JSON.stringify({ ok:true, token_ok:true, base:t.base, credits_error:String(e&&e.message||e) })}; }
+    }
+
+    // ── SKYDROPX (PRO): cotizar envío ──
+    // body: { zip_to, estado/area_level1, ciudad/area_level2, colonia/area_level3, weight(kg), length, width, height }
+    if (action === 'cotizar_envio') {
+      const t = await skydropxToken();
+      if (t.error) return {statusCode:200, headers, body: JSON.stringify({ ok:false, error:t.error })};
+      const origin = {
+        country_code:'MX',
+        postal_code: process.env.SKYDROPX_ORIGIN_CP || '',
+        area_level1: process.env.SKYDROPX_ORIGIN_STATE || '',
+        area_level2: process.env.SKYDROPX_ORIGIN_CITY || '',
+        area_level3: process.env.SKYDROPX_ORIGIN_COLONIA || ''
+      };
+      if (!origin.postal_code) return {statusCode:200, headers, body: JSON.stringify({ ok:false, error:'Falta SKYDROPX_ORIGIN_CP (CP de origen) en variables de entorno' })};
+      const dest = {
+        country_code:'MX',
+        postal_code: String(body.zip_to||'').trim(),
+        area_level1: body.area_level1 || body.estado || '',
+        area_level2: body.area_level2 || body.ciudad || '',
+        area_level3: body.area_level3 || body.colonia || ''
+      };
+      if (!dest.postal_code) return {statusCode:200, headers, body: JSON.stringify({ ok:false, error:'Falta CP de destino (zip_to)' })};
+      const parcel = {
+        weight: Math.max(parseFloat(body.weight)||1, 0.1),
+        length: parseInt(body.length)||30,
+        width:  parseInt(body.width)||20,
+        height: parseInt(body.height)||15
+      };
+      // 1) crear cotización
+      let quoteId=null, rawCreate=null;
+      try {
+        const qResp = await fetch(t.base + '/api/v1/quotations', {
+          method:'POST', headers:{'Authorization':'Bearer '+t.token,'Content-Type':'application/json'},
+          body: JSON.stringify({ quotation: { address_from:origin, address_to:dest, parcels:[parcel] } })
+        });
+        rawCreate = await qResp.json();
+        quoteId = rawCreate && ((rawCreate.data && rawCreate.data.id) || rawCreate.id);
+      } catch(e){ return {statusCode:200, headers, body: JSON.stringify({ ok:false, step:'create', error:String(e&&e.message||e) })}; }
+      if (!quoteId) return {statusCode:200, headers, body: JSON.stringify({ ok:false, step:'create', error:'No se creó la cotización', raw:rawCreate })};
+      // 2) consultar hasta is_completed (máx ~7s)
+      const t0=Date.now(); let rates=[]; let completed=false;
+      while (Date.now()-t0 < 7000) {
+        await new Promise(r=>setTimeout(r,1500));
+        try {
+          const gResp = await fetch(t.base + '/api/v1/quotations/'+quoteId, { headers:{'Authorization':'Bearer '+t.token,'Content-Type':'application/json'} });
+          const raw = await gResp.json();
+          const d = (raw && raw.data) ? raw.data : raw;
+          const attrs = (d && d.attributes) ? d.attributes : d;
+          completed = !!(attrs && attrs.is_completed);
+          const rs = (attrs && attrs.rates) || (d && d.rates) || [];
+          if (rs && rs.length) rates = rs;
+          if (completed) break;
+        } catch(e){}
+      }
+      // normalizar tarifas
+      const norm = (rates||[]).map(r=>{
+        const a = r.attributes || r;
+        return {
+          id: r.id || a.id,
+          carrier: a.provider_name || a.carrier_name || a.provider || a.carrier || '',
+          service: a.service_level_name || a.service_level || a.service || '',
+          total: parseFloat(a.total || a.amount || a.amount_local || 0),
+          days: a.days || a.estimated_delivery || a.estimated_delivery_days || null,
+          success: a.success !== false
+        };
+      }).filter(r=>r.success && r.total>0).sort((a,b)=>a.total-b.total);
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, quotation_id:quoteId, is_completed:completed, count:norm.length, rates:norm })};
     }
 
     // ── LOOKUP POR CÓDIGO (para 'Pedir por código AT') ──
