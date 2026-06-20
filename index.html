@@ -3194,7 +3194,6 @@ window.montarBrickPago = async function(){
             })
             .then(function(r){ return r.json(); })
             .then(function(res){
-              if (typeof console!=='undefined') console.log('process_payment respuesta:', res);
               window.mostrarResultadoPago(res);
               // Resolver SOLO si el pago se aprobó o quedó en proceso (SPEI/OXXO).
               // Si fue rechazado o hubo error, RECHAZAR para reactivar el botón y permitir reintentar.
@@ -5766,7 +5765,13 @@ function crossAddToCart(){
   window.cartAdd({at_code:p.at_code, name:p.name, price:p.price, qty_available:p.qty_available, status:p.status});
 }
 
+// Imágenes de conectores DESACTIVADAS temporalmente: los archivos assets/conn-*.png aún no
+// están subidos y generaban errores 404 en consola. Para reactivarlas cuando subas las imágenes,
+// reemplaza {} por el mapa de abajo.
+var CONNECTOR_IMGS={};
+/* MAPA ORIGINAL (restaurar al subir las imágenes a /assets):
 var CONNECTOR_IMGS={"bspt":"assets/conn-bspt.png","bspp":"assets/conn-bspp.png","orfs":"assets/conn-orfs.png","npt":"assets/conn-npt.png","jic":"assets/conn-jic.png","orb":"assets/conn-orb.png","tee":"assets/conn-tee.jpg","c45":"assets/conn-c45.jpg","c90":"assets/conn-c90.jpg","tap":"assets/conn-tap.jpg","nr":"assets/conn-nr.png","jico":"assets/conn-jico.png","bite":"assets/conn-bite.png","jis":"assets/conn-jis.png","komatsu":"assets/conn-komatsu.png","crx":"assets/conn-crx.png","bh":"assets/conn-bh.png","bh90":"assets/conn-bh90.png","bh45":"assets/conn-bh45.png","bhtee":"assets/conn-bhtee.png"};
+*/
 
 /* ODOO CONFIG: las credenciales viven en la función Netlify (variables de entorno), no en el frontend */
 
@@ -5926,7 +5931,6 @@ function renderStep(){
     g.style.gridTemplateColumns='repeat(auto-fill,minmax(180px,1fr))';
     TIPOS.forEach(function(t){
       g.appendChild(mkOptCard(t.label,t.sub,function(){
-        console.log('TIPO CLICKED:', t.code, t.label);
         tipo=t; exts=[];
         for(var i=0;i<t.n;i++) exts.push({std:null,gen:null,med:null});
         step=1; renderStep();
