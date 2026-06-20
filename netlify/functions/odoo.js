@@ -1863,7 +1863,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-20-sat-code-all-v2', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-20-weights-v1', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all'] })};
     }
 
     // ── SET MASIVO de la Clave Producto/Servicio del SAT (UNSPSC) en TODOS los productos ──
@@ -1934,6 +1934,113 @@ exports.handler = async function(event, context) {
           : 'Listo: todos los productos quedaron con la clave SAT' + (defaultSet ? ' y se fijó como valor por defecto para productos nuevos.' : '.'),
         error: lastError || undefined,
         default_error: defaultError || undefined
+      })};
+    }
+
+    // ── SET MASIVO de PESO ESTIMADO (kg) en productos AT (acero al carbón) ──
+    // Resumible: solo toca productos con weight=0 (re-ejecuta hasta remaining:0).
+    // body: { dry_run?:bool, force?:bool, limit?:int }
+    if (action === 'set_weights_bulk') {
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+      const dryRun = !!body.dry_run;
+      const force = !!body.force;
+      const limit = Math.min(Math.max(parseInt(body.limit) || 2000, 100), 4000);
+      const MAXW = 25;            // máx. grupos de peso por llamada (evita timeout)
+      const t0 = Date.now();
+
+      // Modelo de peso (acero al carbón). Base de un RECTO por dash (g) y multiplicador por tipo.
+      const DASH_G = {2:20,3:28,4:40,5:55,6:70,8:110,10:160,12:230,14:300,16:400,20:620,24:880,32:1500};
+      const DASH_KEYS = Object.keys(DASH_G).map(Number).sort((a,b)=>a-b);
+      function dashG(n){ if (DASH_G[n]!=null) return DASH_G[n]; let best=DASH_KEYS[0]; for (const k of DASH_KEYS){ if (Math.abs(k-n)<Math.abs(best-n)) best=k; } return DASH_G[best]; }
+      const TYPE_MULT = {NR:1.0,NRR:1.0,C45:1.5,C90:1.7,BH:1.6,BH45:2.0,BH90:2.2,TEE:2.2,TEEB:2.2,TEER:2.2,BHTEE:2.6,CRX:2.8,TAP:0.6};
+      function weightKg(code){
+        const seg = String(code||'').split('-');
+        const tipo = (seg[1]||'NR').toUpperCase();
+        const mult = TYPE_MULT[tipo]!=null ? TYPE_MULT[tipo] : 1.3;
+        const a = parseInt(seg[seg.length-2]); const b = parseInt(seg[seg.length-1]);
+        const cands = [a,b].filter(x=>!isNaN(x));
+        const dash = cands.length ? Math.max.apply(null,cands) : 8;
+        return Math.round(dashG(dash) * mult) / 1000; // kg
+      }
+
+      // Dominio: productos con código AT (y weight=0 salvo force)
+      let domainInner = `<value><array><data>${xmlStr('default_code')}<value><string>=like</string></value>${xmlStr('AT-%')}</data></array></value>`;
+      if (!force) domainInner += `<value><array><data>${xmlStr('weight')}${xmlStr('=')}${xmlInt(0)}</data></array></value>`;
+      const domainArg = `<value><array><data>${domainInner}</data></array></value>`;
+
+      // search_read id+default_code
+      const srXml = `<?xml version="1.0"?>
+<methodCall><methodName>execute_kw</methodName><params>
+  <param><value><string>${ODOO_DB}</string></value></param>
+  <param><value><int>${uid}</int></value></param>
+  <param><value><string>${ODOO_KEY}</string></value></param>
+  <param><value><string>product.template</string></value></param>
+  <param><value><string>search_read</string></value></param>
+  <param><value><array><data>${domainArg}</data></array></value></param>
+  <param><value><struct>
+    <member><name>fields</name><value><array><data><value><string>id</string></value><value><string>default_code</string></value></data></array></value></member>
+    <member><name>limit</name><value><int>${limit}</int></value></member>
+    <member><name>order</name><value><string>id</string></value></member>
+  </struct></value></param>
+</params></methodCall>`;
+      const srResp = await fetch(`${ODOO_URL}/xmlrpc/2/object`, {method:'POST',headers:{'Content-Type':'text/xml'},body:srXml});
+      const srText = await srResp.text();
+      const srf = xmlFault(srText);
+      if (srf) return {statusCode:200, headers, body: JSON.stringify({ok:false, step:'search', error:srf})};
+
+      // parsear pares id + default_code
+      const pairs = [];
+      const structs = srText.split('<struct>').slice(1);
+      for (const s of structs){
+        const idm = s.match(/<name>id<\/name>\s*<value>\s*<int>(\d+)<\/int>/);
+        const cm = s.match(/<name>default_code<\/name>\s*<value>\s*<string>([^<]*)<\/string>/);
+        if (idm) pairs.push({ id: parseInt(idm[1]), code: cm ? cm[1] : '' });
+      }
+
+      // agrupar por peso
+      const byW = {}; const sample = [];
+      for (const p of pairs){
+        const w = weightKg(p.code);
+        (byW[w] = byW[w] || []).push(p.id);
+        if (sample.length < 8) sample.push({ code:p.code, kg:w });
+      }
+      const weightVals = Object.keys(byW);
+
+      if (dryRun){
+        return {statusCode:200, headers, body: JSON.stringify({
+          ok:true, dry_run:true, found:pairs.length, distinct_weights:weightVals.length, sample
+        })};
+      }
+
+      // escribir hasta MAXW grupos por llamada
+      let updated = 0, groupsWritten = 0, lastError = '';
+      for (const w of weightVals){
+        if (groupsWritten >= MAXW || (Date.now()-t0) > 7500) break;
+        const ids = byW[w];
+        const idsXml = `<value><array><data>${ids.map(id=>`<value><int>${id}</int></value>`).join('')}</data></array></value>`;
+        const valXml = `<value><struct><member><name>weight</name><value><double>${parseFloat(w)}</double></member></struct></value>`;
+        const wr = await xmlrpc(uid, 'product.template', 'write', idsXml + valXml);
+        const wf = xmlFault(wr);
+        if (wf){ lastError = wf; break; }
+        updated += ids.length; groupsWritten++;
+      }
+
+      // ¿cuántos quedan con weight=0?
+      let remaining = null;
+      try {
+        const remDomain = `<value><array><data>${xmlStr('default_code')}<value><string>=like</string></value>${xmlStr('AT-%')}</data></array></value><value><array><data>${xmlStr('weight')}${xmlStr('=')}${xmlInt(0)}</data></array></value>`;
+        const rc = await xmlrpc(uid, 'product.template', 'search_count', `<value><array><data>${remDomain}</data></array></value>`);
+        const rm = rc.match(/<int>(\d+)<\/int>/);
+        remaining = rm ? parseInt(rm[1]) : null;
+      } catch(_){}
+
+      return {statusCode:200, headers, body: JSON.stringify({
+        ok: !lastError, updated, groups_written:groupsWritten, remaining,
+        done: remaining === 0,
+        note: remaining === 0 ? 'Listo: pesos estimados cargados en todos los productos AT.'
+              : 'Aún faltan ' + (remaining==null?'?':remaining) + '. Vuelve a correr la MISMA acción para continuar.',
+        error: lastError || undefined
       })};
     }
 
