@@ -331,6 +331,15 @@ async function skydropxToken(baseOverride) {
   }
 }
 
+// ── fetch con timeout (AbortController). Evita que una petición colgada bloquee la función ──
+async function fetchTimeout(url, opts, ms) {
+  const ctrl = new AbortController();
+  const to = setTimeout(()=>ctrl.abort(), ms || 8000);
+  try {
+    return await fetch(url, Object.assign({}, opts || {}, { signal: ctrl.signal }));
+  } finally { clearTimeout(to); }
+}
+
 // ── Busca un producto en Odoo por código AT (default_code) y devuelve precio/stock REALES ──
 // Nunca confiamos en el precio que manda el navegador: se recalcula aquí contra Odoo.
 async function lookupProductByCode(uid, code) {
@@ -1893,7 +1902,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-20-skydropx-v3-diag', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-20-skydropx-v4-cotiza', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all'] })};
     }
 
     // ── SET MASIVO de la Clave Producto/Servicio del SAT (UNSPSC) en TODOS los productos ──
@@ -2147,23 +2156,27 @@ exports.handler = async function(event, context) {
         width:  parseInt(body.width)||20,
         height: parseInt(body.height)||15
       };
-      // 1) crear cotización
+      // 1) crear cotización (timeout 6s)
       let quoteId=null, rawCreate=null;
       try {
-        const qResp = await fetch(t.base + '/api/v1/quotations', {
+        const qResp = await fetchTimeout(t.base + '/api/v1/quotations', {
           method:'POST', headers:{'Authorization':'Bearer '+t.token,'Content-Type':'application/json'},
           body: JSON.stringify({ quotation: { address_from:origin, address_to:dest, parcels:[parcel] } })
-        });
+        }, 6000);
         rawCreate = await qResp.json();
         quoteId = rawCreate && ((rawCreate.data && rawCreate.data.id) || rawCreate.id);
-      } catch(e){ return {statusCode:200, headers, body: JSON.stringify({ ok:false, step:'create', error:String(e&&e.message||e) })}; }
+      } catch(e){
+        const msg = (e && e.name === 'AbortError') ? 'Timeout creando la cotización (6s)' : String(e&&e.message||e);
+        return {statusCode:200, headers, body: JSON.stringify({ ok:false, step:'create', error:msg })};
+      }
       if (!quoteId) return {statusCode:200, headers, body: JSON.stringify({ ok:false, step:'create', error:'No se creó la cotización', raw:rawCreate })};
-      // 2) consultar hasta is_completed (máx ~7s)
+      // 2) consultar hasta is_completed. Ventana ~5s + timeout 3s por consulta,
+      //    para que token+create+polling quede bajo el límite ~10s de Netlify.
       const t0=Date.now(); let rates=[]; let completed=false;
-      while (Date.now()-t0 < 7000) {
-        await new Promise(r=>setTimeout(r,1500));
+      while (Date.now()-t0 < 5000) {
+        await new Promise(r=>setTimeout(r,1200));
         try {
-          const gResp = await fetch(t.base + '/api/v1/quotations/'+quoteId, { headers:{'Authorization':'Bearer '+t.token,'Content-Type':'application/json'} });
+          const gResp = await fetchTimeout(t.base + '/api/v1/quotations/'+quoteId, { headers:{'Authorization':'Bearer '+t.token,'Content-Type':'application/json'} }, 3000);
           const raw = await gResp.json();
           const d = (raw && raw.data) ? raw.data : raw;
           const attrs = (d && d.attributes) ? d.attributes : d;
@@ -2185,7 +2198,7 @@ exports.handler = async function(event, context) {
           success: a.success !== false
         };
       }).filter(r=>r.success && r.total>0).sort((a,b)=>a.total-b.total);
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, quotation_id:quoteId, is_completed:completed, count:norm.length, rates:norm })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, quotation_id:quoteId, is_completed:completed, count:norm.length, elapsed_ms:(Date.now()-t0), rates:norm })};
     }
 
     // ── LOOKUP POR CÓDIGO (para 'Pedir por código AT') ──
