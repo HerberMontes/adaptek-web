@@ -1863,7 +1863,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-20-weights-v3', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-20-weights-v5', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all'] })};
     }
 
     // ── SET MASIVO de la Clave Producto/Servicio del SAT (UNSPSC) en TODOS los productos ──
@@ -2014,20 +2014,28 @@ exports.handler = async function(event, context) {
       }
 
       // escribir hasta MAXW grupos por llamada
+      function faultInfo(wr){
+        const m = wr.match(/<name>faultString<\/name>\s*<value>\s*<string>([\s\S]*?)<\/string>/);
+        const full = (m ? m[1] : wr).replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&');
+        const lines = full.trim().split('\n').filter(x=>x.trim());
+        const exc = lines.length ? lines[lines.length-1].trim() : '';
+        return exc + '  |||  ' + (full.length>300 ? '…'+full.slice(-300) : full);
+      }
       let updated = 0, groupsWritten = 0, lastError = '';
+      const CHUNK = 200;
+      outer:
       for (const w of weightVals){
         if (groupsWritten >= MAXW || (Date.now()-t0) > 7500) break;
         const ids = byW[w];
-        const idsXml = `<value><array><data>${ids.map(id=>`<value><int>${id}</int></value>`).join('')}</data></array></value>`;
-        const valXml = `<value><struct><member><name>weight</name><value><double>${parseFloat(w)}</double></member></struct></value>`;
-        const wr = await xmlrpc(uid, 'product.product', 'write', idsXml + valXml);
-        if (wr.indexOf('<fault>') !== -1){
-          const m = wr.match(/<name>faultString<\/name>\s*<value>\s*<string>([\s\S]*?)<\/string>/);
-          const full = m ? m[1].replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&') : wr;
-          lastError = full.length > 400 ? '…' + full.slice(-400) : full;  // la COLA trae el error real
-          break;
+        const valXml = `<value><struct><member><name>weight</name><value><double>${parseFloat(w)}</double></value></member></struct></value>`;
+        for (let i = 0; i < ids.length; i += CHUNK){
+          const chunk = ids.slice(i, i + CHUNK);
+          const idsXml = `<value><array><data>${chunk.map(id=>`<value><int>${id}</int></value>`).join('')}</data></array></value>`;
+          const wr = await xmlrpc(uid, 'product.product', 'write', idsXml + valXml);
+          if (wr.indexOf('<fault>') !== -1){ lastError = faultInfo(wr); break outer; }
+          updated += chunk.length;
         }
-        updated += ids.length; groupsWritten++;
+        groupsWritten++;
       }
 
       // ¿cuántos quedan con weight=0?
