@@ -216,14 +216,20 @@ async function publicarYTimbrar(uid, invoiceId) {
 
   // Timbrar el CFDI (best-effort; depende del PAC configurado en Odoo)
   if (posted) {
+    function _faultTail(text){
+      const m = text && text.match(/<name>faultString<\/name>\s*<value>\s*<string>([\s\S]*?)<\/string>/);
+      if (!m) return (text||'').slice(0,300);
+      const full = m[1].replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&');
+      return full.length > 320 ? '…' + full.slice(-320) : full; // la COLA trae el error real
+    }
     const tryMethods = ['l10n_mx_edi_cfdi_try_send', 'action_process_edi_web_services'];
     for (const mth of tryMethods) {
       try {
         const tText = await xmlrpc(uid, 'account.move', mth,
           `<value><array><data><value><int>${invoiceId}</int></value></data></array></value>`);
-        const tf = xmlFault(tText);
-        if (!tf) { stamped = true; break; } else { stamp_error = tf; }
-      } catch(e){ stamp_error = String(e && e.message || e); }
+        if (tText.indexOf('<fault>') === -1) { stamped = true; stamp_error = ''; break; }
+        else { stamp_error = mth + ': ' + _faultTail(tText); }
+      } catch(e){ stamp_error = mth + ': ' + String(e && e.message || e); }
     }
   }
   return { posted, stamped, post_error, stamp_error };
@@ -913,18 +919,9 @@ exports.handler = async function(event, context) {
       }
 
       const createArgsXml = `<value><struct>${membersXml}</struct></value>`;
-      
-      // DEBUG: log what we're sending
-      console.log('=== PARTNER DATA BEING SENT ===');
-      console.log(JSON.stringify(partnerData, null, 2));
-      console.log('=== XML ARGS ===');
-      console.log(createArgsXml.substring(0, 500));
 
       const createText = await xmlrpc(uid, 'res.partner', 'create', createArgsXml);
-      
-      console.log('=== ODOO RESPONSE ===');
-      console.log(createText.substring(0, 500));
-      
+
       const idMatch = createText.match(/<value><int>(\d+)<\/int><\/value>/);
       const partnerId = idMatch ? parseInt(idMatch[1]) : null;
 
@@ -1131,7 +1128,6 @@ exports.handler = async function(event, context) {
         return {statusCode:400, headers, body: JSON.stringify({error:'CP inválido'})};
       }
       try {
-        console.log('Buscando CP:', cp);
         
         // Combinar resultados de múltiples APIs para mayor cobertura
         let colonias = new Set();
@@ -1149,10 +1145,9 @@ exports.handler = async function(event, context) {
               items.forEach(i => { if(i.asentamiento) colonias.add(i.asentamiento); });
               if (!municipio && items[0]) municipio = items[0].municipio || '';
               if (!estado && items[0]) estado = items[0].estado || '';
-              console.log('copomex:', colonias.size, 'colonias');
             }
           }
-        } catch(e1) { console.log('copomex err:', e1.message); }
+        } catch(e1) { }
 
         // API 2: zippopotam — complementa con más colonias
         try {
@@ -1162,10 +1157,9 @@ exports.handler = async function(event, context) {
             if (d2.places) {
               d2.places.forEach(p => { if(p['place name']) colonias.add(p['place name']); });
               if (!estado && d2.places[0]) estado = d2.places[0].state || '';
-              console.log('zippopotam:', colonias.size, 'total colonias');
             }
           }
-        } catch(e2) { console.log('zippopotam err:', e2.message); }
+        } catch(e2) { }
 
         // API 3: sepomex.icalialabs.com — otra fuente complementaria
         try {
@@ -1177,13 +1171,11 @@ exports.handler = async function(event, context) {
               (d3.zip_codes || []).forEach(z => { if(z.d_asenta) colonias.add(z.d_asenta); });
               if (!municipio && d3.zip_codes && d3.zip_codes[0]) municipio = d3.zip_codes[0].d_mnpio || '';
               if (!estado && d3.zip_codes && d3.zip_codes[0]) estado = d3.zip_codes[0].d_estado || '';
-              console.log('sepomex:', colonias.size, 'total colonias');
             }
           }
-        } catch(e3) { console.log('sepomex err:', e3.message); }
+        } catch(e3) { }
 
         const coloniasArr = [...colonias].sort();
-        console.log('Total colonias combinadas:', coloniasArr.length, '| municipio:', municipio, '| estado:', estado);
 
         if (coloniasArr.length > 0) {
           return {statusCode:200, headers, body: JSON.stringify({
@@ -1198,7 +1190,6 @@ exports.handler = async function(event, context) {
         return {statusCode:200, headers, body: JSON.stringify({success:false, error:'CP no encontrado'})};
 
       } catch(err) {
-        console.log('buscar_cp exception:', err.message);
         return {statusCode:200, headers, body: JSON.stringify({success:false, error: err.message})};
       }
     }
@@ -1565,7 +1556,6 @@ exports.handler = async function(event, context) {
         prefixes.push(buildPrefix(eA, null));
       }
       const atCode = prefixes[0];   // código base para mostrar / nombrar fabricación nueva
-      console.log('AT prefijos a buscar:', prefixes);
 
       // Búsqueda por PREFIJO con =like 'PREFIJO%'
       async function searchByPrefix(prefix) {
@@ -1579,7 +1569,7 @@ exports.handler = async function(event, context) {
       let searchText = '';
       for (const pfx of prefixes) {
         searchText = await searchByPrefix(pfx);
-        if (searchText.includes('<name>id</name>')) { console.log('Match con prefijo:', pfx); break; }
+        if (searchText.includes('<name>id</name>')) { break; }
       }
       const dummyText = searchText; // alias for parser below
 
@@ -1626,17 +1616,14 @@ exports.handler = async function(event, context) {
         }
       }
 
-      console.log('Products found:', products.length);
       // ── Filtro de material: CS = sin -SS, SS = con -SS ──
       {
         const wantSS = (material === 'SS');
         const keep = products.filter(p => wantSS ? /-SS$/.test(p.at_code||'') : !/-SS$/.test(p.at_code||''));
         products.length = 0;
         for (const p of keep) products.push(p);
-        console.log('Tras filtro material(' + material + '):', products.length);
       }
       if (products.length === 0 && searchText.length > 100) {
-        console.log('Raw XML sample:', searchText.substring(0, 800));
       }
 
       // If no exact match, check if AT code exists in catalog (qty=0 = fabricado)
@@ -1800,9 +1787,6 @@ exports.handler = async function(event, context) {
             errors++;
           }
         }
-        
-        // Progress log every 50 products
-        if (i % 50 === 0) console.log(`Progress: ${i}/${products.length} | updated:${updated} notFound:${notFound} errors:${errors}`);
       }
 
       return {statusCode:200, headers, body: JSON.stringify({
