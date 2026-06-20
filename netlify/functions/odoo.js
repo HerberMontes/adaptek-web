@@ -310,13 +310,14 @@ async function skydropxToken() {
   const secret = process.env.SKYDROPX_CLIENT_SECRET || '';
   if (!id || !secret) return { error: 'Faltan credenciales SKYDROPX_CLIENT_ID / SKYDROPX_CLIENT_SECRET en variables de entorno' };
   try {
+    const form = new URLSearchParams({ grant_type:'client_credentials', client_id:id, client_secret:secret });
     const resp = await fetch(base + '/api/v1/oauth/token', {
-      method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ grant_type:'client_credentials', client_id:id, client_secret:secret })
+      method: 'POST', headers: {'Content-Type':'application/x-www-form-urlencoded'},
+      body: form.toString()
     });
-    const data = await resp.json();
+    const data = await resp.json().catch(()=>({}));
     if (data && data.access_token) return { token: data.access_token, base };
-    return { error: (data && (data.error_description || data.error)) || ('No se obtuvo token (HTTP '+resp.status+')') };
+    return { error: (data && (data.error_description || data.error)) || ('No se obtuvo token (HTTP '+resp.status+')'), base };
   } catch(e){ return { error: String(e && e.message || e) }; }
 }
 
@@ -1882,7 +1883,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-20-skydropx-v1', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-20-skydropx-v2', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all'] })};
     }
 
     // ── SET MASIVO de la Clave Producto/Servicio del SAT (UNSPSC) en TODOS los productos ──
