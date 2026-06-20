@@ -366,6 +366,36 @@ async function lookupProductByCode(uid, code) {
   };
 }
 
+// ── Suma el peso (kg) de una lista de items {code, qty} leyendo product.product.weight de Odoo ──
+// Devuelve { weight, found, missing }. Si un código no se encuentra, se contabiliza en 'missing'.
+async function sumWeightFromOdoo(uid, items) {
+  const list = (Array.isArray(items) ? items : []).filter(it => it && it.code);
+  if (!list.length) return { weight: 0, found: 0, missing: [] };
+  const codes = [...new Set(list.map(it => String(it.code).trim()).filter(Boolean))];
+  if (!codes.length) return { weight: 0, found: 0, missing: [] };
+  const codesXml = codes.map(c => xmlStr(c)).join('');
+  const domainXml = `<value><array><data>
+    ${xmlStr('default_code')}<value><string>in</string></value><value><array><data>${codesXml}</data></array></value>
+  </data></array></value>`;
+  const xml = await odooSearchRead(uid, 'product.product', domainXml, ['default_code','weight'], codes.length);
+  const wByCode = {};
+  xml.split('<struct>').slice(1).forEach(part => {
+    const s = part.split('</struct>')[0];
+    const code = (xmlExtractField(s, 'default_code') || '').trim();
+    const w = parseFloat(xmlExtractField(s, 'weight')) || 0;
+    if (code) wByCode[code] = w;
+  });
+  let total = 0; const missing = [];
+  list.forEach(it => {
+    const code = String(it.code).trim();
+    const qty = Math.max(parseInt(it.qty) || 1, 1);
+    const w = wByCode[code];
+    if (w == null) missing.push(code);
+    total += (w || 0) * qty;
+  });
+  return { weight: Math.round(total * 1000) / 1000, found: Object.keys(wByCode).length, missing };
+}
+
 // ── Busca un partner por email; si no existe, lo crea ligero (guest checkout) ──
 async function findOrCreatePartner(uid, contacto) {
   const email = (contacto.email || '').trim();
@@ -1902,7 +1932,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-20-skydropx-v4-cotiza', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-20-skydropx-v5-peso', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all'] })};
     }
 
     // ── SET MASIVO de la Clave Producto/Servicio del SAT (UNSPSC) en TODOS los productos ──
@@ -2150,8 +2180,24 @@ exports.handler = async function(event, context) {
         area_level3: body.area_level3 || body.colonia || ''
       };
       if (!dest.postal_code) return {statusCode:200, headers, body: JSON.stringify({ ok:false, error:'Falta CP de destino (zip_to)' })};
+      // Peso del paquete: si llegan items del carrito, sumar pesos reales de Odoo;
+      // si no, usar body.weight; con un mínimo de seguridad.
+      let weightKg = Math.max(parseFloat(body.weight) || 0, 0);
+      let weightSource = weightKg > 0 ? 'body' : 'default';
+      let weightMeta = null;
+      if (Array.isArray(body.items) && body.items.length) {
+        try {
+          const uidW = await odooAuth();
+          if (uidW) {
+            const w = await sumWeightFromOdoo(uidW, body.items);
+            weightMeta = w;
+            if (w.weight > 0) { weightKg = w.weight; weightSource = 'odoo'; }
+          }
+        } catch(e){ /* si falla Odoo, caemos a body.weight/default sin romper la cotización */ }
+      }
+      if (!(weightKg > 0)) { weightKg = 1; weightSource = 'default'; }
       const parcel = {
-        weight: Math.max(parseFloat(body.weight)||1, 0.1),
+        weight: Math.max(weightKg, 0.1),
         length: parseInt(body.length)||30,
         width:  parseInt(body.width)||20,
         height: parseInt(body.height)||15
@@ -2198,7 +2244,7 @@ exports.handler = async function(event, context) {
           success: a.success !== false
         };
       }).filter(r=>r.success && r.total>0).sort((a,b)=>a.total-b.total);
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, quotation_id:quoteId, is_completed:completed, count:norm.length, elapsed_ms:(Date.now()-t0), rates:norm })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, quotation_id:quoteId, is_completed:completed, count:norm.length, elapsed_ms:(Date.now()-t0), weight_kg:parcel.weight, weight_source:weightSource, weight_meta:weightMeta, rates:norm })};
     }
 
     // ── LOOKUP POR CÓDIGO (para 'Pedir por código AT') ──
