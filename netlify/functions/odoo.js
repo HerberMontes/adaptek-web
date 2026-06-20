@@ -304,21 +304,31 @@ function xmlExtractField(xml, field) {
 // ── SKYDROPX (PRO): obtiene un bearer token vía OAuth client_credentials ──
 // Requiere variables de entorno: SKYDROPX_CLIENT_ID, SKYDROPX_CLIENT_SECRET.
 // SKYDROPX_BASE opcional (default producción; usa https://sb-pro.skydropx.com para sandbox).
-async function skydropxToken() {
-  const base = (process.env.SKYDROPX_BASE || 'https://pro.skydropx.com').replace(/\/+$/,'');
-  const id = process.env.SKYDROPX_CLIENT_ID || '';
-  const secret = process.env.SKYDROPX_CLIENT_SECRET || '';
-  if (!id || !secret) return { error: 'Faltan credenciales SKYDROPX_CLIENT_ID / SKYDROPX_CLIENT_SECRET en variables de entorno' };
+async function skydropxToken(baseOverride) {
+  const base = (baseOverride || process.env.SKYDROPX_BASE || 'https://pro.skydropx.com').replace(/\/+$/,'');
+  const id = (process.env.SKYDROPX_CLIENT_ID || '').trim();
+  const secret = (process.env.SKYDROPX_CLIENT_SECRET || '').trim();
+  if (!id || !secret) return { error: 'Faltan credenciales SKYDROPX_CLIENT_ID / SKYDROPX_CLIENT_SECRET en variables de entorno', base };
   try {
     const form = new URLSearchParams({ grant_type:'client_credentials', client_id:id, client_secret:secret });
-    const resp = await fetch(base + '/api/v1/oauth/token', {
-      method: 'POST', headers: {'Content-Type':'application/x-www-form-urlencoded'},
-      body: form.toString()
-    });
+    const ctrl = new AbortController();
+    const to = setTimeout(()=>ctrl.abort(), 12000);
+    let resp;
+    try {
+      resp = await fetch(base + '/api/v1/oauth/token', {
+        method: 'POST',
+        headers: {'Content-Type':'application/x-www-form-urlencoded','Accept':'application/json'},
+        body: form.toString(),
+        signal: ctrl.signal
+      });
+    } finally { clearTimeout(to); }
     const data = await resp.json().catch(()=>({}));
     if (data && data.access_token) return { token: data.access_token, base };
-    return { error: (data && (data.error_description || data.error)) || ('No se obtuvo token (HTTP '+resp.status+')'), base };
-  } catch(e){ return { error: String(e && e.message || e) }; }
+    return { error: (data && (data.error_description || data.error)) || ('No se obtuvo token (HTTP '+resp.status+')'), base, http: resp.status };
+  } catch(e){
+    if (e && e.name === 'AbortError') return { error: 'Timeout: Skydropx no respondió el token en 12s', base };
+    return { error: String(e && e.message || e), base };
+  }
 }
 
 // ── Busca un producto en Odoo por código AT (default_code) y devuelve precio/stock REALES ──
@@ -1883,7 +1893,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-20-skydropx-v2', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-20-skydropx-v3-diag', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all'] })};
     }
 
     // ── SET MASIVO de la Clave Producto/Servicio del SAT (UNSPSC) en TODOS los productos ──
@@ -2076,15 +2086,38 @@ exports.handler = async function(event, context) {
       })};
     }
 
-    // ── SKYDROPX (PRO): prueba de conexión ──
+    // ── SKYDROPX (PRO): prueba de conexión + diagnóstico ──
+    // Reporta longitudes/espacios de las credenciales SIN exponer su valor,
+    // y si la base configurada falla, prueba la base opuesta (sandbox/producción)
+    // para detectar ambiente cruzado.
     if (action === 'skydropx_test') {
+      const rawId = process.env.SKYDROPX_CLIENT_ID || '';
+      const rawSecret = process.env.SKYDROPX_CLIENT_SECRET || '';
+      const cfgBase = (process.env.SKYDROPX_BASE || 'https://pro.skydropx.com').replace(/\/+$/,'');
+      const diag = {
+        base_configurada: cfgBase,
+        client_id_presente: !!rawId.trim(),
+        client_id_len: rawId.trim().length,
+        client_id_tenia_espacios: rawId !== rawId.trim(),
+        client_secret_presente: !!rawSecret.trim(),
+        client_secret_len: rawSecret.trim().length,
+        client_secret_tenia_espacios: rawSecret !== rawSecret.trim()
+      };
       const t = await skydropxToken();
-      if (t.error) return {statusCode:200, headers, body: JSON.stringify({ ok:false, error:t.error })};
-      try {
-        const r = await fetch(t.base + '/api/v1/finance/credits', { headers:{'Authorization':'Bearer '+t.token,'Content-Type':'application/json'} });
-        const d = await r.json();
-        return {statusCode:200, headers, body: JSON.stringify({ ok:true, token_ok:true, base:t.base, credits:(d&&d.data)||d })};
-      } catch(e){ return {statusCode:200, headers, body: JSON.stringify({ ok:true, token_ok:true, base:t.base, credits_error:String(e&&e.message||e) })}; }
+      if (!t.error && t.token) {
+        try {
+          const r = await fetch(t.base + '/api/v1/finance/credits', { headers:{'Authorization':'Bearer '+t.token,'Content-Type':'application/json'} });
+          const d = await r.json();
+          return {statusCode:200, headers, body: JSON.stringify({ ok:true, token_ok:true, base:t.base, diag, credits:(d&&d.data)||d })};
+        } catch(e){ return {statusCode:200, headers, body: JSON.stringify({ ok:true, token_ok:true, base:t.base, diag, credits_error:String(e&&e.message||e) })}; }
+      }
+      // Falló contra la base configurada: probar la base opuesta para detectar ambiente cruzado
+      const otraBase = cfgBase.indexOf('sb-pro') >= 0 ? 'https://pro.skydropx.com' : 'https://sb-pro.skydropx.com';
+      const t2 = await skydropxToken(otraBase);
+      const prueba_base_opuesta = t2.token
+        ? { base: otraBase, funciona: true }
+        : { base: otraBase, funciona: false, error: t2.error };
+      return {statusCode:200, headers, body: JSON.stringify({ ok:false, error:t.error, base:t.base, http:t.http||null, diag, prueba_base_opuesta })};
     }
 
     // ── SKYDROPX (PRO): cotizar envío ──
