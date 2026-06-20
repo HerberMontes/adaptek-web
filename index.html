@@ -2297,6 +2297,9 @@ cartUpdateBadge();
     <div class="co-card" id="co-addr-form-card">
       <div class="co-title">Direcci&#243;n de env&#237;o</div>
       <div class="co-sub">Ingresa tu CP y autocompletamos colonia, ciudad y estado.</div>
+      <div id="co-gaddr" class="auth-field" style="display:none;margin-bottom:12px;">
+        <label class="auth-label">Buscar direcci&#243;n con Google <span style="font-weight:400;color:#888;font-size:11px;">(autollenado)</span></label>
+      </div>
       <div style="display:grid;grid-template-columns:140px 1fr;gap:10px;">
         <div class="auth-field" style="position:relative;">
           <label class="auth-label">C&#243;digo postal <span style="color:#C8102E;">*</span></label>
@@ -2562,6 +2565,11 @@ window.coAddrMode = function(mode){
   if(oo){ oo.style.borderColor = saved?'#e8e8ed':'#0071e3'; oo.style.background = saved?'#fff':'#F5F9FF'; }
   if(sd){ sd.style.borderColor = saved?'#0071e3':'#c5c5cc'; sd.innerHTML = saved?dot:''; }
   if(od){ od.style.borderColor = saved?'#c5c5cc':'#0071e3'; od.innerHTML = saved?'':dot; }
+  // Cambió la dirección base: limpiar tarifas previas y la selección
+  window.CO_SHIP_STATUS='idle'; window.CO_RATES=[]; window.CO_QUOTATION_ID=null;
+  if (window.CHECKOUT) window.CHECKOUT.envio = null;
+  if (typeof coRenderShipping==='function') coRenderShipping();
+  if (saved && window.CHECKOUT && window.CHECKOUT.step===3 && typeof coCotizarEnvio==='function') coCotizarEnvio();
 };
 window.coEditFiscal = function(){
   window._coFiscalComplete = false;
@@ -2604,26 +2612,130 @@ function coValidRFC(rfc){
   return /^([A-Z&\u00D1]{3,4})\d{6}[A-Z0-9]{2,3}$/.test(rfc) && (rfc.length===12 || rfc.length===13);
 }
 
+// ── Envío en vivo (Skydropx) ──────────────────────────────────────────────
+window.CO_RATES = [];
+window.CO_QUOTATION_ID = null;
+window.CO_SHIP_STATUS = 'idle'; // idle | loading | done | empty | error
+
+var CO_CARRIER_LABELS = { paquetexpress:'Paquetexpress', ampm:'AM/PM', sendex:'Sendex', fedex:'FedEx', dhl:'DHL', estafeta:'Estafeta', ninetynineminutes:'99 Minutos', jtexpress:'J&T Express', redpack:'Redpack', carssa:'Carssa', tresguerras:'Tresguerras', minutos99:'99 Minutos' };
+function coCarrierLabel(c){ c=(c||'').trim(); if(!c) return 'Paqueter\u00eda'; return CO_CARRIER_LABELS[c.toLowerCase()] || (c.charAt(0).toUpperCase()+c.slice(1)); }
+function coShipBtn(txt){
+  return '<button type="button" class="co-btn primary" style="width:auto;padding:10px 18px;margin-top:6px;" onclick="coCotizarEnvio()">'+txt+'</button>';
+}
+
 function coRenderShipping(){
   var box = document.getElementById('co-ship-list');
   if (!box) return;
-  box.innerHTML = CO_SHIPPING.map(function(s){
-    var sel = window.CHECKOUT.envio && window.CHECKOUT.envio.id === s.id;
+  var st = window.CO_SHIP_STATUS;
+  if (st === 'loading'){
+    box.innerHTML = '<div style="padding:18px 4px;color:#86868b;font-size:13px;">Cotizando paqueter\u00edas\u2026</div>';
+    return;
+  }
+  if (st === 'idle'){
+    box.innerHTML = '<div style="padding:10px 4px;color:#86868b;font-size:13px;">Completa tu direcci\u00f3n (CP, colonia, ciudad y estado) para ver las paqueter\u00edas.</div>' + coShipBtn('Cotizar env\u00edo');
+    return;
+  }
+  if (st === 'error'){
+    box.innerHTML = '<div style="padding:10px 4px;color:#C8102E;font-size:13px;">No pudimos cotizar el env\u00edo. Revisa tu direcci\u00f3n e int\u00e9ntalo de nuevo.</div>' + coShipBtn('Reintentar');
+    return;
+  }
+  if (st === 'empty' || !window.CO_RATES.length){
+    box.innerHTML = '<div style="padding:10px 4px;color:#856404;font-size:13px;">No hay paqueter\u00edas disponibles para esta direcci\u00f3n y peso. Verifica el CP.</div>' + coShipBtn('Reintentar');
+    return;
+  }
+  box.innerHTML = window.CO_RATES.map(function(s){
+    var sel = window.CHECKOUT.envio && String(window.CHECKOUT.envio.id) === String(s.id);
+    var label = coCarrierLabel(s.carrier);
+    var initial = label.charAt(0).toUpperCase();
+    var sub = s.service ? coEsc(s.service) : '';
+    var dn = parseInt(s.days)||0;
+    var dias = dn>0 ? (dn + (dn===1?' d\u00eda h\u00e1bil':' d\u00edas h\u00e1biles')) : 'Tiempo estimado por confirmar';
+    var time = sub ? (sub + ' \u00b7 ' + dias) : dias;
     return '<div class="co-ship'+(sel?' sel':'')+'" onclick="coPickShip(\''+s.id+'\')">'
       + '<div class="co-ship-radio"></div>'
-      + '<div style="width:40px;height:40px;border-radius:50%;background:#f5f5f7;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+(CO_SHIP_ICONS[s.id]||'')+'</div>'
-      + '<div><div class="co-ship-name">'+s.name+'</div><div class="co-ship-time">'+s.time+'</div></div>'
-      + '<div class="co-ship-price">$'+s.price.toFixed(2)+' MXN</div>'
+      + '<div style="width:40px;height:40px;border-radius:50%;background:#f5f5f7;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;color:#001F5B;font-size:15px;font-family:-apple-system,BlinkMacSystemFont,Inter,sans-serif;">'+coEsc(initial)+'</div>'
+      + '<div><div class="co-ship-name">'+coEsc(label)+'</div><div class="co-ship-time">'+time+'</div></div>'
+      + '<div class="co-ship-price">'+window.fmtMXN(s.total)+' MXN</div>'
       + '</div>';
   }).join('');
 }
 
 window.coPickShip = function(id){
-  var s = CO_SHIPPING.find(function(x){return x.id===id;});
-  window.CHECKOUT.envio = s ? {id:s.id, name:s.name, price:s.price} : null;
+  var s = (window.CO_RATES||[]).find(function(x){return String(x.id)===String(id);});
+  if (s){
+    var dn = parseInt(s.days)||0;
+    window.CHECKOUT.envio = {
+      id: s.id,
+      quotation_id: window.CO_QUOTATION_ID,
+      name: coCarrierLabel(s.carrier) + (s.service ? ' ' + s.service : ''),
+      carrier: s.carrier,
+      service: s.service || '',
+      price: s.total,
+      days: dn>0 ? dn : null
+    };
+  } else {
+    window.CHECKOUT.envio = null;
+  }
   coRenderShipping();
   coSave();
 };
+
+// Reúne destino (dirección guardada o formulario) + items del carrito y cotiza en vivo
+window.coCotizarEnvio = async function(){
+  var dest;
+  if (window._coUseSavedAddr && window._coSavedAddr){
+    var a = window._coSavedAddr;
+    dest = { zip_to:(a.zip||'').trim(), colonia:(a.street2||'').trim(), ciudad:(a.city||'').trim(), estado:'' };
+  } else {
+    var cpEl=document.getElementById('co-cp'), colEl=document.getElementById('co-colonia'),
+        ciEl=document.getElementById('co-ciudad'), esEl=document.getElementById('co-estado');
+    dest = {
+      zip_to: cpEl ? (cpEl.value||'').trim() : '',
+      colonia: colEl ? (colEl.value||'').trim() : '',
+      ciudad: ciEl ? (ciEl.value||'').trim() : '',
+      estado: esEl ? (esEl.value||'').trim() : ''
+    };
+  }
+  if (!dest.zip_to || dest.zip_to.length !== 5){
+    window.CO_SHIP_STATUS='idle'; coRenderShipping(); return;
+  }
+  var items = (window.CART||[]).map(function(p){ return { code:p.at_code, qty:p.qty||1 }; }).filter(function(x){ return x.code; });
+  window.CO_SHIP_STATUS='loading'; window.CO_RATES=[]; coRenderShipping();
+  try {
+    var resp = await fetch('/.netlify/functions/odoo', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(Object.assign({ action:'cotizar_envio', items:items }, dest))
+    });
+    var data = await resp.json();
+    if (data && data.ok && data.rates && data.rates.length){
+      window.CO_RATES = data.rates;
+      window.CO_QUOTATION_ID = data.quotation_id || null;
+      window.CO_SHIP_STATUS = 'done';
+      if (window.CHECKOUT.envio && !data.rates.some(function(r){ return String(r.id)===String(window.CHECKOUT.envio.id); })){
+        window.CHECKOUT.envio = null; // la paquetería elegida ya no aparece; limpiar selección
+      }
+    } else {
+      window.CO_SHIP_STATUS = 'empty';
+    }
+  } catch(e){
+    window.CO_SHIP_STATUS = 'error';
+  }
+  coRenderShipping();
+  coSave();
+};
+
+// Al entrar al paso 3: si la dirección está completa, cotizar; si no, estado inicial
+function coEnterShipping(){
+  if (window.CO_SHIP_STATUS==='done' && window.CO_RATES.length){ coRenderShipping(); return; }
+  var hasSaved = window._coUseSavedAddr && window._coSavedAddr && ((window._coSavedAddr.zip||'').trim().length===5);
+  var cpEl=document.getElementById('co-cp');
+  var hasForm = !window._coUseSavedAddr && cpEl && (cpEl.value||'').trim().length===5
+    && (document.getElementById('co-colonia')||{}).value
+    && (document.getElementById('co-ciudad')||{}).value
+    && (document.getElementById('co-estado')||{}).value;
+  if (hasSaved || hasForm){ coCotizarEnvio(); }
+  else { window.CO_SHIP_STATUS='idle'; coRenderShipping(); }
+}
 
 window.coBuscarCP = async function(cp){
   if (cp.length !== 5) return;
@@ -2653,6 +2765,7 @@ window.coBuscarCP = async function(cp){
       estadoInput.value = data.estado || '';
       msg.textContent = '\u2713 ' + data.colonias.length + ' colonias encontradas';
       msg.style.color = '#25a244';
+      coloniaSelect.onchange = function(){ if (this.value && this.value!=='__manual__') coCotizarEnvio(); };
     } else { coCPManual(coloniaSelect, msg); }
   } catch(e) { coCPManual(coloniaSelect, msg); }
   spinner.style.display = 'none';
@@ -2665,7 +2778,10 @@ function coCPManual(coloniaSelect, msg){
       var col = prompt('Escribe tu colonia:') || '';
       if (col) {
         this.innerHTML = '<option value="'+coEsc(col)+'" selected>'+coEsc(col)+'</option>';
+        if (typeof coCotizarEnvio === 'function') coCotizarEnvio();
       }
+    } else if (this.value) {
+      if (typeof coCotizarEnvio === 'function') coCotizarEnvio();
     }
   };
   msg.textContent = 'No pudimos consultar el CP — captura colonia, ciudad y estado manualmente.';
@@ -2783,6 +2899,7 @@ window.coGoStep = function(n){
   var hs = document.getElementById('co-header-sub');
   if (hs) hs.textContent = subs[n] || 'Completa tu pedido';
   window.scrollTo(0,0);
+  if (n===3) coEnterShipping();
   if (n===4) coRenderSummary();
   coSave();
 };
@@ -2837,11 +2954,11 @@ function coRenderSummary(){
     + '</div>';
   }).join('');
 
-  // Banner de entrega estimada = max lead time de productos + tránsito de paquetería
-  var shipTransit = { express:1, estandar:5, economico:7 };
-  var transit = c.envio ? (shipTransit[c.envio.id] || 5) : 0;
-  var entregaMin = (maxLead>0?maxLead:0) + (c.envio ? (c.envio.id==='express'?1:(c.envio.id==='estandar'?3:5)) : 0);
-  var entregaMax = maxLead + transit;
+  // Banner de entrega estimada = lead time de productos + tránsito real de la paquetería elegida
+  var shipDays = (c.envio && c.envio.days) ? (parseInt(c.envio.days)||0) : 0;
+  if (c.envio && !(shipDays>0)) shipDays = 5; // respaldo si la tarifa no trae días
+  var entregaMin = (maxLead>0?maxLead:0) + (c.envio ? Math.max(shipDays-1,1) : 0);
+  var entregaMax = (maxLead>0?maxLead:0) + (c.envio ? shipDays : 0);
   var banner = document.getElementById('co-sum-delivery');
   if (banner) {
     if (c.envio) {
@@ -4895,6 +5012,7 @@ async function cambiarPass(key) {
               <option value="P01">P01 - Por definir</option>
               <option value="S01">S01 - Sin efectos fiscales</option>
             </select></div>
+            <div id="pcl-fac-gaddr" class="pcl-field pcl-full" style="display:none;"><label>Buscar direcci&#243;n con Google (autollenado)</label></div>
             <div class="pcl-field"><label>Código postal fiscal</label><input id="pcl-fac-cp" placeholder="CP" maxlength="5" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'');if(this.value.length===5)pclFacCP(this.value);"/></div>
             <div class="pcl-field"><label>Calle</label><input id="pcl-fac-calle" placeholder="Calle"/></div>
             <div class="pcl-field"><label>Número (ext / int)</label><input id="pcl-fac-num" placeholder="Ext / Int"/></div>
@@ -8062,6 +8180,143 @@ updateFAB();
       }
     }catch(e){ if(window.showToast) showToast('No se pudo eliminar la cotización'); }
   };
+})();
+</script>
+
+<script>
+/* =========================================================================
+   GOOGLE PLACES — Autollenado de direcciones (API NUEVA: PlaceAutocompleteElement)
+   -------------------------------------------------------------------------
+   CONFIGURACIÓN (una sola vez):
+   1) En Google Cloud Console crea un proyecto y habilita "Places API (New)".
+   2) Crea una API key de tipo navegador y RESTRÍNGELA por "Referente HTTP"
+      a tus dominios (ej: https://cheery-fenglisu-0daf09.netlify.app/* y tu
+      dominio final). Eso evita que alguien use tu key en otro sitio.
+   3) Pega la key abajo en GOOGLE_MAPS_KEY.
+   Si la dejas vacía, el sitio funciona igual (sin Google); los buscadores
+   de Google simplemente no aparecen.
+   ========================================================================= */
+window.GOOGLE_MAPS_KEY = window.GOOGLE_MAPS_KEY || "";  /* <<< PEGA AQUÍ TU API KEY DE GOOGLE >>> */
+
+(function(){
+  // Conjuntos de campos a los que se conecta el autollenado.
+  // 'num' es opcional: si existe, el número va aparte; si no, se anexa a la calle.
+  window.ADPK_GADDR_SETS = [
+    { containerId:'co-gaddr', cpSilent:true,
+      fields:{ calle:'co-calle', colonia:'co-colonia', ciudad:'co-ciudad', estado:'co-estado', cp:'co-cp' } },
+    { containerId:'pcl-fac-gaddr', cpSilent:true,
+      fields:{ calle:'pcl-fac-calle', num:'pcl-fac-num', colonia:'pcl-fac-colonia', ciudad:'pcl-fac-ciudad', estado:'pcl-fac-estado', cp:'pcl-fac-cp' } }
+  ];
+
+  // Carga el script de Google Maps (Places) si hay key.
+  if (window.GOOGLE_MAPS_KEY && !(window.google && window.google.maps)) {
+    var s = document.createElement('script');
+    s.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(window.GOOGLE_MAPS_KEY) +
+            '&loading=async&libraries=places&language=es-419&region=MX';
+    s.async = true;
+    s.onload = function(){ if (window.adpkInitGoogleAddr) adpkInitGoogleAddr(); };
+    document.head.appendChild(s);
+  }
+
+  function setField(id, val, silent){
+    if (!id || !val) return;
+    var el = document.getElementById(id);
+    if (!el) return;
+    if (el.tagName === 'SELECT') {
+      var opt = null, low = String(val).toLowerCase();
+      for (var i=0;i<el.options.length;i++){
+        if (el.options[i].value.toLowerCase()===low || el.options[i].textContent.toLowerCase()===low){ opt = el.options[i]; break; }
+      }
+      if (!opt){ opt = document.createElement('option'); opt.value = val; opt.textContent = val; el.appendChild(opt); }
+      el.value = opt.value;
+    } else {
+      el.value = val;
+    }
+    if (!silent){
+      el.dispatchEvent(new Event('input', {bubbles:true}));
+      el.dispatchEvent(new Event('change', {bubbles:true}));
+    }
+  }
+
+  function fillFromPlace(place, set){
+    var f = set.fields;
+    var comps = place.addressComponents || [];
+    function get(type){
+      for (var i=0;i<comps.length;i++){
+        var t = comps[i].types || [];
+        if (t.indexOf(type) !== -1) return comps[i].longText || comps[i].shortText || '';
+      }
+      return '';
+    }
+    var route   = get('route');
+    var num     = get('street_number');
+    var colonia = get('sublocality_level_1') || get('sublocality') || get('neighborhood');
+    var ciudad  = get('locality') || get('administrative_area_level_2');
+    var estado  = get('administrative_area_level_1');
+    var cp      = get('postal_code');
+
+    if (f.num){ setField(f.calle, route); setField(f.num, num); }
+    else { setField(f.calle, (route + (num ? (' ' + num) : '')).trim()); }
+    setField(f.colonia, colonia);
+    setField(f.ciudad, ciudad);
+    setField(f.estado, estado);
+    // El CP se pone en silencio para no disparar la búsqueda por CP que
+    // reconstruiría el select de colonia y borraría la de Google.
+    setField(f.cp, cp, set.cpSilent);
+    if (typeof showToast === 'function' && (route||colonia||cp)) showToast('Dirección autocompletada');
+  }
+
+  async function attachOne(set){
+    var container = document.getElementById(set.containerId);
+    if (!container || container.dataset.gready) return;
+    if (!(window.google && google.maps && google.maps.importLibrary)) return;
+    container.dataset.gready = '1';
+    try {
+      var places = await google.maps.importLibrary('places');
+      var PAC = places.PlaceAutocompleteElement;
+      var pac;
+      try { pac = new PAC({ includedRegionCodes:['mx'], requestedLanguage:'es-419', requestedRegion:'mx' }); }
+      catch(eOpt){ pac = new PAC(); }
+      pac.style.width = '100%';
+      container.appendChild(pac);
+      container.style.display = '';
+
+      var onSelect = async function(ev){
+        try {
+          var pred = ev.placePrediction || (ev.detail && ev.detail.placePrediction);
+          var place = null;
+          if (pred && pred.toPlace) place = pred.toPlace();
+          else if (ev.place) place = ev.place;
+          if (!place) return;
+          await place.fetchFields({ fields: ['addressComponents'] });
+          fillFromPlace(place, set);
+        } catch(e){ if (typeof console!=='undefined') console.warn('gaddr select:', e); }
+      };
+      pac.addEventListener('gmp-select', onSelect);       // API nueva
+      pac.addEventListener('gmp-placeselect', onSelect);  // compatibilidad
+      pac.addEventListener('gmp-requesterror', function(){
+        if (typeof console!=='undefined') console.warn('Google Places: solicitud denegada (revisa la API key / restricciones / Places API New habilitada)');
+      });
+    } catch(e){
+      container.dataset.gready = '';
+      if (typeof console!=='undefined') console.warn('gaddr attach:', e);
+    }
+  }
+
+  window.adpkInitGoogleAddr = function(){
+    if (!(window.google && google.maps && google.maps.importLibrary)) return;
+    (window.ADPK_GADDR_SETS||[]).forEach(attachOne);
+  };
+
+  // Reintenta hasta que la API cargue (red lenta, etc.)
+  if (window.GOOGLE_MAPS_KEY){
+    var tries = 0;
+    var iv = setInterval(function(){
+      tries++;
+      if (window.google && google.maps && google.maps.importLibrary){ adpkInitGoogleAddr(); clearInterval(iv); }
+      if (tries > 40) clearInterval(iv); // ~20s
+    }, 500);
+  }
 })();
 </script>
 </body>
