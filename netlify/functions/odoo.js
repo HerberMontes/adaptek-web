@@ -340,6 +340,41 @@ async function fetchTimeout(url, opts, ms) {
   } finally { clearTimeout(to); }
 }
 
+// ── SKYDROPX: revalida una tarifa puntual (quotation_id + rate_id) y devuelve su precio AUTORITATIVO ──
+// Se usa al cobrar: NUNCA se confía en el precio que manda el navegador; se vuelve a leer de Skydropx.
+async function skydropxRatePrice(quotationId, rateId) {
+  if (!quotationId || !rateId) return { ok:false, error:'Falta quotation_id o rate_id del env\u00edo' };
+  const t = await skydropxToken();
+  if (t.error) return { ok:false, error:'Token Skydropx: ' + t.error };
+  try {
+    const r = await fetchTimeout(t.base + '/api/v1/quotations/' + quotationId, { headers:{'Authorization':'Bearer '+t.token,'Content-Type':'application/json'} }, 6000);
+    const raw = await r.json();
+    const d = (raw && raw.data) ? raw.data : raw;
+    const attrs = (d && d.attributes) ? d.attributes : d;
+    const rates = (attrs && attrs.rates) || (d && d.rates) || [];
+    const found = rates.find(x => String(x.id || (x.attributes && x.attributes.id)) === String(rateId));
+    if (!found) return { ok:false, error:'La tarifa de env\u00edo ya no est\u00e1 disponible (la cotizaci\u00f3n expir\u00f3). Vuelve a calcular el env\u00edo.' };
+    const a = found.attributes || found;
+    const price = parseFloat(a.total || a.amount || a.amount_local || 0);
+    if (!(price > 0)) return { ok:false, error:'La tarifa de env\u00edo revalidada es inv\u00e1lida.' };
+    return { ok:true, price: Math.round(price*100)/100,
+      carrier: (a.provider_name || a.carrier_name || a.provider || a.carrier || ''),
+      service: (a.service_level_name || a.service_level || a.service || '') };
+  } catch(e){
+    const msg = (e && e.name === 'AbortError') ? 'Timeout revalidando el env\u00edo con Skydropx' : String(e && e.message || e);
+    return { ok:false, error: msg };
+  }
+}
+
+// ── Resuelve el precio de envío a cobrar para un checkout. Sin envío -> 0. Con envío -> revalida en Skydropx. ──
+async function resolveShipPrice(co) {
+  const envio = (co && co.envio) || null;
+  if (!envio) return { ok:true, ship:0 };
+  const rv = await skydropxRatePrice(envio.quotation_id || envio.quotationId, envio.id || envio.rate_id);
+  if (!rv.ok) return { ok:false, error: rv.error };
+  return { ok:true, ship: rv.price, carrier: rv.carrier, service: rv.service };
+}
+
 // ── Busca un producto en Odoo por código AT (default_code) y devuelve precio/stock REALES ──
 // Nunca confiamos en el precio que manda el navegador: se recalcula aquí contra Odoo.
 async function lookupProductByCode(uid, code) {
@@ -444,7 +479,7 @@ async function findOrCreateProduct(uid, code, name) {
   return { id, name: name || code, at_code: code, price: 0, qty_available: 0, status: 'fabricado', nuevo: true };
 }
 
-async function crearOrdenOdoo(uid, orden, estado) {
+async function crearOrdenOdoo(uid, orden, estado, shipOverride) {
   try {
     const items = Array.isArray(orden.items) ? orden.items : [];
     const co = orden.checkout || {};
@@ -512,15 +547,21 @@ async function crearOrdenOdoo(uid, orden, estado) {
       lineXmls.push(`<value><array><data>${xmlInt(0)}${xmlInt(0)}${lineStruct}</data></array></value>`);
     }
 
-    // Línea de envío
-    const SHIP = { express:0, estandar:0, economico:0 }; // envío sin costo por ahora (pendiente integrar paquetería real)
+    // Línea de envío: precio REVALIDADO contra Skydropx (nunca el que manda el cliente).
+    // Si la acción de pago ya lo revalidó, llega en shipOverride y no se vuelve a consultar.
     const envio = co.envio || null;
-    if (envio && SHIP[envio.id]) {
-      total += SHIP[envio.id];
+    let shipPrice = (typeof shipOverride === 'number' && shipOverride >= 0) ? shipOverride : null;
+    if (shipPrice == null && envio) {
+      const rv = await resolveShipPrice(co);
+      if (!rv.ok) return { ok:false, error: rv.error, ship_revalidation_failed:true };
+      shipPrice = rv.ship;
+    }
+    if (envio && shipPrice && shipPrice > 0) {
+      total += shipPrice;
       const shipStruct = `<value><struct>
-        <member><name>name</name>${xmlStr('Env\u00edo ' + (envio.name || envio.id))}</member>
+        <member><name>name</name>${xmlStr('Env\u00edo ' + (envio.name || envio.carrier || envio.id))}</member>
         <member><name>product_uom_qty</name>${xmlInt(1)}</member>
-        <member><name>price_unit</name><value><double>${SHIP[envio.id].toFixed(2)}</double></value></member>
+        <member><name>price_unit</name><value><double>${shipPrice.toFixed(2)}</double></value></member>
       </struct></value>`;
       lineXmls.push(`<value><array><data>${xmlInt(0)}${xmlInt(0)}${shipStruct}</data></array></value>`);
     }
@@ -1932,7 +1973,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-20-skydropx-v5-peso', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-20-skydropx-v6-revalida', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all'] })};
     }
 
     // ── SET MASIVO de la Clave Producto/Servicio del SAT (UNSPSC) en TODOS los productos ──
@@ -2157,6 +2198,13 @@ exports.handler = async function(event, context) {
         ? { base: otraBase, funciona: true }
         : { base: otraBase, funciona: false, error: t2.error };
       return {statusCode:200, headers, body: JSON.stringify({ ok:false, error:t.error, base:t.base, http:t.http||null, diag, prueba_base_opuesta })};
+    }
+
+    // ── SKYDROPX (PRO): prueba de revalidación de una tarifa (quotation_id + rate_id) ──
+    // body: { quotation_id, rate_id }  -> devuelve el precio autoritativo o el motivo del fallo.
+    if (action === 'revalidar_envio_test') {
+      const rv = await skydropxRatePrice(body.quotation_id, body.rate_id);
+      return {statusCode:200, headers, body: JSON.stringify(rv)};
     }
 
     // ── SKYDROPX (PRO): cotizar envío ──
@@ -2465,8 +2513,16 @@ exports.handler = async function(event, context) {
       const uid = await odooAuth();
       if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
 
+      // Envío: revalidar contra Skydropx ANTES de crear la orden / preferencia (no se confía en el cliente)
+      let shipCost = 0;
+      if (orden.checkout && orden.checkout.envio) {
+        const rvShip = await resolveShipPrice(orden.checkout);
+        if (!rvShip.ok) return {statusCode:200, headers, body: JSON.stringify({ success:false, error:rvShip.error, ship_revalidation_failed:true })};
+        shipCost = rvShip.ship;
+      }
+
       // Crear la orden en Odoo como borrador para que el webhook la confirme tras el pago
-      const ordenCreada = await crearOrdenOdoo(uid, orden, 'draft');
+      const ordenCreada = await crearOrdenOdoo(uid, orden, 'draft', shipCost);
 
       // Recalcular cada línea con el precio REAL de Odoo (no confiar en el cliente)
       const mpItems = [];
@@ -2491,17 +2547,15 @@ exports.handler = async function(event, context) {
         });
       }
 
-      // Costo de envío validado contra catálogo fijo (no confiar en el monto del cliente)
-      const SHIP = { express:0, estandar:0, economico:0 }; // envío sin costo por ahora (pendiente integrar paquetería real)
+      // Costo de envío: ya revalidado arriba contra Skydropx (shipCost)
       const envio = orden.checkout && orden.checkout.envio ? orden.checkout.envio : null;
-      const shipId = envio && SHIP[envio.id] ? envio.id : null;
-      if (shipId) {
+      if (envio && shipCost > 0) {
         mpItems.push({
-          id: 'ENVIO-' + shipId,
-          title: 'Env\u00edo ' + (envio.name || shipId),
+          id: 'ENVIO',
+          title: 'Env\u00edo ' + (envio.name || envio.carrier || ''),
           quantity: 1,
           currency_id: 'MXN',
-          unit_price: SHIP[shipId]
+          unit_price: shipCost
         });
       }
 
@@ -2533,7 +2587,7 @@ exports.handler = async function(event, context) {
             init_point: mpData.init_point,
             preference_id: mpData.id,
             folio: folio,
-            server_total: Math.round((serverSubtotal + (shipId ? SHIP[shipId] : 0)) * 100) / 100
+            server_total: Math.round((serverSubtotal + shipCost) * 100) / 100
           })};
         }
         return {statusCode:502, headers, body: JSON.stringify({
@@ -2579,10 +2633,15 @@ exports.handler = async function(event, context) {
         }
         serverSubtotal += prod.price * qty;
       }
-      const SHIP = { express:0, estandar:0, economico:0 }; // envío sin costo por ahora (pendiente integrar paquetería real)
       const envio = orden.checkout && orden.checkout.envio ? orden.checkout.envio : null;
-      const shipId = envio && SHIP[envio.id] ? envio.id : null;
-      const serverTotal = Math.round((serverSubtotal + (shipId ? SHIP[shipId] : 0)) * 100) / 100;
+      // Envío: revalidar contra Skydropx ANTES de cobrar (no se confía en el monto del cliente)
+      let shipCost = 0;
+      if (envio) {
+        const rvShip = await resolveShipPrice(orden.checkout);
+        if (!rvShip.ok) return {statusCode:200, headers, body: JSON.stringify({ success:false, error:rvShip.error, ship_revalidation_failed:true })};
+        shipCost = rvShip.ship;
+      }
+      const serverTotal = Math.round((serverSubtotal + shipCost) * 100) / 100;
 
       const folio = String(orden.folio || ('PED-' + Date.now().toString().slice(-6)));
 
@@ -2638,11 +2697,11 @@ exports.handler = async function(event, context) {
         //  - en proceso/pendiente → borrador ('draft'), el webhook la confirmará al acreditar
         let ordenInfo = null;
         if (status === 'approved') {
-          try { ordenInfo = await crearOrdenOdoo(uid, orden, 'confirm'); } catch(e){ ordenInfo = {ok:false, error:e.message}; }
+          try { ordenInfo = await crearOrdenOdoo(uid, orden, 'confirm', shipCost); } catch(e){ ordenInfo = {ok:false, error:e.message}; }
           // Enviar correos de confirmación (al cliente y al equipo). No bloquea la respuesta si fallan.
           try { await enviarCorreosPedido(orden, folio, serverTotal, 'tarjeta', 'aprobado'); } catch(_){}
         } else if (status === 'in_process' || status === 'pending') {
-          try { ordenInfo = await crearOrdenOdoo(uid, orden, 'draft'); } catch(e){ ordenInfo = {ok:false, error:e.message}; }
+          try { ordenInfo = await crearOrdenOdoo(uid, orden, 'draft', shipCost); } catch(e){ ordenInfo = {ok:false, error:e.message}; }
         }
 
         return {statusCode:200, headers, body: JSON.stringify({
@@ -3199,15 +3258,21 @@ exports.handler = async function(event, context) {
         }
         serverSubtotal += prod.price * qty;
       }
-      const SHIP = { express:0, estandar:0, economico:0 }; // envío sin costo por ahora (pendiente integrar paquetería real)
       const envio = orden.checkout && orden.checkout.envio ? orden.checkout.envio : null;
-      const shipId = envio && SHIP[envio.id] ? envio.id : null;
-      const serverTotal = Math.round((serverSubtotal + (shipId ? SHIP[shipId] : 0)) * 100) / 100;
+      // Envío: revalidar contra Skydropx (no se confía en el monto del cliente).
+      // El cobro real lo toma del amount_total de Odoo más abajo; serverTotal es el respaldo.
+      let shipCost = 0;
+      if (envio) {
+        const rvShip = await resolveShipPrice(orden.checkout);
+        if (!rvShip.ok) return {statusCode:200, headers, body: JSON.stringify({ success:false, error:rvShip.error, ship_revalidation_failed:true })};
+        shipCost = rvShip.ship;
+      }
+      const serverTotal = Math.round((serverSubtotal + shipCost) * 100) / 100;
 
       const folio = String(orden.folio || ('PED-' + Date.now().toString(36).toUpperCase()));
 
       // Crear la orden en Odoo como borrador (el webhook la confirma cuando llegue la transferencia)
-      try { await crearOrdenOdoo(uid, orden, 'draft'); } catch(_){}
+      try { await crearOrdenOdoo(uid, orden, 'draft', shipCost); } catch(_){}
 
       // Leer el TOTAL REAL de la orden en Odoo (amount_total ya trae el IVA según la config de
       // impuestos). El SPEI cobra EXACTAMENTE ese total, para que el pago coincida con la factura.
