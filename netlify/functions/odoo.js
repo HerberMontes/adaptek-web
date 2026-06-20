@@ -1863,7 +1863,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-20-weights-v1', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-20-weights-v3', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all'] })};
     }
 
     // ── SET MASIVO de la Clave Producto/Servicio del SAT (UNSPSC) en TODOS los productos ──
@@ -1975,7 +1975,7 @@ exports.handler = async function(event, context) {
   <param><value><string>${ODOO_DB}</string></value></param>
   <param><value><int>${uid}</int></value></param>
   <param><value><string>${ODOO_KEY}</string></value></param>
-  <param><value><string>product.template</string></value></param>
+  <param><value><string>product.product</string></value></param>
   <param><value><string>search_read</string></value></param>
   <param><value><array><data>${domainArg}</data></array></value></param>
   <param><value><struct>
@@ -2020,9 +2020,13 @@ exports.handler = async function(event, context) {
         const ids = byW[w];
         const idsXml = `<value><array><data>${ids.map(id=>`<value><int>${id}</int></value>`).join('')}</data></array></value>`;
         const valXml = `<value><struct><member><name>weight</name><value><double>${parseFloat(w)}</double></member></struct></value>`;
-        const wr = await xmlrpc(uid, 'product.template', 'write', idsXml + valXml);
-        const wf = xmlFault(wr);
-        if (wf){ lastError = wf; break; }
+        const wr = await xmlrpc(uid, 'product.product', 'write', idsXml + valXml);
+        if (wr.indexOf('<fault>') !== -1){
+          const m = wr.match(/<name>faultString<\/name>\s*<value>\s*<string>([\s\S]*?)<\/string>/);
+          const full = m ? m[1].replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&') : wr;
+          lastError = full.length > 400 ? '…' + full.slice(-400) : full;  // la COLA trae el error real
+          break;
+        }
         updated += ids.length; groupsWritten++;
       }
 
@@ -2030,7 +2034,7 @@ exports.handler = async function(event, context) {
       let remaining = null;
       try {
         const remDomain = `<value><array><data>${xmlStr('default_code')}<value><string>=like</string></value>${xmlStr('AT-%')}</data></array></value><value><array><data>${xmlStr('weight')}${xmlStr('=')}${xmlInt(0)}</data></array></value>`;
-        const rc = await xmlrpc(uid, 'product.template', 'search_count', `<value><array><data>${remDomain}</data></array></value>`);
+        const rc = await xmlrpc(uid, 'product.product', 'search_count', `<value><array><data>${remDomain}</data></array></value>`);
         const rm = rc.match(/<int>(\d+)<\/int>/);
         remaining = rm ? parseInt(rm[1]) : null;
       } catch(_){}
