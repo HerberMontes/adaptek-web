@@ -2623,6 +2623,34 @@ function coShipBtn(txt){
   return '<button type="button" class="co-btn primary" style="width:auto;padding:10px 18px;margin-top:6px;" onclick="coCotizarEnvio()">'+txt+'</button>';
 }
 
+// De todas las tarifas reales de Skydropx, curar 3 opciones B2B: Express (más rápida),
+// Estándar (intermedia) y Más económico (más barata). Devuelve hasta 3 tarifas distintas,
+// cada una con _label, en orden Express, Estándar, Económico.
+function coSelectThree(rates){
+  if (!rates || !rates.length) return [];
+  var byPrice = rates.slice().sort(function(a,b){ return a.total - b.total; });
+  var withDays = byPrice.filter(function(r){ return parseInt(r.days) > 0; });
+  var econ = byPrice[0]; // más barato
+  var express;           // más rápido (menos días); desempate por precio
+  if (withDays.length){
+    express = withDays.slice().sort(function(a,b){ return (parseInt(a.days)-parseInt(b.days)) || (a.total-b.total); })[0];
+  } else {
+    // sin días: preferir un carrier típicamente exprés, el más barato de ellos
+    var EXPRESS_SET = { ninetynineminutes:1, minutos99:1, ampm:1, fedex:1, dhl:1, redpack:1 };
+    var exprCands = byPrice.filter(function(r){ return EXPRESS_SET[(r.carrier||'').toLowerCase()]; });
+    express = exprCands.length ? exprCands[0] : byPrice[byPrice.length-1];
+  }
+  var used = {}; used[econ.id]=1; if (express) used[express.id]=1;
+  var rest = byPrice.filter(function(r){ return !used[r.id]; });
+  var estandar = rest.length ? rest[Math.floor((rest.length-1)/2)] : null; // intermedio por precio
+  var out = [];
+  function add(r,label){ if (r && !out.some(function(x){ return String(x.id)===String(r.id); })) out.push(Object.assign({}, r, { _label: label })); }
+  add(express, 'Express');
+  add(estandar, 'Est\u00e1ndar');
+  add(econ, 'M\u00e1s econ\u00f3mico');
+  return out;
+}
+
 function coRenderShipping(){
   var box = document.getElementById('co-ship-list');
   if (!box) return;
@@ -2645,16 +2673,16 @@ function coRenderShipping(){
   }
   box.innerHTML = window.CO_RATES.map(function(s){
     var sel = window.CHECKOUT.envio && String(window.CHECKOUT.envio.id) === String(s.id);
-    var label = coCarrierLabel(s.carrier);
-    var initial = label.charAt(0).toUpperCase();
-    var sub = s.service ? coEsc(s.service) : '';
+    var carrier = coCarrierLabel(s.carrier);
+    var title = s._label || carrier;
+    var initial = title.charAt(0).toUpperCase();
     var dn = parseInt(s.days)||0;
     var dias = dn>0 ? (dn + (dn===1?' d\u00eda h\u00e1bil':' d\u00edas h\u00e1biles')) : 'Tiempo estimado por confirmar';
-    var time = sub ? (sub + ' \u00b7 ' + dias) : dias;
+    var sub = s._label ? (carrier + ' \u00b7 ' + dias) : ((s.service ? coEsc(s.service) + ' \u00b7 ' : '') + dias);
     return '<div class="co-ship'+(sel?' sel':'')+'" onclick="coPickShip(\''+s.id+'\')">'
       + '<div class="co-ship-radio"></div>'
       + '<div style="width:40px;height:40px;border-radius:50%;background:#f5f5f7;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;color:#001F5B;font-size:15px;font-family:-apple-system,BlinkMacSystemFont,Inter,sans-serif;">'+coEsc(initial)+'</div>'
-      + '<div><div class="co-ship-name">'+coEsc(label)+'</div><div class="co-ship-time">'+time+'</div></div>'
+      + '<div><div class="co-ship-name">'+coEsc(title)+'</div><div class="co-ship-time">'+coEsc(sub)+'</div></div>'
       + '<div class="co-ship-price">'+window.fmtMXN(s.total)+' MXN</div>'
       + '</div>';
   }).join('');
@@ -2667,7 +2695,7 @@ window.coPickShip = function(id){
     window.CHECKOUT.envio = {
       id: s.id,
       quotation_id: window.CO_QUOTATION_ID,
-      name: coCarrierLabel(s.carrier) + (s.service ? ' ' + s.service : ''),
+      name: (s._label ? s._label + ' \u00b7 ' : '') + coCarrierLabel(s.carrier),
       carrier: s.carrier,
       service: s.service || '',
       price: s.total,
@@ -2708,10 +2736,10 @@ window.coCotizarEnvio = async function(){
     });
     var data = await resp.json();
     if (data && data.ok && data.rates && data.rates.length){
-      window.CO_RATES = data.rates;
+      window.CO_RATES = coSelectThree(data.rates);
       window.CO_QUOTATION_ID = data.quotation_id || null;
       window.CO_SHIP_STATUS = 'done';
-      if (window.CHECKOUT.envio && !data.rates.some(function(r){ return String(r.id)===String(window.CHECKOUT.envio.id); })){
+      if (window.CHECKOUT.envio && !window.CO_RATES.some(function(r){ return String(r.id)===String(window.CHECKOUT.envio.id); })){
         window.CHECKOUT.envio = null; // la paquetería elegida ya no aparece; limpiar selección
       }
     } else {
