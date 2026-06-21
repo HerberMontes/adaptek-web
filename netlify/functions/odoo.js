@@ -1244,9 +1244,11 @@ exports.handler = async function(event, context) {
         let municipio = '';
         let estado = '';
 
-        // API 1: COPOMEX — catálogo oficial SEPOMEX actualizado
+        // API 1: COPOMEX — catálogo oficial SEPOMEX actualizado.
+        // Con token real (env COPOMEX_TOKEN) trae la base completa; 'prueba' es demo limitado.
         try {
-          const r1 = await fetch('https://api.copomex.com/query/info_cp/' + cp + '?token=prueba');
+          const copoTok = (process.env.COPOMEX_TOKEN || 'prueba').trim();
+          const r1 = await fetch('https://api.copomex.com/query/info_cp/' + cp + '?token=' + encodeURIComponent(copoTok));
           if (r1.ok) {
             const text1 = await r1.text();
             if (!text1.includes('<!DOCTYPE')) {
@@ -1973,7 +1975,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-20-skydropx-v6-revalida', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-20-skydropx-v7-copomex', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all'] })};
     }
 
     // ── SET MASIVO de la Clave Producto/Servicio del SAT (UNSPSC) en TODOS los productos ──
