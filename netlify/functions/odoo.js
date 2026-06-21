@@ -1238,31 +1238,41 @@ exports.handler = async function(event, context) {
         return {statusCode:400, headers, body: JSON.stringify({error:'CP inválido'})};
       }
       try {
-        
-        // Combinar resultados de múltiples APIs para mayor cobertura
         let colonias = new Set();
         let municipio = '';
         let estado = '';
+        const diag = { copomex_token_real:false, copomex_token_len:0, api1_copomex:0, api2_zippo:0, api3_icalia:0, api1_error:null, api1_http:null };
 
         // API 1: COPOMEX — catálogo oficial SEPOMEX actualizado.
         // Con token real (env COPOMEX_TOKEN) trae la base completa; 'prueba' es demo limitado.
         try {
           const copoTok = (process.env.COPOMEX_TOKEN || 'prueba').trim();
+          diag.copomex_token_real = (copoTok && copoTok !== 'prueba');
+          diag.copomex_token_len = copoTok.length;
           const r1 = await fetch('https://api.copomex.com/query/info_cp/' + cp + '?token=' + encodeURIComponent(copoTok));
+          diag.api1_http = r1.status;
           if (r1.ok) {
             const text1 = await r1.text();
             if (!text1.includes('<!DOCTYPE')) {
               const d1 = JSON.parse(text1);
-              const items = Array.isArray(d1.response) ? d1.response : [d1.response];
-              items.forEach(i => { if(i.asentamiento) colonias.add(i.asentamiento); });
+              if (d1 && d1.error) diag.api1_error = d1.error_message || ('code ' + d1.code_error);
+              const items = Array.isArray(d1.response) ? d1.response : (d1.response ? [d1.response] : []);
+              const before = colonias.size;
+              items.forEach(i => {
+                if (!i) return;
+                if (Array.isArray(i.asentamiento)) i.asentamiento.forEach(a => { if(a) colonias.add(a); });
+                else if (i.asentamiento) colonias.add(i.asentamiento);
+              });
               if (!municipio && items[0]) municipio = items[0].municipio || '';
               if (!estado && items[0]) estado = items[0].estado || '';
-            }
+              diag.api1_copomex = colonias.size - before;
+            } else { diag.api1_error = 'respuesta HTML (token/endpoint)'; }
           }
-        } catch(e1) { }
+        } catch(e1) { diag.api1_error = String(e1 && e1.message || e1); }
 
         // API 2: zippopotam — complementa con más colonias
         try {
+          const before = colonias.size;
           const r2 = await fetch('https://api.zippopotam.us/mx/' + cp);
           if (r2.ok) {
             const d2 = await r2.json();
@@ -1271,10 +1281,12 @@ exports.handler = async function(event, context) {
               if (!estado && d2.places[0]) estado = d2.places[0].state || '';
             }
           }
+          diag.api2_zippo = colonias.size - before;
         } catch(e2) { }
 
         // API 3: sepomex.icalialabs.com — otra fuente complementaria
         try {
+          const before = colonias.size;
           const r3 = await fetch('https://sepomex.icalialabs.com/api/v1/zip_codes?zip_code=' + cp + '&per_page=200');
           if (r3.ok) {
             const text3 = await r3.text();
@@ -1285,21 +1297,23 @@ exports.handler = async function(event, context) {
               if (!estado && d3.zip_codes && d3.zip_codes[0]) estado = d3.zip_codes[0].d_estado || '';
             }
           }
+          diag.api3_icalia = colonias.size - before;
         } catch(e3) { }
 
         const coloniasArr = [...colonias].sort();
+        diag.total = coloniasArr.length;
+        diag.tiene_las_hadas = coloniasArr.some(c => /las\s*hadas/i.test(String(c)));
 
-        if (coloniasArr.length > 0) {
-          return {statusCode:200, headers, body: JSON.stringify({
-            success: true,
-            colonias: coloniasArr,
-            municipio: municipio,
-            ciudad: municipio,
-            estado: estado
-          })};
-        }
-
-        return {statusCode:200, headers, body: JSON.stringify({success:false, error:'CP no encontrado'})};
+        const resp = {
+          success: coloniasArr.length > 0,
+          colonias: coloniasArr,
+          municipio: municipio,
+          ciudad: municipio,
+          estado: estado
+        };
+        if (!coloniasArr.length) resp.error = 'CP no encontrado';
+        if (body.debug) resp._diag = diag;
+        return {statusCode:200, headers, body: JSON.stringify(resp)};
 
       } catch(err) {
         return {statusCode:200, headers, body: JSON.stringify({success:false, error: err.message})};
@@ -1975,7 +1989,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-20-skydropx-v7-copomex', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-20-skydropx-v7b-cpdiag', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all'] })};
     }
 
     // ── SET MASIVO de la Clave Producto/Servicio del SAT (UNSPSC) en TODOS los productos ──
