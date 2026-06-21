@@ -2927,7 +2927,7 @@ window.coGoStep = function(n){
   var hs = document.getElementById('co-header-sub');
   if (hs) hs.textContent = subs[n] || 'Completa tu pedido';
   window.scrollTo(0,0);
-  if (n===3) coEnterShipping();
+  if (n===3) { coEnterShipping(); if (window.adpkInitGoogleAddr) adpkInitGoogleAddr(); }
   if (n===4) coRenderSummary();
   coSave();
 };
@@ -8224,7 +8224,7 @@ updateFAB();
    Si la dejas vacía, el sitio funciona igual (sin Google); los buscadores
    de Google simplemente no aparecen.
    ========================================================================= */
-window.GOOGLE_MAPS_KEY = window.GOOGLE_MAPS_KEY || "";  /* <<< PEGA AQUÍ TU API KEY DE GOOGLE >>> */
+window.GOOGLE_MAPS_KEY = window.GOOGLE_MAPS_KEY || "AIzaSyDUTWfq1FAfRhEgep_2vwOgOrcWtWLot5c";  /* <<< PEGA AQUÍ TU API KEY DE GOOGLE >>> */
 
 (function(){
   // Conjuntos de campos a los que se conecta el autollenado.
