@@ -853,10 +853,9 @@
   </a>
   <ul class="nav-links">
     <li><a href="#" onclick="showPage('home');return false;">Inicio</a></li>
-    <li><a href="#" onclick="navIrIA();return false;" class="nav-ia"><span style="display:inline-flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.7 6.3L20 10l-6.3 1.7L12 18l-1.7-6.3L4 10l6.3-1.7z"/></svg>Buscar con IA</span></a></li>
     <li><a href="#" onclick="showPage('cfg');return false;">Configurador</a></li>
+    <li><a href="#" onclick="showPage('catalogo');return false;">Catálogo</a></li>
     <li><a href="#" onclick="showPage('cross');return false;">Cross Reference</a></li>
-    <li><a href="#" onclick="showPage('tutorials');return false;">Catálogo</a></li>
     <li class="nav-acct" id="nav-acct" style="padding:0 4px;display:flex;align-items:center;position:relative;">
       <a href="#" onclick="showPage('login');return false;" id="nav-login-btn"
         style="font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#001F5B;text-decoration:none;padding:7px 12px;border-radius:5px;border:2px solid #001F5B;display:block;transition:all .2s;"
@@ -896,8 +895,8 @@
     <div style="padding:4px 16px 24px;flex:1;overflow-y:auto;">
     <a href="#" onclick="showPage('home');toggleMenu();return false;" class="mm-link"><span class="mm-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg></span>Inicio</a>
     <a href="#" onclick="showPage('cfg');toggleMenu();return false;" class="mm-link"><span class="mm-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4l-6 6a1.5 1.5 0 0 0 2 2l6-6a4 4 0 0 0 5.4-5.4l-2.3 2.3-2-2 2.3-2.3Z"/></svg></span>Configurador</a>
+    <a href="#" onclick="showPage('catalogo');toggleMenu();return false;" class="mm-link"><span class="mm-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8l9 5 9-5Z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg></span>Catálogo</a>
     <a href="#" onclick="showPage('cross');toggleMenu();return false;" class="mm-link"><span class="mm-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span>Cross Reference</a>
-    <a href="#" onclick="showPage('tutorials');toggleMenu();return false;" class="mm-link"><span class="mm-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8l9 5 9-5Z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg></span>Productos</a>
     <a href="#" onclick="showPage('cart');toggleMenu();return false;" class="mm-link"><span class="mm-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2.5 3.5h2l2.2 11.2a1.5 1.5 0 0 0 1.5 1.2h8.3a1.5 1.5 0 0 0 1.5-1.2L21 7H6"/></svg></span>Mi Lista de Cotización</a>
 
     <!-- Divider -->
@@ -1283,6 +1282,8 @@
 <!-- ═══════════════════════
      PAGE: CROSS REFERENCE
 ═══════════════════════ -->
+<div id="page-catalogo" style="display:none;"></div>
+
 <div id="page-cross" style="display:none;">
   <div class="page-header">
     <button class="page-header-back" onclick="showPage('home')" title="Regresar">&#8592;</button>
@@ -5630,7 +5631,7 @@ function setApiKey(k) {
 }
 
 /* ── PAGE ROUTER ── */
-var pages = ['home','buscar','cfg','cross','tutorials','quote','cart','checkout','pago','gracias','login','register','portal','miportal'];
+var pages = ['home','buscar','cfg','catalogo','cross','tutorials','quote','cart','checkout','pago','gracias','login','register','portal','miportal'];
 // Registro de cuenta nueva: recopila los datos del formulario y crea el contacto
 // como prospecto pendiente de aprobación (un ejecutivo lo valida después).
 function showRegistroExito(){
@@ -5811,6 +5812,7 @@ function showPage(id) {
   else if (typeof console !== 'undefined') { console.warn('showPage: no existe page-'+id); }
   window.scrollTo(0,0);
   if (id === 'cart' && typeof renderCart === 'function') { renderCart(); }
+  if (id === 'catalogo' && typeof renderCatalogo === 'function') { renderCatalogo(); }
   if(id==='cfg'){
     setTimeout(function(){
       if(typeof window.cfgReset==='function') window.cfgReset();
@@ -6552,7 +6554,7 @@ function renderResultPanel(p, data, params){
 
   // Action buttons
   var btns=document.createElement('div');
-  btns.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;';
+  btns.style.cssText='display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:12px;';
 
   // Add to cart button — oculto cuando hay cadenas (cada cadena agrega sus propias piezas)
   if (!(data._chains && data._chains.length > 0)) {
@@ -6572,21 +6574,14 @@ function renderResultPanel(p, data, params){
   p.appendChild(cartBtn);
   }
 
-  // WhatsApp button
+  // Botón único: solicitar cotización por WhatsApp con un ejecutivo (fusiona "WhatsApp" + "Solicitar cotización" para no duplicar)
   var waMsg=encodeURIComponent('Hola, necesito cotización para el conector '+atCode+'. Extremo A: '+(extA.std?extA.std.label:'')+(extA.gen?' '+(extA.gen.code==='M'?'Macho':'Hembra'):'')+' '+( extA.med||'')+' | Extremo B: '+(extB.std?extB.std.label:'')+(extB.gen?' '+(extB.gen.code==='M'?'Macho':'Hembra'):'')+' '+(extB.med||''));
   var waBtn=document.createElement('a');
   waBtn.href='https://wa.me/525555550000?text='+waMsg;
   waBtn.target='_blank';
-  waBtn.style.cssText='display:block;background:#f5f5f7;color:#001F5B;text-align:center;padding:14px;border-radius:980px;text-decoration:none;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:15px;font-weight:600;letter-spacing:0;';
-  waBtn.innerHTML='WhatsApp ejecutivo';
+  waBtn.style.cssText='display:flex;align-items:center;justify-content:center;gap:9px;background:#25D366;color:#fff;text-align:center;padding:15px;border-radius:980px;text-decoration:none;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:15px;font-weight:700;letter-spacing:0;';
+  waBtn.innerHTML='<svg width="19" height="19" viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.1-1.3A10 10 0 1 0 12 2zm0 18a8 8 0 0 1-4.1-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 20zm4.4-6c-.2-.1-1.4-.7-1.6-.8-.2-.1-.4-.1-.5.1-.2.2-.6.8-.7.9-.1.2-.3.2-.5.1-1.3-.5-2.1-1.1-2.9-2.5-.2-.4.2-.4.6-1.1.1-.2 0-.3 0-.5s-.5-1.3-.7-1.7c-.2-.4-.4-.4-.5-.4h-.5c-.2 0-.5.1-.7.3-.7.7-.9 1.7-.5 2.8.5 1.4 1.5 2.7 3.5 3.7 1.9 1 1.9.7 2.3.6.5 0 1.4-.6 1.6-1.1.2-.5.2-1 .1-1.1z"/></svg>Solicitar cotizaci\u00f3n por WhatsApp';
   btns.appendChild(waBtn);
-
-  // Quote button
-  var qBtn=document.createElement('button');
-  qBtn.style.cssText='background:#f5f5f7;color:#001F5B;border:none;padding:14px;border-radius:980px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:15px;font-weight:600;letter-spacing:0;';
-  qBtn.innerHTML='Solicitar cotización';
-  qBtn.onclick=function(){showPage('quote');};
-  btns.appendChild(qBtn);
   p.appendChild(btns);
 
   // Back button
@@ -6954,7 +6949,7 @@ function sendChatMessage() {
     var aiAtNum   = aiAtMatch ? aiAtMatch[0] : '';
         var aiAt = (reply.match(/AT-[A-Z0-9\-]+/)||[''])[0];
     formatted += '<div style="display:flex;gap:7px;margin-top:10px;flex-wrap:wrap;">'
-      + '<button onclick="quoteFromIA(\'' + aiAtNum + '\')" style="background:#C8102E;color:#fff;border:none;padding:7px 13px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:700;">&#128203; Solicitar cotización</button>'
+      + '<a href="https://wa.me/525555550000?text=' + encodeURIComponent('Hola, quiero cotizar el conector ' + (aiAtNum||'')) + '" target="_blank" style="display:inline-block;background:#25D366;color:#fff;text-decoration:none;padding:7px 13px;border-radius:4px;font-size:12px;font-weight:700;">Cotizar por WhatsApp</a>'
       + '<button onclick="showPage(\'cfg\')" style="background:#001F5B;color:#fff;border:none;padding:7px 13px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:700;">&#128295; Configurar</button>'
       + '</div>';
     addBotMessage(formatted);
@@ -8393,5 +8388,130 @@ updateFAB();
 </script>
 
 
+<script>
+/* ── CATÁLOGO EN LÍNEA (búsqueda facetada: filtros izq, productos der) ── */
+(function(){
+  var CAT = { tipo:'', std:'', size:'', page:1, pageSize:24 };
+  var TIPO_LABEL = { NR:'Recto', C90:'Codo 90°', C45:'Codo 45°', TEE:'Tee', CRX:'Cruz', BH:'Bulkhead', BH45:'Bulkhead 45°', RUN:'Run tee', BRT:'Branch tee', BLK:'Tapón', UN:'Unión' };
+  var STD_LABEL = { JIC:'JIC 37°', NPT:'NPT', BSP:'BSPP', BST:'BSPT', ORB:'O-Ring Boss (ORB)', OFS:'ORFS / Cara plana', MET:'Métrico', DIN:'DIN', JIS:'JIS', KOM:'Komatsu', CAT:'Caterpillar', SAE:'SAE', NPSM:'NPSM', UNF:'UNF', BT:'BSPT', LL:'Serie LL', L:'Serie L' };
+  var SIZE_LABEL = { '01':'1/16"','02':'1/8"','03':'3/16"','04':'1/4"','05':'5/16"','06':'3/8"','08':'1/2"','10':'5/8"','12':'3/4"','14':'7/8"','16':'1"','20':'1.1/4"','24':'1.1/2"','28':'1.3/4"','32':'2"' };
+  function tL(v){ return TIPO_LABEL[v]||v; }
+  function sL(v){ return STD_LABEL[v]||v; }
+  function mL(v){ return SIZE_LABEL[v]||(v+'"'); }
+  function el(tag, css, html){ var e=document.createElement(tag); if(css)e.style.cssText=css; if(html!=null)e.innerHTML=html; return e; }
+
+  function buildShell(c){
+    c.innerHTML='';
+    var wrap = el('div','max-width:1200px;margin:0 auto;padding:28px 20px 60px;');
+    wrap.appendChild(el('div','font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#C8102E;margin-bottom:6px;','Catálogo'));
+    wrap.appendChild(el('h1','font-size:30px;font-weight:700;color:#001F5B;margin:0 0 4px;letter-spacing:-.5px;','Conectores y adaptadores'));
+    wrap.appendChild(el('p','font-size:14px;color:#86868b;margin:0 0 22px;','Filtra por tipo, estándar y medida. Los resultados se acotan conforme eliges.'));
+    var rowf = el('div','display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;');
+    var side = el('div','flex:0 0 250px;min-width:230px;'); side.id='cat-filtros';
+    var main = el('div','flex:1 1 460px;min-width:300px;'); main.id='cat-resultados';
+    rowf.appendChild(side); rowf.appendChild(main);
+    wrap.appendChild(rowf);
+    c.appendChild(wrap);
+    c._built=true;
+  }
+
+  function facetSection(title, items, kind, activeVal, fmt){
+    var box = el('div','margin-bottom:22px;');
+    box.appendChild(el('div','font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#86868b;margin-bottom:10px;', title));
+    if(!items || !items.length){ box.appendChild(el('div','font-size:13px;color:#c0c0c8;','—')); return box; }
+    items.forEach(function(it){
+      var on = (activeVal===it.v);
+      var a = el('button','display:flex;width:100%;justify-content:space-between;align-items:center;gap:8px;background:'+(on?'#001F5B':'transparent')+';color:'+(on?'#fff':'#001F5B')+';border:1px solid '+(on?'#001F5B':'#e8e8ed')+';border-radius:9px;padding:9px 12px;margin-bottom:6px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;text-align:left;',
+        '<span>'+fmt(it.v)+'</span><span style="font-size:11px;opacity:.75;font-weight:600;">'+(on?'×':it.n)+'</span>');
+      a.onclick=function(){ setFilter(kind, it.v); };
+      box.appendChild(a);
+    });
+    return box;
+  }
+
+  function renderFacets(f){
+    var side = document.getElementById('cat-filtros'); if(!side) return;
+    side.innerHTML='';
+    if (CAT.tipo||CAT.std||CAT.size){
+      var clr = el('button','background:#fff;color:#C8102E;border:1px solid #f0d0d4;border-radius:9px;padding:8px 12px;margin-bottom:18px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:700;width:100%;','Limpiar filtros');
+      clr.onclick=function(){ CAT.tipo=CAT.std=CAT.size=''; CAT.page=1; catLoad(); };
+      side.appendChild(clr);
+    }
+    side.appendChild(facetSection('Tipo', f.tipos, 'tipo', CAT.tipo, tL));
+    side.appendChild(facetSection('Estándar', f.estandares, 'std', CAT.std, sL));
+    side.appendChild(facetSection('Medida', f.medidas, 'size', CAT.size, mL));
+  }
+
+  function dispo(qty){
+    var inStock = (qty||0) > 0;
+    var label = inStock ? 'En stock' : 'Sobre pedido';
+    if (inStock && typeof window.clientSeesStockQty==='function' && window.clientSeesStockQty()) label = 'En stock ('+qty+')';
+    return '<span style="font-size:12px;font-weight:700;color:'+(inStock?'#1d7d34':'#9a6a00')+';">'+label+'</span>';
+  }
+  function precioTxt(price){
+    if (typeof window.precioDisplay==='function'){
+      var pd = window.precioDisplay(price, 1);
+      if (pd) return '<div style="font-size:15px;font-weight:700;color:#001F5B;">'+pd.text+'</div><div style="font-size:11px;color:#86868b;">'+pd.sub+'</div>';
+    }
+    return '<div style="font-size:13px;color:#86868b;">Precio bajo cotización</div>';
+  }
+
+  function renderProducts(d, loading){
+    var main = document.getElementById('cat-resultados'); if(!main) return;
+    if (loading){ main.innerHTML='<div style="padding:40px;text-align:center;color:#86868b;font-size:14px;">Cargando productos…</div>'; return; }
+    if (!d || d.error){ main.innerHTML='<div style="padding:40px;text-align:center;color:#C8102E;font-size:14px;">No se pudo cargar el catálogo. Intenta de nuevo.</div>'; return; }
+    main.innerHTML='';
+    main.appendChild(el('div','font-size:14px;color:#86868b;margin-bottom:16px;','<b style="color:#001F5B;">'+d.total+'</b> productos'));
+    if (!d.productos || !d.productos.length){
+      main.appendChild(el('div','padding:40px;text-align:center;color:#86868b;font-size:14px;','No hay productos con esos filtros. Prueba quitar alguno.'));
+      return;
+    }
+    var grid = el('div','display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;');
+    d.productos.forEach(function(p){
+      var card = el('div','background:#fff;border:1px solid #e8e8ed;border-radius:14px;padding:16px;display:flex;flex-direction:column;');
+      card.appendChild(el('div','font-family:-apple-system,BlinkMacSystemFont,monospace;font-size:13px;font-weight:700;color:#001F5B;word-break:break-all;margin-bottom:4px;', p.code));
+      card.appendChild(el('div','font-size:12px;color:#86868b;line-height:1.4;margin-bottom:10px;min-height:32px;', p.name||''));
+      card.appendChild(el('div','margin-bottom:6px;', precioTxt(p.price)));
+      card.appendChild(el('div','margin-bottom:12px;', dispo(p.qty)));
+      var btn = el('button','margin-top:auto;background:#0071e3;color:#fff;border:none;padding:10px;border-radius:980px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;','Agregar al carrito');
+      btn.onclick=(function(prod){ return function(){
+        window.cartAdd({ at_code:prod.code, name:prod.name||prod.code, price:prod.price||0, qty_available:prod.qty||0, status:((prod.qty||0)>0?'stock':'fabricado') });
+        if (typeof showToast==='function') showToast('Agregado al carrito');
+      };})(p);
+      card.appendChild(btn);
+      grid.appendChild(card);
+    });
+    main.appendChild(grid);
+    var totalPages = Math.ceil(d.total / d.page_size);
+    if (totalPages > 1){
+      var pag = el('div','display:flex;justify-content:center;align-items:center;gap:14px;margin-top:26px;');
+      var prev = el('button','background:#f5f5f7;border:none;border-radius:980px;padding:9px 16px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;color:#001F5B;'+(d.page<=1?'opacity:.4;pointer-events:none;':''),'Anterior');
+      prev.onclick=function(){ if(CAT.page>1){ CAT.page--; catLoad(); } };
+      var next = el('button','background:#f5f5f7;border:none;border-radius:980px;padding:9px 16px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;color:#001F5B;'+(d.page>=totalPages?'opacity:.4;pointer-events:none;':''),'Siguiente');
+      next.onclick=function(){ if(CAT.page<totalPages){ CAT.page++; catLoad(); } };
+      pag.appendChild(prev);
+      pag.appendChild(el('div','font-size:13px;color:#86868b;','Página '+d.page+' de '+totalPages));
+      pag.appendChild(next);
+      main.appendChild(pag);
+    }
+  }
+
+  function setFilter(kind, val){ CAT[kind] = (CAT[kind]===val ? '' : val); CAT.page=1; catLoad(); }
+
+  function catLoad(){
+    var c = document.getElementById('page-catalogo'); if(!c) return;
+    if (!c._built) buildShell(c);
+    renderProducts(null, true);
+    fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'catalogo_listar', tipo:CAT.tipo, std:CAT.std, size:CAT.size, page:CAT.page, page_size:CAT.pageSize })
+    }).then(function(r){return r.json();}).then(function(d){
+      renderFacets(d.facetas||{});
+      renderProducts(d, false);
+    }).catch(function(){ renderProducts({error:true}, false); });
+  }
+
+  window.renderCatalogo = catLoad;
+})();
+</script>
 </body>
 </html>
