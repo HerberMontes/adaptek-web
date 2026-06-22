@@ -357,7 +357,7 @@
     .auth-wrap{min-height:calc(100vh - 60px);display:flex;align-items:center;justify-content:center;background:#fff;padding:40px 16px;}
     .auth-card{background:#fff;border-radius:20px;box-shadow:0 4px 24px rgba(0,0,0,.06),0 1px 4px rgba(0,0,0,.04);border:1px solid #f0f0f2;width:100%;max-width:420px;overflow:hidden;}
     .auth-header{background:#fff;padding:34px 32px 8px;text-align:center;border-bottom:none;}
-    .auth-logo{font-family:'Montserrat',sans-serif;font-weight:900;font-size:28px;letter-spacing:-1px;color:#001F5B;margin-bottom:4px;}
+    .auth-logo{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-weight:700;font-size:26px;letter-spacing:-.6px;color:#001F5B;margin-bottom:4px;}
     .auth-logo span{color:#C8102E;}
     .auth-subtitle{font-size:11px;color:#86868b;letter-spacing:2px;text-transform:uppercase;font-weight:600;}
     .auth-body{padding:28px 32px;}
@@ -664,7 +664,7 @@
     .auth-wrap{min-height:calc(100vh - 60px);display:flex;align-items:center;justify-content:center;background:#fff;padding:40px 16px;}
     .auth-card{background:#fff;border-radius:20px;box-shadow:0 4px 24px rgba(0,0,0,.06),0 1px 4px rgba(0,0,0,.04);border:1px solid #f0f0f2;width:100%;max-width:420px;overflow:hidden;}
     .auth-header{background:#fff;padding:34px 32px 8px;text-align:center;border-bottom:none;}
-    .auth-logo{font-family:'Montserrat',sans-serif;font-weight:900;font-size:28px;letter-spacing:-1px;color:#001F5B;margin-bottom:4px;}
+    .auth-logo{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-weight:700;font-size:26px;letter-spacing:-.6px;color:#001F5B;margin-bottom:4px;}
     .auth-logo span{color:#C8102E;}
     .auth-subtitle{font-size:11px;color:#86868b;letter-spacing:2px;text-transform:uppercase;font-weight:600;}
     .auth-body{padding:28px 32px;}
@@ -847,12 +847,8 @@
 <!-- NAV -->
 <nav>
   <a class="logo-wrap" href="#" onclick="showPage('home')">
-    <div style="display:flex;flex-direction:column;align-items:center;">
-      <div style="display:flex;align-items:baseline;line-height:1;">
-        <span style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:26px;letter-spacing:-1px;color:#001F5B;">ADAP</span><span style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:26px;letter-spacing:-1px;color:#C8102E;">TEK</span><span style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:26px;letter-spacing:-1px;color:#001F5B;">K</span>
-      </div>
-      <div style="width:100%;height:2px;background:linear-gradient(to right,#001F5B 50%,#C8102E 50%);border-radius:2px;margin-top:5px;"></div>
-      <span style="font-size:7px;letter-spacing:4px;color:#bbb;text-transform:uppercase;font-weight:600;margin-top:3px;text-align:center;">Conecta sin límites</span>
+    <div style="display:flex;align-items:baseline;line-height:1;">
+      <span style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-weight:700;font-size:26px;letter-spacing:-.6px;color:#001F5B;">Adaptekk</span><span style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-weight:700;font-size:26px;color:#C8102E;">.</span>
     </div>
   </a>
   <ul class="nav-links">
@@ -919,82 +915,191 @@
      PAGE: HOME
 ═══════════════════════ -->
 <div id="page-home">
+<!-- ===== HOME OPCIÓN A (responsive) ===== -->
+<style id="haStyle">
+  #page-home .ha{font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;}
+  #page-home .ha *{box-sizing:border-box;}
+  .ha-ph{background-image:repeating-linear-gradient(135deg,#eef0f4 0 11px,#f5f6f9 11px 22px);}
+  .ha-lift{transition:transform .18s ease, box-shadow .18s ease;cursor:pointer;}
+  .ha-lift:hover{transform:translateY(-4px);}
+  .ha-sec{padding:72px 40px;}
+  .ha-hero{padding:60px 40px 8px;text-align:center;}
+  .ha-h2{font-size:54px;line-height:1.05;font-weight:800;letter-spacing:-1.5px;color:#0a1f44;margin:0 auto 16px;max-width:760px;}
+  .ha-lead{font-size:20px;line-height:1.5;color:#5b6577;max-width:540px;margin:0 auto;font-weight:400;}
+  .ha-paths{padding:18px 40px 24px;display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:1120px;margin:0 auto;}
+  .ha-input{display:flex;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.25);}
+  .ha-input input{flex:1;border:none;outline:none;padding:15px 16px;font-size:15px;color:#0a1f44;font-family:inherit;background:transparent;}
+  .ha-input button{border:none;background:#C8102E;color:#fff;font-size:14px;font-weight:700;padding:0 22px;cursor:pointer;font-family:inherit;}
+  .ha-trust{border-top:1px solid #f0f0f2;border-bottom:1px solid #f0f0f2;background:#fafafc;padding:24px 40px;display:flex;justify-content:center;gap:46px;flex-wrap:wrap;}
+  .ha-trust .it{display:flex;align-items:center;gap:10px;font-size:14px;color:#1d1d1f;font-weight:600;}
+  .ha-cats{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1120px;margin:0 auto;}
+  .ha-cat-img{height:180px;background-color:#0a1f44;background-size:cover;}
+  .ha-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1120px;margin:0 auto;}
+  .ha-why{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;max-width:880px;margin:0 auto;}
+  .ha-cta{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:920px;margin:0 auto;}
+  .ha-title{font-size:38px;font-weight:800;letter-spacing:-.8px;color:#0a1f44;margin:0 0 10px;}
+  .ha-eyebrow{font-size:12px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#C8102E;margin-bottom:12px;}
+  .ha-5{padding:28px 40px;}
+  .ha-5box{display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;background:linear-gradient(120deg,#0a1f44 0%,#14306b 100%);border-radius:18px;padding:26px 34px;max-width:1120px;margin:0 auto;}
+  @media(max-width:900px){
+    .ha-cats{grid-template-columns:repeat(2,1fr);}
+  }
+  @media(max-width:760px){
+    .ha-sec{padding:48px 20px;}
+    .ha-hero{padding:40px 20px 4px;}
+    .ha-h2{font-size:34px;letter-spacing:-1px;}
+    .ha-lead{font-size:17px;}
+    .ha-paths{padding:14px 20px 18px;grid-template-columns:1fr;gap:14px;}
+    .ha-trust{gap:18px 26px;padding:22px 20px;}
+    .ha-trust .it{font-size:13px;}
+    .ha-cats{grid-template-columns:1fr;gap:14px;}
+    .ha-steps{grid-template-columns:1fr;gap:14px;}
+    .ha-why{grid-template-columns:1fr;gap:14px;}
+    .ha-cta{grid-template-columns:1fr;gap:14px;}
+    .ha-title{font-size:27px;}
+    .ha-5{padding:20px;}
+    .ha-5box{padding:22px;gap:16px;}
+  }
+</style>
+
+<div class="ha">
 
   <!-- HERO -->
-  <div class="hero-compact" style="position:relative;overflow:hidden;padding:52px 40px 48px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;min-height:300px;">
+  <div class="ha-hero">
+    <div class="ha-eyebrow">Conectores y adaptadores hidráulicos</div>
+    <h2 class="ha-h2">El conector exacto,<br/>sin adivinar.</h2>
+    <p class="ha-lead">Dinos qué necesitas y la IA lo identifica, o ármalo paso a paso en el configurador.</p>
+  </div>
 
-    <!-- Background: hydraulic connectors photo -->
-    <div style="position:absolute;inset:0;
-      background-image:url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1600&q=85&fit=crop');
-      background-size:cover;background-position:center;filter:blur(1px) brightness(.35) saturate(.6);
-      transform:scale(1.04);"></div>
-    <!-- Blue tint overlay matching brand -->
-    <div style="position:absolute;inset:0;background:linear-gradient(160deg,rgba(27,58,107,.88) 0%,rgba(27,58,107,.78) 50%,rgba(15,30,60,.92) 100%);"></div>
-
-    <!-- Content -->
-    <div style="position:relative;z-index:1;max-width:780px;width:100%;">
-
-      <!-- Tagline -->
-      <div style="display:inline-flex;align-items:center;gap:12px;margin-bottom:22px;">
-        <div style="width:32px;height:2px;background:#C8102E;border-radius:2px;"></div>
-        <span style="font-size:11px;font-weight:700;letter-spacing:5px;text-transform:uppercase;color:rgba(255,255,255,.75);">Soluciones en Conectores Hidráulicos</span>
-        <div style="width:32px;height:2px;background:#C8102E;border-radius:2px;"></div>
+  <!-- TWO PATHS -->
+  <div class="ha-paths">
+    <!-- IA -->
+    <div class="ha-lift" onclick="navIrIA()" style="border-radius:20px;padding:32px;background:linear-gradient(160deg,#0a1f44 0%,#14306b 100%);text-align:left;box-shadow:0 14px 40px rgba(10,31,68,.22);">
+      <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);padding:6px 14px;border-radius:999px;margin-bottom:18px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7fd1ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.2L18 9l-4.2 1.8L12 15l-1.8-4.2L6 9l4.2-1.8z"/></svg>
+        <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#7fd1ff;">Buscador con IA</span>
       </div>
-
-      <!-- Main title -->
-      <h1 style="font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:52px;font-weight:800;color:#fff;line-height:1.08;margin:0 0 10px;letter-spacing:.5px;text-transform:uppercase;text-shadow:0 2px 24px rgba(0,0,0,.4);">
-        Tu solución integral<br/>en el abastecimiento de<br/>
-        <span style="color:#C8102E;text-shadow:0 2px 20px rgba(200,16,46,.5);">Conectores Hidráulicos</span>
-      </h1>
-      <p style="font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:28px;font-weight:400;color:rgba(255,255,255,.75);margin:0 0 20px;letter-spacing:2px;text-transform:uppercase;">y Adaptadores</p>
-
-      <!-- Divider -->
-      <div style="width:60px;height:3px;background:#C8102E;border-radius:2px;margin:0 auto 20px;"></div>
-
-      <!-- Subtext -->
-      <p style="font-size:16px;color:rgba(255,255,255,.8);margin:0 0 32px;line-height:1.8;font-weight:300;letter-spacing:.3px;">
-        Amplio stock disponible y envíos a toda la República Mexicana.
-      </p>
-
-      <!-- CTA: Busca tu conector -->
-      <div style="margin-bottom:38px;">
-        <button onclick="showPage('buscar')" style="display:inline-flex;align-items:center;gap:12px;background:#fff;color:#001F5B;padding:16px 34px;border-radius:40px;font-size:19px;font-weight:800;cursor:pointer;border:none;box-shadow:0 16px 40px rgba(0,0,0,.32);transition:all .2s;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;" onmouseover="this.style.background='#C8102E';this.style.color='#fff';this.style.transform='translateY(-3px)'" onmouseout="this.style.background='#fff';this.style.color='#001F5B';this.style.transform='none'">
-          Busca tu conector
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
-        </button>
-      </div>
-
-      <!-- Stats — centered, no boxes -->
-      <div style="display:flex;justify-content:center;align-items:center;gap:0;">
-        <div style="padding:0 32px;border-right:1px solid rgba(255,255,255,.2);">
-          <div style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:42px;color:#fff;line-height:1;text-shadow:0 2px 12px rgba(0,0,0,.3);">4,298</div>
-          <div style="font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-top:4px;">Conectores en catálogo</div>
-        </div>
-        <div style="padding:0 32px;border-right:1px solid rgba(255,255,255,.2);">
-          <div style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:42px;color:#fff;line-height:1;text-shadow:0 2px 12px rgba(0,0,0,.3);">12</div>
-          <div style="font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-top:4px;">Tipos y configuraciones</div>
-        </div>
-        <div style="padding:0 32px;">
-          <div style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:42px;color:#fff;line-height:1;text-shadow:0 2px 12px rgba(0,0,0,.3);">8</div>
-          <div style="font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-top:4px;">Zonas de cobertura</div>
+      <div style="font-size:24px;font-weight:700;letter-spacing:-.5px;color:#fff;margin-bottom:8px;">Descríbelo como puedas</div>
+      <div style="font-size:15px;line-height:1.55;color:rgba(255,255,255,.65);margin-bottom:18px;">Sube una <b style="color:#fff;font-weight:600;">foto</b>, pega un <b style="color:#fff;font-weight:600;">código</b>, escribe la <b style="color:#fff;font-weight:600;">descripción</b> o mándalo por <b style="color:#fff;font-weight:600;">audio</b>. La IA identifica la pieza exacta.</div>
+      <div style="background:#fff;border-radius:14px;overflow:hidden;">
+        <div style="padding:14px 16px 4px;min-height:46px;"><div style="font-size:14px;line-height:1.5;color:#b8bfcc;">Ocupo un adaptador macho JIC 1/2&quot; recto a NPT 3/8&quot; hembra…</div></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 11px;border-top:1px solid #f0f0f2;">
+          <div style="display:flex;gap:4px;">
+            <span style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#5b6577;padding:7px 10px;border-radius:8px;background:#f5f5f7;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5b6577" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 17l-5-5-7 7"/></svg>Foto</span>
+            <span style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#5b6577;padding:7px 10px;border-radius:8px;background:#f5f5f7;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5b6577" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg>Código</span>
+            <span style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#5b6577;padding:7px 10px;border-radius:8px;background:#f5f5f7;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5b6577" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>Audio</span>
+          </div>
+          <button onclick="event.stopPropagation();navIrIA()" style="border:none;background:#C8102E;color:#fff;font-size:13px;font-weight:600;padding:9px 18px;border-radius:9px;cursor:pointer;font-family:inherit;">Identificar</button>
         </div>
       </div>
     </div>
+    <!-- CONFIG -->
+    <div class="ha-lift" onclick="showPage('cfg')" style="border-radius:20px;padding:32px;background:#fff;border:1.5px solid #e7e9ef;text-align:left;box-shadow:0 10px 30px rgba(16,32,72,.07);">
+      <div style="display:inline-flex;align-items:center;gap:8px;background:#fdeef0;border:1px solid #f8d6db;padding:6px 14px;border-radius:999px;margin-bottom:18px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C8102E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6M6 15v6M6 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM18 3v3M18 12v9M18 6a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>
+        <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#C8102E;">Configurador</span>
+      </div>
+      <div style="font-size:24px;font-weight:700;letter-spacing:-.5px;color:#0a1f44;margin-bottom:8px;">Ármalo paso a paso</div>
+      <div style="font-size:15px;line-height:1.55;color:#5b6577;margin-bottom:22px;">Elige tipo, rosca, ángulo y medida. Te mostramos solo lo compatible — imposible equivocarse.</div>
+      <div style="display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap;align-items:center;">
+        <span style="font-size:12px;font-weight:600;color:#0a1f44;background:#f5f5f7;border:1px solid #e7e9ef;padding:7px 13px;border-radius:8px;">Tipo</span>
+        <span style="font-size:12px;color:#9aa3b2;">→</span>
+        <span style="font-size:12px;font-weight:600;color:#0a1f44;background:#f5f5f7;border:1px solid #e7e9ef;padding:7px 13px;border-radius:8px;">Rosca</span>
+        <span style="font-size:12px;color:#9aa3b2;">→</span>
+        <span style="font-size:12px;font-weight:600;color:#0a1f44;background:#f5f5f7;border:1px solid #e7e9ef;padding:7px 13px;border-radius:8px;">Medida</span>
+      </div>
+      <div style="background:#0a1f44;color:#fff;font-size:15px;font-weight:600;padding:14px;border-radius:12px;text-align:center;">Abrir configurador →</div>
+    </div>
   </div>
 
+  <!-- secondary helpers -->
+  <div style="padding:0 20px 48px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;align-items:center;">
+    <span style="font-size:13px;color:#86868b;">¿Prefieres que lo hagamos por ti?</span>
+    <a href="https://wa.me/525555550000" style="text-decoration:none;display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:#0f6b39;background:#e7f6ee;border:1px solid #d2ecdd;padding:8px 16px;border-radius:999px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="#1f9d55"><path d="M12 2a10 10 0 0 0-8.5 15.3L2 22l4.8-1.5A10 10 0 1 0 12 2z"/></svg>Cotiza por WhatsApp</a>
+    <span onclick="showPage('cross')" style="cursor:pointer;font-size:13px;font-weight:600;color:#5b6577;background:#f5f5f7;border:1px solid #ececef;padding:8px 16px;border-radius:999px;">Cross-reference de marcas</span>
+  </div>
 
+  <!-- TRUST BAND -->
+  <div class="ha-trust">
+    <div class="it"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0a1f44" stroke-width="1.6"><path d="M3 7h11v8H3zM14 10h4l3 3v2h-7z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>Envíos a todo México</div>
+    <div class="it"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0a1f44" stroke-width="1.6"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Pago seguro</div>
+    <div class="it"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0a1f44" stroke-width="1.6"><path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h7"/></svg>Factura CFDI</div>
+    <div class="it"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0a1f44" stroke-width="1.6"><path d="M4 7l8-4 8 4v10l-8 4-8-4z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg>Stock inmediato</div>
+  </div>
 
-  <!-- Configurador y Buscador IA: ahora en la página Buscar (page-buscar) -->
+  <!-- 5% REGISTER -->
+  <div class="ha-5">
+    <div class="ha-5box">
+      <div style="display:flex;align-items:center;gap:18px;">
+        <div style="width:54px;height:54px;border-radius:14px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;flex:none;"><span style="font-size:20px;font-weight:800;color:#5ef0a0;">5%</span></div>
+        <div><div style="font-size:20px;font-weight:700;color:#fff;letter-spacing:-.3px;margin-bottom:3px;">Crea tu cuenta y baja todos los precios 5%</div><div style="font-size:14px;color:rgba(255,255,255,.6);">Los precios son visibles para todos. Al registrarte, el descuento se aplica automáticamente en cada compra.</div></div>
+      </div>
+      <span onclick="showPage('register')" style="background:#fff;color:#0a1f44;font-size:15px;font-weight:700;padding:13px 26px;border-radius:10px;white-space:nowrap;cursor:pointer;">Registrarme gratis →</span>
+    </div>
+  </div>
 
+  <!-- CATEGORIES -->
+  <div class="ha-sec">
+    <div style="text-align:center;margin-bottom:44px;">
+      <h3 class="ha-title">Explora por categoría</h3>
+      <p style="font-size:17px;color:#86868b;margin:0;">Todo el sistema de conexión hidráulica, en un solo lugar.</p>
+    </div>
+    <div class="ha-cats">
+      <div class="ha-ph ha-lift" onclick="showPage('cfg')" style="border-radius:16px;overflow:hidden;border:1px solid #ececef;"><div class="ha-cat-img" style="background-image:linear-gradient(150deg,rgba(10,31,68,.30),rgba(10,31,68,.55)),url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=900&q=80&auto=format&fit=crop');background-position:center;"></div><div style="background:#fff;padding:18px 20px;"><div style="font-size:17px;font-weight:600;color:#0a1f44;">Adaptadores JIC 37°</div><div style="font-size:13px;color:#86868b;margin-top:2px;">812 referencias</div></div></div>
+      <div class="ha-ph ha-lift" onclick="showPage('cfg')" style="border-radius:16px;overflow:hidden;border:1px solid #ececef;"><div class="ha-cat-img" style="background-image:linear-gradient(150deg,rgba(10,31,68,.45),rgba(20,48,107,.45)),url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=900&q=80&auto=format&fit=crop');background-position:left center;"></div><div style="background:#fff;padding:18px 20px;"><div style="font-size:17px;font-weight:600;color:#0a1f44;">ORFS (O-Ring Face Seal)</div><div style="font-size:13px;color:#86868b;margin-top:2px;">534 referencias</div></div></div>
+      <div class="ha-ph ha-lift" onclick="showPage('cfg')" style="border-radius:16px;overflow:hidden;border:1px solid #ececef;"><div class="ha-cat-img" style="background-image:linear-gradient(150deg,rgba(15,30,60,.55),rgba(10,31,68,.30)),url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=900&q=80&auto=format&fit=crop');background-position:right center;"></div><div style="background:#fff;padding:18px 20px;"><div style="font-size:17px;font-weight:600;color:#0a1f44;">NPT / NPTF</div><div style="font-size:13px;color:#86868b;margin-top:2px;">703 referencias</div></div></div>
+      <div class="ha-ph ha-lift" onclick="showPage('cfg')" style="border-radius:16px;overflow:hidden;border:1px solid #ececef;"><div class="ha-cat-img" style="background-image:linear-gradient(150deg,rgba(10,31,68,.40),rgba(10,31,68,.60)),url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=900&q=80&auto=format&fit=crop');background-position:30% 40%;"></div><div style="background:#fff;padding:18px 20px;"><div style="font-size:17px;font-weight:600;color:#0a1f44;">Bridas SAE</div><div style="font-size:13px;color:#86868b;margin-top:2px;">288 referencias</div></div></div>
+      <div class="ha-ph ha-lift" onclick="showPage('cfg')" style="border-radius:16px;overflow:hidden;border:1px solid #ececef;"><div class="ha-cat-img" style="background-image:linear-gradient(150deg,rgba(20,48,107,.40),rgba(10,31,68,.45)),url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=900&q=80&auto=format&fit=crop');background-position:70% 60%;"></div><div style="background:#fff;padding:18px 20px;"><div style="font-size:17px;font-weight:600;color:#0a1f44;">Mangueras hidráulicas</div><div style="font-size:13px;color:#86868b;margin-top:2px;">615 referencias</div></div></div>
+      <div class="ha-ph ha-lift" onclick="showPage('cfg')" style="border-radius:16px;overflow:hidden;border:1px solid #ececef;"><div class="ha-cat-img" style="background-image:linear-gradient(150deg,rgba(10,31,68,.50),rgba(15,30,60,.40)),url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=900&q=80&auto=format&fit=crop');background-position:center bottom;"></div><div style="background:#fff;padding:18px 20px;"><div style="font-size:17px;font-weight:600;color:#0a1f44;">Racores DIN / Métrico</div><div style="font-size:13px;color:#86868b;margin-top:2px;">446 referencias</div></div></div>
+    </div>
+  </div>
+
+  <!-- 3 PATHS / CÓMO FUNCIONA -->
+  <div class="ha-sec" style="background:#f5f5f7;">
+    <div style="text-align:center;margin-bottom:44px;">
+      <div class="ha-eyebrow">Cómo funciona</div>
+      <h3 class="ha-title" style="margin-bottom:10px;">Elige tu camino a la pieza</h3>
+      <p style="font-size:17px;color:#86868b;margin:0;">Tres formas de llegar al conector exacto. Tú eliges.</p>
+    </div>
+    <div class="ha-steps">
+      <div class="ha-lift" onclick="navIrIA()" style="text-align:left;padding:30px 28px;background:#fff;border:1px solid #ececef;border-radius:18px;"><div style="width:52px;height:52px;border-radius:14px;background:#0a1f44;display:flex;align-items:center;justify-content:center;margin-bottom:20px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7fd1ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.2L18 9l-4.2 1.8L12 15l-1.8-4.2L6 9l4.2-1.8z"/></svg></div><div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#C8102E;margin-bottom:8px;">Opción 1 · IA</div><div style="font-size:21px;font-weight:600;color:#0a1f44;margin-bottom:8px;">Búscalo con IA</div><div style="font-size:14px;line-height:1.6;color:#5b6577;margin-bottom:16px;">Sube foto, pega un código, descríbelo o mándalo por audio. La IA identifica la pieza exacta en segundos.</div><div style="font-size:14px;font-weight:600;color:#0a1f44;">Abrir buscador IA →</div></div>
+      <div class="ha-lift" onclick="showPage('cfg')" style="text-align:left;padding:30px 28px;background:#fff;border:1px solid #ececef;border-radius:18px;"><div style="width:52px;height:52px;border-radius:14px;background:#C8102E;display:flex;align-items:center;justify-content:center;margin-bottom:20px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6M6 15v6M6 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM18 3v3M18 12v9M18 6a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg></div><div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#C8102E;margin-bottom:8px;">Opción 2 · Configurador</div><div style="font-size:21px;font-weight:600;color:#0a1f44;margin-bottom:8px;">Ármalo paso a paso</div><div style="font-size:14px;line-height:1.6;color:#5b6577;margin-bottom:16px;">Elige tipo, rosca, ángulo y medida. Solo te mostramos lo compatible: imposible equivocarte.</div><div style="font-size:14px;font-weight:600;color:#0a1f44;">Abrir configurador →</div></div>
+      <a href="https://wa.me/525555550000" class="ha-lift" style="text-decoration:none;display:block;text-align:left;padding:30px 28px;background:#fff;border:1px solid #ececef;border-radius:18px;"><div style="width:52px;height:52px;border-radius:14px;background:#1f9d55;display:flex;align-items:center;justify-content:center;margin-bottom:20px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 0 0-8.5 15.3L2 22l4.8-1.5A10 10 0 1 0 12 2z"/></svg></div><div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#C8102E;margin-bottom:8px;">Opción 3 · Ejecutivo</div><div style="font-size:21px;font-weight:600;color:#0a1f44;margin-bottom:8px;">Cotiza por WhatsApp</div><div style="font-size:14px;line-height:1.6;color:#5b6577;margin-bottom:16px;">¿Prefieres que lo haga una persona? Un ejecutivo te atiende y te cotiza directo por WhatsApp.</div><div style="font-size:14px;font-weight:600;color:#0f6b39;">Hablar con ventas →</div></a>
+    </div>
+  </div>
+
+  <!-- POR QUÉ -->
+  <div class="ha-sec">
+    <div style="text-align:center;margin-bottom:44px;"><h3 class="ha-title">Por qué Adaptekk</h3></div>
+    <div class="ha-why">
+      <div style="border:1px solid #ececef;border-radius:16px;padding:28px;"><div style="font-size:19px;font-weight:600;color:#0a1f44;margin-bottom:8px;">Stock real, no catálogo de papel</div><div style="font-size:15px;line-height:1.6;color:#5b6577;">+4,000 referencias físicas listas para salir. Lo que ves disponible, se envía.</div></div>
+      <div style="border:1px solid #ececef;border-radius:16px;padding:28px;"><div style="font-size:19px;font-weight:600;color:#0a1f44;margin-bottom:8px;">Equivalencias de cualquier marca</div><div style="font-size:15px;line-height:1.6;color:#5b6577;">Cross-reference: danos el número de otra marca y te damos el equivalente AT exacto.</div></div>
+      <div style="border:1px solid #ececef;border-radius:16px;padding:28px;"><div style="font-size:19px;font-weight:600;color:#0a1f44;margin-bottom:8px;">Envíos rápidos a todo México</div><div style="font-size:15px;line-height:1.6;color:#5b6577;">Paquetería nacional y guía de rastreo. Stock inmediato sale el mismo día.</div></div>
+      <div style="border:1px solid #ececef;border-radius:16px;padding:28px;"><div style="font-size:19px;font-weight:600;color:#0a1f44;margin-bottom:8px;">Asesoría técnica real</div><div style="font-size:15px;line-height:1.6;color:#5b6577;">¿No sabes qué pieza es? Te ayudamos a identificarla por WhatsApp con un especialista.</div></div>
+    </div>
+  </div>
+
+  <!-- TRIPLE CTA -->
+  <div class="ha-sec" style="background:#0a1f44;">
+    <div style="text-align:center;margin-bottom:44px;"><h3 class="ha-title" style="color:#fff;margin-bottom:10px;">¿Listo para tu conector?</h3><p style="font-size:17px;color:rgba(255,255,255,.6);margin:0;">Como prefieras: en línea, cotización o por WhatsApp.</p></div>
+    <div class="ha-cta">
+      <div onclick="showPage('cfg')" class="ha-lift" style="background:#fff;border-radius:16px;padding:30px;text-align:center;"><div style="font-size:19px;font-weight:600;color:#0a1f44;margin-bottom:8px;">Comprar en línea</div><div style="font-size:14px;line-height:1.55;color:#5b6577;margin-bottom:20px;">Pago seguro y factura inmediata.</div><div style="background:#C8102E;color:#fff;font-size:15px;font-weight:600;padding:12px;border-radius:10px;">Ir a la tienda</div></div>
+      <div onclick="showPage('quote')" class="ha-lift" style="background:#fff;border-radius:16px;padding:30px;text-align:center;"><div style="font-size:19px;font-weight:600;color:#0a1f44;margin-bottom:8px;">Pedir cotización</div><div style="font-size:14px;line-height:1.55;color:#5b6577;margin-bottom:20px;">Cotización formal con CFDI.</div><div style="background:#0a1f44;color:#fff;font-size:15px;font-weight:600;padding:12px;border-radius:10px;">Cotizar ahora</div></div>
+      <a href="https://wa.me/525555550000" class="ha-lift" style="text-decoration:none;display:block;background:#fff;border-radius:16px;padding:30px;text-align:center;"><div style="font-size:19px;font-weight:600;color:#0a1f44;margin-bottom:8px;">Hablar con ventas</div><div style="font-size:14px;line-height:1.55;color:#5b6577;margin-bottom:20px;">Asesoría directa por WhatsApp.</div><div style="background:#1f9d55;color:#fff;font-size:15px;font-weight:600;padding:12px;border-radius:10px;">WhatsApp</div></a>
+    </div>
+  </div>
+
+</div>
+<!-- ===== /HOME OPCIÓN A ===== -->
+
+  
   <!-- FOOTER -->
   <div style="background:#0D1B2A;border-top:3px solid #C8102E;">
     <div style="max-width:1200px;margin:0 auto;padding:40px 32px;display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:32px;">
       <div>
-        <div style="font-family:Montserrat,sans-serif;font-weight:900;font-size:24px;margin-bottom:8px;">
-          <span style="color:#fff;">ADAP</span><span style="color:#C8102E;">TEK</span><span style="color:#fff;">K</span>
+        <div style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-weight:700;font-size:25px;letter-spacing:-.6px;margin-bottom:14px;">
+          <span style="color:#fff;">Adaptekk</span><span style="color:#C8102E;">.</span>
         </div>
-        <div style="width:40px;height:2px;background:linear-gradient(to right,#fff 50%,#C8102E 50%);margin-bottom:12px;"></div>
-        <div style="font-size:9px;letter-spacing:3px;color:rgba(255,255,255,.4);text-transform:uppercase;margin-bottom:16px;">Conecta sin limites</div>
         <div style="font-size:12px;color:rgba(255,255,255,.5);line-height:1.8;">Especialistas en conectores<br/>y adaptadores hidraulicos<br/>para la industria mexicana.</div>
       </div>
       <div>
@@ -1002,7 +1107,7 @@
         <div style="display:flex;flex-direction:column;gap:10px;">
           <div style="display:flex;align-items:flex-start;gap:8px;"><span style="color:#C8102E;">&#128205;</span><span style="font-size:12px;color:rgba(255,255,255,.6);line-height:1.5;">Ciudad de Mexico, Mexico</span></div>
           <div style="display:flex;align-items:center;gap:8px;"><span style="color:#C8102E;">&#128222;</span><a href="tel:+525555550000" style="font-size:12px;color:rgba(255,255,255,.6);text-decoration:none;">+52 (55) 5555-0000</a></div>
-          <div style="display:flex;align-items:center;gap:8px;"><span style="color:#C8102E;">&#128140;</span><a href="mailto:ventas@adaptekk.com" style="font-size:12px;color:rgba(255,255,255,.6);text-decoration:none;">ventas@adaptekk.com</a></div>
+          <div style="display:flex;align-items:center;gap:8px;"><span style="color:#C8102E;">&#128140;</span><a href="/cdn-cgi/l/email-protection#57213239233624173633362723323c3c7934383a" style="font-size:12px;color:rgba(255,255,255,.6);text-decoration:none;"><span class="__cf_email__" data-cfemail="bccad9d2c8ddcffcddd8ddccc8d9d7d792dfd3d1">[email&#160;protected]</span></a></div>
           <div style="display:flex;align-items:center;gap:8px;"><span style="color:#25D366;">&#128241;</span><a href="https://wa.me/525555550000" style="font-size:12px;color:rgba(255,255,255,.6);text-decoration:none;">WhatsApp Ventas</a></div>
         </div>
       </div>
@@ -1384,7 +1489,7 @@
             style="width:100%;border:2px solid #dde6f0;border-radius:5px;padding:10px 12px;font-size:14px;outline:none;box-sizing:border-box;transition:border-color .2s;"
             onfocus="document.getElementById('q-email').style.borderColor='#001F5B'"
             onblur="validateEmail(document.getElementById('q-email'))"/>
-          <div id="email-error" style="font-size:11px;color:#C8102E;margin-top:4px;display:none;">&#9888; Ingresa un correo válido (ej: nombre@empresa.com)</div>
+          <div id="email-error" style="font-size:11px;color:#C8102E;margin-top:4px;display:none;">&#9888; Ingresa un correo válido (ej: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="9bf5f4f6f9e9fedbfef6ebe9fee8fab5f8f4f6">[email&#160;protected]</a>)</div>
           <div id="email-ok" style="font-size:11px;color:#25a244;margin-top:4px;display:none;">&#10003; Correo válido</div>
         </div>
       </div>
@@ -1645,13 +1750,13 @@
   </div>
 </div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ── CART SYSTEM ──
 window.CART = window.CART || [];
 
 // ── CONFIG EMPRESA (editar con datos reales antes de lanzar) ──
 window.EMPRESA = {
-  nombre: 'ADAPTEKK',
+  nombre: 'Adaptekk',
   razonSocial: 'Adaptekk S.A. de C.V.',
   rfc: 'ADA-PENDIENTE',
   direccion: 'Direcci\u00f3n fiscal pendiente de capturar',
@@ -1988,7 +2093,7 @@ window.descargarCotizacion = function() {
     + '@media print{.btnbar{display:none;}}'
     + '</style></head><body><div class="sheet">'
     + '<div class="header">'
-      + '<div><div class="logo">ADAP<span class="red">TEK</span>K</div>'
+      + '<div><div class="logo">Adaptekk<span class="red">.</span></div>'
       + '<div style="font-size:11px;opacity:.7;margin-top:6px;">Conecta sin l\u00edmites</div></div>'
       + '<div class="empresa"><b>' + esc(E.razonSocial) + '</b><br>RFC: ' + esc(E.rfc) + '<br>' + esc(E.direccion)
       + '<br>Tel: ' + esc(E.tel) + '<br>' + esc(E.email) + ' \u00b7 ' + esc(E.web) + '</div>'
@@ -3476,7 +3581,7 @@ window.descargarComprobantePDF = function(){
   doc.rect(0,0,W,104,'F');
   doc.setTextColor(255,255,255);
   doc.setFont('helvetica','bold'); doc.setFontSize(25);
-  doc.text('ADAPTEKK', ML, 50);
+  doc.text('Adaptekk.', ML, 50);
   doc.setFont('helvetica','normal'); doc.setFontSize(9.5);
   doc.setTextColor(198,210,232);
   doc.text('Conecta sin l\u00edmites  ·  Conectores hidr\u00e1ulicos', ML, 70);
@@ -3810,7 +3915,7 @@ function payConfirmado(metodo){
   <div class="auth-wrap">
     <div class="auth-card">
       <div class="auth-header">
-        <div class="auth-logo" style="display:flex;align-items:baseline;justify-content:center;">ADAP<span style="color:#C8102E;">TEK</span><span style="color:#001F5B;font-size:inherit;">K</span></div>
+        <div class="auth-logo" style="display:flex;align-items:baseline;justify-content:center;">Adaptekk<span style="color:#C8102E;">.</span></div>
         <div class="auth-subtitle">Portal de Clientes</div>
       </div>
       <div class="auth-body">
@@ -3873,12 +3978,18 @@ function payConfirmado(metodo){
   <div class="auth-wrap">
     <div class="auth-card" style="max-width:480px;">
       <div class="auth-header">
-        <div class="auth-logo" style="display:flex;align-items:baseline;justify-content:center;">ADAP<span style="color:#C8102E;">TEK</span><span style="color:#001F5B;font-size:inherit;">K</span></div>
+        <div class="auth-logo" style="display:flex;align-items:baseline;justify-content:center;">Adaptekk<span style="color:#C8102E;">.</span></div>
         <div class="auth-subtitle">Crear Cuenta</div>
       </div>
       <div class="auth-body">
+        <!-- Banner 5% (Opción A) -->
+        <div style="display:flex;align-items:center;gap:13px;background:linear-gradient(120deg,#0a1f44 0%,#14306b 100%);border-radius:14px;padding:16px 18px;margin-bottom:20px;">
+          <div style="width:46px;height:46px;border-radius:12px;background:rgba(94,240,160,.16);border:1px solid rgba(94,240,160,.32);display:flex;align-items:center;justify-content:center;flex:none;"><span style="font-size:17px;font-weight:800;color:#5ef0a0;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;">5%</span></div>
+          <div><div style="font-size:15px;font-weight:700;color:#fff;letter-spacing:-.2px;line-height:1.2;">5% de descuento automático</div><div style="font-size:12.5px;color:rgba(255,255,255,.65);margin-top:2px;line-height:1.35;">Al crear tu cuenta, el descuento se aplica solo en cada compra.</div></div>
+        </div>
+
         <div class="auth-title">Regístrate gratis</div>
-        <div class="auth-desc">Guarda tu historial, datos de facturación y accede a descuentos por volumen.</div>
+        <div class="auth-desc">Crea tu cuenta y baja todos los precios un 5%. Guardamos tu historial y datos de facturación.</div>
 
         <!-- Google -->
         <button class="auth-btn-google" onclick="mockGoogleLogin()">
@@ -3937,7 +4048,7 @@ function payConfirmado(metodo){
 
         <!-- Datos fiscales (RFC + constancia): se piden después, ya dentro de la cuenta del cliente -->
 
-        <button class="auth-btn-primary" onclick="mockRegister()">Crear mi cuenta gratis</button>
+        <button class="auth-btn-primary" onclick="mockRegister()">Crear mi cuenta y activar 5%</button>
         <div style="text-align:center;font-size:12px;color:#888;">
           ¿Ya tienes cuenta? <span class="auth-link" onclick="showPage('login')">Inicia sesión</span>
         </div>
@@ -4029,7 +4140,7 @@ body.exec-mode #cart-fab, body.exec-mode .wa-float{display:none!important;}
   <div style="background:#fff;border-radius:16px;padding:40px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.3);">
     <div style="text-align:center;margin-bottom:28px;">
       <div style="font-family:Montserrat,sans-serif;font-weight:900;font-size:32px;margin-bottom:4px;">
-        <span style="color:#001F5B;">ADAP</span><span style="color:#C8102E;">TEK</span><span style="color:#001F5B;">K</span>
+        <span style="color:#001F5B;">Adaptekk</span><span style="color:#C8102E;">.</span>
       </div>
       <div style="font-size:11px;letter-spacing:3px;color:#aaa;text-transform:uppercase;">Portal Ejecutivo</div>
     </div>
@@ -4055,7 +4166,7 @@ body.exec-mode #cart-fab, body.exec-mode .wa-float{display:none!important;}
   <div style="background:#001F5B;color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;">
     <div style="display:flex;align-items:center;gap:12px;">
       <span style="font-family:Montserrat,sans-serif;font-weight:900;font-size:20px;">
-        <span style="color:#fff;">ADAP</span><span style="color:#C8102E;">TEK</span><span style="color:#fff;">K</span>
+        <span style="color:#fff;">Adaptekk</span><span style="color:#C8102E;">.</span>
       </span>
       <div style="width:1px;height:20px;background:rgba(255,255,255,.2);"></div>
       <span style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.6);">Portal Ejecutivo</span>
