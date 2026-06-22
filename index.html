@@ -6421,10 +6421,36 @@ function renderResult(){
   })
   .then(function(r){return r.json();})
   .then(function(data){
-    body.innerHTML='';
-    var p2=mkdiv('config-panel active');
-    renderResultPanel(p2, data, searchParams);
-    body.appendChild(p2);
+    // Si hay conector directo, lo mostramos tal cual (flujo existente)
+    if (data.found && data.products && data.products.length > 0) {
+      body.innerHTML='';
+      var p2=mkdiv('config-panel active');
+      renderResultPanel(p2, data, searchParams);
+      body.appendChild(p2);
+      return;
+    }
+    // No hay directo: pedimos al MOTOR de armado las cadenas de piezas
+    fetch('/.netlify/functions/odoo', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'armar_conector',
+        a:{ std:searchParams.std_a, gen:searchParams.gen_a, size:searchParams.med_a },
+        b:{ std:searchParams.std_b, gen:searchParams.gen_b, size:searchParams.med_b },
+        material: searchParams.material, max_piezas:4 })
+    })
+    .then(function(r){return r.json();})
+    .then(function(arm){
+      data._chains = (arm && arm.cadenas) ? arm.cadenas : [];
+      body.innerHTML='';
+      var p2=mkdiv('config-panel active');
+      renderResultPanel(p2, data, searchParams);
+      body.appendChild(p2);
+    })
+    .catch(function(){
+      body.innerHTML='';
+      var p2=mkdiv('config-panel active');
+      renderResultPanel(p2, data, searchParams);
+      body.appendChild(p2);
+    });
   })
   .catch(function(err){
     body.innerHTML='';
@@ -6492,6 +6518,10 @@ function renderResultPanel(p, data, params){
               : '<div style="font-size:13px;color:#86868b;margin-top:10px;">Lo fabricamos con tus especificaciones exactas</div>')
           : '<div style="font-size:13px;color:#86868b;margin-top:10px;">Verifica tu cuenta para ver stock y tiempos de entrega</div>');
 
+  } else if (data._chains && data._chains.length > 0) {
+    statusDiv.style.cssText='border-radius:14px;padding:18px;margin-bottom:18px;background:#eef5ff;border:1px solid #d6e4ff;';
+    statusDiv.innerHTML='<div style="font-size:16px;font-weight:700;color:#001F5B;margin-bottom:4px;">No hay un conector directo, pero se puede armar</div>'
+      +'<div style="font-size:13px;color:#5a6675;">Con estas piezas de catálogo logras ambos extremos como los pediste. Las uniones internas quedan macho\u2194hembra.</div>';
   } else if (data.status === 'fabricacion_nueva') {
     statusDiv.style.cssText='border-radius:14px;padding:22px;margin-bottom:20px;background:#f5f5f7;border:none;';
     statusDiv.innerHTML='<div style="font-size:17px;font-weight:600;color:#001F5B;margin-bottom:4px;">Fabricación especial</div>'
@@ -6504,7 +6534,8 @@ function renderResultPanel(p, data, params){
   }
   p.appendChild(statusDiv);
 
-  // Spec summary
+  // Cadenas de armado (cuando no hay directo pero el motor encontró combinaciones)
+  if (data._chains && data._chains.length > 0) { renderChainCards(p, data._chains); }
   var spec=document.createElement('div');
   spec.style.cssText='background:#f5f5f7;border-radius:14px;padding:20px;margin-bottom:24px;display:grid;grid-template-columns:1fr 1fr;gap:16px;';
   function specRow(label,val){
@@ -6523,7 +6554,8 @@ function renderResultPanel(p, data, params){
   var btns=document.createElement('div');
   btns.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;';
 
-  // Add to cart button (always visible)
+  // Add to cart button — oculto cuando hay cadenas (cada cadena agrega sus propias piezas)
+  if (!(data._chains && data._chains.length > 0)) {
   var cartBtn=document.createElement('button');
   cartBtn.style.cssText='grid-column:1/-1;background:#0071e3;color:#fff;border:none;padding:15px;border-radius:980px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:16px;font-weight:600;letter-spacing:0;margin-bottom:8px;';
   cartBtn.innerHTML='Agregar al carrito';
@@ -6538,6 +6570,7 @@ function renderResultPanel(p, data, params){
     window.cartAdd(product);
   };
   p.appendChild(cartBtn);
+  }
 
   // WhatsApp button
   var waMsg=encodeURIComponent('Hola, necesito cotización para el conector '+atCode+'. Extremo A: '+(extA.std?extA.std.label:'')+(extA.gen?' '+(extA.gen.code==='M'?'Macho':'Hembra'):'')+' '+( extA.med||'')+' | Extremo B: '+(extB.std?extB.std.label:'')+(extB.gen?' '+(extB.gen.code==='M'?'Macho':'Hembra'):'')+' '+(extB.med||''));
@@ -6558,6 +6591,47 @@ function renderResultPanel(p, data, params){
 
   // Back button
   p.appendChild(mkNav(function(){step=0;tipo=null;exts=[];material='CS';renderStep();}));
+}
+
+// Dibuja las cadenas de armado (cada opción = lista de piezas reales del catálogo)
+function renderChainCards(p, chains){
+  (chains||[]).forEach(function(c, i){
+    var card=document.createElement('div');
+    card.style.cssText='background:#fff;border:1px solid #e8e8ed;border-radius:14px;padding:18px;margin-bottom:14px;';
+    var stockBadge = c.en_stock
+      ? '<span style="font-size:12px;color:#1d7d34;font-weight:700;">En stock</span>'
+      : '<span style="font-size:12px;color:#9a6a00;font-weight:700;">Sobre pedido</span>';
+    var totalTxt = (c.precio_total>0)
+      ? '$'+Number(c.precio_total).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2})+' MXN'
+      : 'Precio bajo cotizaci\u00f3n';
+    var head='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">'
+      +'<div style="font-size:15px;font-weight:700;color:#001F5B;">Opci\u00f3n '+(i+1)+' \u00b7 '+c.piezas+' piezas</div>'
+      +'<div style="text-align:right;">'+stockBadge+'<div style="font-size:15px;font-weight:700;color:#001F5B;">'+totalTxt+'</div></div></div>';
+    var list='';
+    (c.items||[]).forEach(function(it, j){
+      list+='<div style="display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid #f0f0f3;font-size:13px;">'
+        +'<div><span style="color:#86868b;">'+(j+1)+'.</span> <span style="font-family:-apple-system,BlinkMacSystemFont,monospace;color:#001F5B;font-weight:700;">'+it.code+'</span>'
+        +'<div style="color:#86868b;font-size:12px;margin-top:2px;">'+(it.name||'')+'</div></div>'
+        +'<div style="white-space:nowrap;color:#001F5B;font-weight:600;">'+(it.price>0?('$'+Number(it.price).toLocaleString('es-MX')):'\u2014')+'</div></div>';
+    });
+    card.innerHTML=head+list;
+    var btn=document.createElement('button');
+    btn.textContent='Agregar esta combinaci\u00f3n al carrito';
+    btn.style.cssText='width:100%;margin-top:14px;background:#0071e3;color:#fff;border:none;padding:12px;border-radius:980px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:14px;font-weight:600;';
+    btn.onclick=(function(items){return function(){
+      (items||[]).forEach(function(it){
+        window.cartAdd({ at_code:it.code, name:it.name||it.code, price:it.price||0, qty_available:it.qty||0, status:((it.qty||0)>0?'stock':'fabricado') });
+      });
+      if (typeof showToast==='function') showToast('Combinaci\u00f3n agregada ('+(items?items.length:0)+' piezas)');
+    };})(c.items);
+    card.appendChild(btn);
+    p.appendChild(card);
+  });
+  // 3a opción: fabricar (siempre disponible)
+  var fab=document.createElement('div');
+  fab.style.cssText='background:#f5f5f7;border-radius:14px;padding:16px;margin-bottom:18px;text-align:center;';
+  fab.innerHTML='<div style="font-size:13px;color:#86868b;">\u00bfPrefieres una sola pieza a la medida? Tambi\u00e9n lo <strong style="color:#001F5B;">fabricamos bajo pedido</strong> (3-5 d\u00edas h\u00e1biles). Usa los botones de abajo para cotizar con un ejecutivo.</div>';
+  p.appendChild(fab);
 }
 
 renderProgress();
