@@ -1986,7 +1986,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-21-catalog-v12-listar', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-22-ia-backend-v13', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
     }
 
     // ── DIAGNÓSTICO DE CATÁLOGO: analiza los códigos AT en Odoo para diseñar el armado por piezas ──
@@ -2322,6 +2322,29 @@ exports.handler = async function(event, context) {
         facetas:{ tipos:byN(fT), estandares:byN(fE), generos:byN(fG), medidas:byMed(fM) },
         productos
       })};
+    }
+
+    // ── PROXY DE IA: el chat del home llama AQUÍ (no a Anthropic directo), para que la API key
+    //    viva segura en variable de entorno (ANTHROPIC_API_KEY) y NO se exponga en el navegador.
+    // body: { messages:[...], max_tokens? }
+    if (action === 'chat_ia') {
+      const apiKey = process.env.ANTHROPIC_API_KEY;
+      if (!apiKey) return {statusCode:200, headers, body: JSON.stringify({ error:{ message:'La búsqueda con IA no está configurada: falta la variable de entorno ANTHROPIC_API_KEY en Netlify.' } })};
+      const messages = Array.isArray(body.messages) ? body.messages : null;
+      if (!messages || !messages.length) return {statusCode:200, headers, body: JSON.stringify({ error:{ message:'No se recibieron mensajes para la IA.' } })};
+      const maxTokens = Math.min(Math.max(parseInt(body.max_tokens)||700, 50), 2000);
+      const MODEL = 'claude-sonnet-4-6';
+      try {
+        const r = await fetch('https://api.anthropic.com/v1/messages', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json', 'x-api-key':apiKey, 'anthropic-version':'2023-06-01' },
+          body: JSON.stringify({ model: MODEL, max_tokens: maxTokens, messages })
+        });
+        const data = await r.json();
+        return {statusCode:200, headers, body: JSON.stringify(data)};
+      } catch (e) {
+        return {statusCode:200, headers, body: JSON.stringify({ error:{ message:'Error llamando a la IA: ' + String((e&&e.message)||e) } })};
+      }
     }
 
     // ── SET MASIVO de la Clave Producto/Servicio del SAT (UNSPSC) en TODOS los productos ──
