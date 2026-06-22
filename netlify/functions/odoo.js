@@ -1986,7 +1986,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-21-configcat-v9-armar', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-21-configcat-v10-disp', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible'] })};
     }
 
     // ── DIAGNÓSTICO DE CATÁLOGO: analiza los códigos AT en Odoo para diseñar el armado por piezas ──
@@ -2165,6 +2165,62 @@ exports.handler = async function(event, context) {
         fabricar,
         _diag: { extremo_A_existe_en_catalogo: endsWithA, extremo_B_existe_en_catalogo: endsWithB }
       })};
+    }
+
+    // ── DISPONIBILIDAD POR ESTÁNDAR: lista qué medidas y géneros existen REALMENTE en el catálogo,
+    //    para afinar los códigos del configurador y validar contra datos reales.
+    // body: { std?:'BSPP' }  (sin std => todos los estándares)
+    if (action === 'catalogo_disponible') {
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+      const filterStd = String(body.std||'').toUpperCase().trim();
+      const STANDARDS = ['BSPP','BSPT','ORFS','NPSM','OFS','BST','MET','UNF','ORB','JIC','NPT','DIN','JIS','KOM','CAT','SAE','BSP','BT','LL','L'].sort((x,y)=>y.length-x.length);
+      function splitStdGen(tok){
+        if(!tok) return null;
+        for (const s of STANDARDS){ if (tok.indexOf(s)===0){ return {std:s, gen: tok.slice(s.length)}; } }
+        for (const g of ['HG','MG','H','M']){ if (tok.slice(-g.length)===g) return {std:tok.slice(0,-g.length), gen:g}; }
+        return {std:tok, gen:''};
+      }
+      const isNum = s=>/^[0-9]{1,3}$/.test(s);
+      function parseEnds(code){
+        let c=code; if (/-SS(\b|$)/.test(c)){ c=c.replace(/-SS(\b|$)/,''); }
+        const p=c.split('-'); if (p.length<4) return [];
+        let idx=2; const aTok=p[idx++]; const ends=[];
+        const a=splitStdGen(aTok);
+        if (p[idx] && !isNum(p[idx])){ // dos extremos
+          const bTok=p[idx++];
+          const medA=(p[idx]&&isNum(p[idx]))?p[idx++]:null;
+          const medB=(p[idx]&&isNum(p[idx]))?p[idx++]:null;
+          const b=splitStdGen(bTok);
+          if (a&&medA) ends.push({std:a.std,gen:a.gen,size:medA,code});
+          if (b&&medB) ends.push({std:b.std,gen:b.gen,size:medB,code});
+        } else { // tapón (un extremo)
+          const medA=(p[idx]&&isNum(p[idx]))?p[idx++]:null;
+          if (a&&medA) ends.push({std:a.std,gen:a.gen,size:medA,code});
+        }
+        return ends;
+      }
+      const dom = `<value><array><data>${xmlStr('default_code')}<value><string>=like</string></value>${xmlStr('AT-%')}</data></array></value>`;
+      const text = await odooSearchRead(uid, 'product.product', dom, ['default_code'], 8000);
+      const codes=[...text.matchAll(/<name>default_code<\/name>\s*<value>\s*<string>([^<]*)<\/string>/g)].map(m=>m[1]);
+      const map={};
+      for (const c of codes){
+        for (const e of parseEnds(c)){
+          if(!e.std) continue;
+          const m=map[e.std]=map[e.std]||{sizes:{},gens:{},count:0,samples:[]};
+          m.sizes[e.size]=(m.sizes[e.size]||0)+1;
+          if(e.gen) m.gens[e.gen]=(m.gens[e.gen]||0)+1;
+          m.count++;
+          if (m.samples.length<6 && m.samples.indexOf(e.code)<0) m.samples.push(e.code);
+        }
+      }
+      const out={};
+      Object.keys(map).sort().forEach(s=>{
+        if (filterStd && s!==filterStd) return;
+        const m=map[s];
+        out[s]={ medidas: Object.keys(m.sizes).sort((a,b)=>parseInt(a)-parseInt(b)), generos: Object.keys(m.gens).sort(), apariciones:m.count, ejemplos:m.samples };
+      });
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, total_estandares:Object.keys(map).length, estandares: out })};
     }
 
     // ── SET MASIVO de la Clave Producto/Servicio del SAT (UNSPSC) en TODOS los productos ──
