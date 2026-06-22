@@ -1986,7 +1986,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-21-configcat-v8-diag', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-21-configcat-v9-armar', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector'] })};
     }
 
     // ── DIAGNÓSTICO DE CATÁLOGO: analiza los códigos AT en Odoo para diseñar el armado por piezas ──
@@ -2058,6 +2058,112 @@ exports.handler = async function(event, context) {
         estandares_no_reconocidos: stdNoConocido,
         ejemplos_reducciones: ejReduc,
         ejemplos_adaptadores: ejAdapt
+      })};
+    }
+
+    // ── MOTOR DE ARMADO: dado extremo A y extremo B, busca el directo, o cadenas de 2-4 piezas
+    //    reales del catálogo (uniendo macho↔hembra del mismo estándar+medida), o fabricación.
+    // body: { a:{std,gen,size}, b:{std,gen,size}, material?:'CS'|'SS', max_piezas?:2..4 }
+    if (action === 'armar_conector') {
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+      const up = v => String(v||'').toUpperCase().trim();
+      const A = { std:up(body.a&&body.a.std), gen:up(body.a&&body.a.gen), size:String((body.a&&body.a.size)||'').trim() };
+      const B = { std:up(body.b&&body.b.std), gen:up(body.b&&body.b.gen), size:String((body.b&&body.b.size)||'').trim() };
+      const wantSS = up(body.material||'CS')==='SS';
+      const maxP = Math.min(Math.max(parseInt(body.max_piezas)||4,2),4);
+      if (!A.std||!A.gen||!A.size||!B.std||!B.gen||!B.size)
+        return {statusCode:400, headers, body: JSON.stringify({error:'Faltan datos: a y b necesitan {std, gen, size}'})};
+
+      const STANDARDS = ['BSPP','BSPT','ORFS','NPSM','OFS','BST','MET','UNF','ORB','JIC','NPT','DIN','JIS','KOM','CAT','SAE','BSP','BT','LL','L'].sort((x,y)=>y.length-x.length);
+      function splitStdGen(tok){
+        if(!tok) return null;
+        for (const s of STANDARDS){ if (tok.indexOf(s)===0){ return {std:s, gen: tok.slice(s.length)}; } }
+        for (const g of ['HG','MG','H','M']){ if (tok.slice(-g.length)===g) return {std:tok.slice(0,-g.length), gen:g}; }
+        return {std:tok, gen:''};
+      }
+      const isNum = s=>/^[0-9]{1,3}$/.test(s);
+      function parseCode(code){
+        let c=code, ss=false;
+        if (/-SS(\b|$)/.test(c)){ ss=true; c=c.replace(/-SS(\b|$)/,''); }
+        const p=c.split('-'); if (p.length<5) return null;
+        const tipo=p[1]; let idx=2; const aTok=p[idx++];
+        if (!p[idx] || isNum(p[idx])) return null;
+        const bTok=p[idx++];
+        const medA=(p[idx]&&isNum(p[idx]))?p[idx++]:null;
+        const medB=(p[idx]&&isNum(p[idx]))?p[idx++]:null;
+        if(!medA||!medB) return null;
+        const a=splitStdGen(aTok), b=splitStdGen(bTok); if(!a||!b) return null;
+        return { code, tipo, ss, endA:{std:a.std,gen:a.gen,size:medA}, endB:{std:b.std,gen:b.gen,size:medB} };
+      }
+
+      const dom = `<value><array><data>${xmlStr('default_code')}<value><string>=like</string></value>${xmlStr('AT-%')}</data></array></value>`;
+      const text = await odooSearchRead(uid, 'product.product', dom, ['default_code'], 8000);
+      const codes=[...text.matchAll(/<name>default_code<\/name>\s*<value>\s*<string>([^<]*)<\/string>/g)].map(m=>m[1]);
+      const pieces=[]; for (const c of codes){ const pc=parseCode(c); if(pc) pieces.push(pc); }
+
+      const isMale=g=>g==='M'||g==='MG', isFemale=g=>g==='H'||g==='HG';
+      const sameEnd=(e,s)=>e.std===s.std&&e.gen===s.gen&&e.size===s.size;
+      const mates=(a,b)=>(isMale(a)&&isFemale(b))||(isFemale(a)&&isMale(b));
+      const matMatch=p=>wantSS?p.ss:!p.ss;
+      const byKey={};
+      function addEnd(p,end,other){ const k=end.std+'|'+end.size; (byKey[k]=byKey[k]||[]).push({end,other,code:p.code,tipo:p.tipo,ss:p.ss}); }
+      for (const p of pieces){ addEnd(p,p.endA,p.endB); addEnd(p,p.endB,p.endA); }
+
+      const endsWithA=(byKey[A.std+'|'+A.size]||[]).filter(x=>sameEnd(x.end,A)&&matMatch(x)).length;
+      const endsWithB=(byKey[B.std+'|'+B.size]||[]).filter(x=>sameEnd(x.end,B)&&matMatch(x)).length;
+
+      // Regla 1: directo
+      let directo=null;
+      for (const p of pieces){ if (matMatch(p) && ((sameEnd(p.endA,A)&&sameEnd(p.endB,B))||(sameEnd(p.endA,B)&&sameEnd(p.endB,A)))){ directo=p.code; break; } }
+
+      // Regla 2: cadenas (BFS, las más cortas primero)
+      const chains=[];
+      if (!directo){
+        const start=(byKey[A.std+'|'+A.size]||[]).filter(x=>sameEnd(x.end,A)&&matMatch(x));
+        const queue=start.map(x=>({frontier:x.other, path:[x.code], used:new Set([x.code])}));
+        let budget=15000;
+        while(queue.length && chains.length<8 && budget-->0){
+          const st=queue.shift();
+          if (sameEnd(st.frontier,B)){ chains.push(st.path.slice()); continue; }
+          if (st.path.length>=maxP) continue;
+          const candAll=byKey[st.frontier.std+'|'+st.frontier.size]||[];
+          let n=0;
+          for (const x of candAll){
+            if (n>=120) break;
+            if (!matMatch(x)) continue;
+            if (!mates(st.frontier.gen, x.end.gen)) continue;
+            if (st.used.has(x.code)) continue;
+            n++;
+            if (queue.length>30000) break;
+            const nused=new Set(st.used); nused.add(x.code);
+            queue.push({frontier:x.other, path:st.path.concat(x.code), used:nused});
+          }
+        }
+      }
+      const seen=new Set(), uniq=[];
+      for (const ch of chains){ const k=ch.join('>'); if(!seen.has(k)){seen.add(k); uniq.push(ch);} }
+      uniq.sort((a,b)=>a.length-b.length);
+      const top=uniq.slice(0,5);
+
+      // precios/stock de las piezas involucradas
+      const allCodes=[...new Set([directo, ...top.reduce((a,c)=>a.concat(c),[])].filter(Boolean))];
+      const info={};
+      if (allCodes.length){
+        const codesXml=allCodes.map(c=>xmlStr(c)).join('');
+        const d2=`<value><array><data>${xmlStr('default_code')}<value><string>in</string></value><value><array><data>${codesXml}</data></array></value></data></array></value>`;
+        const t2=await odooSearchRead(uid,'product.product',d2,['default_code','name','list_price','qty_available'],allCodes.length);
+        t2.split('<struct>').slice(1).forEach(s=>{ const st=s.split('</struct>')[0]; const cd=xmlExtractField(st,'default_code'); if(cd) info[cd]={name:xmlExtractField(st,'name'),price:parseFloat(xmlExtractField(st,'list_price'))||0,qty:parseFloat(xmlExtractField(st,'qty_available'))||0}; });
+      }
+      const enrich=arr=>arr.map(c=>Object.assign({code:c}, info[c]||{}));
+      const fabricar=(!directo && top.length===0);
+      return {statusCode:200, headers, body: JSON.stringify({
+        ok:true, a:A, b:B, material:wantSS?'SS':'CS',
+        piezas_en_catalogo: pieces.length,
+        directo: directo? Object.assign({code:directo}, info[directo]||{}) : null,
+        cadenas: top.map(ch=>({ piezas: ch.length, items: enrich(ch) })),
+        fabricar,
+        _diag: { extremo_A_existe_en_catalogo: endsWithA, extremo_B_existe_en_catalogo: endsWithB }
       })};
     }
 
