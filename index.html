@@ -8394,10 +8394,18 @@ updateFAB();
   var CAT = { tipo:'', std:'', size:'', page:1, pageSize:24 };
   var TIPO_LABEL = { NR:'Recto', C90:'Codo 90°', C45:'Codo 45°', TEE:'Tee', CRX:'Cruz', BH:'Bulkhead', BH45:'Bulkhead 45°', RUN:'Run tee', BRT:'Branch tee', BLK:'Tapón', UN:'Unión' };
   var STD_LABEL = { JIC:'JIC 37°', NPT:'NPT', BSP:'BSPP', BST:'BSPT', ORB:'O-Ring Boss (ORB)', OFS:'ORFS / Cara plana', MET:'Métrico', DIN:'DIN', JIS:'JIS', KOM:'Komatsu', CAT:'Caterpillar', SAE:'SAE', NPSM:'NPSM', UNF:'UNF', BT:'BSPT', LL:'Serie LL', L:'Serie L' };
-  var SIZE_LABEL = { '01':'1/16"','02':'1/8"','03':'3/16"','04':'1/4"','05':'5/16"','06':'3/8"','08':'1/2"','10':'5/8"','12':'3/4"','14':'7/8"','16':'1"','20':'1.1/4"','24':'1.1/2"','28':'1.3/4"','32':'2"' };
   function tL(v){ return TIPO_LABEL[v]||v; }
   function sL(v){ return STD_LABEL[v]||v; }
-  function mL(v){ return SIZE_LABEL[v]||(v+'"'); }
+  // Las medidas son dieciseisavos: medida real = código / 16, reducida a fracción de pulgada.
+  function gcd(a,b){ while(b){ var t=b; b=a%b; a=t; } return a; }
+  function mL(v){
+    var n = parseInt(v,10);
+    if (isNaN(n)) return v;
+    var whole = Math.floor(n/16), rem = n%16;
+    if (rem===0) return whole + '"';
+    var g = gcd(rem,16), frac = (rem/g)+'/'+(16/g);
+    return (whole>0 ? whole+'-'+frac : frac) + '"';
+  }
   function el(tag, css, html){ var e=document.createElement(tag); if(css)e.style.cssText=css; if(html!=null)e.innerHTML=html; return e; }
 
   function buildShell(c){
