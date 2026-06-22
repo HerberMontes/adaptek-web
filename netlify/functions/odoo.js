@@ -1986,7 +1986,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-21-configcat-v10-disp', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-21-configcat-v11-rank', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible'] })};
     }
 
     // ── DIAGNÓSTICO DE CATÁLOGO: analiza los códigos AT en Odoo para diseñar el armado por piezas ──
@@ -2141,28 +2141,49 @@ exports.handler = async function(event, context) {
           }
         }
       }
-      const seen=new Set(), uniq=[];
-      for (const ch of chains){ const k=ch.join('>'); if(!seen.has(k)){seen.add(k); uniq.push(ch);} }
-      uniq.sort((a,b)=>a.length-b.length);
-      const top=uniq.slice(0,5);
+      const seen=new Set(), uniqChains=[];
+      for (const ch of chains){ const k=ch.join('>'); if(!seen.has(k)){seen.add(k); uniqChains.push(ch);} }
 
-      // precios/stock de las piezas involucradas
-      const allCodes=[...new Set([directo, ...top.reduce((a,c)=>a.concat(c),[])].filter(Boolean))];
+      // precios/stock (y largo opcional) de todas las piezas involucradas
+      const campoLargo = String(body.campo_largo||'').replace(/[^a-zA-Z0-9_]/g,''); // sanitizado para Odoo
+      const fieldsRead = ['default_code','name','list_price','qty_available'];
+      if (campoLargo) fieldsRead.push(campoLargo);
+      const allCodes=[...new Set([directo].concat(...uniqChains).filter(Boolean))];
       const info={};
       if (allCodes.length){
         const codesXml=allCodes.map(c=>xmlStr(c)).join('');
         const d2=`<value><array><data>${xmlStr('default_code')}<value><string>in</string></value><value><array><data>${codesXml}</data></array></value></data></array></value>`;
-        const t2=await odooSearchRead(uid,'product.product',d2,['default_code','name','list_price','qty_available'],allCodes.length);
-        t2.split('<struct>').slice(1).forEach(s=>{ const st=s.split('</struct>')[0]; const cd=xmlExtractField(st,'default_code'); if(cd) info[cd]={name:xmlExtractField(st,'name'),price:parseFloat(xmlExtractField(st,'list_price'))||0,qty:parseFloat(xmlExtractField(st,'qty_available'))||0}; });
+        const t2=await odooSearchRead(uid,'product.product',d2,fieldsRead,allCodes.length);
+        t2.split('<struct>').slice(1).forEach(s=>{ const st=s.split('</struct>')[0]; const cd=xmlExtractField(st,'default_code'); if(cd) info[cd]={name:xmlExtractField(st,'name'),price:parseFloat(xmlExtractField(st,'list_price'))||0,qty:parseFloat(xmlExtractField(st,'qty_available'))||0, largo: campoLargo?(parseFloat(xmlExtractField(st,campoLargo))||0):null}; });
       }
       const enrich=arr=>arr.map(c=>Object.assign({code:c}, info[c]||{}));
-      const fabricar=(!directo && top.length===0);
+
+      // ── RANKING por reglas: 1) existencia (stock)  2) precio  3) largo  4) menos piezas (proxy de largo) ──
+      const scored = uniqChains.map(ch=>{
+        const items = enrich(ch);
+        const en_stock = items.length>0 && items.every(p=>(p.qty||0)>0);
+        const precio_total = items.reduce((s,p)=>s+(p.price||0),0);
+        const largo_total = campoLargo ? items.reduce((s,p)=>s+(p.largo||0),0) : null;
+        return { piezas: ch.length, en_stock, precio_total, largo_total, items };
+      });
+      scored.sort((a,b)=>{
+        if (a.en_stock!==b.en_stock) return a.en_stock ? -1 : 1;                                  // 1) existencia primero
+        if (a.precio_total!==b.precio_total) return a.precio_total-b.precio_total;                  // 2) más barato
+        if (a.largo_total!=null && b.largo_total!=null && a.largo_total!==b.largo_total) return a.largo_total-b.largo_total; // 3) más corto
+        return a.piezas-b.piezas;                                                                   // 4) menos piezas
+      });
+      const mejores = scored.slice(0,2); // máximo 2 opciones; fabricar es la 3a, siempre
+
+      const solo_fabricar = (!directo && mejores.length===0);
       return {statusCode:200, headers, body: JSON.stringify({
         ok:true, a:A, b:B, material:wantSS?'SS':'CS',
         piezas_en_catalogo: pieces.length,
         directo: directo? Object.assign({code:directo}, info[directo]||{}) : null,
-        cadenas: top.map(ch=>({ piezas: ch.length, items: enrich(ch) })),
-        fabricar,
+        cadenas: mejores,
+        cadenas_encontradas: uniqChains.length,
+        fabricar_siempre_disponible: true,
+        solo_fabricar,
+        criterio_largo: campoLargo ? ('campo:'+campoLargo) : 'no disponible (usa menos piezas como proxy)',
         _diag: { extremo_A_existe_en_catalogo: endsWithA, extremo_B_existe_en_catalogo: endsWithB }
       })};
     }
