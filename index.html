@@ -6681,15 +6681,10 @@ function sendChatMessage() {
     claudeMessages = [{ role:'user', content: textPrompt }];
   }
 
-  fetch('https://api.anthropic.com/v1/messages', {
+  fetch('/.netlify/functions/odoo', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': getApiKey(),
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true'
-    },
-    body: JSON.stringify({ model:'claude-opus-4-5', max_tokens: 700, messages: claudeMessages })
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action:'chat_ia', messages: claudeMessages, max_tokens: 700 })
   })
   .then(function(r){ return r.json(); })
   .then(function(data){
