@@ -3867,11 +3867,12 @@ body.exec-mode #cart-fab, body.exec-mode .wa-float{display:none!important;}
   </div>
 
   <div id="alm-tablero" style="display:none;max-width:760px;margin:0 auto;padding:20px 16px 60px;font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;">
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;">
-      <div id="alm-tab-disp" onclick="almTab('disp')" style="background:#fff;border:1px solid #e7ecf3;border-radius:14px;padding:14px 6px;text-align:center;cursor:pointer;outline:2px solid #C8102E;"><div id="alm-c-disp" style="font-size:24px;font-weight:800;color:#0a1f44;">0</div><div style="font-size:11px;color:#8895a7;font-weight:600;margin-top:2px;">Disponibles</div></div>
-      <div id="alm-tab-proc" onclick="almTab('proc')" style="background:#fff;border:1px solid #e7ecf3;border-radius:14px;padding:14px 6px;text-align:center;cursor:pointer;outline:none;"><div id="alm-c-proc" style="font-size:24px;font-weight:800;color:#0a1f44;">0</div><div style="font-size:11px;color:#8895a7;font-weight:600;margin-top:2px;">En proceso</div></div>
-      <div id="alm-tab-mios" onclick="almTab('mios')" style="background:#fff;border:1px solid #e7ecf3;border-radius:14px;padding:14px 6px;text-align:center;cursor:pointer;outline:none;"><div id="alm-c-mios" style="font-size:24px;font-weight:800;color:#0a1f44;">0</div><div style="font-size:11px;color:#8895a7;font-weight:600;margin-top:2px;">Mis pedidos</div></div>
-      <div id="alm-tab-todos" onclick="almTab('todos')" style="background:#fff;border:1px solid #e7ecf3;border-radius:14px;padding:14px 6px;text-align:center;cursor:pointer;outline:none;"><div id="alm-c-todos" style="font-size:24px;font-weight:800;color:#0a1f44;">0</div><div style="font-size:11px;color:#8895a7;font-weight:600;margin-top:2px;">Todos</div></div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px;">
+      <div id="alm-tab-disp" onclick="almTab('disp')" style="background:#fff;border:1px solid #e7ecf3;border-radius:14px;padding:14px 4px;text-align:center;cursor:pointer;outline:2px solid #C8102E;"><div id="alm-c-disp" style="font-size:22px;font-weight:800;color:#0a1f44;">0</div><div style="font-size:10.5px;color:#8895a7;font-weight:600;margin-top:2px;">Disponibles</div></div>
+      <div id="alm-tab-proc" onclick="almTab('proc')" style="background:#fff;border:1px solid #e7ecf3;border-radius:14px;padding:14px 4px;text-align:center;cursor:pointer;outline:none;"><div id="alm-c-proc" style="font-size:22px;font-weight:800;color:#0a1f44;">0</div><div style="font-size:10.5px;color:#8895a7;font-weight:600;margin-top:2px;">En proceso</div></div>
+      <div id="alm-tab-mios" onclick="almTab('mios')" style="background:#fff;border:1px solid #e7ecf3;border-radius:14px;padding:14px 4px;text-align:center;cursor:pointer;outline:none;"><div id="alm-c-mios" style="font-size:22px;font-weight:800;color:#0a1f44;">0</div><div style="font-size:10.5px;color:#8895a7;font-weight:600;margin-top:2px;">Mis pedidos</div></div>
+      <div id="alm-tab-todos" onclick="almTab('todos')" style="background:#fff;border:1px solid #e7ecf3;border-radius:14px;padding:14px 4px;text-align:center;cursor:pointer;outline:none;"><div id="alm-c-todos" style="font-size:22px;font-weight:800;color:#0a1f44;">0</div><div style="font-size:10.5px;color:#8895a7;font-weight:600;margin-top:2px;">Todos</div></div>
+      <div id="alm-tab-surt" onclick="almTab('surt')" style="background:#fff;border:1px solid #e7ecf3;border-radius:14px;padding:14px 4px;text-align:center;cursor:pointer;outline:none;"><div id="alm-c-surt" style="font-size:22px;font-weight:800;color:#0a1f44;">0</div><div style="font-size:10.5px;color:#8895a7;font-weight:600;margin-top:2px;">Surtidos</div></div>
     </div>
     <div id="alm-list"></div>
   </div>
@@ -4161,7 +4162,15 @@ function almLoadPedidos(){
     almRenderList();
   }).catch(function(){});
 }
-function almTab(t){ window.ALM.tab=t; almRenderList(); }
+function almTab(t){ window.ALM.tab=t; if(t==='surt'){ almLoadSurtidos(); } else { almRenderList(); } }
+function almLoadSurtidos(){
+  var cont=document.getElementById('alm-list');
+  if(cont) cont.innerHTML='<div style="background:#fff;border-radius:12px;padding:30px;text-align:center;color:#9aa7b8;font-size:14px;">Cargando surtidos…</div>';
+  ['disp','proc','mios','todos','surt'].forEach(function(t){var el=document.getElementById('alm-tab-'+t); if(el) el.style.outline=(t==='surt')?'2px solid #C8102E':'none';});
+  fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'almacen_listar_surtidos'})})
+  .then(function(r){return r.json();}).then(function(d){ window.ALM.surtidos=(d&&d.ok&&d.pedidos)?d.pedidos:[]; almRenderList(); })
+  .catch(function(){ window.ALM.surtidos=[]; almRenderList(); });
+}
 function almCount(t,n){ var el=document.getElementById('alm-c-'+t); if(el) el.textContent=n; }
 function almRenderList(){
   var me=window.ALM.name, peds=window.ALM.pedidos;
@@ -4169,7 +4178,25 @@ function almRenderList(){
   var proc=peds.filter(function(p){return !!p.owner;});
   var mios=peds.filter(function(p){return p.owner===me;});
   almCount('disp',disp.length); almCount('proc',proc.length); almCount('mios',mios.length); almCount('todos',peds.length);
-  ['disp','proc','mios','todos'].forEach(function(t){var el=document.getElementById('alm-tab-'+t); if(el) el.style.outline=(window.ALM.tab===t)?'2px solid #C8102E':'none';});
+  almCount('surt',(window.ALM.surtidos||[]).length);
+  ['disp','proc','mios','todos','surt'].forEach(function(t){var el=document.getElementById('alm-tab-'+t); if(el) el.style.outline=(window.ALM.tab===t)?'2px solid #C8102E':'none';});
+  var cont=document.getElementById('alm-list'); if(!cont) return;
+  if(window.ALM.tab==='surt'){
+    var sl=window.ALM.surtidos||[];
+    if(!sl.length){ cont.innerHTML='<div style="background:#fff;border-radius:12px;padding:30px;text-align:center;color:#9aa7b8;font-size:14px;">Aún no hay pedidos surtidos.</div>'; return; }
+    cont.innerHTML=sl.map(function(p){
+      var g=p.guia||{};
+      var guiaHtml = (g&&g.tracking)
+        ? '<div style="font-size:12px;color:#0f6b39;font-weight:600;margin-top:6px;">Guía: '+g.tracking+(g.carrier?(' · '+g.carrier):'')+(g.label_url?(' · <a href="'+g.label_url+'" target="_blank" rel="noopener" style="color:#2a6fdb;">etiqueta PDF</a>'):'')+'</div>'
+        : '<div style="font-size:12px;color:#aab2c0;margin-top:6px;">Sin guía generada</div>';
+      return '<div style="background:#fff;border:1px solid #eef0f4;border-radius:14px;padding:15px 17px;margin-bottom:10px;">'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;"><div style="font-size:15px;font-weight:700;letter-spacing:-.2px;color:#0a1f44;">'+(p.cliente||'Cliente')+'</div>'
+        +'<span style="display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:#e7f6ee;color:#0f6b39;">Surtido</span></div>'
+        +'<div style="font-size:12px;color:#8895a7;margin:3px 0 0;">'+(p.folio||p.origin||'')+(p.fecha?(' · '+String(p.fecha).slice(0,16).replace('T',' ')):'')+'</div>'
+        +guiaHtml+'</div>';
+    }).join('');
+    return;
+  }
   var list=window.ALM.tab==='disp'?disp:window.ALM.tab==='proc'?proc:window.ALM.tab==='mios'?mios:peds;
   var cont=document.getElementById('alm-list'); if(!cont) return;
   if(!list.length){ cont.innerHTML='<div style="background:#fff;border-radius:12px;padding:30px;text-align:center;color:#9aa7b8;font-size:14px;">No hay pedidos en esta vista.</div>'; return; }
