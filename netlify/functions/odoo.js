@@ -304,10 +304,10 @@ function xmlExtractField(xml, field) {
 // ── SKYDROPX (PRO): obtiene un bearer token vía OAuth client_credentials ──
 // Requiere variables de entorno: SKYDROPX_CLIENT_ID, SKYDROPX_CLIENT_SECRET.
 // SKYDROPX_BASE opcional (default producción; usa https://sb-pro.skydropx.com para sandbox).
-async function skydropxToken(baseOverride) {
+async function skydropxToken(baseOverride, credsOverride) {
   const base = (baseOverride || process.env.SKYDROPX_BASE || 'https://pro.skydropx.com').replace(/\/+$/,'');
-  const id = (process.env.SKYDROPX_CLIENT_ID || '').trim();
-  const secret = (process.env.SKYDROPX_CLIENT_SECRET || '').trim();
+  const id = (((credsOverride && credsOverride.id) || process.env.SKYDROPX_CLIENT_ID) || '').trim();
+  const secret = (((credsOverride && credsOverride.secret) || process.env.SKYDROPX_CLIENT_SECRET) || '').trim();
   if (!id || !secret) return { error: 'Faltan credenciales SKYDROPX_CLIENT_ID / SKYDROPX_CLIENT_SECRET en variables de entorno', base };
   try {
     const form = new URLSearchParams({ grant_type:'client_credentials', client_id:id, client_secret:secret });
@@ -2206,7 +2206,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-23-guia-v21', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-23-guia-prodswitch-v23', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
     }
 
     // ── DIAGNÓSTICO DE CATÁLOGO: analiza los códigos AT en Odoo para diseñar el armado por piezas ──
@@ -2867,9 +2867,21 @@ exports.handler = async function(event, context) {
       let envioData; try { envioData = JSON.parse(Buffer.from(em[1],'base64').toString('utf8')); } catch(e){ return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'Datos de envío ilegibles'})}; }
       const dir = envioData.dir||{}, con = envioData.con||{};
 
-      // 4) Token Skydropx (sandbox si SKYDROPX_BASE=sb-pro)
-      const t = await skydropxToken();
-      if (t.error) return {statusCode:200, headers, body: JSON.stringify({ok:false, step:'token', error:t.error, base:t.base})};
+      // 4) Token Skydropx. Por defecto SANDBOX (gratis, aislado del checkout).
+      //    Si SKYDROPX_GUIA_PROD=1 -> PRODUCCIÓN (guía real, se cobra). Opt-in explícito.
+      const usarProd = /^(1|true|si|s\u00ed)$/i.test(String(process.env.SKYDROPX_GUIA_PROD||'').trim());
+      let t;
+      if (usarProd) {
+        t = await skydropxToken(); // producción: SKYDROPX_BASE + SKYDROPX_CLIENT_ID/SECRET
+        if (t.error) return {statusCode:200, headers, body: JSON.stringify({ok:false, step:'token', error:'Producci\u00f3n Skydropx: '+t.error, base:t.base})};
+      } else {
+        const sbBase = process.env.SKYDROPX_SANDBOX_BASE || 'https://sb-pro.skydropx.com';
+        const sbId = (process.env.SKYDROPX_SANDBOX_CLIENT_ID || '').trim();
+        const sbSecret = (process.env.SKYDROPX_SANDBOX_CLIENT_SECRET || '').trim();
+        if (!sbId || !sbSecret) return {statusCode:200, headers, body: JSON.stringify({ok:false, step:'token', error:'Faltan credenciales de SANDBOX (SKYDROPX_SANDBOX_CLIENT_ID/SECRET). O las pones para prueba gratis, o pones SKYDROPX_GUIA_PROD=1 para generar la gu\u00eda real (se cobra).'})};
+        t = await skydropxToken(sbBase, { id: sbId, secret: sbSecret });
+        if (t.error) return {statusCode:200, headers, body: JSON.stringify({ok:false, step:'token', error:'Sandbox Skydropx: '+t.error, base:t.base})};
+      }
 
       // 5) Recotizar (las cotizaciones expiran, no se reusa la del checkout)
       const origin = { country_code:'MX', postal_code: process.env.SKYDROPX_ORIGIN_CP||'', area_level1: process.env.SKYDROPX_ORIGIN_STATE||'', area_level2: process.env.SKYDROPX_ORIGIN_CITY||'', area_level3: process.env.SKYDROPX_ORIGIN_COLONIA||'' };
@@ -3404,7 +3416,7 @@ exports.handler = async function(event, context) {
       }
       if (!pid) return {statusCode:200, headers, body: JSON.stringify({ok:true, orders:[]})};
       const domain = `<value><array><data>${xmlStr('partner_id')}<value><string>=</string></value>${xmlInt(pid)}</data></array></value>`;
-      const text = await odooSearchRead(uid, 'sale.order', domain, ['name','client_order_ref','date_order','state','amount_total','invoice_status','invoice_ids','order_line'], 50);
+      const text = await odooSearchRead(uid, 'sale.order', domain, ['name','client_order_ref','date_order','state','amount_total','invoice_status','invoice_ids','order_line','note'], 50);
       const structs = text.match(/<struct>[\s\S]*?<\/struct>/g) || [];
       const orders = [];
       for (const st of structs) {
@@ -3414,6 +3426,8 @@ exports.handler = async function(event, context) {
         const invStatus = xmlExtractField(st, 'invoice_status');
         const invm = st.match(/<name>\s*invoice_ids\s*<\/name>\s*<value>\s*<array>\s*<data>([\s\S]*?)<\/data>/);
         const invCount = invm ? (invm[1].match(/<int>/g) || []).length : 0;
+        let guia = null;
+        try { const gm = st.match(/\[GUIA\]([A-Za-z0-9+/=]+)\[\/GUIA\]/); if (gm) guia = JSON.parse(Buffer.from(gm[1],'base64').toString('utf8')); } catch(_){}
         orders.push({
           name: xmlExtractField(st, 'name'),
           folio: xmlExtractField(st, 'client_order_ref'),
@@ -3421,7 +3435,8 @@ exports.handler = async function(event, context) {
           state: xmlExtractField(st, 'state'),
           total: parseFloat(xmlExtractField(st, 'amount_total')) || 0,
           items: items,
-          facturado: (invStatus === 'invoiced') || (invCount > 0)
+          facturado: (invStatus === 'invoiced') || (invCount > 0),
+          guia: guia
         });
       }
       orders.sort((a,b)=> (b.date||'').localeCompare(a.date||''));
