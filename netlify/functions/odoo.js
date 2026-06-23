@@ -659,6 +659,37 @@ async function saveMetricsPartner(uid, id, data) {
     );
   }
 }
+// ── Config de encargados de zona: contraseñas + bloqueo, en el partner ADAPTEKK_CONFIG ──
+// Formato: comment = {"passes":{user:pass},"blocked":{user:true}}. Compatible con el viejo (mapa plano user->pass).
+async function _encCfgRead(uid){
+  const searchText = await xmlrpc(uid, 'res.partner', 'search',
+    `<value><array><data><value><array><data>${xmlStr('name')}<value><string>=</string></value>${xmlStr('ADAPTEKK_CONFIG')}</data></array></value></data></array></value>`);
+  const idMatch = searchText.match(/<value><int>(\d+)<\/int><\/value>/);
+  let passes={}, blocked={}, id=null;
+  if (idMatch){
+    id=parseInt(idMatch[1]);
+    const readText = await xmlrpc(uid, 'res.partner', 'read', `<value><array><data><value><int>${id}</int></value></data></array></value>`);
+    const commentMatch = readText.match(/<name>comment<\/name>\s*<value>(?:<string>)?([^<]*)/);
+    if (commentMatch){
+      try {
+        const parsed = JSON.parse(commentMatch[1]);
+        if (parsed && typeof parsed==='object' && parsed.passes && typeof parsed.passes==='object'){ passes=parsed.passes||{}; blocked=parsed.blocked||{}; }
+        else if (parsed && typeof parsed==='object'){ passes=parsed; } // legacy plano
+      } catch(e){}
+    }
+  }
+  return { id, passes, blocked };
+}
+async function _encCfgWrite(uid, cfg){
+  const json = JSON.stringify({ passes: cfg.passes||{}, blocked: cfg.blocked||{} });
+  if (cfg.id){
+    await xmlrpc(uid, 'res.partner', 'write',
+      `<value><array><data><value><int>${cfg.id}</int></value></data></array></value><value><struct><member><name>comment</name>${xmlStr(json)}</member></struct></value>`);
+  } else {
+    await xmlrpc(uid, 'res.partner', 'create',
+      `<value><struct><member><name>name</name>${xmlStr('ADAPTEKK_CONFIG')}</member><member><name>comment</name>${xmlStr(json)}</member><member><name>active</name><value><boolean>0</boolean></value></member></struct></value>`);
+  }
+}
 function mxDay() { return new Date().toLocaleDateString('en-CA', {timeZone:'America/Mexico_City'}); }
 // Precios de Claude Haiku 4.5 (USD por millon de tokens). Ajustables si cambia el plan.
 const IA_PRICE_IN_PER_MTOK = 1.0;
@@ -1774,61 +1805,21 @@ exports.handler = async function(event, context) {
 
     if (action === 'save_user_pass') {
       const { user_key, new_pass, gerencia_pass } = body;
-      // Verify gerencia password
       if (!process.env.GERENCIA_PASS || gerencia_pass !== process.env.GERENCIA_PASS) {
         return {statusCode:401, headers, body: JSON.stringify({error:'No autorizado'})};
       }
       if (!user_key || !new_pass || new_pass.length < 6) {
         return {statusCode:400, headers, body: JSON.stringify({error:'Datos invalidos'})};
       }
-      // Store in Odoo as a special partner note (as a config partner)
       const uid = await odooAuth();
       if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
-
-      // Search for config partner
-      const searchText = await xmlrpc(uid, 'res.partner', 'search',
-        `<value><array><data>
-          <value><array><data>${xmlStr('name')}<value><string>=</string></value>${xmlStr('ADAPTEKK_CONFIG')}</data></array></value>
-        </data></array></value>`
-      );
-      const idMatch = searchText.match(/<value><int>(\d+)<\/int><\/value>/);
-
-      // Load current config
-      let passes = {};
-      if (idMatch) {
-        const readText = await xmlrpc(uid, 'res.partner', 'read',
-          `<value><array><data><value><int>${idMatch[1]}</int></value></data></array></value>`
-        );
-        const commentMatch = readText.match(/<name>comment<\/name>\s*<value>(?:<string>)?([^<]*)/);
-        if (commentMatch) {
-          try { passes = JSON.parse(commentMatch[1]); } catch(e) { passes = {}; }
-        }
-      }
-
-      passes[user_key] = new_pass;
-      const passesJson = JSON.stringify(passes);
-
-      if (idMatch) {
-        // Update existing config partner
-        await xmlrpc(uid, 'res.partner', 'write',
-          `<value><array><data><value><int>${idMatch[1]}</int></value></data></array></value>
-           <value><struct><member><name>comment</name>${xmlStr(passesJson)}</member></struct></value>`
-        );
-      } else {
-        // Create config partner
-        await xmlrpc(uid, 'res.partner', 'create',
-          `<value><struct>
-            <member><name>name</name>${xmlStr('ADAPTEKK_CONFIG')}</member>
-            <member><name>comment</name>${xmlStr(passesJson)}</member>
-            <member><name>active</name><value><boolean>0</boolean></value></member>
-          </struct></value>`
-        );
-      }
-
+      const cfg = await _encCfgRead(uid);
+      cfg.passes[user_key] = new_pass;
+      await _encCfgWrite(uid, cfg);
       return {statusCode:200, headers, body: JSON.stringify({success:true, user_key, message:'Contrasena actualizada'})};
     }
 
-    // ── GET USER PASSWORDS ──
+    // ── GET USER PASSWORDS (incluye estado de bloqueo) ──
     if (action === 'get_user_passes') {
       const { gerencia_pass } = body;
       if (!process.env.GERENCIA_PASS || gerencia_pass !== process.env.GERENCIA_PASS) {
@@ -1836,24 +1827,36 @@ exports.handler = async function(event, context) {
       }
       const uid = await odooAuth();
       if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+      const cfg = await _encCfgRead(uid);
+      return {statusCode:200, headers, body: JSON.stringify({success:true, passes:cfg.passes, blocked:cfg.blocked})};
+    }
 
-      const searchText = await xmlrpc(uid, 'res.partner', 'search',
-        `<value><array><data>
-          <value><array><data>${xmlStr('name')}<value><string>=</string></value>${xmlStr('ADAPTEKK_CONFIG')}</data></array></value>
-        </data></array></value>`
-      );
-      const idMatch = searchText.match(/<value><int>(\d+)<\/int><\/value>/);
-      if (!idMatch) return {statusCode:200, headers, body: JSON.stringify({success:true, passes:{}})};
-
-      const readText = await xmlrpc(uid, 'res.partner', 'read',
-        `<value><array><data><value><int>${idMatch[1]}</int></value></data></array></value>`
-      );
-      const commentMatch = readText.match(/<name>comment<\/name>\s*<value>(?:<string>)?([^<]*)/);
-      let passes = {};
-      if (commentMatch) {
-        try { passes = JSON.parse(commentMatch[1]); } catch(e) { passes = {}; }
+    // ── BLOQUEAR / DESBLOQUEAR un encargado de zona (solo gerencia) ──
+    if (action === 'encargado_block') {
+      const { user_key, blocked, gerencia_pass } = body;
+      if (!process.env.GERENCIA_PASS || gerencia_pass !== process.env.GERENCIA_PASS) {
+        return {statusCode:401, headers, body: JSON.stringify({error:'No autorizado'})};
       }
-      return {statusCode:200, headers, body: JSON.stringify({success:true, passes})};
+      if (!user_key) return {statusCode:400, headers, body: JSON.stringify({error:'Falta user_key'})};
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+      const cfg = await _encCfgRead(uid);
+      if (blocked) cfg.blocked[user_key] = true; else delete cfg.blocked[user_key];
+      await _encCfgWrite(uid, cfg);
+      return {statusCode:200, headers, body: JSON.stringify({success:true, user_key, blocked:!!blocked})};
+    }
+
+    // ── LOGIN de encargado de zona: valida contra la contraseña guardada (o la default) y respeta el bloqueo ──
+    if (action === 'encargado_login') {
+      const user = String(body.user||'').trim().toLowerCase();
+      const pass = String(body.pass||'');
+      if (!user || !pass) return {statusCode:200, headers, body: JSON.stringify({ok:false})};
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'odoo auth'})};
+      const cfg = await _encCfgRead(uid);
+      if (cfg.blocked && cfg.blocked[user]) return {statusCode:200, headers, body: JSON.stringify({ok:false, blocked:true})};
+      const valid = (cfg.passes && cfg.passes[user]) ? cfg.passes[user] : (process.env.ENCARGADO_DEFAULT_PASS || 'adaptekk2026');
+      return {statusCode:200, headers, body: JSON.stringify({ ok: pass === valid })};
     }
 
     // ── BUSCAR PRODUCTO POR CONFIGURADOR ──
@@ -2206,7 +2209,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-23-guia-prodswitch-v23', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-23-encargados-v25', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
     }
 
     // ── DIAGNÓSTICO DE CATÁLOGO: analiza los códigos AT en Odoo para diseñar el armado por piezas ──
@@ -3794,6 +3797,15 @@ exports.handler = async function(event, context) {
         return m ? parseFloat(m[1]) : 0;
       }
 
+      function extractMany2oneId(struct, field){
+        const tag = '<name>' + field + '</name>';
+        const pos = struct.indexOf(tag);
+        if (pos < 0) return 0;
+        const after = struct.substring(pos);
+        const m = after.match(/<int>(\d+)<\/int>/);
+        return m ? parseInt(m[1]) : 0;
+      }
+
       const lineas = [];
       const parts = text.split('<struct>');
       for (let i = 1; i < parts.length; i++) {
@@ -3803,10 +3815,30 @@ exports.handler = async function(event, context) {
           lineas.push({
             producto: prod,                              // "[AT-NR-...] Nombre"
             cantidad: extractNum(struct, 'product_uom_qty'),
-            ubicacion: extractMany2oneName(struct, 'location_id')
+            ubicacion: extractMany2oneName(struct, 'location_id'),
+            _pid: extractMany2oneId(struct, 'product_id')
           });
         }
       }
+      // Peso por producto (de Odoo), en lote
+      try {
+        const pids = [...new Set(lineas.map(l=>l._pid).filter(Boolean))];
+        if (pids.length) {
+          const idsXml = pids.map(id=>`<value><int>${id}</int></value>`).join('');
+          const wdom = `<value><array><data>${xmlStr('id')}<value><string>in</string></value><value><array><data>${idsXml}</data></array></value></data></array></value>`;
+          const wt = await odooSearchRead(uid, 'product.product', wdom, ['id','weight'], pids.length);
+          const wmap = {};
+          const wparts = wt.split('<struct>');
+          for (let i=1;i<wparts.length;i++){
+            const s = wparts[i].split('</struct>')[0];
+            const idm = s.match(/<name>id<\/name>\s*<value><int>(\d+)<\/int>/);
+            const wm = s.match(/<name>weight<\/name>\s*<value>\s*<double>([^<]*)<\/double>/) || s.match(/<name>weight<\/name>\s*<value>\s*<int>([^<]*)<\/int>/);
+            if (idm) wmap[idm[1]] = wm ? parseFloat(wm[1]) : 0;
+          }
+          lineas.forEach(l=>{ l.peso_unit = wmap[String(l._pid)]||0; l.peso_total = Math.round(l.peso_unit*(l.cantidad||1)*1000)/1000; });
+        }
+      } catch(_){ /* si falla, las líneas van sin peso */ }
+      lineas.forEach(l=>{ delete l._pid; if(l.peso_unit==null) l.peso_unit=0; if(l.peso_total==null) l.peso_total=0; });
       return {statusCode:200, headers, body: JSON.stringify({ ok:true, lineas })};
     }
 
