@@ -3891,9 +3891,8 @@ body.exec-mode #cart-fab, body.exec-mode .wa-float{display:none!important;}
         <span id="alm-s-prog" style="font-size:13px;font-weight:700;color:#C8102E;">0 de 0</span>
       </div>
       <button id="alm-scan-btn" onclick="almStartScan()" style="width:100%;background:#001F5B;color:#fff;border:none;padding:13px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;margin-bottom:10px;">Escanear código</button>
-      <div id="alm-cam-box" style="display:none;border-radius:12px;overflow:hidden;margin-bottom:10px;background:#000;position:relative;">
-        <video id="alm-video" style="width:100%;max-height:260px;object-fit:cover;display:block;" muted playsinline></video>
-        <div style="position:absolute;left:8%;right:8%;top:50%;height:2px;background:rgba(200,16,46,.9);box-shadow:0 0 8px rgba(200,16,46,.8);"></div>
+      <div id="alm-cam-box" style="display:none;border-radius:12px;overflow:hidden;margin-bottom:10px;background:#000;">
+        <div id="alm-reader" style="width:100%;"></div>
       </div>
       <div id="alm-scan-msg" style="display:none;font-size:13px;font-weight:700;padding:9px 12px;border-radius:9px;margin-bottom:10px;text-align:center;"></div>
       <div id="alm-lines"></div>
@@ -4235,62 +4234,46 @@ function almOnScan(raw){
   if(line.done>=line.need){ almScanMsg(true, line.code+' ya estaba completo'); return; }
   line.done++; almScanMsg(true, line.code+' escaneado ('+line.done+'/'+line.need+')'); almRenderSurtir();
 }
-function almLoadJsQR(cb){
-  if(window.jsQR){ cb(); return; }
-  var s=document.createElement('script'); s.src='https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js';
+function almLoadQR(cb){
+  if(window.Html5Qrcode){ cb(); return; }
+  var s=document.createElement('script'); s.src='https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
   s.onload=function(){ cb(); }; s.onerror=function(){ cb(new Error('lib')); };
   document.head.appendChild(s);
 }
 function almStartScan(){
   if(window.ALM.scanning){ almStopScan(); return; }
   var box=document.getElementById('alm-cam-box'), btn=document.getElementById('alm-scan-btn');
-  var video=document.getElementById('alm-video');
-  almLoadJsQR(function(err){
-    if(err||!window.jsQR){ almScanMsg(false,'No se pudo cargar el escáner; usa "marcar" a mano.'); return; }
-    var constraints={ video:{ facingMode:{ ideal:'environment' } }, audio:false };
-    navigator.mediaDevices.getUserMedia(constraints)
-      .catch(function(){ return navigator.mediaDevices.getUserMedia({ video:true, audio:false }); })
-      .then(function(stream){
-        window.ALM.stream=stream;
-        video.srcObject=stream;
-        video.setAttribute('playsinline','true'); video.muted=true;
-        return video.play();
-      })
-      .then(function(){
-        if(box) box.style.display='block'; if(btn) btn.textContent='Detener escáner';
-        window.ALM.scanning=true; window.ALM._last=''; window.ALM._lastT=0;
-        var canvas=document.createElement('canvas');
-        var ctx=canvas.getContext('2d',{ willReadFrequently:true });
-        var tick=function(){
-          if(!window.ALM.scanning) return;
-          if(video.readyState>=2 && video.videoWidth>0){
-            canvas.width=video.videoWidth; canvas.height=video.videoHeight;
-            ctx.drawImage(video,0,0,canvas.width,canvas.height);
-            try{
-              var img=ctx.getImageData(0,0,canvas.width,canvas.height);
-              var code=window.jsQR(img.data,img.width,img.height,{ inversionAttempts:'dontInvert' });
-              if(code && code.data){
-                var t=String(code.data).trim();
-                var now=Date.now();
-                if(!(t===window.ALM._last && (now-(window.ALM._lastT||0))<1500)){
-                  window.ALM._last=t; window.ALM._lastT=now;
-                  almOnScan(t);
-                }
-              }
-            }catch(e){}
-          }
-          window.ALM._raf=requestAnimationFrame(tick);
-        };
-        window.ALM._raf=requestAnimationFrame(tick);
-      })
-      .catch(function(){ almScanMsg(false,'No se pudo abrir la cámara. Revisa permisos.'); });
+  almLoadQR(function(err){
+    if(err||!window.Html5Qrcode){ almScanMsg(false,'No se pudo cargar el escáner; usa "marcar" a mano.'); return; }
+    if(box) box.style.display='block';
+    window.ALM.scanning=true; window.ALM._last=''; window.ALM._lastT=0;
+    try{ window.ALM.qr=new Html5Qrcode('alm-reader',{ verbose:false }); }
+    catch(e){ almScanMsg(false,'No se pudo iniciar el escáner.'); return; }
+    var onOk=function(text){
+      var t=String(text).trim(); var now=Date.now();
+      if(t===window.ALM._last && (now-(window.ALM._lastT||0))<1500) return;
+      window.ALM._last=t; window.ALM._lastT=now;
+      almOnScan(t);
+    };
+    var cfg={ fps:10, qrbox:function(w,h){ var m=Math.floor(Math.min(w,h)*0.72); return {width:m,height:m}; }, aspectRatio:1.0 };
+    window.ALM.qr.start({ facingMode:'environment' }, cfg, onOk, function(){})
+      .then(function(){ if(btn) btn.textContent='Detener escáner'; })
+      .catch(function(){
+        window.ALM.qr.start({ facingMode:'user' }, cfg, onOk, function(){})
+          .then(function(){ if(btn) btn.textContent='Detener escáner'; })
+          .catch(function(){ window.ALM.scanning=false; if(box) box.style.display='none'; almScanMsg(false,'No se pudo abrir la cámara. Revisa permisos del navegador.'); });
+      });
   });
 }
 function almStopScan(){
   window.ALM.scanning=false;
-  if(window.ALM._raf){ try{ cancelAnimationFrame(window.ALM._raf); }catch(e){} window.ALM._raf=null; }
-  try{ if(window.ALM.stream){ window.ALM.stream.getTracks().forEach(function(tr){ tr.stop(); }); window.ALM.stream=null; } }catch(e){}
-  var video=document.getElementById('alm-video'); if(video){ try{ video.pause(); video.srcObject=null; }catch(e){} }
+  try{
+    if(window.ALM.qr){
+      var q=window.ALM.qr; window.ALM.qr=null;
+      if(q.isScanning){ q.stop().then(function(){ try{q.clear();}catch(e){} }).catch(function(){ try{q.clear();}catch(e){} }); }
+      else { try{q.clear();}catch(e){} }
+    }
+  }catch(e){}
   var box=document.getElementById('alm-cam-box'); if(box) box.style.display='none';
   var btn=document.getElementById('alm-scan-btn'); if(btn) btn.textContent='Escanear código';
 }
