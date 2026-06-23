@@ -598,6 +598,7 @@ async function crearOrdenOdoo(uid, orden, estado, shipOverride) {
         const envioData = { dir: co.direccion || co.destino || {}, con: co.contacto || {}, car: envio ? (envio.carrier || envio.name || envio.id || '') : '' };
         np.push('[ENVIO]' + Buffer.from(JSON.stringify(envioData)).toString('base64') + '[/ENVIO]');
       } catch(_){}
+      if (orden && orden.metodo) { np.push('[PAGO]' + String(orden.metodo).replace(/[^a-z]/gi,'').toLowerCase() + '[/PAGO]'); }
       noteVal = np.join('\n');
     }
     const orderStruct = `<value><struct>
@@ -2284,7 +2285,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-23-surtidos-v28', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-23-detalle-surtido-v29', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
     }
 
     // ── DIAGNÓSTICO DE CATÁLOGO: analiza los códigos AT en Odoo para diseñar el armado por piezas ──
@@ -3423,6 +3424,7 @@ exports.handler = async function(event, context) {
         //  - aprobado            → confirmada ('confirm')
         //  - en proceso/pendiente → borrador ('draft'), el webhook la confirmará al acreditar
         let ordenInfo = null;
+        orden.metodo = 'tarjeta';
         if (status === 'approved') {
           try { ordenInfo = await crearOrdenOdoo(uid, orden, 'confirm', shipCost); } catch(e){ ordenInfo = {ok:false, error:e.message}; }
           // Enviar correos de confirmación (al cliente y al equipo). No bloquea la respuesta si fallan.
@@ -3924,6 +3926,92 @@ exports.handler = async function(event, context) {
       return {statusCode:200, headers, body: JSON.stringify({ ok:true, pedidos })};
     }
 
+    // ── DETALLE de un pedido SURTIDO (todos los datos para consulta + guía) ──
+    if (action === 'almacen_detalle_surtido') {
+      const pickingId = parseInt(body.picking_id);
+      if (!pickingId) return {statusCode:400, headers, body: JSON.stringify({error:'picking_id requerido'})};
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'odoo auth'})};
+
+      function exF(struct, field){
+        const tag = '<name>' + field + '</name>';
+        const pos = struct.indexOf(tag); if (pos < 0) return '';
+        const afterTag = struct.substring(pos + tag.length);
+        const valStart = afterTag.indexOf('<value>'); if (valStart < 0) return '';
+        const inner = afterTag.substring(valStart + 7);
+        const typeEnd = inner.indexOf('>');
+        const firstChar = inner.charAt(0);
+        let content = (firstChar === '<') ? inner.substring(typeEnd + 1) : inner;
+        const end = content.indexOf('<');
+        return end >= 0 ? content.substring(0, end).trim() : content.trim();
+      }
+      function exM2O(struct, field){
+        const tag = '<name>' + field + '</name>';
+        const pos = struct.indexOf(tag); if (pos < 0) return '';
+        const after = struct.substring(pos);
+        const m = after.match(/<string>([^<]*)<\/string>/);
+        return m ? m[1].trim() : '';
+      }
+      function exNote(struct){
+        // note puede venir largo (base64); extraer el string crudo del campo note
+        const tag = '<name>note</name>';
+        const pos = struct.indexOf(tag); if (pos < 0) return '';
+        const after = struct.substring(pos);
+        const m = after.match(/<string>([\s\S]*?)<\/string>/);
+        return m ? m[1] : '';
+      }
+
+      // 1) Picking
+      const pdom = `<value><array><data>${xmlStr('id')}<value><string>=</string></value><value><int>${pickingId}</int></value></data></array></value>`;
+      const ptext = await odooSearchRead(uid, 'stock.picking', pdom, ['id','name','origin','date_done','scheduled_date','partner_id','note'], 1);
+      const pstruct = (ptext.split('<struct>')[1]||'').split('</struct>')[0];
+      const det = {
+        id: pickingId,
+        wh: exF(pstruct,'name'),
+        origin: exF(pstruct,'origin'),
+        cliente: exM2O(pstruct,'partner_id'),
+        fecha_surtido: exF(pstruct,'date_done') || exF(pstruct,'scheduled_date'),
+        almacenista: (typeof _almParseOwner === 'function') ? (_almParseOwner(exNote(pstruct)) || '') : '',
+        folio: exF(pstruct,'origin'),
+        fecha_pedido:'', total:'', metodo:'', carrier:'', direccion:null, guia:null, lineas:[]
+      };
+
+      // 2) Sale order (por name = origin): fechas, total, [PAGO], [ENVIO], [GUIA]
+      if (det.origin) {
+        try {
+          const sdom = `<value><array><data>${xmlStr('name')}<value><string>=</string></value>${xmlStr(det.origin)}</data></array></value>`;
+          const sot = await odooSearchRead(uid, 'sale.order', sdom, ['name','client_order_ref','date_order','amount_total','note'], 1);
+          const sstruct = (sot.split('<struct>')[1]||'').split('</struct>')[0];
+          if (sstruct) {
+            const folio = exF(sstruct,'client_order_ref'); if (folio) det.folio = folio;
+            det.fecha_pedido = exF(sstruct,'date_order');
+            det.total = exF(sstruct,'amount_total');
+            const note = exNote(sstruct);
+            const pg = note.match(/\[PAGO\]([a-z]+)\[\/PAGO\]/i); if (pg) det.metodo = pg[1].toLowerCase();
+            const en = note.match(/\[ENVIO\]([A-Za-z0-9+/=\s]+?)\[\/ENVIO\]/);
+            if (en) { try { const e = JSON.parse(Buffer.from(en[1].replace(/\s/g,''),'base64').toString('utf8')); det.carrier = e.car||''; det.direccion = e.dir||null; } catch(_){} }
+            const gm = note.match(/\[GUIA\]([A-Za-z0-9+/=\s]+?)\[\/GUIA\]/);
+            if (gm) { try { det.guia = JSON.parse(Buffer.from(gm[1].replace(/\s/g,''),'base64').toString('utf8')); } catch(_){} }
+          }
+        } catch(_){}
+      }
+
+      // 3) Líneas (stock.move)
+      try {
+        const mdom = `<value><array><data>${xmlStr('picking_id')}<value><string>=</string></value><value><int>${pickingId}</int></value></data></array></value>`;
+        const mtext = await odooSearchRead(uid, 'stock.move', mdom, ['product_id','product_uom_qty'], 50);
+        const mparts = mtext.split('<struct>');
+        for (let i=1;i<mparts.length;i++){
+          const ms = mparts[i].split('</struct>')[0];
+          const prod = exM2O(ms,'product_id'); if (!prod) continue;
+          const qm = ms.match(/<name>product_uom_qty<\/name>\s*<value>\s*<double>([^<]*)<\/double>/);
+          det.lineas.push({ producto: prod, cantidad: qm ? Math.round(parseFloat(qm[1])) : 1 });
+        }
+      } catch(_){}
+
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, det })};
+    }
+
     // ── DETALLE de un pedido (líneas a surtir con producto, cantidad, ubicación) ──
     if (action === 'almacen_detalle_pedido') {
       const pickingId = parseInt(body.picking_id);
@@ -4112,7 +4200,7 @@ exports.handler = async function(event, context) {
       const folio = String(orden.folio || ('PED-' + Date.now().toString(36).toUpperCase()));
 
       // Crear la orden en Odoo como borrador (el webhook la confirma cuando llegue la transferencia)
-      try { await crearOrdenOdoo(uid, orden, 'draft', shipCost); } catch(_){}
+      try { orden.metodo = 'spei'; await crearOrdenOdoo(uid, orden, 'draft', shipCost); } catch(_){}
 
       // Leer el TOTAL REAL de la orden en Odoo (amount_total ya trae el IVA según la config de
       // impuestos). El SPEI cobra EXACTAMENTE ese total, para que el pago coincida con la factura.
