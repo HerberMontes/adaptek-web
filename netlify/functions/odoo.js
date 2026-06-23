@@ -478,6 +478,25 @@ async function findOrCreateProduct(uid, code, name) {
   if (!id) return null;
   return { id, name: name || code, at_code: code, price: 0, qty_available: 0, status: 'fabricado', nuevo: true };
 }
+// Producto de SERVICIO para la línea de envío (Odoo exige producto en cada línea; servicio = sin stock, no estorba al almacén).
+let _shipProdCache = null;
+async function findOrCreateShippingProduct(uid) {
+  if (_shipProdCache) return _shipProdCache;
+  const code = 'ADAPTEKK-ENVIO';
+  const existing = await lookupProductByCode(uid, code);
+  if (existing && existing.id) { _shipProdCache = existing.id; return existing.id; }
+  const struct = `<value><struct>
+    <member><name>name</name>${xmlStr('Env\u00edo')}</member>
+    <member><name>default_code</name>${xmlStr(code)}</member>
+    <member><name>list_price</name><value><double>0.00</double></value></member>
+    <member><name>type</name>${xmlStr('service')}</member>
+    <member><name>sale_ok</name><value><boolean>1</boolean></value></member>
+  </struct></value>`;
+  const ct = await xmlrpc(uid, 'product.product', 'create', struct).catch(()=>'');
+  const m = ct.match(/<value><int>(\d+)<\/int><\/value>/);
+  _shipProdCache = m ? parseInt(m[1]) : null;
+  return _shipProdCache;
+}
 
 async function crearOrdenOdoo(uid, orden, estado, shipOverride) {
   try {
@@ -558,7 +577,9 @@ async function crearOrdenOdoo(uid, orden, estado, shipOverride) {
     }
     if (envio && shipPrice && shipPrice > 0) {
       total += shipPrice;
+      const shipProdId = await findOrCreateShippingProduct(uid);
       const shipStruct = `<value><struct>
+        ${shipProdId ? `<member><name>product_id</name>${xmlInt(shipProdId)}</member>` : ''}
         <member><name>name</name>${xmlStr('Env\u00edo ' + (envio.name || envio.carrier || envio.id))}</member>
         <member><name>product_uom_qty</name>${xmlInt(1)}</member>
         <member><name>price_unit</name><value><double>${shipPrice.toFixed(2)}</double></value></member>
@@ -1859,6 +1880,60 @@ exports.handler = async function(event, context) {
       return {statusCode:200, headers, body: JSON.stringify({ ok: pass === valid })};
     }
 
+    // ── SEED de producto de PRUEBA (solo gerencia): crea/ajusta un producto con precio y stock para pruebas E2E ──
+    if (action === 'seed_test_product') {
+      if (!process.env.GERENCIA_PASS || body.gerencia_pass !== process.env.GERENCIA_PASS) {
+        return {statusCode:401, headers, body: JSON.stringify({ok:false, error:'No autorizado (gerencia_pass incorrecto)'})};
+      }
+      const code = String(body.code||'').trim();
+      const price = Math.max(0, Number(body.price)||0);
+      const stock = Math.max(0, Number(body.stock)||0);
+      const name = String(body.name||code).trim();
+      if (!code || !(price>0)) return {statusCode:400, headers, body: JSON.stringify({ok:false, error:'Faltan code y price>0'})};
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'odoo auth'})};
+      // 1) producto: crear o actualizar precio
+      let prodId = null;
+      const existing = await lookupProductByCode(uid, code);
+      if (existing && existing.id) {
+        prodId = existing.id;
+        await xmlrpc(uid, 'product.product', 'write', `<value><array><data><value><int>${prodId}</int></value></data></array></value><value><struct><member><name>list_price</name><value><double>${price.toFixed(2)}</double></value></member></struct></value>`);
+      } else {
+        const struct = `<value><struct><member><name>name</name>${xmlStr(name)}</member><member><name>default_code</name>${xmlStr(code)}</member><member><name>list_price</name><value><double>${price.toFixed(2)}</double></value></member><member><name>type</name>${xmlStr('product')}</member><member><name>sale_ok</name><value><boolean>1</boolean></value></member></struct></value>`;
+        const ct = await xmlrpc(uid, 'product.product', 'create', struct);
+        const m = ct.match(/<value><int>(\d+)<\/int><\/value>/);
+        prodId = m ? parseInt(m[1]) : null;
+      }
+      if (!prodId) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'No se pudo crear/ubicar el producto'})};
+      // 2) stock (best-effort) en la ubicación interna principal
+      let stockSet = false, stockMsg = '';
+      if (stock > 0) {
+        try {
+          const locXml = `<value><array><data>${xmlStr('usage')}<value><string>=</string></value>${xmlStr('internal')}</data></array></value>`;
+          const locText = await odooSearchRead(uid, 'stock.location', locXml, ['id'], 1);
+          const lm = locText.match(/<name>id<\/name>\s*<value><int>(\d+)<\/int>/);
+          const locId = lm ? parseInt(lm[1]) : null;
+          if (locId) {
+            const qXml = `<value><array><data><value><array><data>${xmlStr('product_id')}<value><string>=</string></value><value><int>${prodId}</int></value></data></array></value><value><array><data>${xmlStr('location_id')}<value><string>=</string></value><value><int>${locId}</int></value></data></array></value></data></array></value>`;
+            const qText = await odooSearchRead(uid, 'stock.quant', qXml, ['id'], 1);
+            const qm = qText.match(/<name>id<\/name>\s*<value><int>(\d+)<\/int>/);
+            let quantId = qm ? parseInt(qm[1]) : null;
+            if (!quantId) {
+              const qct = await xmlrpc(uid, 'stock.quant', 'create', `<value><struct><member><name>product_id</name><value><int>${prodId}</int></value></member><member><name>location_id</name><value><int>${locId}</int></value></member></struct></value>`);
+              const qcm = qct.match(/<value><int>(\d+)<\/int><\/value>/);
+              quantId = qcm ? parseInt(qcm[1]) : null;
+            }
+            if (quantId) {
+              await xmlrpc(uid, 'stock.quant', 'write', `<value><array><data><value><int>${quantId}</int></value></data></array></value><value><struct><member><name>inventory_quantity</name><value><double>${stock.toFixed(2)}</double></value></member></struct></value>`);
+              await xmlrpc(uid, 'stock.quant', 'action_apply_inventory', `<value><array><data><value><int>${quantId}</int></value></data></array></value>`).catch(()=>{});
+              stockSet = true;
+            }
+          } else { stockMsg = 'sin ubicación interna'; }
+        } catch(e){ stockMsg = String(e&&e.message||e); }
+      }
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, product_id:prodId, code, price, stock_set:stockSet, stock_msg:stockMsg })};
+    }
+
     // ── BUSCAR PRODUCTO POR CONFIGURADOR ──
     if (action === 'buscar_por_configurador') {
       const { tipo, std_a, gen_a, med_a, std_b, gen_b, med_b, material } = body;
@@ -2209,7 +2284,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-23-encargados-v25', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-23-envio-producto-v27', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
     }
 
     // ── DIAGNÓSTICO DE CATÁLOGO: analiza los códigos AT en Odoo para diseñar el armado por piezas ──
