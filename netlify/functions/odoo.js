@@ -2115,7 +2115,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-23-ia-cards-v15', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-23-ia-solucion-v17', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
     }
 
     // ── DIAGNÓSTICO DE CATÁLOGO: analiza los códigos AT en Odoo para diseñar el armado por piezas ──
@@ -2349,6 +2349,7 @@ exports.handler = async function(event, context) {
       const SYSTEM = [
         'Eres el asistente experto en conectores y adaptadores hidraulicos de Adaptekk (Mexico).',
         'Identificas la pieza exacta que el cliente necesita USANDO EXCLUSIVAMENTE los codigos reales del catalogo de Odoo. NUNCA inventes codigos.',
+        'Tu objetivo es RESOLVER rapido: lleva al cliente a la solucion (pieza directa, cadena o fabricacion) en los menos pasos posibles. Si te falta informacion, haz UNA sola pregunta corta y concreta a la vez, nunca una lista de preguntas. En cuanto tengas ambos extremos, llama a la herramienta y presenta la solucion. Profesional, directo y breve.',
         'Cuando el cliente describa un conector con dos extremos (ej. macho 2 pulg BSPP de un lado y macho 1/2 pulg JIC del otro) DEBES llamar a la herramienta armar_conector para obtener la solucion real. No des un codigo sin haber llamado la herramienta.',
         'Convenciones para armar_conector:',
         '- std (estandar), codigo del catalogo: BSPP o BSP => BSP, ORFS => OFS, JIC => JIC, NPT => NPT, ORB => ORB, metrico => MET, DIN => DIN, BSPT => BST, NPSM => NPSM, SAE => SAE, JIS => JIS, Komatsu => KOM, Caterpillar => CAT.',
@@ -2363,6 +2364,7 @@ exports.handler = async function(event, context) {
         '- Si solo se fabrica (no hay piezas en catalogo que conecten ambos extremos): dilo con claridad y ofrece la fabricacion especial y cotizacion.',
         '- En todos los casos deja claras las alternativas: lo que existe en catalogo (directo o cadena) y la opcion de fabricar a la medida en una sola pieza.',
         '- Si falta un dato (ej. la medida de un extremo), pidelo amablemente.',
+        '- Mantén el hilo: recibiras el historial de la conversacion. Si ya hiciste una pregunta y el cliente responde, combina su respuesta con lo que ya te habia dicho para avanzar; no reinicies desde cero ni repitas preguntas ya contestadas. Cuando ya tengas ambos extremos completos, llama a la herramienta.',
         '- Tu TEXTO debe ser una introduccion BREVE (2 o 3 frases) que explique el panorama: si se arma en una sola pieza, en cadena de cuantas piezas, o si se fabrica. NO enumeres los codigos uno por uno en el texto, porque las opciones con su codigo, precio y disponibilidad se mostraran en tarjetas ordenadas debajo de tu mensaje.',
         '- Se conciso.'
       ].join('\n');
