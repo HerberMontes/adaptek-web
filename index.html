@@ -3824,6 +3824,78 @@ body.exec-mode #cart-fab, body.exec-mode .wa-float{display:none!important;}
     <div onclick="showPage('home')" style="margin-top:20px;font-size:12px;color:#aaa;cursor:pointer;">&larr; Volver al sitio</div>
   </div>
 </div>
+<div id="alm-screen" style="display:none;min-height:100vh;background:#0a1f44;">
+  <div style="background:#001F5B;color:#fff;padding:13px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5;">
+    <span style="font-family:Montserrat,sans-serif;font-weight:900;font-size:17px;">Adaptekk<span style="color:#C8102E;">.</span> <span style="font-weight:600;font-size:11px;letter-spacing:2px;color:rgba(255,255,255,.5);">ALMACÉN</span></span>
+    <span style="display:flex;align-items:center;gap:14px;"><span id="alm-who-badge" style="font-size:12px;color:rgba(255,255,255,.72);"></span><span onclick="almSalir()" style="font-size:12px;color:rgba(255,255,255,.5);cursor:pointer;">Salir</span></span>
+  </div>
+
+  <div id="alm-login" style="max-width:360px;margin:0 auto;padding:56px 22px;">
+    <div style="background:#fff;border-radius:16px;padding:32px 26px;box-shadow:0 18px 50px rgba(0,0,0,.25);text-align:center;">
+      <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#001F5B;margin-bottom:18px;">Portal de Almacén</div>
+      <input id="alm-pass" type="password" placeholder="Contraseña de acceso" onkeydown="if(event.key==='Enter')almLogin()" style="width:100%;padding:12px 14px;border:2px solid #e0e8f0;border-radius:9px;font-size:15px;box-sizing:border-box;margin-bottom:10px;"/>
+      <div id="alm-login-err" style="display:none;color:#C8102E;font-size:12px;margin-bottom:8px;">Contraseña incorrecta</div>
+      <button onclick="almLogin()" style="width:100%;background:#001F5B;color:#fff;border:none;padding:13px;border-radius:9px;font-weight:700;font-size:15px;cursor:pointer;">Entrar</button>
+      <div onclick="almSalir()" style="margin-top:14px;font-size:12px;color:#aaa;cursor:pointer;">&larr; Volver</div>
+    </div>
+  </div>
+
+  <div id="alm-quien" style="display:none;max-width:380px;margin:0 auto;padding:48px 22px;">
+    <div style="background:#fff;border-radius:16px;padding:28px 24px;box-shadow:0 18px 50px rgba(0,0,0,.25);">
+      <div style="font-size:16px;font-weight:700;color:#001F5B;margin-bottom:4px;">¿Quién surte hoy?</div>
+      <div style="font-size:13px;color:#888;margin-bottom:16px;">Tu nombre queda en el pedido para evitar duplicados.</div>
+      <input id="alm-name" type="text" placeholder="Tu nombre" onkeydown="if(event.key==='Enter')almPickWho()" style="width:100%;padding:12px 14px;border:2px solid #e0e8f0;border-radius:9px;font-size:15px;box-sizing:border-box;margin-bottom:12px;"/>
+      <button onclick="almPickWho()" style="width:100%;background:#001F5B;color:#fff;border:none;padding:13px;border-radius:9px;font-weight:700;font-size:15px;cursor:pointer;">Continuar</button>
+    </div>
+  </div>
+
+  <div id="alm-tablero" style="display:none;max-width:760px;margin:0 auto;padding:20px 16px 60px;">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;">
+      <div id="alm-tab-disp" onclick="almTab('disp')" style="background:#fff;border-radius:11px;padding:12px 6px;text-align:center;cursor:pointer;outline:2px solid #C8102E;"><div id="alm-c-disp" style="font-size:22px;font-weight:800;color:#0a1f44;">0</div><div style="font-size:11px;color:#8895a7;font-weight:600;">Disponibles</div></div>
+      <div id="alm-tab-proc" onclick="almTab('proc')" style="background:#fff;border-radius:11px;padding:12px 6px;text-align:center;cursor:pointer;outline:none;"><div id="alm-c-proc" style="font-size:22px;font-weight:800;color:#0a1f44;">0</div><div style="font-size:11px;color:#8895a7;font-weight:600;">En proceso</div></div>
+      <div id="alm-tab-mios" onclick="almTab('mios')" style="background:#fff;border-radius:11px;padding:12px 6px;text-align:center;cursor:pointer;outline:none;"><div id="alm-c-mios" style="font-size:22px;font-weight:800;color:#0a1f44;">0</div><div style="font-size:11px;color:#8895a7;font-weight:600;">Mis pedidos</div></div>
+      <div id="alm-tab-todos" onclick="almTab('todos')" style="background:#fff;border-radius:11px;padding:12px 6px;text-align:center;cursor:pointer;outline:none;"><div id="alm-c-todos" style="font-size:22px;font-weight:800;color:#0a1f44;">0</div><div style="font-size:11px;color:#8895a7;font-weight:600;">Todos</div></div>
+    </div>
+    <div id="alm-list"></div>
+  </div>
+
+  <div id="alm-surtir" style="display:none;max-width:680px;margin:0 auto;padding:18px 16px 90px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+      <button onclick="almVolverTablero()" style="background:#fff;border:1px solid #dde6f0;border-radius:10px;width:38px;height:38px;cursor:pointer;font-size:18px;color:#001F5B;">&larr;</button>
+      <div style="font-size:17px;font-weight:800;color:#fff;">Surtir pedido</div>
+    </div>
+    <div style="background:#fff;border-radius:14px;padding:15px 16px;margin-bottom:13px;">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;"><span style="color:#8895a7;">Cliente</span><span id="alm-s-cliente" style="font-weight:700;color:#0a1f44;">—</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:#8895a7;">Pedido</span><span id="alm-s-pedido" style="font-weight:700;color:#0a1f44;">—</span></div>
+    </div>
+    <div style="background:#fff;border-radius:14px;padding:16px;margin-bottom:13px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <span style="font-size:14px;font-weight:800;color:#0a1f44;">Productos a recoger</span>
+        <span id="alm-s-prog" style="font-size:13px;font-weight:700;color:#0071e3;">0 de 0</span>
+      </div>
+      <button id="alm-scan-btn" onclick="almStartScan()" style="width:100%;background:#001F5B;color:#fff;border:none;padding:13px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;margin-bottom:10px;">Escanear código</button>
+      <div id="alm-cam-box" style="display:none;border-radius:12px;overflow:hidden;margin-bottom:10px;background:#000;position:relative;">
+        <video id="alm-video" style="width:100%;max-height:260px;object-fit:cover;display:block;" muted playsinline></video>
+        <div style="position:absolute;left:8%;right:8%;top:50%;height:2px;background:rgba(200,16,46,.9);box-shadow:0 0 8px rgba(200,16,46,.8);"></div>
+      </div>
+      <div id="alm-scan-msg" style="display:none;font-size:13px;font-weight:700;padding:9px 12px;border-radius:9px;margin-bottom:10px;text-align:center;"></div>
+      <div id="alm-lines"></div>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="almLiberar()" style="flex:none;background:#fff;border:1px solid #dde6f0;color:#5b6577;padding:13px 18px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;">Liberar</button>
+      <button id="alm-confirmar" onclick="almConfirmar()" disabled style="flex:1;background:#1F9D55;color:#fff;border:none;padding:13px;border-radius:10px;font-weight:700;font-size:14px;cursor:not-allowed;opacity:.45;">Confirmar surtido</button>
+    </div>
+  </div>
+
+  <div id="alm-listo" style="display:none;max-width:460px;margin:0 auto;padding:66px 22px;">
+    <div style="background:#fff;border-radius:16px;padding:40px 28px;text-align:center;box-shadow:0 18px 50px rgba(0,0,0,.25);">
+      <div style="width:64px;height:64px;border-radius:50%;background:#E8F6EE;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1F9D55" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div style="font-size:20px;font-weight:800;color:#0a1f44;margin-bottom:6px;">Pedido surtido</div>
+      <div style="font-size:13.5px;color:#8895a7;line-height:1.5;margin-bottom:22px;">Listo para empaque y envío. El inventario se actualizó en Odoo automáticamente.</div>
+      <button onclick="almVolverTablero()" style="width:100%;background:#001F5B;color:#fff;border:none;padding:13px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;">Volver al tablero</button>
+    </div>
+  </div>
+</div>
 <div id="exec-login-screen" style="display:none;min-height:100vh;align-items:center;justify-content:center;background:linear-gradient(135deg,#001F5B,#003087);">
   <div style="background:#fff;border-radius:16px;padding:40px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.3);">
     <div style="text-align:center;margin-bottom:28px;">
@@ -4006,7 +4078,7 @@ function execLogout() {
   execCurrentUser = null;
 }
 function portalChoose(which){
-  if(which==='almacen'){ window.location.href='/almacen'; return; }
+  if(which==='almacen'){ almEnter(); return; }
   var ch=document.getElementById('exec-portal-choose'); if(ch) ch.style.display='none';
   var lg=document.getElementById('exec-login-screen'); if(lg) lg.style.display='flex';
   var ui=document.getElementById('exec-user-input'); if(ui) ui.focus();
@@ -4015,6 +4087,180 @@ function portalReset(){
   var ch=document.getElementById('exec-portal-choose'); if(ch) ch.style.display='flex';
   var lg=document.getElementById('exec-login-screen'); if(lg) lg.style.display='none';
   var ps=document.getElementById('exec-portal-screen'); if(ps) ps.style.display='none';
+  var as=document.getElementById('alm-screen'); if(as) as.style.display='none';
+}
+
+/* ════════ PORTAL DE ALMACÉN (surtido + escáner) ════════ */
+window.ALM = { name:'', pedidos:[], tab:'disp', poll:null, cur:null, lines:[], reader:null, scanning:false };
+var ALM_PASS = '1234'; // demo; se puede endurecer con backend/env mas adelante
+
+function almShow(view){
+  ['login','quien','tablero','surtir','listo'].forEach(function(v){
+    var el=document.getElementById('alm-'+v); if(el) el.style.display=(v===view)?'block':'none';
+  });
+}
+function almEnter(){
+  var ch=document.getElementById('exec-portal-choose'); if(ch) ch.style.display='none';
+  var sc=document.getElementById('alm-screen'); if(sc) sc.style.display='block';
+  almShow('login');
+  var p=document.getElementById('alm-pass'); if(p){ p.value=''; setTimeout(function(){p.focus();},50); }
+}
+function almLogin(){
+  var p=document.getElementById('alm-pass'), e=document.getElementById('alm-login-err'); if(!p) return;
+  if((p.value||'').trim() !== ALM_PASS){ if(e) e.style.display='block'; return; }
+  if(e) e.style.display='none';
+  almShow('quien');
+  var n=document.getElementById('alm-name'); if(n) setTimeout(function(){n.focus();},50);
+}
+function almPickWho(){
+  var n=document.getElementById('alm-name'); var name=n?(n.value||'').trim():'';
+  if(!name){ if(n) n.focus(); return; }
+  window.ALM.name=name;
+  var b=document.getElementById('alm-who-badge'); if(b) b.textContent=name;
+  almShow('tablero');
+  almLoadPedidos();
+  if(window.ALM.poll) clearInterval(window.ALM.poll);
+  window.ALM.poll=setInterval(almLoadPedidos, 5000);
+}
+function almLoadPedidos(){
+  fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'almacen_listar_pedidos'})})
+  .then(function(r){return r.json();}).then(function(d){
+    window.ALM.pedidos=(d&&d.ok&&d.pedidos)?d.pedidos:[];
+    almRenderList();
+  }).catch(function(){});
+}
+function almTab(t){ window.ALM.tab=t; almRenderList(); }
+function almCount(t,n){ var el=document.getElementById('alm-c-'+t); if(el) el.textContent=n; }
+function almRenderList(){
+  var me=window.ALM.name, peds=window.ALM.pedidos;
+  var disp=peds.filter(function(p){return !p.owner;});
+  var proc=peds.filter(function(p){return !!p.owner;});
+  var mios=peds.filter(function(p){return p.owner===me;});
+  almCount('disp',disp.length); almCount('proc',proc.length); almCount('mios',mios.length); almCount('todos',peds.length);
+  ['disp','proc','mios','todos'].forEach(function(t){var el=document.getElementById('alm-tab-'+t); if(el) el.style.outline=(window.ALM.tab===t)?'2px solid #C8102E':'none';});
+  var list=window.ALM.tab==='disp'?disp:window.ALM.tab==='proc'?proc:window.ALM.tab==='mios'?mios:peds;
+  var cont=document.getElementById('alm-list'); if(!cont) return;
+  if(!list.length){ cont.innerHTML='<div style="background:#fff;border-radius:12px;padding:30px;text-align:center;color:#9aa7b8;font-size:14px;">No hay pedidos en esta vista.</div>'; return; }
+  cont.innerHTML=list.map(function(p){
+    var mine=p.owner===me, taken=p.owner&&!mine;
+    var badge=p.owner?'<span style="font-size:11px;font-weight:700;color:'+(mine?'#1F9D55':'#E0962A')+';">'+(mine?'Tuyo':'Tomado por '+p.owner)+'</span>':'<span style="font-size:11px;font-weight:700;color:#0071e3;">Disponible</span>';
+    var btn=taken?'<span style="font-size:12px;color:#bbb;">En proceso</span>':'<button onclick="almOpen('+p.id+')" style="background:#001F5B;color:#fff;border:none;padding:9px 16px;border-radius:980px;font-size:12.5px;font-weight:700;cursor:pointer;">Surtir</button>';
+    return '<div style="background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;">'
+      +'<div><div style="font-size:14px;font-weight:700;color:#0a1f44;">'+(p.cliente||'Cliente')+'</div>'
+      +'<div style="font-size:12px;color:#8895a7;margin:2px 0 3px;">'+(p.wh||'')+(p.origin?' · '+p.origin:'')+'</div>'+badge+'</div>'+btn+'</div>';
+  }).join('');
+}
+function almOpen(id){
+  fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'almacen_tomar_pedido',picking_id:id,almacenista:window.ALM.name})})
+  .then(function(r){return r.json();}).then(function(d){
+    if(d&&d.ya_tomado){ showToast('Ese pedido ya lo tomó '+(d.owner||'otro almacenista')); almLoadPedidos(); return; }
+    window.ALM.cur=window.ALM.pedidos.filter(function(p){return p.id===id;})[0]||{id:id};
+    return fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'almacen_detalle_pedido',picking_id:id})})
+    .then(function(r){return r.json();}).then(function(dd){
+      var lineas=(dd&&dd.ok&&dd.lineas)?dd.lineas:[];
+      window.ALM.lines=lineas.map(function(l){
+        var code=((String(l.producto).match(/\[([^\]]+)\]/)||[])[1]||'').toUpperCase().trim();
+        return { code:code, nombre:String(l.producto), need:Math.max(1,Math.round(l.cantidad||1)), done:0, ubic:l.ubicacion||'' };
+      });
+      almRenderSurtir(); almShow('surtir');
+    });
+  }).catch(function(){ showToast('No se pudo abrir el pedido'); });
+}
+function almRenderSurtir(){
+  var c=window.ALM.cur||{}, lines=window.ALM.lines;
+  var sc=document.getElementById('alm-s-cliente'); if(sc) sc.textContent=c.cliente||'—';
+  var sp=document.getElementById('alm-s-pedido'); if(sp) sp.textContent=((c.wh||'')+(c.origin?' · '+c.origin:''))||'—';
+  var totalNeed=lines.reduce(function(a,l){return a+l.need;},0);
+  var totalDone=lines.reduce(function(a,l){return a+l.done;},0);
+  var pr=document.getElementById('alm-s-prog'); if(pr) pr.textContent=totalDone+' de '+totalNeed;
+  var allDone=totalNeed>0&&totalDone>=totalNeed;
+  var btn=document.getElementById('alm-confirmar'); if(btn){ btn.disabled=!allDone; btn.style.opacity=allDone?'1':'.45'; btn.style.cursor=allDone?'pointer':'not-allowed'; }
+  var cont=document.getElementById('alm-lines'); if(!cont) return;
+  cont.innerHTML=lines.map(function(l,i){
+    var ok=l.done>=l.need;
+    return '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 13px;border:1.5px solid '+(ok?'#bfe6cb':'#e7e9ef')+';background:'+(ok?'#F2FBF5':'#fff')+';border-radius:10px;margin-bottom:8px;">'
+      +'<div><div style="font-size:13px;font-weight:700;color:#0a1f44;letter-spacing:.3px;">'+(l.code||'—')+'</div>'
+      +'<div style="font-size:11.5px;color:#8895a7;">'+(l.ubic||'')+'</div></div>'
+      +'<div style="display:flex;align-items:center;gap:10px;"><span style="font-size:13px;font-weight:700;color:'+(ok?'#1F9D55':'#5b6577')+';">'+l.done+' / '+l.need+'</span>'
+      +(ok?'<span style="color:#1F9D55;font-size:16px;">&#10003;</span>':'<button onclick="almMark('+i+')" style="background:none;border:1px solid #dde6f0;color:#5b6577;border-radius:8px;padding:5px 9px;font-size:11px;cursor:pointer;">marcar</button>')
+      +'</div></div>';
+  }).join('');
+}
+function almMark(i){ var l=window.ALM.lines[i]; if(l&&l.done<l.need){ l.done++; almRenderSurtir(); } }
+function almScanMsg(ok,msg){
+  var el=document.getElementById('alm-scan-msg'); if(!el) return;
+  el.style.display='block'; el.style.background=ok?'#E8F6EE':'#FCE9EC'; el.style.color=ok?'#1F7D34':'#C8102E';
+  el.textContent=(ok?'\u2713 ':'\u2717 ')+msg;
+  if(navigator.vibrate){ try{ navigator.vibrate(ok?40:[60,40,60]); }catch(e){} }
+}
+function almOnScan(raw){
+  var code=String(raw||'').toUpperCase().trim(); if(!code) return;
+  var line=window.ALM.lines.filter(function(l){return l.code===code;})[0];
+  if(!line){ almScanMsg(false, code+' no corresponde a este pedido'); return; }
+  if(line.done>=line.need){ almScanMsg(true, line.code+' ya estaba completo'); return; }
+  line.done++; almScanMsg(true, line.code+' escaneado ('+line.done+'/'+line.need+')'); almRenderSurtir();
+}
+function almLoadZXing(cb){
+  if(window.ZXing){ cb(); return; }
+  var s=document.createElement('script'); s.src='https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js';
+  s.onload=function(){ cb(); }; s.onerror=function(){ cb(new Error('lib')); };
+  document.head.appendChild(s);
+}
+function almStartScan(){
+  if(window.ALM.scanning){ almStopScan(); return; }
+  var box=document.getElementById('alm-cam-box'), btn=document.getElementById('alm-scan-btn');
+  almLoadZXing(function(err){
+    if(err||!window.ZXing){ almScanMsg(false,'No se pudo cargar el escáner; usa "marcar" a mano.'); return; }
+    try{
+      window.ALM.reader=new ZXing.BrowserMultiFormatReader();
+      if(box) box.style.display='block'; if(btn) btn.textContent='Detener escáner';
+      window.ALM.scanning=true; window.ALM._last='';
+      var onResult=function(result){
+        if(result){
+          var t=result.getText?result.getText():result.text;
+          var now=Date.now();
+          if(t===window.ALM._last && (now-(window.ALM._lastT||0))<1500) return; // anti-rebote
+          window.ALM._last=t; window.ALM._lastT=now;
+          almOnScan(t);
+        }
+      };
+      // preferir camara trasera en celular; si falla, camara por defecto
+      if(typeof window.ALM.reader.decodeFromConstraints==='function'){
+        window.ALM.reader.decodeFromConstraints({ video:{ facingMode:{ ideal:'environment' } } },'alm-video',onResult)
+          .catch(function(){ try{ window.ALM.reader.decodeFromVideoDevice(null,'alm-video',onResult); }catch(e){ almScanMsg(false,'No se pudo abrir la cámara. Revisa permisos.'); } });
+      } else {
+        window.ALM.reader.decodeFromVideoDevice(null,'alm-video',onResult);
+      }
+    }catch(e){ almScanMsg(false,'No se pudo abrir la cámara. Revisa permisos.'); }
+  });
+}
+function almStopScan(){
+  try{ if(window.ALM.reader) window.ALM.reader.reset(); }catch(e){}
+  window.ALM.scanning=false;
+  var box=document.getElementById('alm-cam-box'); if(box) box.style.display='none';
+  var btn=document.getElementById('alm-scan-btn'); if(btn) btn.textContent='Escanear código';
+}
+function almLiberar(){
+  almStopScan();
+  var id=window.ALM.cur&&window.ALM.cur.id; if(!id){ almVolverTablero(); return; }
+  fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'almacen_liberar_pedido',picking_id:id})})
+  .then(function(){ almVolverTablero(); }).catch(function(){ almVolverTablero(); });
+}
+function almConfirmar(){
+  var id=window.ALM.cur&&window.ALM.cur.id; if(!id) return;
+  var btn=document.getElementById('alm-confirmar'); if(btn){ btn.disabled=true; btn.textContent='Confirmando…'; }
+  almStopScan();
+  fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'almacen_validar_pedido',picking_id:id,almacenista:window.ALM.name})})
+  .then(function(r){return r.json();}).then(function(d){
+    if(d&&d.ok){ almShow('listo'); almLoadPedidos(); }
+    else { showToast('No se pudo validar: '+((d&&d.detalle)||'error')); if(btn){ btn.disabled=false; btn.textContent='Confirmar surtido'; } }
+  }).catch(function(){ showToast('Error al validar'); if(btn){ btn.disabled=false; btn.textContent='Confirmar surtido'; } });
+}
+function almVolverTablero(){ almStopScan(); window.ALM.cur=null; window.ALM.lines=[]; almShow('tablero'); almLoadPedidos(); }
+function almSalir(){
+  almStopScan(); if(window.ALM.poll) clearInterval(window.ALM.poll);
+  var sc=document.getElementById('alm-screen'); if(sc) sc.style.display='none';
+  portalReset();
 }
 
 async function execDiag(){
