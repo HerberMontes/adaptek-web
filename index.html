@@ -3877,6 +3877,16 @@ body.exec-mode #cart-fab, body.exec-mode .wa-float{display:none!important;}
     <div id="alm-list"></div>
   </div>
 
+  <div id="alm-det-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(10,20,40,.55);padding:20px 14px;overflow-y:auto;font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;">
+    <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:18px;box-shadow:0 20px 60px rgba(16,32,72,.30);overflow:hidden;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:18px 20px;border-bottom:1px solid #eef0f4;">
+        <div style="font-size:17px;font-weight:800;letter-spacing:-.3px;color:#0a1f44;">Detalle del pedido</div>
+        <button onclick="almCerrarDetSurtido()" style="background:#f1f4f8;border:none;border-radius:10px;width:34px;height:34px;cursor:pointer;font-size:18px;color:#5b6577;">&times;</button>
+      </div>
+      <div id="alm-det-body" style="padding:18px 20px 22px;"></div>
+    </div>
+  </div>
+
   <div id="alm-surtir" style="display:none;max-width:680px;margin:0 auto;padding:18px 16px 90px;">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
       <button onclick="almVolverTablero()" style="background:#fff;border:1px solid #dde6f0;border-radius:10px;width:38px;height:38px;cursor:pointer;font-size:18px;color:#001F5B;">&larr;</button>
@@ -4171,6 +4181,77 @@ function almLoadSurtidos(){
   .then(function(r){return r.json();}).then(function(d){ window.ALM.surtidos=(d&&d.ok&&d.pedidos)?d.pedidos:[]; almRenderList(); })
   .catch(function(){ window.ALM.surtidos=[]; almRenderList(); });
 }
+function almCerrarDetSurtido(){
+  var m=document.getElementById('alm-det-modal'); if(m) m.style.display='none';
+  if(window.ALM.tab==='surt') almLoadSurtidos();
+}
+function almAbrirSurtido(id){
+  var m=document.getElementById('alm-det-modal'), b=document.getElementById('alm-det-body');
+  if(!m||!b) return;
+  b.innerHTML='<div style="text-align:center;color:#9aa7b8;font-size:14px;padding:24px;">Cargando…</div>';
+  m.style.display='block';
+  fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'almacen_detalle_surtido',picking_id:id})})
+  .then(function(r){return r.json();}).then(function(d){
+    if(!d||!d.ok||!d.det){ b.innerHTML='<div style="color:#C8102E;font-size:13px;">No se pudo cargar el detalle.</div>'; return; }
+    window.ALM.detSurt=d.det; almRenderDetSurtido();
+  }).catch(function(){ b.innerHTML='<div style="color:#C8102E;font-size:13px;">Error de conexión.</div>'; });
+}
+function _almPagoLabel(m){ m=(m||'').toLowerCase(); return m==='spei'?'Transferencia SPEI':m==='tarjeta'?'Tarjeta':m==='oxxo'?'OXXO':(m?m:'No registrado'); }
+function _almFechaHora(s){ if(!s) return '—'; return String(s).replace('T',' ').slice(0,16); }
+function almRenderDetSurtido(){
+  var d=window.ALM.detSurt||{}, b=document.getElementById('alm-det-body'); if(!b) return;
+  function row(lbl,val){ return '<div style="display:flex;justify-content:space-between;gap:14px;padding:7px 0;border-bottom:1px solid #f2f5f9;"><div style="font-size:12.5px;color:#8895a7;font-weight:600;">'+lbl+'</div><div style="font-size:13px;color:#0a1f44;font-weight:600;text-align:right;">'+(val||'—')+'</div></div>'; }
+  var dir=d.direccion||{};
+  var dirStr=[dir.calle||dir.street||dir.linea1, dir.colonia||dir.neighborhood, dir.ciudad||dir.city, dir.estado||dir.state, dir.cp||dir.zip].filter(Boolean).join(', ');
+  var prods=(d.lineas&&d.lineas.length)? d.lineas.map(function(l){ return '<div style="font-size:12.5px;color:#0a1f44;padding:5px 0;border-bottom:1px solid #f2f5f9;">'+(l.cantidad||1)+' &times; '+(l.producto||'')+'</div>'; }).join('') : '<div style="font-size:12.5px;color:#9aa7b8;">Sin líneas</div>';
+  var g=d.guia||{};
+  var guiaBlock;
+  if(g&&g.tracking){
+    guiaBlock='<div style="background:#eef9f1;border:1px solid #c9ebd5;border-radius:12px;padding:13px 15px;">'
+      +'<div style="font-size:12.5px;font-weight:800;color:#0f6b39;margin-bottom:5px;">Guía generada</div>'
+      +'<div style="font-size:12.5px;color:#0a1f44;">Paquetería: <b>'+(g.carrier||d.carrier||'—')+'</b></div>'
+      +'<div style="font-size:12.5px;color:#0a1f44;margin-top:2px;">Rastreo: <b>'+g.tracking+'</b></div>'
+      +(g.label_url?('<a href="'+g.label_url+'" target="_blank" rel="noopener" style="display:inline-block;margin-top:9px;background:#001F5B;color:#fff;text-decoration:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;">Abrir etiqueta (PDF)</a>'):'')
+      +'<div style="margin-top:10px;"><button onclick="almGenerarGuiaSurtido('+d.id+')" style="background:#fff;border:1px solid #C8102E;color:#C8102E;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Regenerar guía</button></div>'
+      +'</div>';
+  } else {
+    guiaBlock='<div style="background:#fff6f7;border:1px solid #f3d3d8;border-radius:12px;padding:13px 15px;">'
+      +'<div style="font-size:12.5px;font-weight:800;color:#C8102E;margin-bottom:6px;">Sin guía generada</div>'
+      +'<button id="alm-det-guia-btn" onclick="almGenerarGuiaSurtido('+d.id+')" style="width:100%;background:#C8102E;color:#fff;border:none;padding:12px;border-radius:10px;font-size:13.5px;font-weight:700;cursor:pointer;">Generar guía y avisar al cliente</button>'
+      +'</div>';
+  }
+  b.innerHTML=
+    '<div style="font-size:18px;font-weight:800;letter-spacing:-.3px;color:#0a1f44;margin-bottom:2px;">'+(d.cliente||'Cliente')+'</div>'
+    +'<div style="font-size:12.5px;color:#8895a7;margin-bottom:14px;">'+(d.folio||d.origin||'')+'</div>'
+    +'<div style="margin-bottom:14px;">'
+      +row('Fecha del pedido', _almFechaHora(d.fecha_pedido))
+      +row('Surtido', _almFechaHora(d.fecha_surtido))
+      +row('Surtió', d.almacenista||'—')
+      +row('Método de pago', _almPagoLabel(d.metodo))
+      +row('Total', d.total?('$'+d.total+' MXN'):'—')
+      +row('Paquetería', d.carrier||(g&&g.carrier)||'—')
+    +'</div>'
+    +(dirStr?('<div style="font-size:12px;color:#8895a7;font-weight:600;margin-bottom:4px;">Dirección de entrega</div><div style="font-size:12.5px;color:#0a1f44;margin-bottom:14px;line-height:1.4;">'+dirStr+'</div>'):'')
+    +'<div style="font-size:12px;color:#8895a7;font-weight:600;margin-bottom:4px;">Productos</div><div style="margin-bottom:16px;">'+prods+'</div>'
+    +'<div id="alm-det-guia-result">'+guiaBlock+'</div>';
+}
+function almGenerarGuiaSurtido(id){
+  var res=document.getElementById('alm-det-guia-result'); var btn=document.getElementById('alm-det-guia-btn');
+  if(btn){ btn.disabled=true; btn.textContent='Generando guía…'; btn.style.opacity='.6'; btn.style.cursor='wait'; }
+  fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'crear_guia',picking_id:id})})
+  .then(function(r){return r.json();}).then(function(d){
+    if(d&&d.ok&&d.guia){
+      if(window.ALM.detSurt) window.ALM.detSurt.guia=d.guia;
+      almRenderDetSurtido();
+      showToast(d.ya_existe?'Esa guía ya existía':('Guía generada'+(d.emailed?' y correo enviado':'')));
+    } else {
+      var msg=(d&&d.error)?d.error:'No se pudo generar la guía';
+      if(res){ res.innerHTML='<div style="background:#fff6f7;border:1px solid #f3d3d8;border-radius:12px;padding:13px 15px;"><div style="font-size:12.5px;font-weight:800;color:#C8102E;margin-bottom:4px;">No se pudo generar la guía</div><div style="font-size:12px;color:#5b6577;line-height:1.45;margin-bottom:10px;">'+msg+'</div><button id="alm-det-guia-btn" onclick="almGenerarGuiaSurtido('+id+')" style="width:100%;background:#C8102E;color:#fff;border:none;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">Reintentar guía</button></div>'; }
+    }
+  }).catch(function(){
+    if(res){ res.innerHTML='<div style="color:#C8102E;font-size:12.5px;">Error de conexión al generar la guía.</div>'; }
+  });
+}
 function almCount(t,n){ var el=document.getElementById('alm-c-'+t); if(el) el.textContent=n; }
 function almRenderList(){
   var me=window.ALM.name, peds=window.ALM.pedidos;
@@ -4189,11 +4270,12 @@ function almRenderList(){
       var guiaHtml = (g&&g.tracking)
         ? '<div style="font-size:12px;color:#0f6b39;font-weight:600;margin-top:6px;">Guía: '+g.tracking+(g.carrier?(' · '+g.carrier):'')+(g.label_url?(' · <a href="'+g.label_url+'" target="_blank" rel="noopener" style="color:#2a6fdb;">etiqueta PDF</a>'):'')+'</div>'
         : '<div style="font-size:12px;color:#aab2c0;margin-top:6px;">Sin guía generada</div>';
-      return '<div style="background:#fff;border:1px solid #eef0f4;border-radius:14px;padding:15px 17px;margin-bottom:10px;">'
+      return '<div onclick="almAbrirSurtido('+p.id+')" style="background:#fff;border:1px solid #eef0f4;border-radius:14px;padding:15px 17px;margin-bottom:10px;cursor:pointer;transition:box-shadow .15s,border-color .15s;" onmouseover="this.style.boxShadow=\'0 4px 14px rgba(16,32,72,.10)\';this.style.borderColor=\'#d7e0ee\';" onmouseout="this.style.boxShadow=\'none\';this.style.borderColor=\'#eef0f4\';">'
         +'<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;"><div style="font-size:15px;font-weight:700;letter-spacing:-.2px;color:#0a1f44;">'+(p.cliente||'Cliente')+'</div>'
         +'<span style="display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:#e7f6ee;color:#0f6b39;">Surtido</span></div>'
         +'<div style="font-size:12px;color:#8895a7;margin:3px 0 0;">'+(p.folio||p.origin||'')+(p.fecha?(' · '+String(p.fecha).slice(0,16).replace('T',' ')):'')+'</div>'
-        +guiaHtml+'</div>';
+        +guiaHtml
+        +'<div style="font-size:11.5px;color:#2a6fdb;font-weight:600;margin-top:8px;">Ver detalle ›</div></div>';
     }).join('');
     return;
   }
