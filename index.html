@@ -6555,7 +6555,7 @@ function aiOffersHTML(armar){
   if (!armar) return '';
   var FONT = "-apple-system,BlinkMacSystemFont,'Inter',sans-serif";
   var COND = "'Barlow Condensed',sans-serif";
-  function codeChip(c){ return '<span style="font-family:'+COND+';font-size:15px;font-weight:700;color:#001F5B;letter-spacing:1px;">'+c+'</span>'; }
+  function codeChip(c){ return '<span style="font-family:'+FONT+';font-size:14px;font-weight:700;color:#001F5B;letter-spacing:.2px;">'+c+'</span>'; }
   function dispoTxt(q){ var ok=(q||0)>0; return '<span style="font-size:11px;font-weight:700;color:'+(ok?'#1d7d34':'#9a6a00')+';">'+(ok?'En stock':'Sobre pedido')+'</span>'; }
   function priceTxt(items){
     if (typeof window.precioDisplay!=='function') return '<span style="font-size:12px;color:#86868b;">Bajo cotización</span>';
@@ -6642,7 +6642,7 @@ function sendChatMessage() {
       .replace(/\*\*(AT-[A-Z0-9\-]+)\*\*/g,'$1')
       .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
       .replace(/^\s*[\*•]\s+/gm,'• ')
-      .replace(/(AT-[A-Z0-9]+(?:-[A-Z0-9]+)+)/g,'<strong style="font-family:Barlow Condensed,sans-serif;font-size:16px;color:#001F5B;letter-spacing:1px;">$1</strong>')
+      .replace(/(AT-[A-Z0-9]+(?:-[A-Z0-9]+)+)/g,'<strong style="font-family:-apple-system,BlinkMacSystemFont,Inter,sans-serif;font-size:15px;color:#001F5B;letter-spacing:.2px;">$1</strong>')
       .replace(/\n{3,}/g,'\n\n')
       .replace(/\n/g,'<br/>');
     var atMatch = reply.match(/AT-[A-Z0-9\-]+/);
