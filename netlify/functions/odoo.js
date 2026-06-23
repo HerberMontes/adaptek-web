@@ -740,6 +740,135 @@ async function enviarCorreosPedido(orden, folio, total, metodo, estado, destinat
 
 const otpStore = {};
 
+// ══════════════════════════════════════════════════════════════════
+// MOTOR DE ARMADO reutilizable: lo usan la acción armar_conector Y la IA (chat_ia).
+// Trabaja SIEMPRE con los códigos AT reales del catálogo de Odoo.
+// ══════════════════════════════════════════════════════════════════
+const _AT_STANDARDS = ['BSPP','BSPT','ORFS','NPSM','OFS','BST','MET','UNF','ORB','JIC','NPT','DIN','JIS','KOM','CAT','SAE','BSP','BT','LL','L'].sort((x,y)=>y.length-x.length);
+function _splitStdGen(tok){
+  if(!tok) return null;
+  for (const s of _AT_STANDARDS){ if (tok.indexOf(s)===0){ return {std:s, gen: tok.slice(s.length)}; } }
+  for (const g of ['HG','MG','H','M']){ if (tok.slice(-g.length)===g) return {std:tok.slice(0,-g.length), gen:g}; }
+  return {std:tok, gen:''};
+}
+function _isNumAT(s){ return /^[0-9]{1,3}$/.test(s); }
+function _parseAT(code){
+  let c=code, ss=false;
+  if (/-SS(\b|$)/.test(c)){ ss=true; c=c.replace(/-SS(\b|$)/,''); }
+  const p=c.split('-'); if (p.length<5) return null;
+  const tipo=p[1]; let idx=2; const aTok=p[idx++];
+  if (!p[idx] || _isNumAT(p[idx])) return null;
+  const bTok=p[idx++];
+  const medA=(p[idx]&&_isNumAT(p[idx]))?p[idx++]:null;
+  const medB=(p[idx]&&_isNumAT(p[idx]))?p[idx++]:null;
+  if(!medA||!medB) return null;
+  const a=_splitStdGen(aTok), b=_splitStdGen(bTok); if(!a||!b) return null;
+  return { code, tipo, ss, endA:{std:a.std,gen:a.gen,size:medA}, endB:{std:b.std,gen:b.gen,size:medB} };
+}
+
+let _catalogCache = { ts:0, pieces:null };
+async function getCatalogPieces(uid){
+  const now = Date.now();
+  if (_catalogCache.pieces && (now - _catalogCache.ts) < 300000) return _catalogCache.pieces; // caché 5 min
+  const dom = `<value><array><data>${xmlStr('default_code')}<value><string>=like</string></value>${xmlStr('AT-%')}</data></array></value>`;
+  const text = await odooSearchRead(uid, 'product.product', dom, ['default_code'], 8000);
+  const codes=[...text.matchAll(/<name>default_code<\/name>\s*<value>\s*<string>([^<]*)<\/string>/g)].map(m=>m[1]);
+  const pieces=[]; for (const c of codes){ const pc=_parseAT(c); if(pc) pieces.push(pc); }
+  _catalogCache = { ts:now, pieces };
+  return pieces;
+}
+
+async function armarConectorCore(body, uid){
+  const up = v => String(v||'').toUpperCase().trim();
+  const A = { std:up(body.a&&body.a.std), gen:up(body.a&&body.a.gen), size:String((body.a&&body.a.size)||'').trim() };
+  const B = { std:up(body.b&&body.b.std), gen:up(body.b&&body.b.gen), size:String((body.b&&body.b.size)||'').trim() };
+  const wantSS = up(body.material||'CS')==='SS';
+  const maxP = Math.min(Math.max(parseInt(body.max_piezas)||4,2),4);
+  if (!A.std||!A.gen||!A.size||!B.std||!B.gen||!B.size)
+    return {error:'Faltan datos: a y b necesitan {std, gen, size}'};
+
+  const pieces = await getCatalogPieces(uid);
+
+  const isMale=g=>g==='M'||g==='MG', isFemale=g=>g==='H'||g==='HG';
+  const sameEnd=(e,s)=>e.std===s.std&&e.gen===s.gen&&e.size===s.size;
+  const mates=(a,b)=>(isMale(a)&&isFemale(b))||(isFemale(a)&&isMale(b));
+  const matMatch=p=>wantSS?p.ss:!p.ss;
+  const byKey={};
+  function addEnd(p,end,other){ const k=end.std+'|'+end.size; (byKey[k]=byKey[k]||[]).push({end,other,code:p.code,tipo:p.tipo,ss:p.ss}); }
+  for (const p of pieces){ addEnd(p,p.endA,p.endB); addEnd(p,p.endB,p.endA); }
+
+  const endsWithA=(byKey[A.std+'|'+A.size]||[]).filter(x=>sameEnd(x.end,A)&&matMatch(x)).length;
+  const endsWithB=(byKey[B.std+'|'+B.size]||[]).filter(x=>sameEnd(x.end,B)&&matMatch(x)).length;
+
+  // Regla 1: directo (una pieza)
+  let directo=null;
+  for (const p of pieces){ if (matMatch(p) && ((sameEnd(p.endA,A)&&sameEnd(p.endB,B))||(sameEnd(p.endA,B)&&sameEnd(p.endB,A)))){ directo=p.code; break; } }
+
+  // Regla 2: cadenas (BFS, las más cortas primero)
+  const chains=[];
+  if (!directo){
+    const start=(byKey[A.std+'|'+A.size]||[]).filter(x=>sameEnd(x.end,A)&&matMatch(x));
+    const queue=start.map(x=>({frontier:x.other, path:[x.code], used:new Set([x.code])}));
+    let budget=15000;
+    while(queue.length && chains.length<8 && budget-->0){
+      const st=queue.shift();
+      if (sameEnd(st.frontier,B)){ chains.push(st.path.slice()); continue; }
+      if (st.path.length>=maxP) continue;
+      const candAll=byKey[st.frontier.std+'|'+st.frontier.size]||[];
+      let n=0;
+      for (const x of candAll){
+        if (n>=120) break;
+        if (!matMatch(x)) continue;
+        if (!mates(st.frontier.gen, x.end.gen)) continue;
+        if (st.used.has(x.code)) continue;
+        n++;
+        if (queue.length>30000) break;
+        const nused=new Set(st.used); nused.add(x.code);
+        queue.push({frontier:x.other, path:st.path.concat(x.code), used:nused});
+      }
+    }
+  }
+  const seen=new Set(), uniqChains=[];
+  for (const ch of chains){ const k=ch.join('>'); if(!seen.has(k)){seen.add(k); uniqChains.push(ch);} }
+
+  // precios/stock de las piezas involucradas
+  const fieldsRead = ['default_code','name','list_price','qty_available'];
+  const allCodes=[...new Set([directo].concat(...uniqChains).filter(Boolean))];
+  const info={};
+  if (allCodes.length){
+    const codesXml=allCodes.map(c=>xmlStr(c)).join('');
+    const d2=`<value><array><data>${xmlStr('default_code')}<value><string>in</string></value><value><array><data>${codesXml}</data></array></value></data></array></value>`;
+    const t2=await odooSearchRead(uid,'product.product',d2,fieldsRead,allCodes.length);
+    t2.split('<struct>').slice(1).forEach(s=>{ const st=s.split('</struct>')[0]; const cd=xmlExtractField(st,'default_code'); if(cd) info[cd]={name:xmlExtractField(st,'name'),price:parseFloat(xmlExtractField(st,'list_price'))||0,qty:parseFloat(xmlExtractField(st,'qty_available'))||0}; });
+  }
+  const enrich=arr=>arr.map(c=>Object.assign({code:c}, info[c]||{}));
+
+  const scored = uniqChains.map(ch=>{
+    const items = enrich(ch);
+    const en_stock = items.length>0 && items.every(p=>(p.qty||0)>0);
+    const precio_total = items.reduce((s,p)=>s+(p.price||0),0);
+    return { piezas: ch.length, en_stock, precio_total, items };
+  });
+  scored.sort((a,b)=>{
+    if (a.en_stock!==b.en_stock) return a.en_stock ? -1 : 1;
+    if (a.precio_total!==b.precio_total) return a.precio_total-b.precio_total;
+    return a.piezas-b.piezas;
+  });
+  const mejores = scored.slice(0,2); // máximo 2 opciones; fabricar es la 3a
+
+  const solo_fabricar = (!directo && mejores.length===0);
+  return {
+    ok:true, a:A, b:B, material:wantSS?'SS':'CS',
+    piezas_en_catalogo: pieces.length,
+    directo: directo? Object.assign({code:directo}, info[directo]||{}) : null,
+    cadenas: mejores,
+    cadenas_encontradas: uniqChains.length,
+    fabricar_siempre_disponible: true,
+    solo_fabricar,
+    _diag: { extremo_A_existe_en_catalogo: endsWithA, extremo_B_existe_en_catalogo: endsWithB }
+  };
+}
+
 exports.handler = async function(event, context) {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -1986,7 +2115,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-22-ia-backend-v13', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-22-ia-tooluse-v14', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
     }
 
     // ── DIAGNÓSTICO DE CATÁLOGO: analiza los códigos AT en Odoo para diseñar el armado por piezas ──
@@ -2067,125 +2196,8 @@ exports.handler = async function(event, context) {
     if (action === 'armar_conector') {
       const uid = await odooAuth();
       if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
-      const up = v => String(v||'').toUpperCase().trim();
-      const A = { std:up(body.a&&body.a.std), gen:up(body.a&&body.a.gen), size:String((body.a&&body.a.size)||'').trim() };
-      const B = { std:up(body.b&&body.b.std), gen:up(body.b&&body.b.gen), size:String((body.b&&body.b.size)||'').trim() };
-      const wantSS = up(body.material||'CS')==='SS';
-      const maxP = Math.min(Math.max(parseInt(body.max_piezas)||4,2),4);
-      if (!A.std||!A.gen||!A.size||!B.std||!B.gen||!B.size)
-        return {statusCode:400, headers, body: JSON.stringify({error:'Faltan datos: a y b necesitan {std, gen, size}'})};
-
-      const STANDARDS = ['BSPP','BSPT','ORFS','NPSM','OFS','BST','MET','UNF','ORB','JIC','NPT','DIN','JIS','KOM','CAT','SAE','BSP','BT','LL','L'].sort((x,y)=>y.length-x.length);
-      function splitStdGen(tok){
-        if(!tok) return null;
-        for (const s of STANDARDS){ if (tok.indexOf(s)===0){ return {std:s, gen: tok.slice(s.length)}; } }
-        for (const g of ['HG','MG','H','M']){ if (tok.slice(-g.length)===g) return {std:tok.slice(0,-g.length), gen:g}; }
-        return {std:tok, gen:''};
-      }
-      const isNum = s=>/^[0-9]{1,3}$/.test(s);
-      function parseCode(code){
-        let c=code, ss=false;
-        if (/-SS(\b|$)/.test(c)){ ss=true; c=c.replace(/-SS(\b|$)/,''); }
-        const p=c.split('-'); if (p.length<5) return null;
-        const tipo=p[1]; let idx=2; const aTok=p[idx++];
-        if (!p[idx] || isNum(p[idx])) return null;
-        const bTok=p[idx++];
-        const medA=(p[idx]&&isNum(p[idx]))?p[idx++]:null;
-        const medB=(p[idx]&&isNum(p[idx]))?p[idx++]:null;
-        if(!medA||!medB) return null;
-        const a=splitStdGen(aTok), b=splitStdGen(bTok); if(!a||!b) return null;
-        return { code, tipo, ss, endA:{std:a.std,gen:a.gen,size:medA}, endB:{std:b.std,gen:b.gen,size:medB} };
-      }
-
-      const dom = `<value><array><data>${xmlStr('default_code')}<value><string>=like</string></value>${xmlStr('AT-%')}</data></array></value>`;
-      const text = await odooSearchRead(uid, 'product.product', dom, ['default_code'], 8000);
-      const codes=[...text.matchAll(/<name>default_code<\/name>\s*<value>\s*<string>([^<]*)<\/string>/g)].map(m=>m[1]);
-      const pieces=[]; for (const c of codes){ const pc=parseCode(c); if(pc) pieces.push(pc); }
-
-      const isMale=g=>g==='M'||g==='MG', isFemale=g=>g==='H'||g==='HG';
-      const sameEnd=(e,s)=>e.std===s.std&&e.gen===s.gen&&e.size===s.size;
-      const mates=(a,b)=>(isMale(a)&&isFemale(b))||(isFemale(a)&&isMale(b));
-      const matMatch=p=>wantSS?p.ss:!p.ss;
-      const byKey={};
-      function addEnd(p,end,other){ const k=end.std+'|'+end.size; (byKey[k]=byKey[k]||[]).push({end,other,code:p.code,tipo:p.tipo,ss:p.ss}); }
-      for (const p of pieces){ addEnd(p,p.endA,p.endB); addEnd(p,p.endB,p.endA); }
-
-      const endsWithA=(byKey[A.std+'|'+A.size]||[]).filter(x=>sameEnd(x.end,A)&&matMatch(x)).length;
-      const endsWithB=(byKey[B.std+'|'+B.size]||[]).filter(x=>sameEnd(x.end,B)&&matMatch(x)).length;
-
-      // Regla 1: directo
-      let directo=null;
-      for (const p of pieces){ if (matMatch(p) && ((sameEnd(p.endA,A)&&sameEnd(p.endB,B))||(sameEnd(p.endA,B)&&sameEnd(p.endB,A)))){ directo=p.code; break; } }
-
-      // Regla 2: cadenas (BFS, las más cortas primero)
-      const chains=[];
-      if (!directo){
-        const start=(byKey[A.std+'|'+A.size]||[]).filter(x=>sameEnd(x.end,A)&&matMatch(x));
-        const queue=start.map(x=>({frontier:x.other, path:[x.code], used:new Set([x.code])}));
-        let budget=15000;
-        while(queue.length && chains.length<8 && budget-->0){
-          const st=queue.shift();
-          if (sameEnd(st.frontier,B)){ chains.push(st.path.slice()); continue; }
-          if (st.path.length>=maxP) continue;
-          const candAll=byKey[st.frontier.std+'|'+st.frontier.size]||[];
-          let n=0;
-          for (const x of candAll){
-            if (n>=120) break;
-            if (!matMatch(x)) continue;
-            if (!mates(st.frontier.gen, x.end.gen)) continue;
-            if (st.used.has(x.code)) continue;
-            n++;
-            if (queue.length>30000) break;
-            const nused=new Set(st.used); nused.add(x.code);
-            queue.push({frontier:x.other, path:st.path.concat(x.code), used:nused});
-          }
-        }
-      }
-      const seen=new Set(), uniqChains=[];
-      for (const ch of chains){ const k=ch.join('>'); if(!seen.has(k)){seen.add(k); uniqChains.push(ch);} }
-
-      // precios/stock (y largo opcional) de todas las piezas involucradas
-      const campoLargo = String(body.campo_largo||'').replace(/[^a-zA-Z0-9_]/g,''); // sanitizado para Odoo
-      const fieldsRead = ['default_code','name','list_price','qty_available'];
-      if (campoLargo) fieldsRead.push(campoLargo);
-      const allCodes=[...new Set([directo].concat(...uniqChains).filter(Boolean))];
-      const info={};
-      if (allCodes.length){
-        const codesXml=allCodes.map(c=>xmlStr(c)).join('');
-        const d2=`<value><array><data>${xmlStr('default_code')}<value><string>in</string></value><value><array><data>${codesXml}</data></array></value></data></array></value>`;
-        const t2=await odooSearchRead(uid,'product.product',d2,fieldsRead,allCodes.length);
-        t2.split('<struct>').slice(1).forEach(s=>{ const st=s.split('</struct>')[0]; const cd=xmlExtractField(st,'default_code'); if(cd) info[cd]={name:xmlExtractField(st,'name'),price:parseFloat(xmlExtractField(st,'list_price'))||0,qty:parseFloat(xmlExtractField(st,'qty_available'))||0, largo: campoLargo?(parseFloat(xmlExtractField(st,campoLargo))||0):null}; });
-      }
-      const enrich=arr=>arr.map(c=>Object.assign({code:c}, info[c]||{}));
-
-      // ── RANKING por reglas: 1) existencia (stock)  2) precio  3) largo  4) menos piezas (proxy de largo) ──
-      const scored = uniqChains.map(ch=>{
-        const items = enrich(ch);
-        const en_stock = items.length>0 && items.every(p=>(p.qty||0)>0);
-        const precio_total = items.reduce((s,p)=>s+(p.price||0),0);
-        const largo_total = campoLargo ? items.reduce((s,p)=>s+(p.largo||0),0) : null;
-        return { piezas: ch.length, en_stock, precio_total, largo_total, items };
-      });
-      scored.sort((a,b)=>{
-        if (a.en_stock!==b.en_stock) return a.en_stock ? -1 : 1;                                  // 1) existencia primero
-        if (a.precio_total!==b.precio_total) return a.precio_total-b.precio_total;                  // 2) más barato
-        if (a.largo_total!=null && b.largo_total!=null && a.largo_total!==b.largo_total) return a.largo_total-b.largo_total; // 3) más corto
-        return a.piezas-b.piezas;                                                                   // 4) menos piezas
-      });
-      const mejores = scored.slice(0,2); // máximo 2 opciones; fabricar es la 3a, siempre
-
-      const solo_fabricar = (!directo && mejores.length===0);
-      return {statusCode:200, headers, body: JSON.stringify({
-        ok:true, a:A, b:B, material:wantSS?'SS':'CS',
-        piezas_en_catalogo: pieces.length,
-        directo: directo? Object.assign({code:directo}, info[directo]||{}) : null,
-        cadenas: mejores,
-        cadenas_encontradas: uniqChains.length,
-        fabricar_siempre_disponible: true,
-        solo_fabricar,
-        criterio_largo: campoLargo ? ('campo:'+campoLargo) : 'no disponible (usa menos piezas como proxy)',
-        _diag: { extremo_A_existe_en_catalogo: endsWithA, extremo_B_existe_en_catalogo: endsWithB }
-      })};
+      const result = await armarConectorCore(body, uid);
+      return {statusCode: result.error?400:200, headers, body: JSON.stringify(result)};
     }
 
     // ── DISPONIBILIDAD POR ESTÁNDAR: lista qué medidas y géneros existen REALMENTE en el catálogo,
@@ -2330,20 +2342,71 @@ exports.handler = async function(event, context) {
     if (action === 'chat_ia') {
       const apiKey = process.env.ANTHROPIC_API_KEY;
       if (!apiKey) return {statusCode:200, headers, body: JSON.stringify({ error:{ message:'La búsqueda con IA no está configurada: falta la variable de entorno ANTHROPIC_API_KEY en Netlify.' } })};
-      const messages = Array.isArray(body.messages) ? body.messages : null;
+      const messages = Array.isArray(body.messages) ? body.messages.slice() : null;
       if (!messages || !messages.length) return {statusCode:200, headers, body: JSON.stringify({ error:{ message:'No se recibieron mensajes para la IA.' } })};
-      const maxTokens = Math.min(Math.max(parseInt(body.max_tokens)||700, 50), 2000);
-      const MODEL = 'claude-sonnet-4-6';
+      const maxTokens = Math.min(Math.max(parseInt(body.max_tokens)||900, 50), 2000);
+      const MODEL = 'claude-haiku-4-5-20251001';
+      const SYSTEM = [
+        'Eres el asistente experto en conectores y adaptadores hidraulicos de Adaptekk (Mexico).',
+        'Identificas la pieza exacta que el cliente necesita USANDO EXCLUSIVAMENTE los codigos reales del catalogo de Odoo. NUNCA inventes codigos.',
+        'Cuando el cliente describa un conector con dos extremos (ej. macho 2 pulg BSPP de un lado y macho 1/2 pulg JIC del otro) DEBES llamar a la herramienta armar_conector para obtener la solucion real. No des un codigo sin haber llamado la herramienta.',
+        'Convenciones para armar_conector:',
+        '- std (estandar), codigo del catalogo: BSPP o BSP => BSP, ORFS => OFS, JIC => JIC, NPT => NPT, ORB => ORB, metrico => MET, DIN => DIN, BSPT => BST, NPSM => NPSM, SAE => SAE, JIS => JIS, Komatsu => KOM, Caterpillar => CAT.',
+        '- gen (genero): macho => M, hembra => H, giratorio macho => MG, giratorio hembra => HG.',
+        '- size (medida): SIEMPRE en dieciseisavos como texto (pulgadas x 16). 1/4 => 04, 3/8 => 06, 1/2 => 08, 5/8 => 10, 3/4 => 12, 1 => 16, 1-1/4 => 20, 1-1/2 => 24, 2 => 32, 2-1/2 => 40.',
+        '- material: acero al carbon => CS (default), inoxidable => SS.',
+        'La herramienta devuelve: directo (existe en UNA pieza, con su codigo), cadenas (combinaciones reales de 2+ piezas que conectan ambos extremos, cada una con sus codigos) y solo_fabricar (no hay combinacion, se fabrica especial). Las cadenas vienen ordenadas: primero en stock, luego mas barata, luego menos piezas.',
+        'Al responder al cliente:',
+        '- Espanol claro y natural, en prosa limpia. PROHIBIDO: emojis, iconos, encabezados markdown (## o ###), lineas de guiones (---), asteriscos de negrita o vinetas con asterisco. Escribe como una persona experta explicando con claridad.',
+        '- Si hay directo: dilo y da el codigo exacto.',
+        '- Si se arma con cadena: explica que se arma con N piezas y enuncia los codigos en orden.',
+        '- Si solo se fabrica: dilo con claridad y ofrece cotizacion.',
+        '- Si falta un dato (ej. la medida de un extremo), pidelo amablemente.',
+        '- Se conciso.'
+      ].join('\n');
+      const tools = [{
+        name:'armar_conector',
+        description:'Busca en el catalogo real de Adaptekk como conectar dos extremos A y B. Devuelve si existe directo en una pieza, cadenas reales de varias piezas, o si se fabrica especial. Usalo siempre que el cliente describa un conector de dos extremos.',
+        input_schema:{ type:'object', properties:{
+          a:{type:'object', properties:{ std:{type:'string'}, gen:{type:'string'}, size:{type:'string'} }, required:['std','gen','size']},
+          b:{type:'object', properties:{ std:{type:'string'}, gen:{type:'string'}, size:{type:'string'} }, required:['std','gen','size']},
+          material:{type:'string'}
+        }, required:['a','b'] }
+      }];
+      let uidIA = null;
       try {
-        const r = await fetch('https://api.anthropic.com/v1/messages', {
-          method:'POST',
-          headers:{ 'Content-Type':'application/json', 'x-api-key':apiKey, 'anthropic-version':'2023-06-01' },
-          body: JSON.stringify({ model: MODEL, max_tokens: maxTokens, messages })
+        for (let iter=0; iter<3; iter++){
+          const r = await fetch('https://api.anthropic.com/v1/messages', {
+            method:'POST',
+            headers:{ 'Content-Type':'application/json', 'x-api-key':apiKey, 'anthropic-version':'2023-06-01' },
+            body: JSON.stringify({ model:MODEL, max_tokens:maxTokens, system:SYSTEM, tools, messages })
+          });
+          const data = await r.json();
+          if (data.error) return {statusCode:200, headers, body: JSON.stringify({ error:data.error })};
+          const toolUses = (data.content||[]).filter(b=>b.type==='tool_use');
+          if (data.stop_reason!=='tool_use' || !toolUses.length){
+            return {statusCode:200, headers, body: JSON.stringify(data)};
+          }
+          messages.push({ role:'assistant', content:data.content });
+          const results=[];
+          for (const tu of toolUses){
+            let out;
+            if (tu.name==='armar_conector'){
+              if (!uidIA) uidIA = await odooAuth();
+              out = uidIA ? await armarConectorCore(tu.input||{}, uidIA) : {error:'No se pudo conectar al catalogo'};
+            } else { out = {error:'herramienta desconocida'}; }
+            results.push({ type:'tool_result', tool_use_id:tu.id, content: JSON.stringify(out).slice(0,6000) });
+          }
+          messages.push({ role:'user', content:results });
+        }
+        const rf = await fetch('https://api.anthropic.com/v1/messages', {
+          method:'POST', headers:{ 'Content-Type':'application/json', 'x-api-key':apiKey, 'anthropic-version':'2023-06-01' },
+          body: JSON.stringify({ model:MODEL, max_tokens:maxTokens, system:SYSTEM, messages })
         });
-        const data = await r.json();
-        return {statusCode:200, headers, body: JSON.stringify(data)};
-      } catch (e) {
-        return {statusCode:200, headers, body: JSON.stringify({ error:{ message:'Error llamando a la IA: ' + String((e&&e.message)||e) } })};
+        const df = await rf.json();
+        return {statusCode:200, headers, body: JSON.stringify(df)};
+      } catch(e){
+        return {statusCode:200, headers, body: JSON.stringify({ error:{ message:'Error en la IA: '+String((e&&e.message)||e) } })};
       }
     }
 
