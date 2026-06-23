@@ -2284,7 +2284,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-23-envio-producto-v27', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-23-surtidos-v28', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
     }
 
     // ── DIAGNÓSTICO DE CATÁLOGO: analiza los códigos AT en Odoo para diseñar el armado por piezas ──
@@ -3840,6 +3840,87 @@ exports.handler = async function(event, context) {
           });
         }
       }
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, pedidos })};
+    }
+
+    // ── LISTAR SURTIDOS (entregas ya hechas, para consulta, con su guía) ──
+    if (action === 'almacen_listar_surtidos') {
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'odoo auth'})};
+
+      const domainXml = `<value><array><data>${xmlStr('picking_type_code')}<value><string>=</string></value>${xmlStr('outgoing')}</data></array></value>
+        <value><array><data>${xmlStr('state')}<value><string>=</string></value>${xmlStr('done')}</data></array></value>`;
+      let text = await odooSearchRead(uid, 'stock.picking', domainXml,
+        ['id','name','origin','date_done','scheduled_date','partner_id'], 80);
+
+      if (text.indexOf('<fault>') >= 0) {
+        return {statusCode:200, headers, body: JSON.stringify({ ok:false, error:'odoo_fault', pedidos:[] })};
+      }
+
+      function extractField(struct, field){
+        const tag = '<name>' + field + '</name>';
+        const pos = struct.indexOf(tag); if (pos < 0) return '';
+        const afterTag = struct.substring(pos + tag.length);
+        const valStart = afterTag.indexOf('<value>'); if (valStart < 0) return '';
+        const inner = afterTag.substring(valStart + 7);
+        const typeEnd = inner.indexOf('>');
+        const firstChar = inner.charAt(0);
+        let content = (firstChar === '<') ? inner.substring(typeEnd + 1) : inner;
+        const end = content.indexOf('<');
+        return end >= 0 ? content.substring(0, end).trim() : content.trim();
+      }
+      function extractM2OName(struct, field){
+        const tag = '<name>' + field + '</name>';
+        const pos = struct.indexOf(tag); if (pos < 0) return '';
+        const after = struct.substring(pos);
+        const m = after.match(/<string>([^<]*)<\/string>/);
+        return m ? m[1].trim() : '';
+      }
+
+      const pedidos = [];
+      const origins = [];
+      const parts = text.split('<struct>');
+      for (let i = 1; i < parts.length; i++) {
+        const struct = parts[i].split('</struct>')[0];
+        const id = parseInt(extractField(struct, 'id'));
+        if (id > 0) {
+          const origin = extractField(struct, 'origin');
+          if (origin) origins.push(origin);
+          pedidos.push({
+            id,
+            wh: extractField(struct, 'name'),
+            origin,
+            fecha: extractField(struct, 'date_done') || extractField(struct, 'scheduled_date'),
+            cliente: extractM2OName(struct, 'partner_id'),
+            folio: origin,
+            guia: null
+          });
+        }
+      }
+
+      // Guías en lote: leer las sale.order cuyo name esté en los origins
+      if (origins.length) {
+        try {
+          const uniq = [...new Set(origins)];
+          const idsXml = uniq.map(n => xmlStr(n)).join('');
+          const sdom = `<value><array><data>${xmlStr('name')}<value><string>in</string></value><value><array><data>${idsXml}</data></array></value></data></array></value>`;
+          const sot = await odooSearchRead(uid, 'sale.order', sdom, ['name','note','client_order_ref'], uniq.length);
+          const gmap = {};
+          const sparts = sot.split('<struct>');
+          for (let i = 1; i < sparts.length; i++) {
+            const s = sparts[i].split('</struct>')[0];
+            const nm = extractField(s, 'name');
+            const folio = extractField(s, 'client_order_ref');
+            let guia = null;
+            const gm = s.match(/\[GUIA\]([A-Za-z0-9+/=\s]+?)\[\/GUIA\]/);
+            if (gm) { try { guia = JSON.parse(Buffer.from(gm[1].replace(/\s/g,''), 'base64').toString('utf8')); } catch(e){} }
+            if (nm) gmap[nm] = { folio, guia };
+          }
+          pedidos.forEach(p => { const g = gmap[p.origin]; if (g) { if (g.folio) p.folio = g.folio; p.guia = g.guia; } });
+        } catch(e){ /* sin guías, no rompe */ }
+      }
+
+      pedidos.sort((a,b) => String(b.fecha||'').localeCompare(String(a.fecha||'')));
       return {statusCode:200, headers, body: JSON.stringify({ ok:true, pedidos })};
     }
 
