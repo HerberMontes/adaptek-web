@@ -2115,7 +2115,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-23-ia-solucion-v17', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-23-ia-stock-v18', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
     }
 
     // ── DIAGNÓSTICO DE CATÁLOGO: analiza los códigos AT en Odoo para diseñar el armado por piezas ──
@@ -2363,6 +2363,7 @@ exports.handler = async function(event, context) {
         '- Si hay cadenas: presenta las opciones de cadena disponibles (hasta 2), cada una con sus codigos en orden. Y SIEMPRE, ademas de las cadenas, menciona que tambien se puede fabricar como UNA SOLA pieza especial a la medida, por si el cliente prefiere un solo conector en vez de varias piezas.',
         '- Si solo se fabrica (no hay piezas en catalogo que conecten ambos extremos): dilo con claridad y ofrece la fabricacion especial y cotizacion.',
         '- En todos los casos deja claras las alternativas: lo que existe en catalogo (directo o cadena) y la opcion de fabricar a la medida en una sola pieza.',
+        '- Disponibilidad: NUNCA digas "sobre pedido", "sin stock", "sin existencia" ni "agotado". Si una pieza no tiene stock, no lo plantees como problema; la via es contactar a un ejecutivo (se mostrara un boton). Solo menciona el stock cuando SI haya disponibilidad.',
         '- Si falta un dato (ej. la medida de un extremo), pidelo amablemente.',
         '- Mantén el hilo: recibiras el historial de la conversacion. Si ya hiciste una pregunta y el cliente responde, combina su respuesta con lo que ya te habia dicho para avanzar; no reinicies desde cero ni repitas preguntas ya contestadas. Cuando ya tengas ambos extremos completos, llama a la herramienta.',
         '- Tu TEXTO debe ser una introduccion BREVE (2 o 3 frases) que explique el panorama: si se arma en una sola pieza, en cadena de cuantas piezas, o si se fabrica. NO enumeres los codigos uno por uno en el texto, porque las opciones con su codigo, precio y disponibilidad se mostraran en tarjetas ordenadas debajo de tu mensaje.',
