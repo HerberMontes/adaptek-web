@@ -649,19 +649,39 @@ async function saveMetricsPartner(uid, id, data) {
   }
 }
 function mxDay() { return new Date().toLocaleDateString('en-CA', {timeZone:'America/Mexico_City'}); }
-async function bumpMetric(kind) {
+// Precios de Claude Haiku 4.5 (USD por millon de tokens). Ajustables si cambia el plan.
+const IA_PRICE_IN_PER_MTOK = 1.0;
+const IA_PRICE_OUT_PER_MTOK = 5.0;
+async function bumpMetric(kind, payload) {
   const uid = await odooAuth(); if (!uid) return;
   const { id, data } = await getMetricsPartner(uid);
+  const month = mxDay().slice(0,7);
   if (kind === 'email') {
-    const day = mxDay(), month = day.slice(0,7);
+    const day = mxDay();
     if (data.emailDay !== day) { data.emailDay = day; data.emailDayCount = 0; }
     if (data.emailMonth !== month) { data.emailMonth = month; data.emailMonthCount = 0; }
     data.emailDayCount = (data.emailDayCount||0) + 1;
     data.emailMonthCount = (data.emailMonthCount||0) + 1;
   } else if (kind === 'noresult') {
-    const month = mxDay().slice(0,7);
     if (data.noResultMonth !== month) { data.noResultMonth = month; data.noResultCount = 0; }
     data.noResultCount = (data.noResultCount||0) + 1;
+  } else if (kind === 'ia') {
+    const inT = Math.max(0, parseInt((payload&&payload.inTok)||0) || 0);
+    const outT = Math.max(0, parseInt((payload&&payload.outTok)||0) || 0);
+    if (data.iaMonth !== month) { data.iaMonth = month; data.iaInTok = 0; data.iaOutTok = 0; data.iaCalls = 0; }
+    data.iaInTok = (data.iaInTok||0) + inT;
+    data.iaOutTok = (data.iaOutTok||0) + outT;
+    data.iaCalls = (data.iaCalls||0) + 1;
+    data.iaInTokTotal = (data.iaInTokTotal||0) + inT;   // acumulado de por vida
+    data.iaOutTokTotal = (data.iaOutTokTotal||0) + outT;
+  } else if (kind === 'copomex') {
+    if (data.copomexMonth !== month) { data.copomexMonth = month; data.copomexCount = 0; }
+    data.copomexCount = (data.copomexCount||0) + 1;
+    data.copomexTotal = (data.copomexTotal||0) + 1;
+  } else if (kind === 'skydropx') {
+    if (data.skydropxMonth !== month) { data.skydropxMonth = month; data.skydropxCount = 0; }
+    data.skydropxCount = (data.skydropxCount||0) + 1;
+    data.skydropxTotal = (data.skydropxTotal||0) + 1;
   }
   await saveMetricsPartner(uid, id, data);
 }
@@ -1607,12 +1627,31 @@ exports.handler = async function(event, context) {
       if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
 
       let email = {day:0, month:0}, noResult = 0;
+      let ia = {calls:0, inTok:0, outTok:0, costUsd:0, creditsUsd:0, restanteUsd:null};
+      let copomex = {count:0, total:0, limit:0};
+      let skydropx = {count:0, total:0, limit:0};
       try {
         const { data } = await getMetricsPartner(uid);
         const today = mxDay(), month = today.slice(0,7);
         email.day = (data.emailDay === today) ? (data.emailDayCount||0) : 0;
         email.month = (data.emailMonth === month) ? (data.emailMonthCount||0) : 0;
         noResult = (data.noResultMonth === month) ? (data.noResultCount||0) : 0;
+        // IA: gasto acumulado de por vida (tokens x precio) vs creditos comprados
+        const inTot = data.iaInTokTotal||0, outTot = data.iaOutTokTotal||0;
+        const costTotal = inTot/1e6*IA_PRICE_IN_PER_MTOK + outTot/1e6*IA_PRICE_OUT_PER_MTOK;
+        ia.calls = (data.iaMonth === month) ? (data.iaCalls||0) : 0;
+        ia.inTok = inTot; ia.outTok = outTot;
+        ia.costUsd = costTotal;
+        ia.creditsUsd = data.iaCreditsUsd||0;
+        ia.restanteUsd = ia.creditsUsd ? Math.max(0, ia.creditsUsd - costTotal) : null;
+        // COPOMEX (consultas de codigo postal)
+        copomex.count = (data.copomexMonth === month) ? (data.copomexCount||0) : 0;
+        copomex.total = data.copomexTotal||0;
+        copomex.limit = data.copomexLimit||0;
+        // Skydropx (cotizaciones de envio)
+        skydropx.count = (data.skydropxMonth === month) ? (data.skydropxCount||0) : 0;
+        skydropx.total = data.skydropxTotal||0;
+        skydropx.limit = data.skydropxLimit||0;
       } catch(e) {}
 
       async function prodCount(condXml) {
@@ -1637,7 +1676,32 @@ exports.handler = async function(event, context) {
       }
       const thisMonth = series.length ? series[series.length-1].count : 0;
 
-      return {statusCode:200, headers, body: JSON.stringify({success:true, products:{total, thisMonth, series}, email, noResult})};
+      return {statusCode:200, headers, body: JSON.stringify({success:true, products:{total, thisMonth, series}, email, noResult, ia, copomex, skydropx})};
+    }
+
+    // ── REGISTRO LIGERO DE USO (fire-and-forget desde el frontend; nunca bloquea al cliente) ──
+    if (action === 'track_usage') {
+      try {
+        const kind = body.kind;
+        if (kind === 'ia') await bumpMetric('ia', { inTok: body.inTok, outTok: body.outTok });
+        else if (kind === 'copomex') await bumpMetric('copomex');
+        else if (kind === 'skydropx') await bumpMetric('skydropx');
+      } catch(e) {}
+      return {statusCode:200, headers, body: JSON.stringify({ok:true})};
+    }
+
+    // ── CONFIG DE SERVICIOS (creditos IA comprados + limites de plan) ──
+    if (action === 'set_service_config') {
+      try {
+        const uid = await odooAuth();
+        if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
+        const { id, data } = await getMetricsPartner(uid);
+        if (body.iaCreditsUsd  !== undefined) data.iaCreditsUsd  = Math.max(0, Number(body.iaCreditsUsd)||0);
+        if (body.copomexLimit  !== undefined) data.copomexLimit  = Math.max(0, parseInt(body.copomexLimit)||0);
+        if (body.skydropxLimit !== undefined) data.skydropxLimit = Math.max(0, parseInt(body.skydropxLimit)||0);
+        await saveMetricsPartner(uid, id, data);
+        return {statusCode:200, headers, body: JSON.stringify({ok:true})};
+      } catch(e) { return {statusCode:200, headers, body: JSON.stringify({ok:false, error:String((e&&e.message)||e)})}; }
     }
 
     // ── DIAGNÓSTICO: qué ve la API en res.partner ──
@@ -2115,7 +2179,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-23-ia-stock-v18', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-23-metrics-v19', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
     }
 
     // ── DIAGNÓSTICO DE CATÁLOGO: analiza los códigos AT en Odoo para diseñar el armado por piezas ──
@@ -2378,7 +2442,7 @@ exports.handler = async function(event, context) {
           material:{type:'string'}
         }, required:['a','b'] }
       }];
-      let uidIA = null, lastArmar = null;
+      let uidIA = null, lastArmar = null, totalIn = 0, totalOut = 0;
       try {
         for (let iter=0; iter<3; iter++){
           const r = await fetch('https://api.anthropic.com/v1/messages', {
@@ -2387,10 +2451,12 @@ exports.handler = async function(event, context) {
             body: JSON.stringify({ model:MODEL, max_tokens:maxTokens, system:SYSTEM, tools, messages })
           });
           const data = await r.json();
+          if (data.usage) { totalIn += (data.usage.input_tokens||0); totalOut += (data.usage.output_tokens||0); }
           if (data.error) return {statusCode:200, headers, body: JSON.stringify({ error:data.error })};
           const toolUses = (data.content||[]).filter(b=>b.type==='tool_use');
           if (data.stop_reason!=='tool_use' || !toolUses.length){
             if (lastArmar) data._armar = lastArmar;
+            data._usage = { inTok: totalIn, outTok: totalOut };
             return {statusCode:200, headers, body: JSON.stringify(data)};
           }
           messages.push({ role:'assistant', content:data.content });
@@ -2411,7 +2477,9 @@ exports.handler = async function(event, context) {
           body: JSON.stringify({ model:MODEL, max_tokens:maxTokens, system:SYSTEM, messages })
         });
         const df = await rf.json();
+        if (df.usage) { totalIn += (df.usage.input_tokens||0); totalOut += (df.usage.output_tokens||0); }
         if (lastArmar) df._armar = lastArmar;
+        df._usage = { inTok: totalIn, outTok: totalOut };
         return {statusCode:200, headers, body: JSON.stringify(df)};
       } catch(e){
         return {statusCode:200, headers, body: JSON.stringify({ error:{ message:'Error en la IA: '+String((e&&e.message)||e) } })};
