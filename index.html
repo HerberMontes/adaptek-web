@@ -3372,6 +3372,13 @@ window.payTab = function(which){
   } else {
     if(brick) brick.style.display='block';
     if(spei) spei.style.display='none';
+    // Restaurar el formulario de tarjeta (SPEI pudo haberlo ocultado) y re-montarlo si quedó vacío.
+    var brickCont = document.getElementById('mp-brick-container');
+    if (brickCont) {
+      brickCont.style.display = 'block';
+      var vacio = !brickCont.children || brickCont.children.length === 0;
+      if (vacio && typeof window.montarBrickPago === 'function') { window.montarBrickPago(); }
+    }
     if(hint){ hint.style.display='block'; hint.textContent = (which==='oxxo')
       ? 'Elige la opción de pago en efectivo (OXXO y tiendas) en el formulario y genera tu ficha.'
       : 'Ingresa los datos de tu tarjeta de crédito o débito.'; }
@@ -4228,43 +4235,62 @@ function almOnScan(raw){
   if(line.done>=line.need){ almScanMsg(true, line.code+' ya estaba completo'); return; }
   line.done++; almScanMsg(true, line.code+' escaneado ('+line.done+'/'+line.need+')'); almRenderSurtir();
 }
-function almLoadZXing(cb){
-  if(window.ZXing){ cb(); return; }
-  var s=document.createElement('script'); s.src='https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js';
+function almLoadJsQR(cb){
+  if(window.jsQR){ cb(); return; }
+  var s=document.createElement('script'); s.src='https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js';
   s.onload=function(){ cb(); }; s.onerror=function(){ cb(new Error('lib')); };
   document.head.appendChild(s);
 }
 function almStartScan(){
   if(window.ALM.scanning){ almStopScan(); return; }
   var box=document.getElementById('alm-cam-box'), btn=document.getElementById('alm-scan-btn');
-  almLoadZXing(function(err){
-    if(err||!window.ZXing){ almScanMsg(false,'No se pudo cargar el escáner; usa "marcar" a mano.'); return; }
-    try{
-      window.ALM.reader=new ZXing.BrowserMultiFormatReader();
-      if(box) box.style.display='block'; if(btn) btn.textContent='Detener escáner';
-      window.ALM.scanning=true; window.ALM._last='';
-      var onResult=function(result){
-        if(result){
-          var t=result.getText?result.getText():result.text;
-          var now=Date.now();
-          if(t===window.ALM._last && (now-(window.ALM._lastT||0))<1500) return; // anti-rebote
-          window.ALM._last=t; window.ALM._lastT=now;
-          almOnScan(t);
-        }
-      };
-      // preferir camara trasera en celular; si falla, camara por defecto
-      if(typeof window.ALM.reader.decodeFromConstraints==='function'){
-        window.ALM.reader.decodeFromConstraints({ video:{ facingMode:{ ideal:'environment' } } },'alm-video',onResult)
-          .catch(function(){ try{ window.ALM.reader.decodeFromVideoDevice(null,'alm-video',onResult); }catch(e){ almScanMsg(false,'No se pudo abrir la cámara. Revisa permisos.'); } });
-      } else {
-        window.ALM.reader.decodeFromVideoDevice(null,'alm-video',onResult);
-      }
-    }catch(e){ almScanMsg(false,'No se pudo abrir la cámara. Revisa permisos.'); }
+  var video=document.getElementById('alm-video');
+  almLoadJsQR(function(err){
+    if(err||!window.jsQR){ almScanMsg(false,'No se pudo cargar el escáner; usa "marcar" a mano.'); return; }
+    var constraints={ video:{ facingMode:{ ideal:'environment' } }, audio:false };
+    navigator.mediaDevices.getUserMedia(constraints)
+      .catch(function(){ return navigator.mediaDevices.getUserMedia({ video:true, audio:false }); })
+      .then(function(stream){
+        window.ALM.stream=stream;
+        video.srcObject=stream;
+        video.setAttribute('playsinline','true'); video.muted=true;
+        return video.play();
+      })
+      .then(function(){
+        if(box) box.style.display='block'; if(btn) btn.textContent='Detener escáner';
+        window.ALM.scanning=true; window.ALM._last=''; window.ALM._lastT=0;
+        var canvas=document.createElement('canvas');
+        var ctx=canvas.getContext('2d',{ willReadFrequently:true });
+        var tick=function(){
+          if(!window.ALM.scanning) return;
+          if(video.readyState>=2 && video.videoWidth>0){
+            canvas.width=video.videoWidth; canvas.height=video.videoHeight;
+            ctx.drawImage(video,0,0,canvas.width,canvas.height);
+            try{
+              var img=ctx.getImageData(0,0,canvas.width,canvas.height);
+              var code=window.jsQR(img.data,img.width,img.height,{ inversionAttempts:'dontInvert' });
+              if(code && code.data){
+                var t=String(code.data).trim();
+                var now=Date.now();
+                if(!(t===window.ALM._last && (now-(window.ALM._lastT||0))<1500)){
+                  window.ALM._last=t; window.ALM._lastT=now;
+                  almOnScan(t);
+                }
+              }
+            }catch(e){}
+          }
+          window.ALM._raf=requestAnimationFrame(tick);
+        };
+        window.ALM._raf=requestAnimationFrame(tick);
+      })
+      .catch(function(){ almScanMsg(false,'No se pudo abrir la cámara. Revisa permisos.'); });
   });
 }
 function almStopScan(){
-  try{ if(window.ALM.reader) window.ALM.reader.reset(); }catch(e){}
   window.ALM.scanning=false;
+  if(window.ALM._raf){ try{ cancelAnimationFrame(window.ALM._raf); }catch(e){} window.ALM._raf=null; }
+  try{ if(window.ALM.stream){ window.ALM.stream.getTracks().forEach(function(tr){ tr.stop(); }); window.ALM.stream=null; } }catch(e){}
+  var video=document.getElementById('alm-video'); if(video){ try{ video.pause(); video.srcObject=null; }catch(e){} }
   var box=document.getElementById('alm-cam-box'); if(box) box.style.display='none';
   var btn=document.getElementById('alm-scan-btn'); if(btn) btn.textContent='Escanear código';
 }
