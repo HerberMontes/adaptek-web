@@ -850,6 +850,9 @@
 
 <!-- NAV -->
 <nav>
+  <a id="nav-back" href="#" onclick="goBack();return false;" title="Regresar" style="display:none;align-items:center;justify-content:center;width:38px;height:38px;border-radius:10px;margin-right:4px;color:#001F5B;text-decoration:none;flex:none;border:1px solid #e3e9f3;background:#fff;">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  </a>
   <a class="logo-wrap" href="#" onclick="showPage('home')">
     <div style="display:flex;align-items:baseline;line-height:1;">
       <span style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-weight:700;font-size:26px;letter-spacing:-.6px;color:#001F5B;">Adaptekk</span><span style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-weight:700;font-size:26px;color:#C8102E;">.</span>
@@ -3809,52 +3812,56 @@ body.exec-mode #cart-fab, body.exec-mode .wa-float{display:none!important;}
 </style>
 
 <!-- LOGIN SCREEN -->
-<div id="exec-portal-choose" style="display:flex;min-height:100vh;align-items:center;justify-content:center;background:linear-gradient(135deg,#001F5B,#003087);">
-  <div style="background:#fff;border-radius:16px;padding:38px 34px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center;">
-    <div style="font-family:Montserrat,sans-serif;font-weight:900;font-size:30px;margin-bottom:4px;"><span style="color:#001F5B;">Adaptekk</span><span style="color:#C8102E;">.</span></div>
-    <div style="font-size:11px;letter-spacing:3px;color:#aaa;text-transform:uppercase;margin-bottom:26px;">Acceso interno</div>
-    <button onclick="portalChoose('admin')" style="width:100%;display:flex;align-items:center;gap:14px;text-align:left;background:#fff;border:2px solid #e0e8f0;border-radius:12px;padding:15px 18px;cursor:pointer;margin-bottom:12px;font-family:inherit;">
-      <span style="width:42px;height:42px;border-radius:11px;background:#EEF3FB;display:flex;align-items:center;justify-content:center;flex:none;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#001F5B" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg></span>
-      <span><span style="display:block;font-size:15px;font-weight:700;color:#001F5B;">Portal Administrador</span><span style="display:block;font-size:12px;color:#888;">Tablero, clientes y servicios</span></span>
+<div id="exec-portal-choose" style="display:flex;min-height:100vh;align-items:center;justify-content:center;background:#fff;font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;padding:20px;">
+  <div style="background:#fff;border-radius:22px;padding:40px 34px;width:100%;max-width:430px;box-shadow:0 10px 40px rgba(16,32,72,.10);border:1px solid #eef0f4;text-align:center;">
+    <div style="font-size:28px;font-weight:700;letter-spacing:-.6px;margin-bottom:6px;"><span style="color:#0a1f44;">Adaptekk</span><span style="color:#C8102E;">.</span></div>
+    <div style="font-size:11px;letter-spacing:2.5px;color:#9aa7b8;text-transform:uppercase;margin-bottom:28px;font-weight:600;">Acceso interno</div>
+    <button onclick="portalChoose('admin')" onmouseover="this.style.borderColor='#2a6fdb';this.style.boxShadow='0 8px 22px rgba(42,111,219,.12)';this.querySelector('.pc-ic').style.background='#eef3fb';" onmouseout="this.style.borderColor='#e7ecf3';this.style.boxShadow='none';this.querySelector('.pc-ic').style.background='#f4f6fa';" style="width:100%;display:flex;align-items:center;gap:15px;text-align:left;background:#fff;border:1.5px solid #e7ecf3;border-radius:14px;padding:17px 18px;cursor:pointer;margin-bottom:12px;font-family:inherit;transition:all .18s ease;">
+      <span class="pc-ic" style="width:46px;height:46px;border-radius:12px;background:#f4f6fa;display:flex;align-items:center;justify-content:center;flex:none;transition:background .18s ease;"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="5" rx="2"/><rect x="13" y="11" width="8" height="10" rx="2"/><rect x="3" y="14" width="8" height="7" rx="2"/></svg></span>
+      <span style="flex:1;"><span style="display:block;font-size:15.5px;font-weight:700;color:#0a1f44;">Portal de Gerencia</span><span style="display:block;font-size:12.5px;color:#86868b;margin-top:1px;">Tablero, clientes y servicios</span></span>
+      <span style="color:#c2ccda;font-size:20px;">&rsaquo;</span>
     </button>
-    <button onclick="portalChoose('almacen')" style="width:100%;display:flex;align-items:center;gap:14px;text-align:left;background:#fff;border:2px solid #e0e8f0;border-radius:12px;padding:15px 18px;cursor:pointer;font-family:inherit;">
-      <span style="width:42px;height:42px;border-radius:11px;background:#EEF3FB;display:flex;align-items:center;justify-content:center;flex:none;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#001F5B" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-6 9 6v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M3 9h18M9 22V12h6v10"/></svg></span>
-      <span><span style="display:block;font-size:15px;font-weight:700;color:#001F5B;">Portal de Almacén</span><span style="display:block;font-size:12px;color:#888;">Surtir pedidos y escanear códigos</span></span>
+    <button onclick="portalChoose('almacen')" onmouseover="this.style.borderColor='#C8102E';this.style.boxShadow='0 8px 22px rgba(200,16,46,.10)';this.querySelector('.pc-ic').style.background='#fdeef0';" onmouseout="this.style.borderColor='#e7ecf3';this.style.boxShadow='none';this.querySelector('.pc-ic').style.background='#f4f6fa';" style="width:100%;display:flex;align-items:center;gap:15px;text-align:left;background:#fff;border:1.5px solid #e7ecf3;border-radius:14px;padding:17px 18px;cursor:pointer;font-family:inherit;transition:all .18s ease;">
+      <span class="pc-ic" style="width:46px;height:46px;border-radius:12px;background:#f4f6fa;display:flex;align-items:center;justify-content:center;flex:none;transition:background .18s ease;"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#C8102E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-6 9 6v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M3 9h18M9 22V12h6v10"/></svg></span>
+      <span style="flex:1;"><span style="display:block;font-size:15.5px;font-weight:700;color:#0a1f44;">Portal de Almacén</span><span style="display:block;font-size:12.5px;color:#86868b;margin-top:1px;">Surtir pedidos y escanear códigos</span></span>
+      <span style="color:#c2ccda;font-size:20px;">&rsaquo;</span>
     </button>
-    <div onclick="showPage('home')" style="margin-top:20px;font-size:12px;color:#aaa;cursor:pointer;">&larr; Volver al sitio</div>
+    <div onclick="goBack()" style="margin-top:20px;font-size:12px;color:#aaa;cursor:pointer;">&larr; Volver al sitio</div>
   </div>
 </div>
-<div id="alm-screen" style="display:none;min-height:100vh;background:#0a1f44;">
+<div id="alm-screen" style="display:none;min-height:100vh;background:#fff;">
   <div style="background:#001F5B;color:#fff;padding:13px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5;">
-    <span style="font-family:Montserrat,sans-serif;font-weight:900;font-size:17px;">Adaptekk<span style="color:#C8102E;">.</span> <span style="font-weight:600;font-size:11px;letter-spacing:2px;color:rgba(255,255,255,.5);">ALMACÉN</span></span>
+    <span style="display:flex;align-items:center;gap:11px;"><button onclick="goBack()" title="Regresar" style="background:rgba(255,255,255,.12);border:none;border-radius:9px;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button><span style="font-size:17px;font-weight:700;letter-spacing:-.3px;">Adaptekk<span style="color:#C8102E;">.</span> <span style="font-weight:600;font-size:11px;letter-spacing:2px;color:rgba(255,255,255,.5);">ALMACÉN</span></span></span>
     <span style="display:flex;align-items:center;gap:14px;"><span id="alm-who-badge" style="font-size:12px;color:rgba(255,255,255,.72);"></span><span onclick="almSalir()" style="font-size:12px;color:rgba(255,255,255,.5);cursor:pointer;">Salir</span></span>
   </div>
 
-  <div id="alm-login" style="max-width:360px;margin:0 auto;padding:56px 22px;">
-    <div style="background:#fff;border-radius:16px;padding:32px 26px;box-shadow:0 18px 50px rgba(0,0,0,.25);text-align:center;">
-      <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#001F5B;margin-bottom:18px;">Portal de Almacén</div>
-      <input id="alm-pass" type="password" placeholder="Contraseña de acceso" onkeydown="if(event.key==='Enter')almLogin()" style="width:100%;padding:12px 14px;border:2px solid #e0e8f0;border-radius:9px;font-size:15px;box-sizing:border-box;margin-bottom:10px;"/>
-      <div id="alm-login-err" style="display:none;color:#C8102E;font-size:12px;margin-bottom:8px;">Contraseña incorrecta</div>
-      <button onclick="almLogin()" style="width:100%;background:#001F5B;color:#fff;border:none;padding:13px;border-radius:9px;font-weight:700;font-size:15px;cursor:pointer;">Entrar</button>
-      <div onclick="almSalir()" style="margin-top:14px;font-size:12px;color:#aaa;cursor:pointer;">&larr; Volver</div>
+  <div id="alm-login" style="max-width:380px;margin:0 auto;padding:56px 22px;font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;">
+    <div style="background:#fff;border-radius:20px;padding:36px 30px;box-shadow:0 10px 40px rgba(16,32,72,.10);border:1px solid #eef0f4;text-align:center;">
+      <div style="width:52px;height:52px;border-radius:14px;background:#f4f6fa;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#C8102E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div>
+      <div style="font-size:18px;font-weight:700;letter-spacing:-.2px;color:#0a1f44;margin-bottom:4px;">Portal de Almacén</div>
+      <div style="font-size:13px;color:#86868b;margin-bottom:22px;">Ingresa la contraseña para surtir pedidos</div>
+      <input id="alm-pass" type="password" placeholder="Contraseña de acceso" onkeydown="if(event.key==='Enter')almLogin()" onfocus="this.style.borderColor='#C8102E'" onblur="this.style.borderColor='#e0e8f0'" style="width:100%;padding:13px 15px;border:1.5px solid #e0e8f0;border-radius:12px;font-size:15px;box-sizing:border-box;margin-bottom:10px;font-family:inherit;outline:none;transition:border-color .2s;"/>
+      <div id="alm-login-err" style="display:none;color:#C8102E;font-size:12.5px;margin-bottom:8px;">Contraseña incorrecta</div>
+      <button onclick="almLogin()" onmouseover="this.style.background='#a50d26'" onmouseout="this.style.background='#C8102E'" style="width:100%;background:#C8102E;color:#fff;border:none;padding:14px;border-radius:12px;font-weight:600;font-size:15px;cursor:pointer;font-family:inherit;transition:background .18s ease;">Entrar</button>
+      <div onclick="almSalir()" style="margin-top:16px;font-size:13px;color:#9aa7b8;cursor:pointer;font-weight:500;">&larr; Volver</div>
     </div>
   </div>
 
-  <div id="alm-quien" style="display:none;max-width:380px;margin:0 auto;padding:48px 22px;">
-    <div style="background:#fff;border-radius:16px;padding:28px 24px;box-shadow:0 18px 50px rgba(0,0,0,.25);">
-      <div style="font-size:16px;font-weight:700;color:#001F5B;margin-bottom:4px;">¿Quién surte hoy?</div>
-      <div style="font-size:13px;color:#888;margin-bottom:16px;">Tu nombre queda en el pedido para evitar duplicados.</div>
-      <input id="alm-name" type="text" placeholder="Tu nombre" onkeydown="if(event.key==='Enter')almPickWho()" style="width:100%;padding:12px 14px;border:2px solid #e0e8f0;border-radius:9px;font-size:15px;box-sizing:border-box;margin-bottom:12px;"/>
-      <button onclick="almPickWho()" style="width:100%;background:#001F5B;color:#fff;border:none;padding:13px;border-radius:9px;font-weight:700;font-size:15px;cursor:pointer;">Continuar</button>
+  <div id="alm-quien" style="display:none;max-width:400px;margin:0 auto;padding:48px 22px;font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;">
+    <div style="background:#fff;border-radius:20px;padding:32px 28px;box-shadow:0 10px 40px rgba(16,32,72,.10);border:1px solid #eef0f4;">
+      <div style="font-size:19px;font-weight:700;letter-spacing:-.3px;color:#0a1f44;margin-bottom:5px;">¿Quién surte hoy?</div>
+      <div style="font-size:13.5px;color:#86868b;line-height:1.5;margin-bottom:20px;">Tu nombre queda en el pedido para evitar duplicados.</div>
+      <input id="alm-name" type="text" placeholder="Tu nombre" onkeydown="if(event.key==='Enter')almPickWho()" onfocus="this.style.borderColor='#C8102E'" onblur="this.style.borderColor='#e0e8f0'" style="width:100%;padding:13px 15px;border:1.5px solid #e0e8f0;border-radius:12px;font-size:15px;box-sizing:border-box;margin-bottom:14px;font-family:inherit;outline:none;transition:border-color .2s;"/>
+      <button onclick="almPickWho()" onmouseover="this.style.background='#a50d26'" onmouseout="this.style.background='#C8102E'" style="width:100%;background:#C8102E;color:#fff;border:none;padding:14px;border-radius:12px;font-weight:600;font-size:15px;cursor:pointer;font-family:inherit;transition:background .18s ease;">Continuar</button>
     </div>
   </div>
 
-  <div id="alm-tablero" style="display:none;max-width:760px;margin:0 auto;padding:20px 16px 60px;">
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;">
-      <div id="alm-tab-disp" onclick="almTab('disp')" style="background:#fff;border-radius:11px;padding:12px 6px;text-align:center;cursor:pointer;outline:2px solid #C8102E;"><div id="alm-c-disp" style="font-size:22px;font-weight:800;color:#0a1f44;">0</div><div style="font-size:11px;color:#8895a7;font-weight:600;">Disponibles</div></div>
-      <div id="alm-tab-proc" onclick="almTab('proc')" style="background:#fff;border-radius:11px;padding:12px 6px;text-align:center;cursor:pointer;outline:none;"><div id="alm-c-proc" style="font-size:22px;font-weight:800;color:#0a1f44;">0</div><div style="font-size:11px;color:#8895a7;font-weight:600;">En proceso</div></div>
-      <div id="alm-tab-mios" onclick="almTab('mios')" style="background:#fff;border-radius:11px;padding:12px 6px;text-align:center;cursor:pointer;outline:none;"><div id="alm-c-mios" style="font-size:22px;font-weight:800;color:#0a1f44;">0</div><div style="font-size:11px;color:#8895a7;font-weight:600;">Mis pedidos</div></div>
-      <div id="alm-tab-todos" onclick="almTab('todos')" style="background:#fff;border-radius:11px;padding:12px 6px;text-align:center;cursor:pointer;outline:none;"><div id="alm-c-todos" style="font-size:22px;font-weight:800;color:#0a1f44;">0</div><div style="font-size:11px;color:#8895a7;font-weight:600;">Todos</div></div>
+  <div id="alm-tablero" style="display:none;max-width:760px;margin:0 auto;padding:20px 16px 60px;font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;">
+      <div id="alm-tab-disp" onclick="almTab('disp')" style="background:#fff;border:1px solid #e7ecf3;border-radius:14px;padding:14px 6px;text-align:center;cursor:pointer;outline:2px solid #C8102E;"><div id="alm-c-disp" style="font-size:24px;font-weight:800;color:#0a1f44;">0</div><div style="font-size:11px;color:#8895a7;font-weight:600;margin-top:2px;">Disponibles</div></div>
+      <div id="alm-tab-proc" onclick="almTab('proc')" style="background:#fff;border:1px solid #e7ecf3;border-radius:14px;padding:14px 6px;text-align:center;cursor:pointer;outline:none;"><div id="alm-c-proc" style="font-size:24px;font-weight:800;color:#0a1f44;">0</div><div style="font-size:11px;color:#8895a7;font-weight:600;margin-top:2px;">En proceso</div></div>
+      <div id="alm-tab-mios" onclick="almTab('mios')" style="background:#fff;border:1px solid #e7ecf3;border-radius:14px;padding:14px 6px;text-align:center;cursor:pointer;outline:none;"><div id="alm-c-mios" style="font-size:24px;font-weight:800;color:#0a1f44;">0</div><div style="font-size:11px;color:#8895a7;font-weight:600;margin-top:2px;">Mis pedidos</div></div>
+      <div id="alm-tab-todos" onclick="almTab('todos')" style="background:#fff;border:1px solid #e7ecf3;border-radius:14px;padding:14px 6px;text-align:center;cursor:pointer;outline:none;"><div id="alm-c-todos" style="font-size:24px;font-weight:800;color:#0a1f44;">0</div><div style="font-size:11px;color:#8895a7;font-weight:600;margin-top:2px;">Todos</div></div>
     </div>
     <div id="alm-list"></div>
   </div>
@@ -3862,16 +3869,16 @@ body.exec-mode #cart-fab, body.exec-mode .wa-float{display:none!important;}
   <div id="alm-surtir" style="display:none;max-width:680px;margin:0 auto;padding:18px 16px 90px;">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
       <button onclick="almVolverTablero()" style="background:#fff;border:1px solid #dde6f0;border-radius:10px;width:38px;height:38px;cursor:pointer;font-size:18px;color:#001F5B;">&larr;</button>
-      <div style="font-size:17px;font-weight:800;color:#fff;">Surtir pedido</div>
+      <div style="font-size:17px;font-weight:700;letter-spacing:-.2px;color:#0a1f44;">Surtir pedido</div>
     </div>
-    <div style="background:#fff;border-radius:14px;padding:15px 16px;margin-bottom:13px;">
+    <div style="background:#fff;border:1px solid #eef0f4;border-radius:14px;padding:15px 16px;margin-bottom:13px;">
       <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;"><span style="color:#8895a7;">Cliente</span><span id="alm-s-cliente" style="font-weight:700;color:#0a1f44;">—</span></div>
       <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:#8895a7;">Pedido</span><span id="alm-s-pedido" style="font-weight:700;color:#0a1f44;">—</span></div>
     </div>
-    <div style="background:#fff;border-radius:14px;padding:16px;margin-bottom:13px;">
+    <div style="background:#fff;border:1px solid #eef0f4;border-radius:14px;padding:16px;margin-bottom:13px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
         <span style="font-size:14px;font-weight:800;color:#0a1f44;">Productos a recoger</span>
-        <span id="alm-s-prog" style="font-size:13px;font-weight:700;color:#0071e3;">0 de 0</span>
+        <span id="alm-s-prog" style="font-size:13px;font-weight:700;color:#C8102E;">0 de 0</span>
       </div>
       <button id="alm-scan-btn" onclick="almStartScan()" style="width:100%;background:#001F5B;color:#fff;border:none;padding:13px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;margin-bottom:10px;">Escanear código</button>
       <div id="alm-cam-box" style="display:none;border-radius:12px;overflow:hidden;margin-bottom:10px;background:#000;position:relative;">
@@ -3888,7 +3895,7 @@ body.exec-mode #cart-fab, body.exec-mode .wa-float{display:none!important;}
   </div>
 
   <div id="alm-listo" style="display:none;max-width:460px;margin:0 auto;padding:66px 22px;">
-    <div style="background:#fff;border-radius:16px;padding:40px 28px;text-align:center;box-shadow:0 18px 50px rgba(0,0,0,.25);">
+    <div style="background:#fff;border-radius:16px;padding:40px 28px;text-align:center;box-shadow:0 10px 40px rgba(16,32,72,.10);border:1px solid #eef0f4;">
       <div style="width:64px;height:64px;border-radius:50%;background:#E8F6EE;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1F9D55" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></div>
       <div style="font-size:20px;font-weight:800;color:#0a1f44;margin-bottom:6px;">Pedido surtido</div>
       <div style="font-size:13.5px;color:#8895a7;line-height:1.5;margin-bottom:22px;">Listo para empaque y envío. El inventario se actualizó en Odoo automáticamente.</div>
@@ -3896,40 +3903,44 @@ body.exec-mode #cart-fab, body.exec-mode .wa-float{display:none!important;}
     </div>
   </div>
 </div>
-<div id="exec-login-screen" style="display:none;min-height:100vh;align-items:center;justify-content:center;background:linear-gradient(135deg,#001F5B,#003087);">
-  <div style="background:#fff;border-radius:16px;padding:40px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+<div id="exec-login-screen" style="display:none;min-height:100vh;align-items:center;justify-content:center;background:#fff;font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;padding:20px;">
+  <div style="background:#fff;border-radius:22px;padding:42px 38px;width:100%;max-width:390px;box-shadow:0 10px 40px rgba(16,32,72,.10);border:1px solid #eef0f4;">
     <div style="text-align:center;margin-bottom:28px;">
-      <div style="font-family:Montserrat,sans-serif;font-weight:900;font-size:32px;margin-bottom:4px;">
-        <span style="color:#001F5B;">Adaptekk</span><span style="color:#C8102E;">.</span>
+      <div style="font-size:30px;font-weight:700;letter-spacing:-.6px;margin-bottom:6px;">
+        <span style="color:#0a1f44;">Adaptekk</span><span style="color:#C8102E;">.</span>
       </div>
-      <div style="font-size:11px;letter-spacing:3px;color:#aaa;text-transform:uppercase;">Portal Ejecutivo</div>
+      <div style="font-size:11px;letter-spacing:2.5px;color:#9aa7b8;text-transform:uppercase;font-weight:600;">Portal de Gerencia</div>
     </div>
-    <label style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#888;display:block;margin-bottom:6px;">Usuario</label>
+    <label style="font-size:12px;font-weight:600;letter-spacing:0;color:#5b6577;display:block;margin-bottom:7px;">Usuario</label>
     <input id="exec-user-input" type="text" placeholder="Tu correo o zona (ej: zona-noreste)"
-      style="width:100%;padding:12px 16px;border:2px solid #e0e8f0;border-radius:8px;font-size:15px;box-sizing:border-box;margin-bottom:12px;"
+      style="width:100%;padding:13px 15px;border:1.5px solid #e0e8f0;border-radius:12px;font-size:15px;box-sizing:border-box;margin-bottom:14px;font-family:inherit;outline:none;transition:border-color .2s;"
+      onfocus="this.style.borderColor='#C8102E'" onblur="this.style.borderColor='#e0e8f0'"
       onkeydown="if(event.key==='Enter')execLogin()"/>
-    <label style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#888;display:block;margin-bottom:6px;">Contrasena</label>
-    <input id="exec-pass-input" type="password" placeholder="Ingresa tu contrasena"
-      style="width:100%;padding:12px 16px;border:2px solid #e0e8f0;border-radius:8px;font-size:15px;box-sizing:border-box;margin-bottom:10px;"
+    <label style="font-size:12px;font-weight:600;letter-spacing:0;color:#5b6577;display:block;margin-bottom:7px;">Contraseña</label>
+    <input id="exec-pass-input" type="password" placeholder="Ingresa tu contraseña"
+      style="width:100%;padding:13px 15px;border:1.5px solid #e0e8f0;border-radius:12px;font-size:15px;box-sizing:border-box;margin-bottom:12px;font-family:inherit;outline:none;transition:border-color .2s;"
+      onfocus="this.style.borderColor='#C8102E'" onblur="this.style.borderColor='#e0e8f0'"
       onkeydown="if(event.key==='Enter')execLogin()"/>
-    <div id="exec-login-err" style="color:#C8102E;font-size:12px;margin-bottom:10px;display:none;">Usuario o contrasena incorrectos</div>
-    <button onclick="execLogin()" style="width:100%;background:#001F5B;color:#fff;border:none;padding:14px;border-radius:8px;font-weight:700;font-size:15px;cursor:pointer;">
-      Entrar al Portal
+    <div id="exec-login-err" style="color:#C8102E;font-size:12.5px;margin-bottom:12px;display:none;">Usuario o contraseña incorrectos</div>
+    <button onclick="execLogin()" style="width:100%;background:#C8102E;color:#fff;border:none;padding:14px;border-radius:12px;font-weight:600;font-size:15px;cursor:pointer;font-family:inherit;transition:background .18s ease;" onmouseover="this.style.background='#a50d26'" onmouseout="this.style.background='#C8102E'">
+      Entrar al portal
     </button>
+    <div onclick="portalReset()" style="text-align:center;margin-top:18px;font-size:13px;color:#9aa7b8;cursor:pointer;font-weight:500;">&larr; Cambiar de portal</div>
   </div>
 </div>
 
 <!-- PORTAL SCREEN -->
-<div id="exec-portal-screen" style="display:none;background:#F4F6FA;min-height:100vh;">
+<div id="exec-portal-screen" style="display:none;background:#fff;min-height:100vh;">
 
   <!-- Header -->
   <div style="background:#001F5B;color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;">
     <div style="display:flex;align-items:center;gap:12px;">
-      <span style="font-family:Montserrat,sans-serif;font-weight:900;font-size:20px;">
+      <button onclick="goBack()" title="Regresar" style="background:rgba(255,255,255,.12);border:none;border-radius:9px;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <span style="font-size:19px;font-weight:700;letter-spacing:-.4px;">
         <span style="color:#fff;">Adaptekk</span><span style="color:#C8102E;">.</span>
       </span>
       <div style="width:1px;height:20px;background:rgba(255,255,255,.2);"></div>
-      <span style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.6);">Portal Ejecutivo</span>
+      <span style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.6);">Portal de Gerencia</span>
       <span id="exec-role-badge" style="font-size:10px;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,.1);color:#fff;font-weight:700;"></span>
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
@@ -4143,11 +4154,11 @@ function almRenderList(){
   if(!list.length){ cont.innerHTML='<div style="background:#fff;border-radius:12px;padding:30px;text-align:center;color:#9aa7b8;font-size:14px;">No hay pedidos en esta vista.</div>'; return; }
   cont.innerHTML=list.map(function(p){
     var mine=p.owner===me, taken=p.owner&&!mine;
-    var badge=p.owner?'<span style="font-size:11px;font-weight:700;color:'+(mine?'#1F9D55':'#E0962A')+';">'+(mine?'Tuyo':'Tomado por '+p.owner)+'</span>':'<span style="font-size:11px;font-weight:700;color:#0071e3;">Disponible</span>';
-    var btn=taken?'<span style="font-size:12px;color:#bbb;">En proceso</span>':'<button onclick="almOpen('+p.id+')" style="background:#001F5B;color:#fff;border:none;padding:9px 16px;border-radius:980px;font-size:12.5px;font-weight:700;cursor:pointer;">Surtir</button>';
-    return '<div style="background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;">'
-      +'<div><div style="font-size:14px;font-weight:700;color:#0a1f44;">'+(p.cliente||'Cliente')+'</div>'
-      +'<div style="font-size:12px;color:#8895a7;margin:2px 0 3px;">'+(p.wh||'')+(p.origin?' · '+p.origin:'')+'</div>'+badge+'</div>'+btn+'</div>';
+    var badge=p.owner?'<span style="display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:'+(mine?'#e7f6ee':'#fdf3e3')+';color:'+(mine?'#0f6b39':'#9a6512')+';">'+(mine?'Tuyo':'Tomado por '+p.owner)+'</span>':'<span style="display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:#eef3fb;color:#2a6fdb;">Disponible</span>';
+    var btn=taken?'<span style="font-size:12px;color:#aab2c0;font-weight:600;">En proceso</span>':'<button onclick="almOpen('+p.id+')" onmouseover="this.style.background=\'#a50d26\'" onmouseout="this.style.background=\'#C8102E\'" style="background:#C8102E;color:#fff;border:none;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:background .18s ease;">Surtir</button>';
+    return '<div style="background:#fff;border:1px solid #eef0f4;border-radius:14px;padding:15px 17px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;">'
+      +'<div><div style="font-size:15px;font-weight:700;letter-spacing:-.2px;color:#0a1f44;">'+(p.cliente||'Cliente')+'</div>'
+      +'<div style="font-size:12px;color:#8895a7;margin:3px 0 8px;">'+(p.wh||'')+(p.origin?' · '+p.origin:'')+'</div>'+badge+'</div>'+btn+'</div>';
   }).join('');
 }
 function almOpen(id){
@@ -5816,12 +5827,19 @@ window.mockRegister = async function(){
   }
 };
 
-function showPage(id) {
+function showPage(id, isBack) {
+  if (!isBack && window.navCurrentPage && window.navCurrentPage !== id) {
+    window.navHistory = window.navHistory || [];
+    window.navHistory.push(window.navCurrentPage);
+    if (window.navHistory.length > 60) window.navHistory.shift();
+  }
+  window.navCurrentPage = id;
   pages.forEach(function(p){ var el = document.getElementById('page-'+p); if (el) el.style.display='none'; });
   var target = document.getElementById('page-'+id);
   if (target) { target.style.display='block'; }
   else if (typeof console !== 'undefined') { console.warn('showPage: no existe page-'+id); }
   window.scrollTo(0,0);
+  var nb = document.getElementById('nav-back'); if (nb) nb.style.display = (id==='home') ? 'none' : 'flex';
   if (id === 'cart' && typeof renderCart === 'function') { renderCart(); }
   if (id === 'catalogo' && typeof renderCatalogo === 'function') { renderCatalogo(); }
   if(id==='cfg'){
@@ -5830,6 +5848,28 @@ function showPage(id) {
       else if(typeof window.renderStep==='function'){ window.renderProgress(); window.renderStep(); }
     },50);
   }
+}
+// Regresa un paso atras (pagina anterior), nunca reinicia ni manda a inicio salvo que no haya historial.
+function navBack(){
+  if (window.navHistory && window.navHistory.length){ showPage(window.navHistory.pop(), true); }
+  else { showPage('home', true); }
+}
+function navShown(id){ var e=document.getElementById(id); return !!(e && e.style.display!=='none'); }
+// Boton global de regreso: respeta sub-pasos (portal/almacen) antes de cambiar de pagina.
+function goBack(){
+  if (window.navCurrentPage==='portal'){
+    var alm=document.getElementById('alm-screen');
+    if (alm && alm.style.display!=='none'){
+      if (navShown('alm-listo')||navShown('alm-surtir')){ almVolverTablero(); return; }
+      if (navShown('alm-tablero')){ almShow('quien'); return; }
+      if (navShown('alm-quien')){ almShow('login'); return; }
+      almSalir(); return;
+    }
+    if (navShown('exec-portal-screen')){ execLogout(); return; }
+    if (navShown('exec-login-screen')){ portalReset(); return; }
+    navBack(); return;
+  }
+  navBack();
 }
 showPage('home');
 
