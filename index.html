@@ -3808,7 +3808,6 @@ function payConfirmado(metodo){
 .dsh-spinner{width:26px;height:26px;border:3px solid #E7ECF3;border-top-color:#001F5B;border-radius:50%;margin:0 auto;animation:dshspin .8s linear infinite;}
 @keyframes dshspin{to{transform:rotate(360deg);}}
 body.exec-mode #cart-fab, body.exec-mode .wa-float{display:none!important;}
-body.exec-mode .topbar, body.exec-mode > nav, body.exec-mode body > nav{display:none!important;}
 .ebtn.in{background:#f0f0f0;color:#333;}
 </style>
 
@@ -4058,8 +4057,16 @@ async function execLogin() {
     } catch(e) { ok = false; }
     if (btn) { btn.disabled = false; btn.textContent = 'Entrar'; }
   } else {
-    // Zonas: validación local (sin cambios)
-    ok = (cuenta.pass === pass);
+    // Encargado de zona: validación en backend (contraseña administrable desde Gerencia + bloqueo)
+    var btn2 = document.querySelector('#exec-login-screen button');
+    if (btn2) { btn2.disabled = true; btn2.textContent = 'Entrando…'; }
+    try {
+      var rz = await fetch('/.netlify/functions/odoo', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'encargado_login', user:user, pass:pass})});
+      var dz = await rz.json();
+      ok = !!(dz && dz.ok);
+      if (dz && dz.blocked) { if(btn2){btn2.disabled=false;btn2.textContent='Entrar';} err.textContent='Este usuario está bloqueado. Contacta a Gerencia.'; err.style.display='block'; return; }
+    } catch(e) { ok = false; }
+    if (btn2) { btn2.disabled = false; btn2.textContent = 'Entrar'; }
   }
 
   if (ok) {
@@ -4079,6 +4086,7 @@ async function execLogin() {
     cargarClientes();
     execVista(esGerente ? 'tablero' : 'clientes');
   } else {
+    err.textContent = 'Usuario o contraseña incorrectos.';
     err.style.display = 'block';
   }
 }
@@ -4174,7 +4182,7 @@ function almOpen(id){
       var lineas=(dd&&dd.ok&&dd.lineas)?dd.lineas:[];
       window.ALM.lines=lineas.map(function(l){
         var code=((String(l.producto).match(/\[([^\]]+)\]/)||[])[1]||'').toUpperCase().trim();
-        return { code:code, nombre:String(l.producto), need:Math.max(1,Math.round(l.cantidad||1)), done:0, ubic:l.ubicacion||'' };
+        return { code:code, nombre:String(l.producto), need:Math.max(1,Math.round(l.cantidad||1)), done:0, ubic:l.ubicacion||'', peso:(l.peso_unit||0), pesoTot:(l.peso_total||0) };
       });
       almRenderSurtir(); almShow('surtir');
     });
@@ -4190,11 +4198,16 @@ function almRenderSurtir(){
   var allDone=totalNeed>0&&totalDone>=totalNeed;
   var btn=document.getElementById('alm-confirmar'); if(btn){ btn.disabled=!allDone; btn.style.opacity=allDone?'1':'.45'; btn.style.cursor=allDone?'pointer':'not-allowed'; }
   var cont=document.getElementById('alm-lines'); if(!cont) return;
-  cont.innerHTML=lines.map(function(l,i){
+  var totalPeso=lines.reduce(function(a,l){return a+(l.pesoTot||0);},0);
+  var pesoHdr = totalPeso>0
+    ? '<div style="display:flex;justify-content:space-between;align-items:center;background:#eef3fb;border:1px solid #dbe6f5;border-radius:10px;padding:9px 13px;margin-bottom:10px;"><span style="font-size:11.5px;color:#5b6577;font-weight:600;">Peso total estimado</span><span style="font-size:13px;font-weight:800;color:#0a1f44;">'+totalPeso.toFixed(3).replace(/\.?0+$/,'')+' kg</span></div>'
+    : '<div style="font-size:11px;color:#b06a00;background:#fff7e6;border:1px solid #ffe1a8;border-radius:10px;padding:8px 12px;margin-bottom:10px;">Sin peso cargado en estos productos (cárgalo en Odoo para envío y empaque).</div>';
+  cont.innerHTML=pesoHdr+lines.map(function(l,i){
     var ok=l.done>=l.need;
+    var pesoTxt=(l.peso>0)?('<div style="font-size:11px;color:#7a8699;margin-top:2px;">'+String(l.peso).replace(/\.?0+$/,'')+' kg c/u · '+String(l.pesoTot||0).replace(/\.?0+$/,'')+' kg total</div>'):'';
     return '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 13px;border:1.5px solid '+(ok?'#bfe6cb':'#e7e9ef')+';background:'+(ok?'#F2FBF5':'#fff')+';border-radius:10px;margin-bottom:8px;">'
       +'<div><div style="font-size:13px;font-weight:700;color:#0a1f44;letter-spacing:.3px;">'+(l.code||'—')+'</div>'
-      +'<div style="font-size:11.5px;color:#8895a7;">'+(l.ubic||'')+'</div></div>'
+      +'<div style="font-size:11.5px;color:#8895a7;">'+(l.ubic||'')+'</div>'+pesoTxt+'</div>'
       +'<div style="display:flex;align-items:center;gap:10px;"><span style="font-size:13px;font-weight:700;color:'+(ok?'#1F9D55':'#5b6577')+';">'+l.done+' / '+l.need+'</span>'
       +(ok?'<span style="color:#1F9D55;font-size:16px;">&#10003;</span>':'<button onclick="almMark('+i+')" style="background:none;border:1px solid #dde6f0;color:#5b6577;border-radius:8px;padding:5px 9px;font-size:11px;cursor:pointer;">marcar</button>')
       +'</div></div>';
@@ -4739,28 +4752,45 @@ async function reenviarAcceso(id) {
 }
 
 // ── ADMIN USUARIOS (solo gerencia) ──
-function abrirAdminUsuarios() {
+async function abrirAdminUsuarios() {
   var list = document.getElementById('admin-users-list');
   var zonas = Object.keys(EXEC_CUENTAS).filter(function(k){return EXEC_CUENTAS[k].rol!=='gerente';});
+  document.getElementById('admin-users-modal').style.display = 'block';
+  list.innerHTML = '<div style="color:#8895a7;font-size:13px;padding:10px;">Cargando…</div>';
+  var blocked = {}, passes = {};
+  try {
+    var r = await fetch('/.netlify/functions/odoo', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'get_user_passes', gerencia_pass: execCurrentUser.pass})});
+    var d = await r.json();
+    if (d && d.success) { blocked = d.blocked || {}; passes = d.passes || {}; }
+  } catch(e) {}
   list.innerHTML = '<div style="display:flex;flex-direction:column;gap:12px;">' +
     zonas.map(function(key) {
       var cuenta = EXEC_CUENTAS[key];
-      return '<div style="border:1px solid #e0e8f0;border-radius:8px;padding:14px 16px;">' +
-        '<div style="margin-bottom:10px;">' +
-          '<div style="font-weight:700;color:#001F5B;font-size:14px;">' + cuenta.nombre + '</div>' +
-          '<div style="font-size:11px;color:#aaa;margin-top:2px;">Usuario: <code style="background:#f0f0f0;padding:1px 6px;border-radius:3px;">' + key + '</code></div>' +
+      var isBlocked = !!blocked[key];
+      var hasPass = !!passes[key];
+      return '<div style="border:1px solid '+(isBlocked?'#f2c2c2':'#e0e8f0')+';border-radius:8px;padding:14px 16px;background:'+(isBlocked?'#fdf3f3':'#fff')+';">' +
+        '<div style="margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">' +
+          '<div><div style="font-weight:700;color:#001F5B;font-size:14px;">' + cuenta.nombre + (isBlocked?' <span style="color:#C8102E;font-size:11px;font-weight:700;">· BLOQUEADO</span>':'') + '</div>' +
+          '<div style="font-size:11px;color:#aaa;margin-top:2px;">Usuario: <code style="background:#f0f0f0;padding:1px 6px;border-radius:3px;">' + key + '</code>' + (hasPass?' · contraseña personalizada':' · contraseña por defecto') + '</div></div>' +
+          '<button onclick="bloquearUsuario(\''+key+'\','+(isBlocked?'false':'true')+')" style="background:'+(isBlocked?'#1F9D55':'#fff')+';color:'+(isBlocked?'#fff':'#C8102E')+';border:1.5px solid '+(isBlocked?'#1F9D55':'#e6b8b8')+';padding:6px 12px;border-radius:6px;cursor:pointer;font-weight:700;font-size:11px;white-space:nowrap;">'+(isBlocked?'Desbloquear':'Bloquear')+'</button>' +
         '</div>' +
         '<div style="display:flex;align-items:center;gap:8px;">' +
-          '<input id="newpass-'+key+'" type="password" placeholder="Nueva contrasena (min 6 caracteres)"' +
-            ' style="flex:1;padding:8px 12px;border:1.5px solid #dde6f0;border-radius:6px;font-size:13px;"/>' +
-          '<button onclick="cambiarPass(\''+key+'\')"' +
-            ' style="background:#001F5B;color:#fff;border:none;padding:9px 16px;border-radius:6px;cursor:pointer;font-weight:700;font-size:12px;white-space:nowrap;">Guardar</button>' +
+          '<input id="newpass-'+key+'" type="password" placeholder="Nueva contrasena (min 6 caracteres)" style="flex:1;padding:8px 12px;border:1.5px solid #dde6f0;border-radius:6px;font-size:13px;"/>' +
+          '<button onclick="cambiarPass(\''+key+'\')" style="background:#001F5B;color:#fff;border:none;padding:9px 16px;border-radius:6px;cursor:pointer;font-weight:700;font-size:12px;white-space:nowrap;">Guardar</button>' +
           '<span id="ok-'+key+'" style="display:none;color:#25a244;font-size:18px;">&#10003;</span>' +
         '</div>' +
       '</div>';
     }).join('') +
   '</div>';
-  document.getElementById('admin-users-modal').style.display = 'block';
+}
+
+async function bloquearUsuario(key, blocked) {
+  try {
+    var r = await fetch('/.netlify/functions/odoo', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'encargado_block', user_key:key, blocked:blocked, gerencia_pass: execCurrentUser.pass})});
+    var d = await r.json();
+    if (d && d.success) { abrirAdminUsuarios(); }
+    else { alert('Error: '+((d&&d.error)||'Intenta de nuevo')); }
+  } catch(e) { alert('Error de conexión: '+e.message); }
 }
 
 function cerrarAdminUsuarios() { document.getElementById('admin-users-modal').style.display = 'none'; }
