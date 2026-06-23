@@ -568,10 +568,21 @@ async function crearOrdenOdoo(uid, orden, estado, shipOverride) {
 
     if (!lineXmls.length) return { ok:false, error:'Ning\u00fan producto v\u00e1lido en Odoo' };
 
+    // Guarda datos de envío (destino + contacto + paquetería) para poder generar la guía al surtir.
+    let noteVal = '';
+    {
+      const np = [];
+      if (co.facturar === true) np.push('[AUTOFACTURA] Pedido marcado para facturacion automatica.');
+      try {
+        const envioData = { dir: co.direccion || co.destino || {}, con: co.contacto || {}, car: envio ? (envio.carrier || envio.name || envio.id || '') : '' };
+        np.push('[ENVIO]' + Buffer.from(JSON.stringify(envioData)).toString('base64') + '[/ENVIO]');
+      } catch(_){}
+      noteVal = np.join('\n');
+    }
     const orderStruct = `<value><struct>
       <member><name>partner_id</name>${xmlInt(partnerId)}</member>
       <member><name>client_order_ref</name>${xmlStr(folio)}</member>
-      ${(co.facturar === true) ? `<member><name>note</name>${xmlStr('[AUTOFACTURA] Pedido marcado para facturacion automatica.')}</member>` : ''}
+      ${ noteVal ? `<member><name>note</name>${xmlStr(noteVal)}</member>` : '' }
       <member><name>order_line</name><value><array><data>${lineXmls.join('')}</data></array></value></member>
     </struct></value>`;
     const createText = await xmlrpc(uid, 'sale.order', 'create', orderStruct);
@@ -687,6 +698,22 @@ async function bumpMetric(kind, payload) {
 }
 
 // Envía el correo de confirmación al cliente y un aviso al equipo de Adaptekk.
+// Correo al cliente con su guía de envío (rastreo + PDF de etiqueta).
+function guiaEmailHtml(folio, g){
+  const carrier = g.carrier ? `<p style="font-size:14px;color:#555;margin:4px 0;">Paqueter\u00eda: <b>${g.carrier}</b>${g.service?(' \u00b7 '+g.service):''}</p>` : '';
+  const track = g.tracking ? `<p style="font-size:15px;margin:8px 0;"><b>N\u00famero de rastreo:</b> ${g.tracking}</p>` : '';
+  const label = g.label_url
+    ? `<p style="margin:18px 0;"><a href="${g.label_url}" style="background:#001F5B;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700;font-size:14px;">Ver / descargar tu gu\u00eda (PDF)</a></p>`
+    : `<p style="font-size:13px;color:#888;margin:14px 0;">Tu gu\u00eda se est\u00e1 generando; te llegar\u00e1 el PDF en breve.</p>`;
+  return `<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;border:1px solid #eee;border-radius:10px;overflow:hidden;">
+    <div style="background:#001F5B;padding:18px 24px;color:#fff;font-size:20px;font-weight:800;">Adaptekk<span style="color:#C8102E;">.</span></div>
+    <div style="padding:24px;">
+      <h2 style="color:#1a7d34;margin:0 0 6px;">\u00a1Tu pedido va en camino!</h2>
+      <p style="font-size:14px;color:#555;">Tu pedido <b>${folio}</b> ya fue surtido y enviado.</p>
+      ${carrier}${track}${label}
+      <p style="font-size:12px;color:#888;margin-top:18px;">Gracias por tu compra. \u2014 Equipo Adaptekk</p>
+    </div></div>`;
+}
 async function enviarCorreosPedido(orden, folio, total, metodo, estado, destinatarios) {
   // destinatarios: 'ambos' (default) | 'solo_equipo' | 'solo_cliente'
   destinatarios = destinatarios || 'ambos';
@@ -2179,7 +2206,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-23-metrics-v19', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-23-guia-v21', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
     }
 
     // ── DIAGNÓSTICO DE CATÁLOGO: analiza los códigos AT en Odoo para diseñar el armado por piezas ──
@@ -2803,6 +2830,106 @@ exports.handler = async function(event, context) {
         };
       }).filter(r=>r.success && r.total>0).sort((a,b)=>a.total-b.total);
       return {statusCode:200, headers, body: JSON.stringify({ ok:true, quotation_id:quoteId, is_completed:completed, count:norm.length, elapsed_ms:(Date.now()-t0), weight_kg:parcel.weight, weight_source:weightSource, weight_meta:weightMeta, rates:norm })};
+    }
+
+    // ── CREAR GUÍA de envío (Skydropx) tras surtir: recotiza, crea el envío, guarda y avisa al cliente ──
+    // body: { picking_id } o { folio }.  Idempotente: si ya hay guía, la devuelve sin recobrar.
+    if (action === 'crear_guia') {
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'odoo auth'})};
+      // 1) Resolver la orden de venta (desde picking_id o folio)
+      let saleId=null, saleName='', note='';
+      try {
+        if (body.picking_id) {
+          const pk = await odooSearchRead(uid, 'stock.picking', `<value><array><data>${xmlStr('id')}<value><string>=</string></value><value><int>${parseInt(body.picking_id)}</int></value></data></array></value>`, ['id','origin'], 1);
+          const om = pk.match(/<name>origin<\/name>\s*<value>\s*<string>([^<]*)<\/string>/);
+          saleName = om ? om[1].trim() : '';
+        }
+        const dom = body.folio
+          ? `<value><array><data>${xmlStr('client_order_ref')}<value><string>=</string></value>${xmlStr(String(body.folio))}</data></array></value>`
+          : `<value><array><data>${xmlStr('name')}<value><string>=</string></value>${xmlStr(saleName)}</data></array></value>`;
+        const so = await odooSearchRead(uid, 'sale.order', dom, ['id','name','note'], 1);
+        const im = so.match(/<name>id<\/name>\s*<value><int>(\d+)<\/int>/);
+        saleId = im ? parseInt(im[1]) : null;
+        if (!saleName){ const nmn = so.match(/<name>name<\/name>\s*<value>\s*<string>([^<]*)<\/string>/); saleName = nmn ? nmn[1] : ''; }
+        const nm = so.match(/<name>note<\/name>\s*<value>\s*<string>([\s\S]*?)<\/string>/);
+        note = nm ? nm[1] : '';
+      } catch(e){ return {statusCode:200, headers, body: JSON.stringify({ok:false, step:'find_order', error:String(e&&e.message||e)})}; }
+      if (!saleId) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'No se encontró la orden de venta'})};
+
+      // 2) Idempotencia: si ya tiene guía, devolverla
+      const gm = note.match(/\[GUIA\]([A-Za-z0-9+/=]+)\[\/GUIA\]/);
+      if (gm) { try { const g = JSON.parse(Buffer.from(gm[1],'base64').toString('utf8')); return {statusCode:200, headers, body: JSON.stringify({ok:true, ya_existe:true, guia:g})}; } catch(_){} }
+
+      // 3) Datos de envío persistidos al crear el pedido
+      const em = note.match(/\[ENVIO\]([A-Za-z0-9+/=]+)\[\/ENVIO\]/);
+      if (!em) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'El pedido no trae datos de envío guardados (se creó antes de esta versión). Vuelve a hacer un pedido de prueba.'})};
+      let envioData; try { envioData = JSON.parse(Buffer.from(em[1],'base64').toString('utf8')); } catch(e){ return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'Datos de envío ilegibles'})}; }
+      const dir = envioData.dir||{}, con = envioData.con||{};
+
+      // 4) Token Skydropx (sandbox si SKYDROPX_BASE=sb-pro)
+      const t = await skydropxToken();
+      if (t.error) return {statusCode:200, headers, body: JSON.stringify({ok:false, step:'token', error:t.error, base:t.base})};
+
+      // 5) Recotizar (las cotizaciones expiran, no se reusa la del checkout)
+      const origin = { country_code:'MX', postal_code: process.env.SKYDROPX_ORIGIN_CP||'', area_level1: process.env.SKYDROPX_ORIGIN_STATE||'', area_level2: process.env.SKYDROPX_ORIGIN_CITY||'', area_level3: process.env.SKYDROPX_ORIGIN_COLONIA||'' };
+      const dest = { country_code:'MX', postal_code:String(dir.cp||dir.postal_code||dir.zip||'').trim(), area_level1: dir.estado||dir.area_level1||'', area_level2: dir.ciudad||dir.area_level2||'', area_level3: dir.colonia||dir.area_level3||'' };
+      if (!origin.postal_code) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'Falta SKYDROPX_ORIGIN_CP (CP del almacén) en variables de entorno'})};
+      if (!dest.postal_code) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'El pedido no tiene CP de destino guardado'})};
+      const parcel = { weight:1, length:30, width:20, height:15 };
+      let quoteId=null;
+      try {
+        const qr = await fetchTimeout(t.base+'/api/v1/quotations', { method:'POST', headers:{'Authorization':'Bearer '+t.token,'Content-Type':'application/json'}, body: JSON.stringify({ quotation:{ address_from:origin, address_to:dest, parcels:[parcel] } }) }, 6000);
+        const rc = await qr.json(); quoteId = rc && ((rc.data&&rc.data.id)||rc.id);
+      } catch(e){ return {statusCode:200, headers, body: JSON.stringify({ok:false, step:'quote', error:String(e&&e.message||e)})}; }
+      if (!quoteId) return {statusCode:200, headers, body: JSON.stringify({ok:false, step:'quote', error:'No se creó la cotización'})};
+      const t0=Date.now(); let rates=[];
+      while (Date.now()-t0 < 3800) {
+        await new Promise(r=>setTimeout(r,1100));
+        try {
+          const gr = await fetchTimeout(t.base+'/api/v1/quotations/'+quoteId, { headers:{'Authorization':'Bearer '+t.token,'Content-Type':'application/json'} }, 3000);
+          const raw = await gr.json(); const d=(raw&&raw.data)?raw.data:raw; const attrs=(d&&d.attributes)?d.attributes:d;
+          const rs=(attrs&&attrs.rates)||(d&&d.rates)||[]; if (rs&&rs.length) rates=rs;
+          if (rates.length) break;
+        } catch(e){}
+      }
+      const norm = (rates||[]).map(r=>{ const a=r.attributes||r; return { id:r.id||a.id, carrier:a.provider_name||a.carrier_name||a.provider||a.carrier||'', service:a.service_level_name||a.service_level||a.service||'', total:parseFloat(a.total||a.amount||0), success:a.success!==false }; }).filter(r=>r.success && r.id);
+      if (!norm.length) return {statusCode:200, headers, body: JSON.stringify({ok:false, step:'rates', error:'No se obtuvieron tarifas para la guía'})};
+      norm.sort((a,b)=>a.total-b.total);
+      const want = String(envioData.car||'').toLowerCase();
+      const chosen = (want && norm.find(r=> (r.carrier||'').toLowerCase().indexOf(want)>=0)) || norm[0];
+
+      // 6) Crear el envío (guía). Si Skydropx pide Carta Porte u otro dato, vendrá en 'raw' para afinar.
+      let ship=null;
+      try {
+        const sr = await fetchTimeout(t.base+'/api/v1/shipments', { method:'POST', headers:{'Authorization':'Bearer '+t.token,'Content-Type':'application/json'}, body: JSON.stringify({ quotation_id: quoteId, rate_id: chosen.id, carrier_name: chosen.carrier }) }, 7000);
+        ship = await sr.json();
+      } catch(e){ return {statusCode:200, headers, body: JSON.stringify({ok:false, step:'shipment', error:String(e&&e.message||e), rate:chosen})}; }
+      // parsear rastreo + etiqueta de varias formas posibles del JSON:API
+      function digLabel(obj){
+        let tracking=null, label=null, status=null, shipId=null;
+        const scan=(a)=>{ if(!a) return; tracking=tracking||a.tracking_number||a.trackingNumber||null; label=label||a.label_url||a.labelUrl||null; status=status||a.status||null; };
+        if (obj){ const d=obj.data||obj; shipId=(d&&d.id)||null; scan(d&&d.attributes); scan(d); const inc=obj.included; if(Array.isArray(inc)) inc.forEach(x=>scan(x&&x.attributes)); }
+        return { tracking, label, status, shipId };
+      }
+      const got = digLabel(ship);
+      if (!got.tracking && !got.label && !got.shipId) {
+        return {statusCode:200, headers, body: JSON.stringify({ok:false, step:'shipment_parse', error:'Skydropx no devolvió guía. Revisa el detalle (puede pedir Carta Porte).', raw: ship, rate: chosen})};
+      }
+      const guia = { tracking: got.tracking||null, label_url: got.label||null, carrier: chosen.carrier, service: chosen.service, shipment_id: got.shipId||null, status: got.status||(got.label?'listo':'generando') };
+
+      // 7) Guardar [GUIA] en la nota (sin borrar lo demás)
+      try {
+        const b64 = Buffer.from(JSON.stringify(guia)).toString('base64');
+        const newNote = (note + '\n[GUIA]' + b64 + '[/GUIA]').trim();
+        await xmlrpc(uid, 'sale.order', 'write', `<value><array><data><value><int>${saleId}</int></value></data></array></value><value><struct><member><name>note</name>${xmlStr(newNote)}</member></struct></value>`);
+      } catch(e){}
+
+      // 8) Avisar al cliente con la guía
+      let emailed=false; const clientEmail = con.email || con.correo || '';
+      if (clientEmail) { try { const r = await sendEmail(clientEmail, `Tu pedido va en camino — ${saleName||'Adaptekk'} | Adaptekk`, guiaEmailHtml(saleName||'tu pedido', guia)); emailed = !!(r && r.id); } catch(e){} }
+
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, guia, emailed, cliente: clientEmail||null })};
     }
 
     // ── LOOKUP POR CÓDIGO (para 'Pedir por código AT') ──
