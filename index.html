@@ -1001,9 +1001,10 @@
         Hola, dime qué conector necesitas. Puedes subir una <b style="color:#0a1f44;font-weight:600;">foto</b>, pegar un <b style="color:#0a1f44;font-weight:600;">código</b>, <b style="color:#0a1f44;font-weight:600;">describirlo</b> o mandar un <b style="color:#0a1f44;font-weight:600;">audio</b>.
       </div>
 
+      <div id="chat-messages" style="display:none;flex:1;min-height:0;flex-direction:column;gap:10px;padding:2px;text-align:left;overflow-y:auto;margin-bottom:14px;"></div>
+
       <!-- input area (funcional) -->
       <div style="margin-top:auto;background:#f6f7f9;border:1px solid #edeef2;border-radius:16px;padding:8px;">
-        <div id="chat-messages" style="display:none;flex-direction:column;gap:10px;padding:14px 16px;text-align:left;max-height:460px;overflow-y:auto;border-bottom:1px solid #e7e9ef;"></div>
         <div style="padding:9px 11px 10px;">
           <textarea id="chat-input" placeholder="Describe tu conector, pega un código o sube una foto…" rows="2" oninput="autoResize(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}" style="width:100%;border:none;outline:none;resize:none;font-family:inherit;font-size:14px;color:#1a1a2e;line-height:1.5;min-height:44px;max-height:160px;padding:0;background:transparent;"></textarea>
         </div>
@@ -1021,7 +1022,7 @@
           <button type="button" onclick="clearChatImage()" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:15px;">&#10005;</button>
         </div>
       </div>
-      <div style="text-align:center;margin-top:12px;font-size:12.5px;color:rgba(255,255,255,.6);">¿Prefieres atención personal? <a href="https://wa.me/525555550000" target="_blank" style="color:#7fd1ff;font-weight:600;text-decoration:none;">Habla con un ejecutivo por WhatsApp</a></div>
+      <div style="text-align:center;margin-top:14px;font-size:12.5px;color:#86868b;">¿Prefieres atención personal? <a href="https://wa.me/525555550000" target="_blank" style="color:#0071e3;font-weight:600;text-decoration:none;">Habla con un ejecutivo por WhatsApp</a></div>
     </div>
 
     <!-- CONFIGURADOR -->
