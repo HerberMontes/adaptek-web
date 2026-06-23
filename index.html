@@ -6532,45 +6532,17 @@ function sendChatMessage() {
 
   addBotMessage('<span style="display:inline-flex;gap:4px;align-items:center;">Analizando<span style="display:inline-flex;gap:3px;margin-left:4px;"><span style="width:6px;height:6px;border-radius:50%;background:#001F5B;animation:bounce-dot 1.2s infinite;display:inline-block;"></span><span style="width:6px;height:6px;border-radius:50%;background:#001F5B;animation:bounce-dot 1.2s .2s infinite;display:inline-block;"></span><span style="width:6px;height:6px;border-radius:50%;background:#001F5B;animation:bounce-dot 1.2s .4s infinite;display:inline-block;"></span></span></span>', true);
 
-  var imagePrompt = 'Eres el experto en adaptadores hidraulicos de Adaptek Mexico. Analiza la imagen.'
-    + (text ? ' El cliente agrega: "' + text + '"' : '')
-    + ' Responde en espanol con EXACTAMENTE esta estructura:\n\n'
-    + '🔍 **LO QUE VEO EN LA IMAGEN**\n'
-    + 'Describe: tipo de conector (recto, codo 90, codo 45, tee, tapon, reduccion, swivel), forma, extremos, tuerca hexagonal, rosca visible, material aparente. '
-    + 'Indica el estandar probable de cada extremo (JIC 37, NPT, BSPP, BSPT, DIN 24, ORFS, ORB, JIS, Komatsu) y si es macho o hembra. '
-    + 'Da un numero AT probable: AT-[TIPO]-[STD]-[GEN][MED]-[STD]-[GEN][MED]. Aclara que es estimacion visual.\n\n'
-    + '📐 **MEDIDAS QUE NECESITO PARA CONFIRMAR**\n'
-    + 'Lista 3 a 5 medidas especificas que el cliente debe tomar con calibrador vernier. Para cada una: (a) que medir, (b) donde exactamente, (c) valor esperado segun estandar probable. '
-    + 'Termina con: "Con estas medidas podre confirmarte el codigo AT exacto. Puedes compartirlas aqui?"';
-
-  var textPrompt = 'Eres el experto en adaptadores hidraulicos de Adaptek Mexico.'
-    + ' El cliente escribe: "' + text + '".'
-    + ' Analiza si es descripcion nueva o medidas de seguimiento para confirmar un conector previamente analizado.'
-    + ' Numero AT formato: AT-[TIPO]-[STD_A]-[GEN_A][MED_A]-[STD_B]-[GEN_B][MED_B].'
-    + ' Tipos: NR=recto, C90=codo90, C45=codo45, TEE=tee, TAP=tapon, RED=reduccion, GIR=giratoria.'
-    + ' Estandares: JIC, NPT, BSPP, BSPT, ORB, ORFS, DIN, JIS, KOM, CAT. M=macho, H=hembra.'
-    + ' Medidas: 02=1/8", 04=1/4", 06=3/8", 08=1/2", 10=5/8", 12=3/4", 16=1".'
-    + ' Si son medidas: confirma estandar y da codigo AT exacto con alta confianza.'
-    + ' Si es descripcion: da AT probable con nivel de confianza. Numero AT siempre en **negrita**.'
-    + ' Responde en espanol claro y directo.';
-
-  var docPrompt = 'Eres el experto en adaptadores hidraulicos de Adaptek Mexico. Analiza el documento PDF adjunto (puede ser lista de materiales, requisicion, cotizacion o ficha tecnica).'
-    + (text ? ' El cliente agrega: "' + text + '".' : '')
-    + ' Identifica cada conector o adaptador mencionado y, para cada uno, da el numero AT probable formato AT-[TIPO]-[STD_A]-[GEN_A][MED_A]-[STD_B]-[GEN_B][MED_B] con su nivel de confianza.'
-    + ' Tipos: NR=recto, C90=codo90, C45=codo45, TEE=tee, TAP=tapon, RED=reduccion, GIR=giratoria. Estandares: JIC, NPT, BSPP, BSPT, ORB, ORFS, DIN, JIS, KOM, CAT. M=macho, H=hembra.'
-    + ' El numero AT siempre en **negrita**. Si falta informacion para algun item, indica que medida hace falta. Responde en espanol claro, en forma de lista.';
-
   var mediaType = (['image/jpeg','image/png','image/gif','image/webp'].indexOf(chatImageType)>=0 ? chatImageType : 'image/jpeg');
-  var promptToUse = hasImg ? imagePrompt : (hasDoc ? docPrompt : textPrompt);
+  var userText = text || (hasImg ? 'Identifica este conector a partir de la imagen y dame el codigo del catalogo.' : (hasDoc ? 'Identifica los conectores de este documento y dame los codigos del catalogo.' : ''));
   var claudeMessages;
   if (hasImg || hasDoc) {
     var content = [];
     if (hasImg) content.push({ type:'image', source:{ type:'base64', media_type: mediaType, data: chatImageBase64 }});
     if (hasDoc) content.push({ type:'document', source:{ type:'base64', media_type:'application/pdf', data: chatDocBase64 }});
-    content.push({ type:'text', text: promptToUse });
+    content.push({ type:'text', text: userText });
     claudeMessages = [{ role:'user', content: content }];
   } else {
-    claudeMessages = [{ role:'user', content: textPrompt }];
+    claudeMessages = [{ role:'user', content: userText }];
   }
 
   fetch('/.netlify/functions/odoo', {
@@ -6585,10 +6557,13 @@ function sendChatMessage() {
       ? data.content[0].text
       : (data.error ? 'Error: ' + data.error.message : 'Error en la respuesta.');
     var formatted = reply
-      .replace(/\*\*(AT-[A-Z0-9\-]+)\*\*/g,'<strong style="font-family:Barlow Condensed,sans-serif;font-size:16px;color:#001F5B;letter-spacing:1px;">$1</strong>')
+      .replace(/^#{1,6}\s*/gm,'')
+      .replace(/^\s*[-–—]{3,}\s*$/gm,'')
+      .replace(/\*\*(AT-[A-Z0-9\-]+)\*\*/g,'$1')
       .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
-      .replace(/🔍/g,'<span style="font-size:16px;">🔍</span>')
-      .replace(/📐/g,'<span style="font-size:16px;">📐</span>')
+      .replace(/^\s*[\*•]\s+/gm,'• ')
+      .replace(/(AT-[A-Z0-9]+(?:-[A-Z0-9]+)+)/g,'<strong style="font-family:Barlow Condensed,sans-serif;font-size:16px;color:#001F5B;letter-spacing:1px;">$1</strong>')
+      .replace(/\n{3,}/g,'\n\n')
       .replace(/\n/g,'<br/>');
     var atMatch = reply.match(/AT-[A-Z0-9\-]+/);
     var waMsg = encodeURIComponent('Hola Adaptek, quiero cotizar' + (atMatch ? ': ' + atMatch[0] : '.'));
