@@ -3953,7 +3953,7 @@ body.exec-mode #cart-fab, body.exec-mode .wa-float{display:none!important;}
       <span id="exec-nav-clientes" onclick="execVista('clientes')" class="dsh-nav" style="color:rgba(255,255,255,.6);">Clientes</span>
       <span style="width:1px;height:18px;background:rgba(255,255,255,.18);margin:0 4px;"></span>
       <span onclick="execRefrescar()" style="background:rgba(255,255,255,.1);color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;cursor:pointer;font-weight:600;">Actualizar</span>
-      <span id="btn-diag" onclick="execDiag()" style="display:none;background:rgba(255,255,255,.1);color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;cursor:pointer;font-weight:600;">Diagnóstico</span><span id="btn-admin-users" onclick="abrirAdminUsuarios()" style="display:none;background:#C8102E;color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;cursor:pointer;font-weight:700;">Usuarios</span>
+      <span id="btn-admin-users" onclick="abrirAdminUsuarios()" style="display:none;background:#C8102E;color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;cursor:pointer;font-weight:700;">Usuarios</span>
       <span onclick="execLogout()" style="color:rgba(255,255,255,.5);font-size:12px;cursor:pointer;">Salir</span>
     </div>
   </div>
@@ -4081,8 +4081,6 @@ async function execLogin() {
     if (badge) { badge.textContent = cuenta.nombre; badge.style.background = cuenta.rol==='gerente'?'#C8102E':'rgba(255,255,255,.1)'; }
     var adminBtn = document.getElementById('btn-admin-users');
     if (adminBtn) adminBtn.style.display = cuenta.rol==='gerente' ? 'inline' : 'none';
-    var diagBtn = document.getElementById('btn-diag');
-    if (diagBtn) diagBtn.style.display = cuenta.rol==='gerente' ? 'inline' : 'none';
     var esGerente = cuenta.rol==='gerente';
     var navT = document.getElementById('exec-nav-tablero');
     if (navT) navT.style.display = esGerente ? 'inline-block' : 'none';
@@ -4321,17 +4319,6 @@ function almSalir(){
   almStopScan(); if(window.ALM.poll) clearInterval(window.ALM.poll);
   var sc=document.getElementById('alm-screen'); if(sc) sc.style.display='none';
   portalReset();
-}
-
-async function execDiag(){
-  showToast('Consultando Odoo…');
-  try{
-    var r=await fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'debug_partners'})});
-    var d=await r.json();
-    if(!d.success){ alert('Error: '+(d.error||'sin respuesta de Odoo')); return; }
-    var lines=(d.recent||[]).map(function(c){ return '#'+c.id+'  '+(c.name||'(sin nombre)')+'\n   ['+(c.email||'\u2014')+']  rank='+c.customer_rank+'  estado='+(c.estado||'?'); }).join('\n');
-    alert('DIAGN\u00d3STICO ODOO\n\nTotal de contactos: '+d.totalPartners+'\nClientes (rank>0): '+d.customers+'\nRegistros web (por comentario): '+d.webRegs+'\n\n\u00daltimos 6 contactos:\n'+(lines||'(ninguno)'));
-  }catch(e){ alert('Error de conexi\u00f3n: '+e.message); }
 }
 
 // ===== TABLERO DE GERENCIA =====
