@@ -2285,7 +2285,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-23-detalle-surtido-v29', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-23-guia-error-real-v30', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
     }
 
     // ── DIAGNÓSTICO DE CATÁLOGO: analiza los códigos AT en Odoo para diseñar el armado por piezas ──
@@ -3005,7 +3005,22 @@ exports.handler = async function(event, context) {
       }
       const got = digLabel(ship);
       if (!got.tracking && !got.label && !got.shipId) {
-        return {statusCode:200, headers, body: JSON.stringify({ok:false, step:'shipment_parse', error:'Skydropx no devolvió guía. Revisa el detalle (puede pedir Carta Porte).', raw: ship, rate: chosen})};
+        // Extraer el motivo real que devuelve Skydropx (saldo, carta porte, dirección, etc.)
+        function digErr(obj){
+          if(!obj) return '';
+          const msgs=[]; const push=(x)=>{ if(x && String(x).trim()) msgs.push(String(x).trim()); };
+          if(Array.isArray(obj.errors)) obj.errors.forEach(e=>{ if(typeof e==='string') push(e); else push(e.detail||e.title||e.message||e.code); });
+          else if(obj.errors && typeof obj.errors==='object') Object.keys(obj.errors).forEach(k=>{ const v=obj.errors[k]; push(k+': '+(Array.isArray(v)?v.join(', '):v)); });
+          push(obj.message); push(obj.error); push(obj.detail); push(obj.error_description);
+          const d=obj.data&&obj.data.attributes; if(d){ if(Array.isArray(d.errors)) d.errors.forEach(e=>push(typeof e==='string'?e:(e.detail||e.title||e.message))); push(d.error); push(d.message); }
+          return msgs.filter(Boolean).slice(0,4).join(' · ');
+        }
+        const reason = digErr(ship);
+        let snippet=''; try{ snippet = JSON.stringify(ship).replace(/\s+/g,' ').slice(0,300); }catch(_){}
+        const errMsg = reason
+          ? ('Skydropx: ' + reason)
+          : ('Skydropx no devolvió guía. Respuesta: ' + (snippet || 'vacía'));
+        return {statusCode:200, headers, body: JSON.stringify({ok:false, step:'shipment_parse', error: errMsg, reason: reason||null, raw: ship, rate: chosen})};
       }
       const guia = { tracking: got.tracking||null, label_url: got.label||null, carrier: chosen.carrier, service: chosen.service, shipment_id: got.shipId||null, status: got.status||(got.label?'listo':'generando') };
 
