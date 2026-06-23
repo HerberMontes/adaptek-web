@@ -3898,8 +3898,10 @@ body.exec-mode #cart-fab, body.exec-mode .wa-float{display:none!important;}
     <div style="background:#fff;border-radius:16px;padding:40px 28px;text-align:center;box-shadow:0 10px 40px rgba(16,32,72,.10);border:1px solid #eef0f4;">
       <div style="width:64px;height:64px;border-radius:50%;background:#E8F6EE;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1F9D55" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></div>
       <div style="font-size:20px;font-weight:800;color:#0a1f44;margin-bottom:6px;">Pedido surtido</div>
-      <div style="font-size:13.5px;color:#8895a7;line-height:1.5;margin-bottom:22px;">Listo para empaque y envío. El inventario se actualizó en Odoo automáticamente.</div>
-      <button onclick="almVolverTablero()" style="width:100%;background:#001F5B;color:#fff;border:none;padding:13px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;">Volver al tablero</button>
+      <div style="font-size:13.5px;color:#8895a7;line-height:1.5;margin-bottom:20px;">Listo para empaque y envío. El inventario se actualizó en Odoo automáticamente.</div>
+      <div id="alm-guia-result" style="display:none;text-align:left;background:#f6f8fb;border:1px solid #e7ebf2;border-radius:12px;padding:14px 16px;margin-bottom:16px;"></div>
+      <button id="alm-guia-btn" onclick="almGenerarGuia()" style="width:100%;background:#C8102E;color:#fff;border:none;padding:13px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;margin-bottom:10px;">Generar guía y avisar al cliente</button>
+      <button onclick="almVolverTablero()" style="width:100%;background:#fff;color:#001F5B;border:1.5px solid #d9e0ea;padding:13px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;">Volver al tablero</button>
     </div>
   </div>
 </div>
@@ -4263,9 +4265,39 @@ function almConfirmar(){
   almStopScan();
   fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'almacen_validar_pedido',picking_id:id,almacenista:window.ALM.name})})
   .then(function(r){return r.json();}).then(function(d){
-    if(d&&d.ok){ almShow('listo'); almLoadPedidos(); }
+    if(d&&d.ok){
+      var gr=document.getElementById('alm-guia-result'); if(gr){ gr.style.display='none'; gr.innerHTML=''; }
+      var gb=document.getElementById('alm-guia-btn'); if(gb){ gb.style.display='block'; gb.disabled=false; gb.textContent='Generar guía y avisar al cliente'; gb.style.opacity='1'; gb.style.cursor='pointer'; }
+      almShow('listo'); almLoadPedidos();
+    }
     else { showToast('No se pudo validar: '+((d&&d.detalle)||'error')); if(btn){ btn.disabled=false; btn.textContent='Confirmar surtido'; } }
   }).catch(function(){ showToast('Error al validar'); if(btn){ btn.disabled=false; btn.textContent='Confirmar surtido'; } });
+}
+function almGenerarGuia(){
+  var id=window.ALM.cur&&window.ALM.cur.id; if(!id){ showToast('No hay pedido activo'); return; }
+  var btn=document.getElementById('alm-guia-btn'); var res=document.getElementById('alm-guia-result');
+  if(btn){ btn.disabled=true; btn.textContent='Generando guía…'; btn.style.opacity='.6'; btn.style.cursor='wait'; }
+  fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'crear_guia',picking_id:id})})
+  .then(function(r){return r.json();}).then(function(d){
+    if(d&&d.ok&&d.guia){
+      var g=d.guia;
+      var html='<div style="font-size:13px;font-weight:800;color:#0a1f44;margin-bottom:8px;">'+(d.ya_existe?'Esta guía ya estaba generada':'Guía generada')+'</div>';
+      if(g.carrier) html+='<div style="font-size:12.5px;color:#5b6577;margin-bottom:4px;">Paquetería: <b>'+g.carrier+'</b>'+(g.service?(' · '+g.service):'')+'</div>';
+      if(g.tracking) html+='<div style="font-size:13px;color:#0a1f44;margin-bottom:10px;">Rastreo: <b>'+g.tracking+'</b></div>';
+      if(g.label_url) html+='<a href="'+g.label_url+'" target="_blank" rel="noopener" style="display:inline-block;background:#001F5B;color:#fff;text-decoration:none;padding:9px 16px;border-radius:8px;font-size:12.5px;font-weight:700;">Abrir etiqueta (PDF)</a>';
+      else html+='<div style="font-size:12px;color:#b06a00;">La etiqueta se está generando; llegará en breve.</div>';
+      html+='<div style="font-size:11.5px;color:'+(d.emailed?'#1F9D55':'#8895a7')+';margin-top:10px;">'+(d.emailed?('Correo enviado al cliente'+(d.cliente?(' ('+d.cliente+')'):'')):'Sin correo al cliente (no traía email)')+'</div>';
+      if(res){ res.style.display='block'; res.innerHTML=html; }
+      if(btn){ btn.style.display='none'; }
+    } else {
+      var msg=(d&&d.error)?d.error:'No se pudo generar la guía';
+      if(res){ res.style.display='block'; res.innerHTML='<div style="font-size:12.5px;color:#C8102E;font-weight:700;margin-bottom:4px;">No se pudo generar la guía</div><div style="font-size:12px;color:#5b6577;line-height:1.45;">'+msg+'</div>'; }
+      if(btn){ btn.disabled=false; btn.textContent='Reintentar guía'; btn.style.opacity='1'; btn.style.cursor='pointer'; }
+    }
+  }).catch(function(){
+    if(res){ res.style.display='block'; res.innerHTML='<div style="font-size:12.5px;color:#C8102E;">Error de conexión al generar la guía.</div>'; }
+    if(btn){ btn.disabled=false; btn.textContent='Reintentar guía'; btn.style.opacity='1'; btn.style.cursor='pointer'; }
+  });
 }
 function almVolverTablero(){ almStopScan(); window.ALM.cur=null; window.ALM.lines=[]; almShow('tablero'); almLoadPedidos(); }
 function almSalir(){
@@ -5483,6 +5515,13 @@ function _pclEstado(state){
   var map={ draft:['amber','Pendiente'], sent:['amber','Enviada'], sale:['blue','Confirmado'], done:['green','Entregado'], cancel:['gray','Cancelado'] };
   return map[state]||['gray', state||'—'];
 }
+window.pclAbrirGuia = function(folio){
+  var g=(window._pclGuias||{})[folio];
+  if(!g){ showToast('Sin guía para este pedido'); return; }
+  if(g.label_url){ window.open(g.label_url,'_blank','noopener'); }
+  else if(g.tracking){ showToast('Rastreo '+(g.carrier?g.carrier+' ':'')+g.tracking+' — la etiqueta se está generando'); }
+  else { showToast('Sin guía disponible'); }
+};
 async function pclLoadOrders(){
   var c=window.currentClientUser||{};
   var body=document.getElementById('pcl-orders-body');
@@ -5500,17 +5539,23 @@ async function pclLoadOrders(){
   var cotiz=orders.filter(function(o){ return o.state==='draft'||o.state==='sent'; });
 
   // ── Tabla de pedidos ──
+  window._pclGuias = window._pclGuias || {};
   function rowPedido(o){
     var st=_pclEstado(o.state);
     var folio=o.folio||o.name||'—';
     var fb = o.facturado
       ? '<button class="pcl-mini" onclick="window.pclDescargarFactura(\''+folio+'\')">Factura</button>'
       : '<button class="pcl-mini pcl-mini-off" disabled title="Este pedido aún no tiene factura">Factura</button>';
+    var gb='';
+    if(o.guia && (o.guia.label_url || o.guia.tracking)){
+      window._pclGuias[folio]=o.guia;
+      gb='<button class="pcl-mini" onclick="window.pclAbrirGuia(\''+folio+'\')">Guía</button>';
+    }
     return '<tr><td class="pcl-onum">'+folio+'</td><td>'+_pclDate(o.date)+'</td>'
       +'<td class="pcl-oprods">'+(o.items||0)+' artículo'+(o.items===1?'':'s')+'</td>'
       +'<td class="pcl-ototal">'+_pclMoney(o.total)+'</td>'
       +'<td><span class="pcl-st '+st[0]+'"><span class="dot"></span>'+st[1]+'</span></td>'
-      +'<td><div class="pcl-act"><button class="pcl-mini" onclick="window.pclVerDetalle(\''+folio+'\')">Detalle</button>'+fb+'</div></td></tr>';
+      +'<td><div class="pcl-act"><button class="pcl-mini" onclick="window.pclVerDetalle(\''+folio+'\')">Detalle</button>'+fb+gb+'</div></td></tr>';
   }
   if(body){
     if(pedidos.length) body.innerHTML=pedidos.map(rowPedido).join('');
