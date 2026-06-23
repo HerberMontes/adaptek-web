@@ -2115,7 +2115,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-22-ia-tooluse-v14', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-23-ia-cards-v15', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
     }
 
     // ── DIAGNÓSTICO DE CATÁLOGO: analiza los códigos AT en Odoo para diseñar el armado por piezas ──
@@ -2363,6 +2363,7 @@ exports.handler = async function(event, context) {
         '- Si solo se fabrica (no hay piezas en catalogo que conecten ambos extremos): dilo con claridad y ofrece la fabricacion especial y cotizacion.',
         '- En todos los casos deja claras las alternativas: lo que existe en catalogo (directo o cadena) y la opcion de fabricar a la medida en una sola pieza.',
         '- Si falta un dato (ej. la medida de un extremo), pidelo amablemente.',
+        '- Tu TEXTO debe ser una introduccion BREVE (2 o 3 frases) que explique el panorama: si se arma en una sola pieza, en cadena de cuantas piezas, o si se fabrica. NO enumeres los codigos uno por uno en el texto, porque las opciones con su codigo, precio y disponibilidad se mostraran en tarjetas ordenadas debajo de tu mensaje.',
         '- Se conciso.'
       ].join('\n');
       const tools = [{
@@ -2374,7 +2375,7 @@ exports.handler = async function(event, context) {
           material:{type:'string'}
         }, required:['a','b'] }
       }];
-      let uidIA = null;
+      let uidIA = null, lastArmar = null;
       try {
         for (let iter=0; iter<3; iter++){
           const r = await fetch('https://api.anthropic.com/v1/messages', {
@@ -2386,6 +2387,7 @@ exports.handler = async function(event, context) {
           if (data.error) return {statusCode:200, headers, body: JSON.stringify({ error:data.error })};
           const toolUses = (data.content||[]).filter(b=>b.type==='tool_use');
           if (data.stop_reason!=='tool_use' || !toolUses.length){
+            if (lastArmar) data._armar = lastArmar;
             return {statusCode:200, headers, body: JSON.stringify(data)};
           }
           messages.push({ role:'assistant', content:data.content });
@@ -2395,6 +2397,7 @@ exports.handler = async function(event, context) {
             if (tu.name==='armar_conector'){
               if (!uidIA) uidIA = await odooAuth();
               out = uidIA ? await armarConectorCore(tu.input||{}, uidIA) : {error:'No se pudo conectar al catalogo'};
+              if (out && out.ok) lastArmar = out;
             } else { out = {error:'herramienta desconocida'}; }
             results.push({ type:'tool_result', tool_use_id:tu.id, content: JSON.stringify(out).slice(0,6000) });
           }
@@ -2405,6 +2408,7 @@ exports.handler = async function(event, context) {
           body: JSON.stringify({ model:MODEL, max_tokens:maxTokens, system:SYSTEM, messages })
         });
         const df = await rf.json();
+        if (lastArmar) df._armar = lastArmar;
         return {statusCode:200, headers, body: JSON.stringify(df)};
       } catch(e){
         return {statusCode:200, headers, body: JSON.stringify({ error:{ message:'Error en la IA: '+String((e&&e.message)||e) } })};
