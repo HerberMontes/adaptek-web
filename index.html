@@ -4638,6 +4638,60 @@ function renderList(list) {
   }).join('');
 }
 
+function _critEmailOk(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(e||'').trim()); }
+function _critRfcOk(v){ var s=String(v||'').trim().toUpperCase(); return /^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/.test(s); }
+function _critTelOk(p){ return String(p||'').replace(/\D/g,'').length>=10; }
+function _critRegimenOk(r){ var s=String(r||'').trim(); if(!s) return false; return !/605|sueldos|asalariad/i.test(s); }
+function criteriosB2B(cl){
+  var domOk = !!(String(cl.street||'').trim() && String(cl.zip||'').trim() && String(cl.city||'').trim());
+  return {
+    auto: [
+      { label:'RFC válido', ok:_critRfcOk(cl.vat), hint: cl.vat?('RFC '+cl.vat):'sin RFC' },
+      { label:'Razón social', ok:!!String(cl.company_name||'').trim(), hint: cl.company_name||'falta' },
+      { label:'Régimen fiscal de empresa', ok:_critRegimenOk(cl.l10n_mx_edi_fiscal_regime), hint: cl.l10n_mx_edi_fiscal_regime||'falta' },
+      { label:'Domicilio fiscal completo', ok:domOk, hint: domOk?'calle, CP y ciudad':'incompleto' },
+      { label:'Correo válido', ok:_critEmailOk(cl.email), hint: cl.email||'falta' },
+      { label:'Teléfono', ok:_critTelOk(cl.phone), hint: cl.phone||'falta' }
+    ],
+    manual: [
+      { k:'constancia', label:'Constancia de Situación Fiscal vigente y que cuadre con RFC y razón social' },
+      { k:'noduplicado', label:'RFC/correo no registrado antes (no duplicado)' }
+    ]
+  };
+}
+function criteriosChecklistHtml(cl){
+  var c = criteriosB2B(cl);
+  var okCount = c.auto.filter(function(x){return x.ok;}).length;
+  var rows = c.auto.map(function(x){
+    var ic = x.ok ? '<span style="color:#1F9D55;font-weight:800;">&#10003;</span>' : '<span style="color:#C8102E;font-weight:800;">&#10007;</span>';
+    return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #eef1f5;">'+ic+'<div style="flex:1;"><span style="font-size:12.5px;color:#111;font-weight:600;">'+x.label+'</span> <span style="font-size:11px;color:#9aa7b8;">· '+x.hint+'</span></div></div>';
+  }).join('');
+  var manual = c.manual.map(function(m){
+    return '<label style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;cursor:pointer;"><input type="checkbox" id="crit-man-'+m.k+'" style="margin-top:2px;"/><span style="font-size:12px;color:#444;">'+m.label+'</span></label>';
+  }).join('');
+  var allAuto = okCount===c.auto.length;
+  return '<div style="background:#fff;border:1.5px solid '+(allAuto?'#bfe6cb':'#ffe1a8')+';border-radius:8px;padding:14px;margin-bottom:16px;">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><div style="font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#001F5B;">Criterios obligatorios B2B</div><div style="font-size:11px;font-weight:700;color:'+(allAuto?'#1F9D55':'#C8102E')+';">'+okCount+' de '+c.auto.length+' automáticos</div></div>'+
+    rows+
+    '<div style="font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#8895a7;margin:10px 0 2px;">Verificación manual</div>'+
+    manual+
+  '</div>';
+}
+function intentarAprobar(id){
+  var cl = execTodos.find(function(c){return c.id===id;}); if(!cl) return;
+  var c = criteriosB2B(cl);
+  var faltAuto = c.auto.filter(function(x){return !x.ok;}).map(function(x){return x.label;});
+  var faltMan = c.manual.filter(function(m){ var el=document.getElementById('crit-man-'+m.k); return !(el&&el.checked); }).map(function(m){return m.label;});
+  if (faltAuto.length || faltMan.length){
+    var msg = 'Este cliente no cumple todos los criterios obligatorios:\n\n';
+    if (faltAuto.length) msg += '• Datos incompletos: '+faltAuto.join(', ')+'\n';
+    if (faltMan.length) msg += '• Sin verificar: '+faltMan.join(', ')+'\n';
+    msg += '\n¿Aprobar de todos modos?';
+    if (!confirm(msg)) return;
+  }
+  confirmarAccion(id,'aprobar');
+}
+
 function verDetalle(id) {
   var cl = execTodos.find(function(c){return c.id===id;});
   if (!cl) return;
@@ -4667,10 +4721,11 @@ function verDetalle(id) {
     '<div style="background:#f5f5f5;border-radius:8px;padding:12px;margin-bottom:16px;font-size:12px;color:#555;">' +
       '<strong>Notas:</strong> '+(cl.comment||'—').replace(/\n/g,'<br/>') +
     '</div>' +
+    (est==='pendiente' ? criteriosChecklistHtml(cl) : '') +
     '<div id="exec-action-area">' +
     (est==='pendiente' ?
       '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">' +
-        '<button class="ebtn ap" onclick="confirmarAccion('+cl.id+',\'aprobar\')">Aprobar</button>' +
+        '<button class="ebtn ap" onclick="intentarAprobar('+cl.id+')">Aprobar</button>' +
         '<button class="ebtn in" onclick="confirmarAccion('+cl.id+',\'info\')">Pedir info</button>' +
         '<button class="ebtn re" onclick="confirmarAccion('+cl.id+',\'rechazar\')">Rechazar</button>' +
       '</div>'
