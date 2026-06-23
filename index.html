@@ -3890,10 +3890,13 @@ body.exec-mode #cart-fab, body.exec-mode .wa-float{display:none!important;}
         <span style="font-size:14px;font-weight:800;color:#0a1f44;">Productos a recoger</span>
         <span id="alm-s-prog" style="font-size:13px;font-weight:700;color:#C8102E;">0 de 0</span>
       </div>
-      <button id="alm-scan-btn" onclick="almStartScan()" style="width:100%;background:#001F5B;color:#fff;border:none;padding:13px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;margin-bottom:10px;">Escanear código</button>
+      <button id="alm-scan-btn" onclick="almStartScan()" style="width:100%;background:#001F5B;color:#fff;border:none;padding:13px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;margin-bottom:8px;">Escanear código</button>
+      <button onclick="document.getElementById('alm-photo-input').click()" style="width:100%;background:#fff;color:#001F5B;border:1.5px solid #d9e0ea;padding:11px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;margin-bottom:10px;">Escanear desde foto</button>
+      <input type="file" id="alm-photo-input" accept="image/*" capture="environment" style="display:none;" onchange="almScanFoto(this)"/>
       <div id="alm-cam-box" style="display:none;border-radius:12px;overflow:hidden;margin-bottom:10px;background:#000;">
         <div id="alm-reader" style="width:100%;"></div>
       </div>
+      <div id="alm-reader-file" style="position:absolute;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;"></div>
       <div id="alm-scan-msg" style="display:none;font-size:13px;font-weight:700;padding:9px 12px;border-radius:9px;margin-bottom:10px;text-align:center;"></div>
       <div id="alm-lines"></div>
     </div>
@@ -4233,6 +4236,20 @@ function almOnScan(raw){
   if(!line){ almScanMsg(false, code+' no corresponde a este pedido'); return; }
   if(line.done>=line.need){ almScanMsg(true, line.code+' ya estaba completo'); return; }
   line.done++; almScanMsg(true, line.code+' escaneado ('+line.done+'/'+line.need+')'); almRenderSurtir();
+}
+function almScanFoto(input){
+  var file = input && input.files && input.files[0]; if(!file){ return; }
+  almStopScan();
+  almLoadQR(function(err){
+    if(err||!window.Html5Qrcode){ almScanMsg(false,'No se pudo cargar el lector.'); input.value=''; return; }
+    var el=document.getElementById('alm-scan-msg'); if(el){ el.style.display='block'; el.style.background='#EEF3FB'; el.style.color='#001F5B'; el.textContent='Leyendo la foto…'; }
+    var tmp;
+    try{ tmp=new Html5Qrcode('alm-reader-file',{ verbose:false }); }
+    catch(e){ almScanMsg(false,'No se pudo iniciar el lector.'); input.value=''; return; }
+    tmp.scanFile(file, false)
+      .then(function(text){ try{tmp.clear();}catch(e){} input.value=''; almOnScan(String(text).trim()); })
+      .catch(function(){ try{tmp.clear();}catch(e){} input.value=''; almScanMsg(false,'No se detectó el QR en la foto. Tómala de nuevo, más cerca y bien enfocada.'); });
+  });
 }
 function almLoadQR(cb){
   if(window.Html5Qrcode){ cb(); return; }
