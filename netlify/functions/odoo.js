@@ -2358,9 +2358,10 @@ exports.handler = async function(event, context) {
         'La herramienta devuelve: directo (existe en UNA pieza, con su codigo), cadenas (combinaciones reales de 2+ piezas que conectan ambos extremos, cada una con sus codigos) y solo_fabricar (no hay combinacion, se fabrica especial). Las cadenas vienen ordenadas: primero en stock, luego mas barata, luego menos piezas.',
         'Al responder al cliente:',
         '- Espanol claro y natural, en prosa limpia. PROHIBIDO: emojis, iconos, encabezados markdown (## o ###), lineas de guiones (---), asteriscos de negrita o vinetas con asterisco. Escribe como una persona experta explicando con claridad.',
-        '- Si hay directo: dilo y da el codigo exacto.',
-        '- Si se arma con cadena: explica que se arma con N piezas y enuncia los codigos en orden.',
-        '- Si solo se fabrica: dilo con claridad y ofrece cotizacion.',
+        '- Si hay directo (existe en una sola pieza): presentalo primero como la mejor opcion, con su codigo exacto.',
+        '- Si hay cadenas: presenta las opciones de cadena disponibles (hasta 2), cada una con sus codigos en orden. Y SIEMPRE, ademas de las cadenas, menciona que tambien se puede fabricar como UNA SOLA pieza especial a la medida, por si el cliente prefiere un solo conector en vez de varias piezas.',
+        '- Si solo se fabrica (no hay piezas en catalogo que conecten ambos extremos): dilo con claridad y ofrece la fabricacion especial y cotizacion.',
+        '- En todos los casos deja claras las alternativas: lo que existe en catalogo (directo o cadena) y la opcion de fabricar a la medida en una sola pieza.',
         '- Si falta un dato (ej. la medida de un extremo), pidelo amablemente.',
         '- Se conciso.'
       ].join('\n');
