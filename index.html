@@ -981,6 +981,7 @@
       <div style="font-size:24px;font-weight:700;letter-spacing:-.5px;color:#fff;margin-bottom:8px;">Descríbelo como puedas</div>
       <div style="font-size:15px;line-height:1.55;color:rgba(255,255,255,.65);margin-bottom:18px;">Sube una <b style="color:#fff;font-weight:600;">foto</b>, pega un <b style="color:#fff;font-weight:600;">código</b>, escribe la <b style="color:#fff;font-weight:600;">descripción</b> o mándalo por <b style="color:#fff;font-weight:600;">audio</b>. La IA identifica la pieza exacta.</div>
       <div style="background:#fff;border-radius:14px;overflow:hidden;">
+        <div id="chat-messages" style="display:none;flex-direction:column;gap:10px;padding:14px 16px;text-align:left;max-height:340px;overflow-y:auto;border-bottom:1px solid #f0f0f2;"></div>
         <div style="padding:14px 16px 4px;">
           <textarea id="chat-input" placeholder="Ocupo un adaptador macho JIC 1/2&quot; recto a NPT 3/8&quot; hembra…" rows="2" oninput="autoResize(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}" style="width:100%;border:none;outline:none;resize:none;font-family:inherit;font-size:14px;color:#1a1a2e;line-height:1.5;min-height:46px;max-height:160px;padding:0;background:transparent;"></textarea>
         </div>
@@ -998,7 +999,6 @@
           <button type="button" onclick="clearChatImage()" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:15px;">&#10005;</button>
         </div>
       </div>
-      <div id="chat-messages" style="display:none;flex-direction:column;gap:12px;background:#fff;border:1px solid #E3E9F3;border-radius:14px;padding:14px;margin-top:14px;text-align:left;max-height:360px;overflow-y:auto;"></div>
     </div>
     <!-- CONFIG -->
     <div class="ha-lift" onclick="showPage('cfg')" style="border-radius:20px;padding:32px;background:#fff;border:1.5px solid #e7e9ef;text-align:left;box-shadow:0 10px 30px rgba(16,32,72,.07);">
