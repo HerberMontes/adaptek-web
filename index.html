@@ -211,18 +211,19 @@
       font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:15px;outline:none;
       transition:border-color .2s,box-shadow .2s;
     }
-    .cross-input:focus{border-color:#0071e3;box-shadow:0 0 0 3px rgba(0,113,227,.15);}
+    .cross-input:focus{border-color:#C8102E;box-shadow:0 0 0 3px rgba(200,16,46,.12);}
     .cross-btn{
-      background:#0071e3;color:#fff;border:none;padding:13px 26px;border-radius:980px;
+      background:#C8102E;color:#fff;border:none;padding:13px 26px;border-radius:12px;
       font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:15px;font-weight:600;
       letter-spacing:0;text-transform:none;cursor:pointer;transition:background .2s;white-space:nowrap;
     }
-    .cross-btn:hover{background:#0077ed;}
+    .cross-btn:hover{background:#a50d26;}
     .cross-brands{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
     .cross-brand-tag{
-      background:#f5f5f7;border:none;color:#001F5B;cursor:pointer;
-      font-size:13px;font-weight:500;padding:6px 14px;border-radius:980px;letter-spacing:0;transition:background .2s;
+      background:#fff;border:1px solid #e2e6ee;color:#0a1f44;cursor:pointer;
+      font-size:13px;font-weight:600;padding:7px 15px;border-radius:999px;letter-spacing:0;transition:all .18s ease;
     }
+    .cross-brand-tag:hover{border-color:#C8102E;color:#C8102E;box-shadow:0 4px 12px rgba(200,16,46,.08);}
     .cross-result{
       background:#fff;border:1px solid #e8e8ed;
       border-radius:18px;padding:26px 28px;box-shadow:none;
@@ -247,7 +248,8 @@
       transition:box-shadow .2s,transform .15s,border-color .2s;
     }
     .tut-card:hover{box-shadow:var(--sombra-h);transform:translateY(-2px);border-color:rgba(200,16,46,.3);}
-    .tut-icon{font-size:32px;margin-bottom:12px;}
+    .tut-icon{width:46px;height:46px;border-radius:11px;background:#f4f6fa;border:1px solid #e6eaf1;display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
+    .tut-icon svg{width:23px;height:23px;stroke:#0a1f44;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
     .tut-title{font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:16px;font-weight:700;letter-spacing:1px;color:var(--negro);margin-bottom:6px;}
     .tut-desc{font-size:12px;color:#888;line-height:1.6;}
     .tut-link{display:inline-block;margin-top:10px;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--rojo);text-decoration:none;}
@@ -257,6 +259,7 @@
       background:#fff;color:#001F5B;padding:32px 32px 8px;
       display:flex;align-items:center;gap:16px;
     }
+    .page-header>div:last-child{flex:1;min-width:0;}
     .page-header-back{
       background:#f5f5f7;border:none;color:#001F5B;
       width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:18px;
@@ -264,7 +267,7 @@
       transition:background .2s;
     }
     .page-header-back:hover{background:#e8e8ed;}
-    .page-header-title{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:32px;font-weight:600;letter-spacing:-.3px;color:#001F5B;}
+    .page-header-title{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:28px;font-weight:700;letter-spacing:-.4px;color:#001F5B;line-height:1.15;}
     .page-header-sub{font-size:15px;opacity:1;color:#86868b;margin-top:4px;}
 
     /* ── SECTION HEADER ── */
@@ -279,28 +282,29 @@
     .config-step-dot{display:flex;flex-direction:column;align-items:center;gap:4px;}
     .config-step-dot .dot-num{width:34px;height:34px;border-radius:50%;border:2px solid var(--borde);background:#fff;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:13px;font-weight:700;color:#bbb;transition:all .3s;}
     .config-step-dot .dot-lbl{font-size:11px;font-weight:500;letter-spacing:0;text-transform:none;color:#aeaeb2;white-space:nowrap;}
-    .config-step-dot.active .dot-num{border-color:#0071e3;background:#0071e3;color:#fff;}
+    .config-step-dot.active .dot-num{border-color:#C8102E;background:#C8102E;color:#fff;}
     .config-step-dot.active .dot-lbl{color:#001F5B;}
-    .config-step-dot.done .dot-num{border-color:#0071e3;background:#0071e3;color:#fff;}
+    .config-step-dot.done .dot-num{border-color:#C8102E;background:#C8102E;color:#fff;}
     .config-step-dot.done .dot-lbl{color:#001F5B;}
     .config-step-line{width:36px;height:2px;background:#e8e8ed;margin-bottom:20px;flex-shrink:0;transition:background .4s;}
-    .config-step-line.done{background:#0071e3;}
+    .config-step-line.done{background:#C8102E;}
     .config-panel{display:none;}
-    .config-panel.active{display:block;animation:panelIn .3s ease;background:#fff;}
+    .config-panel.active{display:block;opacity:1;animation:cfgPanelIn .3s ease;background:#fff;}
     @keyframes panelIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes cfgPanelIn{from{transform:translateY(10px)}to{transform:translateY(0)}}
     @keyframes appleSpin{to{transform:rotate(360deg)}}
     .apple-spinner{width:32px;height:32px;border-radius:50%;border:3px solid #e8e8ed;border-top-color:#86868b;animation:appleSpin .8s linear infinite;margin:0 auto;}
     .config-panel-title{display:none;}
     .config-panel-q{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:28px;font-weight:600;letter-spacing:-.3px;color:#001F5B;margin-bottom:24px;text-align:center;}
     .config-options{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;}
     .config-opt{border:1.5px solid #e8e8ed;border-radius:16px;padding:24px 16px 18px;text-align:center;cursor:pointer;background:#fff;transition:border-color .2s,box-shadow .2s,transform .15s;min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:none;}
-    .config-opt:hover{border-color:#0071e3;box-shadow:0 0 0 3px rgba(0,113,227,.1);transform:none;}
+    .config-opt:hover{border-color:#C8102E;box-shadow:0 0 0 3px rgba(200,16,46,.1);transform:none;}
     .config-opt-label{font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:15px;font-weight:600;letter-spacing:0;color:#001F5B;line-height:1.3;}
     .config-opt-sub{font-size:12px;color:#86868b;margin-top:4px;}
     .config-group-label{font-size:12px;font-weight:600;letter-spacing:0;color:#86868b;text-transform:none;margin:16px 0 8px;display:block;}
     .config-nav{display:flex;align-items:center;justify-content:space-between;margin-top:28px;padding-top:20px;border-top:1px solid #e8e8ed;flex-wrap:wrap;gap:8px;}
     .config-breadcrumb{font-size:13px;color:#86868b;display:flex;flex-wrap:wrap;gap:3px;align-items:center;}
-    .btn-config-back{background:none;border:none;color:#0071e3;padding:8px 4px;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:15px;font-weight:400;letter-spacing:0;text-transform:none;border-radius:0;cursor:pointer;}
+    .btn-config-back{background:none;border:none;color:#C8102E;padding:8px 4px;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:15px;font-weight:400;letter-spacing:0;text-transform:none;border-radius:0;cursor:pointer;}
     .config-results{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-top:6px;}
     .config-result-card{background:#fff;border:1px solid #e8e8ed;border-radius:16px;padding:22px 24px;box-shadow:none;transition:box-shadow .2s,transform .15s;}
     .config-result-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.06);transform:none;}
@@ -308,8 +312,8 @@
     .config-result-name{font-size:13px;color:#86868b;margin-bottom:10px;line-height:1.45;}
     .config-result-specs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
     .config-result-actions{display:flex;gap:8px;}
-    .btn-result-quote{flex:1;background:#0071e3;color:#fff;border:none;padding:11px 0;border-radius:980px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:14px;font-weight:600;letter-spacing:0;text-transform:none;transition:background .2s;}
-    .btn-result-quote:hover{background:#0077ed;}
+    .btn-result-quote{flex:1;background:#C8102E;color:#fff;border:none;padding:11px 0;border-radius:980px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:14px;font-weight:600;letter-spacing:0;text-transform:none;transition:background .2s;}
+    .btn-result-quote:hover{background:#a50d26;}
     .btn-result-wa{background:#25D366;color:#fff;border:none;padding:11px 16px;border-radius:980px;cursor:pointer;font-size:14px;font-weight:600;text-decoration:none;display:flex;align-items:center;justify-content:center;}
     .btn-result-wa:hover{background:#20bd5a;}
     .config-summary{background:#f5f5f7;border:none;border-radius:14px;padding:16px 18px;margin-bottom:18px;}
@@ -365,15 +369,15 @@
     .auth-desc{font-size:14px;color:#86868b;margin-bottom:24px;line-height:1.5;}
     .auth-field{margin-bottom:14px;}
     .auth-label{font-size:13px;font-weight:500;letter-spacing:0;text-transform:none;color:#001F5B;display:block;margin-bottom:7px;}
-    .auth-input{width:100%;border:1px solid #d2d2d7;border-radius:12px;padding:13px 15px;font-size:15px;outline:none;box-sizing:border-box;transition:border-color .2s,box-shadow .2s;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;background:#fff;}.auth-input:focus{border-color:#0071e3;box-shadow:0 0 0 3px rgba(0,113,227,.15);}
+    .auth-input{width:100%;border:1px solid #d2d2d7;border-radius:12px;padding:13px 15px;font-size:15px;outline:none;box-sizing:border-box;transition:border-color .2s,box-shadow .2s;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;background:#fff;}.auth-input:focus{border-color:#C8102E;box-shadow:0 0 0 3px rgba(200,16,46,.15);}
     .auth-input:focus{border-color:#001F5B;}
-    .auth-btn-primary{width:100%;background:#C8102E;color:#fff;border:none;padding:14px;border-radius:980px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:16px;font-weight:600;letter-spacing:0;text-transform:none;transition:background .2s;margin-bottom:12px;}
+    .auth-btn-primary{width:100%;background:#C8102E;color:#fff;border:none;padding:14px;border-radius:12px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:16px;font-weight:600;letter-spacing:0;text-transform:none;transition:background .2s;margin-bottom:12px;}
     .auth-btn-primary:hover{background:#a00c24;}
-    .auth-btn-google{width:100%;background:#fff;color:#001F5B;border:1px solid #d2d2d7;padding:13px;border-radius:980px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:15px;font-weight:500;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s;margin-bottom:18px;}
+    .auth-btn-google{width:100%;background:#fff;color:#001F5B;border:1px solid #d2d2d7;padding:13px;border-radius:12px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:15px;font-weight:500;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s;margin-bottom:18px;}
     .auth-btn-google:hover{border-color:#86868b;background:#fafafa;}
     .auth-divider{display:flex;align-items:center;gap:12px;margin-bottom:18px;color:#86868b;font-size:13px;}
     .auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:#e0e0e0;}
-    .auth-link{color:#0071e3;font-weight:500;cursor:pointer;text-decoration:none;}
+    .auth-link{color:#C8102E;font-weight:500;cursor:pointer;text-decoration:none;}
     .auth-footer{text-align:center;font-size:13px;color:#86868b;padding:0 32px 28px;}
     .auth-guest{text-align:center;margin-top:10px;}
 
@@ -672,15 +676,15 @@
     .auth-desc{font-size:14px;color:#86868b;margin-bottom:24px;line-height:1.5;}
     .auth-field{margin-bottom:14px;}
     .auth-label{font-size:13px;font-weight:500;letter-spacing:0;text-transform:none;color:#001F5B;display:block;margin-bottom:7px;}
-    .auth-input{width:100%;border:1px solid #d2d2d7;border-radius:12px;padding:13px 15px;font-size:15px;outline:none;box-sizing:border-box;transition:border-color .2s,box-shadow .2s;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;background:#fff;}.auth-input:focus{border-color:#0071e3;box-shadow:0 0 0 3px rgba(0,113,227,.15);}
+    .auth-input{width:100%;border:1px solid #d2d2d7;border-radius:12px;padding:13px 15px;font-size:15px;outline:none;box-sizing:border-box;transition:border-color .2s,box-shadow .2s;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;background:#fff;}.auth-input:focus{border-color:#C8102E;box-shadow:0 0 0 3px rgba(200,16,46,.15);}
     .auth-input:focus{border-color:#001F5B;}
-    .auth-btn-primary{width:100%;background:#C8102E;color:#fff;border:none;padding:14px;border-radius:980px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:16px;font-weight:600;letter-spacing:0;text-transform:none;transition:background .2s;margin-bottom:12px;}
+    .auth-btn-primary{width:100%;background:#C8102E;color:#fff;border:none;padding:14px;border-radius:12px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:16px;font-weight:600;letter-spacing:0;text-transform:none;transition:background .2s;margin-bottom:12px;}
     .auth-btn-primary:hover{background:#a00c24;}
-    .auth-btn-google{width:100%;background:#fff;color:#001F5B;border:1px solid #d2d2d7;padding:13px;border-radius:980px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:15px;font-weight:500;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s;margin-bottom:18px;}
+    .auth-btn-google{width:100%;background:#fff;color:#001F5B;border:1px solid #d2d2d7;padding:13px;border-radius:12px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:15px;font-weight:500;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s;margin-bottom:18px;}
     .auth-btn-google:hover{border-color:#86868b;background:#fafafa;}
     .auth-divider{display:flex;align-items:center;gap:12px;margin-bottom:18px;color:#86868b;font-size:13px;}
     .auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:#e0e0e0;}
-    .auth-link{color:#0071e3;font-weight:500;cursor:pointer;text-decoration:none;}
+    .auth-link{color:#C8102E;font-weight:500;cursor:pointer;text-decoration:none;}
     .auth-footer{text-align:center;font-size:13px;color:#86868b;padding:0 32px 28px;}
     .auth-guest{text-align:center;margin-top:10px;}
 
@@ -922,10 +926,17 @@
   .ha-lift{transition:transform .18s ease, box-shadow .18s ease;cursor:pointer;}
   .ha-lift:hover{transform:translateY(-4px);}
   .ha-sec{padding:72px 40px;}
-  .ha-hero{padding:60px 40px 8px;text-align:center;}
-  .ha-h2{font-size:54px;line-height:1.05;font-weight:800;letter-spacing:-1.5px;color:#0a1f44;margin:0 auto 16px;max-width:760px;}
-  .ha-lead{font-size:20px;line-height:1.5;color:#5b6577;max-width:540px;margin:0 auto;font-weight:400;}
-  .ha-paths{padding:18px 40px 24px;display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:1120px;margin:0 auto;}
+  .ha-hero{padding:64px 40px 4px;text-align:center;}
+  .ha-h2{font-size:52px;line-height:1.05;font-weight:800;letter-spacing:-1.6px;color:#0a1f44;margin:0 auto 16px;max-width:740px;}
+  .ha-lead{font-size:19px;line-height:1.5;color:#5b6577;max-width:560px;margin:0 auto;font-weight:400;}
+  .ha-paths{padding:36px 40px 22px;display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:1060px;margin:0 auto;align-items:stretch;}
+  .hx-card{border-radius:22px;padding:30px;display:flex;flex-direction:column;background:#fff;border:1px solid #ececf1;box-shadow:0 18px 50px rgba(16,32,72,.09);}
+  .hx-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 13px;border-radius:999px;align-self:flex-start;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;}
+  .hx-chip{cursor:pointer;text-align:left;font-size:13.5px;line-height:1.45;color:#5b6577;background:#f6f7f9;border:1px solid #edeef2;padding:11px 14px;border-radius:12px;transition:all .15s ease;}
+  .hx-chip:hover{color:#0a1f44;background:#fff;border-color:#cdd3dd;box-shadow:0 4px 14px rgba(16,32,72,.06);}
+  .hx-chip b{color:#0a1f44;font-weight:600;}
+  .hx-step{display:flex;align-items:center;gap:13px;padding:12px 0;}
+  .hx-step .d{width:30px;height:30px;border-radius:9px;background:#f0f3f9;color:#0a1f44;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none;}
   .ha-input{display:flex;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.25);}
   .ha-input input{flex:1;border:none;outline:none;padding:15px 16px;font-size:15px;color:#0a1f44;font-family:inherit;background:transparent;}
   .ha-input button{border:none;background:#C8102E;color:#fff;font-size:14px;font-weight:700;padding:0 22px;cursor:pointer;font-family:inherit;}
@@ -948,7 +959,8 @@
     .ha-hero{padding:40px 20px 4px;}
     .ha-h2{font-size:34px;letter-spacing:-1px;}
     .ha-lead{font-size:17px;}
-    .ha-paths{padding:14px 20px 18px;grid-template-columns:1fr;gap:14px;}
+    .ha-paths{padding:22px 20px 18px;grid-template-columns:1fr;gap:16px;}
+    .hx-card{padding:24px;}
     .ha-trust{gap:18px 26px;padding:22px 20px;}
     .ha-trust .it{font-size:13px;}
     .ha-cats{grid-template-columns:1fr;gap:14px;}
@@ -970,60 +982,85 @@
     <p class="ha-lead">Dinos qué necesitas y la IA lo identifica, o ármalo paso a paso en el configurador.</p>
   </div>
 
-  <!-- TWO PATHS -->
+  <!-- TWO PATHS (rediseño equilibrado) -->
   <div class="ha-paths">
-    <!-- IA -->
-    <div class="ha-lift" style="border-radius:20px;padding:32px;background:linear-gradient(160deg,#0a1f44 0%,#14306b 100%);text-align:left;box-shadow:0 14px 40px rgba(10,31,68,.22);">
-      <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);padding:6px 14px;border-radius:999px;margin-bottom:18px;">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7fd1ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.2L18 9l-4.2 1.8L12 15l-1.8-4.2L6 9l4.2-1.8z"/></svg>
-        <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#7fd1ff;">Buscador con IA</span>
+
+    <!-- ASISTENTE IA -->
+    <div class="hx-card">
+      <div style="display:flex;align-items:center;gap:13px;margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid #f0f1f4;">
+        <div style="width:42px;height:42px;border-radius:12px;background:#fff;border:1px solid #e2e6ee;display:flex;align-items:center;justify-content:center;flex:none;">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#0a1f44" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l1.6 4.9 4.9 1.6-4.9 1.6L12 16.5l-1.6-4.9L5.5 10l4.9-1.6z"/><path d="M18.5 15.5l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/></svg>
+        </div>
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:9px;"><span style="font-size:16px;font-weight:600;color:#0a1f44;letter-spacing:-.2px;">Asistente Adaptekk</span><span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:500;color:#1f9d55;"><span style="width:6px;height:6px;border-radius:50%;background:#1f9d55;"></span>En línea</span></div>
+          <div style="font-size:13px;color:#86868b;margin-top:1px;">Identifica tu conector en segundos</div>
+        </div>
       </div>
-      <div style="font-size:24px;font-weight:700;letter-spacing:-.5px;color:#fff;margin-bottom:8px;">Descríbelo como puedas</div>
-      <div style="font-size:15px;line-height:1.55;color:rgba(255,255,255,.65);margin-bottom:18px;">Sube una <b style="color:#fff;font-weight:600;">foto</b>, pega un <b style="color:#fff;font-weight:600;">código</b>, escribe la <b style="color:#fff;font-weight:600;">descripción</b> o mándalo por <b style="color:#fff;font-weight:600;">audio</b>. La IA identifica la pieza exacta.</div>
-      <div style="background:#fff;border-radius:14px;overflow:hidden;">
-        <div id="chat-messages" style="display:none;flex-direction:column;gap:10px;padding:14px 16px;text-align:left;max-height:340px;overflow-y:auto;border-bottom:1px solid #f0f0f2;"></div>
-        <div style="padding:14px 16px 4px;">
-          <textarea id="chat-input" placeholder="Ocupo un adaptador macho JIC 1/2&quot; recto a NPT 3/8&quot; hembra…" rows="2" oninput="autoResize(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}" style="width:100%;border:none;outline:none;resize:none;font-family:inherit;font-size:14px;color:#1a1a2e;line-height:1.5;min-height:46px;max-height:160px;padding:0;background:transparent;"></textarea>
+
+      <div style="background:#f6f7f9;border-radius:5px 16px 16px 16px;padding:14px 16px;font-size:14px;line-height:1.55;color:#3a4250;margin-bottom:16px;">
+        Hola, dime qué conector necesitas. Puedes subir una <b style="color:#0a1f44;font-weight:600;">foto</b>, pegar un <b style="color:#0a1f44;font-weight:600;">código</b>, <b style="color:#0a1f44;font-weight:600;">describirlo</b> o mandar un <b style="color:#0a1f44;font-weight:600;">audio</b>.
+      </div>
+
+      <!-- input area (funcional) -->
+      <div style="margin-top:auto;background:#f6f7f9;border:1px solid #edeef2;border-radius:16px;padding:8px;">
+        <div id="chat-messages" style="display:none;flex-direction:column;gap:10px;padding:14px 16px;text-align:left;max-height:340px;overflow-y:auto;border-bottom:1px solid #e7e9ef;"></div>
+        <div style="padding:9px 11px 10px;">
+          <textarea id="chat-input" placeholder="Describe tu conector, pega un código o sube una foto…" rows="2" oninput="autoResize(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}" style="width:100%;border:none;outline:none;resize:none;font-family:inherit;font-size:14px;color:#1a1a2e;line-height:1.5;min-height:44px;max-height:160px;padding:0;background:transparent;"></textarea>
         </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 11px;border-top:1px solid #f0f0f2;flex-wrap:wrap;gap:8px;">
-          <div style="display:flex;gap:4px;flex-wrap:wrap;">
-            <label title="Subir imagen" style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#5b6577;padding:7px 10px;border-radius:8px;background:#f5f5f7;cursor:pointer;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5b6577" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 17l-5-5-7 7"/></svg>Foto<input type="file" accept="image/*" id="chat-img-input" style="display:none" onchange="handleChatImage(this)"/></label>
-            <button type="button" title="Buscar por código AT" onclick="var i=document.getElementById('chat-input');i.placeholder='Pega tu código AT, por ejemplo AT-NR-JIC-M08-NPT-M06…';i.focus();" style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#5b6577;padding:7px 10px;border-radius:8px;background:#f5f5f7;border:none;cursor:pointer;font-family:inherit;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5b6577" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg>Código</button>
-            <button type="button" id="chat-voice-btn" title="Hablar" onclick="toggleChatVoice()" style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#5b6577;padding:7px 10px;border-radius:8px;background:#f5f5f7;border:none;cursor:pointer;font-family:inherit;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5b6577" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>Audio</button>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 8px 4px;flex-wrap:wrap;gap:8px;">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <label title="Subir imagen" style="display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:#5b6577;padding:8px 12px;border-radius:10px;background:#fff;border:1px solid #e7e9ef;cursor:pointer;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5b6577" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 17l-5-5-7 7"/></svg>Foto<input type="file" accept="image/*" id="chat-img-input" style="display:none" onchange="handleChatImage(this)"/></label>
+            <button type="button" title="Buscar por código AT" onclick="var i=document.getElementById('chat-input');i.placeholder='Pega tu código AT, por ejemplo AT-NR-JIC-M08-NPT-M06…';i.focus();" style="display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:#5b6577;padding:8px 12px;border-radius:10px;background:#fff;border:1px solid #e7e9ef;cursor:pointer;font-family:inherit;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5b6577" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg>Código</button>
+            <button type="button" id="chat-voice-btn" title="Hablar" onclick="toggleChatVoice()" style="display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:#5b6577;padding:8px 12px;border-radius:10px;background:#fff;border:1px solid #e7e9ef;cursor:pointer;font-family:inherit;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5b6577" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>Audio</button>
           </div>
-          <button type="button" onclick="sendChatMessage()" style="border:none;background:#C8102E;color:#fff;font-size:13px;font-weight:600;padding:9px 18px;border-radius:9px;cursor:pointer;font-family:inherit;">Identificar</button>
+          <button type="button" onclick="sendChatMessage()" style="border:none;background:#C8102E;color:#fff;width:44px;height:44px;border-radius:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;" title="Identificar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
         </div>
-        <div id="chat-img-preview-strip" style="display:none;background:#EEF5FF;border:1px solid #dde6f0;border-radius:10px;padding:7px 12px;align-items:center;gap:8px;margin:0 11px 11px;">
+        <div id="chat-img-preview-strip" style="display:none;background:#EEF5FF;border:1px solid #dde6f0;border-radius:10px;padding:7px 12px;align-items:center;gap:8px;margin:4px 4px 4px;">
           <img id="chat-img-thumb" style="height:40px;width:40px;object-fit:cover;border-radius:6px;border:1px solid #dde6f0;"/>
           <div style="flex:1;"><div style="font-size:11px;font-weight:600;color:#001F5B;" id="chat-img-name">imagen.jpg</div></div>
           <button type="button" onclick="clearChatImage()" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:15px;">&#10005;</button>
         </div>
       </div>
     </div>
-    <!-- CONFIG -->
-    <div class="ha-lift" onclick="showPage('cfg')" style="border-radius:20px;padding:32px;background:#fff;border:1.5px solid #e7e9ef;text-align:left;box-shadow:0 10px 30px rgba(16,32,72,.07);">
-      <div style="display:inline-flex;align-items:center;gap:8px;background:#fdeef0;border:1px solid #f8d6db;padding:6px 14px;border-radius:999px;margin-bottom:18px;">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C8102E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6M6 15v6M6 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM18 3v3M18 12v9M18 6a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>
-        <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#C8102E;">Configurador</span>
+
+    <!-- CONFIGURADOR -->
+    <div class="hx-card">
+      <div style="display:flex;align-items:center;gap:13px;margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid #f0f1f4;">
+        <div style="width:42px;height:42px;border-radius:12px;background:#fff;border:1px solid #e2e6ee;display:flex;align-items:center;justify-content:center;flex:none;">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#0a1f44" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h8M5 8a2.5 2.5 0 1 1 5 0 2.5 2.5 0 0 1-5 0zM19 8h-2M19 16h-8M19 16a2.5 2.5 0 1 0-5 0 2.5 2.5 0 0 0 5 0zM5 16h2"/></svg>
+        </div>
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:9px;"><span style="font-size:16px;font-weight:600;color:#0a1f44;letter-spacing:-.2px;">Configurador</span><span style="font-size:11.5px;font-weight:600;color:#C8102E;">Guiado</span></div>
+          <div style="font-size:13px;color:#86868b;margin-top:1px;">Ármalo paso a paso, sin errores</div>
+        </div>
       </div>
-      <div style="font-size:24px;font-weight:700;letter-spacing:-.5px;color:#0a1f44;margin-bottom:8px;">Ármalo paso a paso</div>
-      <div style="font-size:15px;line-height:1.55;color:#5b6577;margin-bottom:22px;">Elige tipo, rosca, ángulo y medida. Te mostramos solo lo compatible — imposible equivocarse.</div>
-      <div style="display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap;align-items:center;">
-        <span style="font-size:12px;font-weight:600;color:#0a1f44;background:#f5f5f7;border:1px solid #e7e9ef;padding:7px 13px;border-radius:8px;">Tipo</span>
-        <span style="font-size:12px;color:#9aa3b2;">→</span>
-        <span style="font-size:12px;font-weight:600;color:#0a1f44;background:#f5f5f7;border:1px solid #e7e9ef;padding:7px 13px;border-radius:8px;">Rosca</span>
-        <span style="font-size:12px;color:#9aa3b2;">→</span>
-        <span style="font-size:12px;font-weight:600;color:#0a1f44;background:#f5f5f7;border:1px solid #e7e9ef;padding:7px 13px;border-radius:8px;">Medida</span>
+
+      <div style="font-size:24px;font-weight:700;letter-spacing:-.5px;color:#0a1f44;margin-bottom:7px;">¿Prefieres armarlo tú?</div>
+      <div style="font-size:14.5px;line-height:1.55;color:#5b6577;margin-bottom:18px;">Selección guiada. Solo te mostramos lo compatible: imposible equivocarte.</div>
+
+      <div style="border-top:1px solid #f0f0f2;">
+        <div class="hx-step"><span class="d">1</span><div style="font-size:14.5px;font-weight:600;color:#0a1f44;">Tipo de conector</div></div>
+        <div class="hx-step" style="border-top:1px solid #f5f5f7;"><span class="d">2</span><div style="font-size:14.5px;font-weight:600;color:#0a1f44;">Rosca y ángulo</div></div>
+        <div class="hx-step" style="border-top:1px solid #f5f5f7;"><span class="d">3</span><div style="font-size:14.5px;font-weight:600;color:#0a1f44;">Medida exacta</div></div>
       </div>
-      <div style="background:#0a1f44;color:#fff;font-size:15px;font-weight:600;padding:14px;border-radius:12px;text-align:center;">Abrir configurador →</div>
+
+      <div onclick="showPage('cfg')" style="margin-top:20px;background:#0a1f44;color:#fff;font-size:15px;font-weight:600;padding:15px;border-radius:13px;text-align:center;cursor:pointer;">Abrir configurador →</div>
     </div>
+
   </div>
 
   <!-- secondary helpers -->
-  <div style="padding:0 20px 48px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;align-items:center;">
-    <span style="font-size:13px;color:#86868b;">¿Prefieres que lo hagamos por ti?</span>
-    <a href="https://wa.me/525555550000" style="text-decoration:none;display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:#0f6b39;background:#e7f6ee;border:1px solid #d2ecdd;padding:8px 16px;border-radius:999px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="#1f9d55"><path d="M12 2a10 10 0 0 0-8.5 15.3L2 22l4.8-1.5A10 10 0 1 0 12 2z"/></svg>Cotiza por WhatsApp</a>
-    <span onclick="showPage('cross')" style="cursor:pointer;font-size:13px;font-weight:600;color:#5b6577;background:#f5f5f7;border:1px solid #ececef;padding:8px 16px;border-radius:999px;">Cross-reference de marcas</span>
+  <div style="max-width:1060px;margin:0 auto;padding:6px 40px 50px;">
+    <div style="display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;background:#fafafc;border:1px solid #f0f0f2;border-radius:16px;padding:16px 24px;">
+      <div style="display:flex;align-items:center;gap:11px;">
+        <div style="width:34px;height:34px;border-radius:9px;background:#e7f6ee;display:flex;align-items:center;justify-content:center;flex:none;"><svg width="17" height="17" viewBox="0 0 24 24" fill="#1f9d55"><path d="M12 2a10 10 0 0 0-8.5 15.3L2 22l4.8-1.5A10 10 0 1 0 12 2z"/></svg></div>
+        <span style="font-size:14px;color:#5b6577;">¿Prefieres que un ejecutivo lo resuelva por ti?</span>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <a href="https://wa.me/525555550000" style="text-decoration:none;display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;color:#0f6b39;background:#fff;border:1px solid #d2ecdd;padding:9px 16px;border-radius:10px;">Cotizar por WhatsApp</a>
+        <span onclick="showPage('cross')" style="cursor:pointer;font-size:13.5px;font-weight:600;color:#5b6577;background:#fff;border:1px solid #e7e9ef;padding:9px 16px;border-radius:10px;">Cross-reference de marcas</span>
+      </div>
+    </div>
   </div>
 
   <!-- TRUST BAND -->
@@ -1045,22 +1082,6 @@
     </div>
   </div>
 
-  <!-- CATEGORIES -->
-  <div class="ha-sec">
-    <div style="text-align:center;margin-bottom:44px;">
-      <h3 class="ha-title">Explora por categoría</h3>
-      <p style="font-size:17px;color:#86868b;margin:0;">Todo el sistema de conexión hidráulica, en un solo lugar.</p>
-    </div>
-    <div class="ha-cats">
-      <div class="ha-ph ha-lift" onclick="showPage('cfg')" style="border-radius:16px;overflow:hidden;border:1px solid #ececef;"><div class="ha-cat-img" style="background-image:linear-gradient(150deg,rgba(10,31,68,.30),rgba(10,31,68,.55)),url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=900&q=80&auto=format&fit=crop');background-position:center;"></div><div style="background:#fff;padding:18px 20px;"><div style="font-size:17px;font-weight:600;color:#0a1f44;">Adaptadores JIC 37°</div><div style="font-size:13px;color:#86868b;margin-top:2px;">812 referencias</div></div></div>
-      <div class="ha-ph ha-lift" onclick="showPage('cfg')" style="border-radius:16px;overflow:hidden;border:1px solid #ececef;"><div class="ha-cat-img" style="background-image:linear-gradient(150deg,rgba(10,31,68,.45),rgba(20,48,107,.45)),url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=900&q=80&auto=format&fit=crop');background-position:left center;"></div><div style="background:#fff;padding:18px 20px;"><div style="font-size:17px;font-weight:600;color:#0a1f44;">ORFS (O-Ring Face Seal)</div><div style="font-size:13px;color:#86868b;margin-top:2px;">534 referencias</div></div></div>
-      <div class="ha-ph ha-lift" onclick="showPage('cfg')" style="border-radius:16px;overflow:hidden;border:1px solid #ececef;"><div class="ha-cat-img" style="background-image:linear-gradient(150deg,rgba(15,30,60,.55),rgba(10,31,68,.30)),url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=900&q=80&auto=format&fit=crop');background-position:right center;"></div><div style="background:#fff;padding:18px 20px;"><div style="font-size:17px;font-weight:600;color:#0a1f44;">NPT / NPTF</div><div style="font-size:13px;color:#86868b;margin-top:2px;">703 referencias</div></div></div>
-      <div class="ha-ph ha-lift" onclick="showPage('cfg')" style="border-radius:16px;overflow:hidden;border:1px solid #ececef;"><div class="ha-cat-img" style="background-image:linear-gradient(150deg,rgba(10,31,68,.40),rgba(10,31,68,.60)),url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=900&q=80&auto=format&fit=crop');background-position:30% 40%;"></div><div style="background:#fff;padding:18px 20px;"><div style="font-size:17px;font-weight:600;color:#0a1f44;">Bridas SAE</div><div style="font-size:13px;color:#86868b;margin-top:2px;">288 referencias</div></div></div>
-      <div class="ha-ph ha-lift" onclick="showPage('cfg')" style="border-radius:16px;overflow:hidden;border:1px solid #ececef;"><div class="ha-cat-img" style="background-image:linear-gradient(150deg,rgba(20,48,107,.40),rgba(10,31,68,.45)),url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=900&q=80&auto=format&fit=crop');background-position:70% 60%;"></div><div style="background:#fff;padding:18px 20px;"><div style="font-size:17px;font-weight:600;color:#0a1f44;">Mangueras hidráulicas</div><div style="font-size:13px;color:#86868b;margin-top:2px;">615 referencias</div></div></div>
-      <div class="ha-ph ha-lift" onclick="showPage('cfg')" style="border-radius:16px;overflow:hidden;border:1px solid #ececef;"><div class="ha-cat-img" style="background-image:linear-gradient(150deg,rgba(10,31,68,.50),rgba(15,30,60,.40)),url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=900&q=80&auto=format&fit=crop');background-position:center bottom;"></div><div style="background:#fff;padding:18px 20px;"><div style="font-size:17px;font-weight:600;color:#0a1f44;">Racores DIN / Métrico</div><div style="font-size:13px;color:#86868b;margin-top:2px;">446 referencias</div></div></div>
-    </div>
-  </div>
-
   <!-- 3 PATHS / CÓMO FUNCIONA -->
   <div class="ha-sec" style="background:#f5f5f7;">
     <div style="text-align:center;margin-bottom:44px;">
@@ -1069,9 +1090,9 @@
       <p style="font-size:17px;color:#86868b;margin:0;">Tres formas de llegar al conector exacto. Tú eliges.</p>
     </div>
     <div class="ha-steps">
-      <div class="ha-lift" onclick="navIrIA()" style="text-align:left;padding:30px 28px;background:#fff;border:1px solid #ececef;border-radius:18px;"><div style="width:52px;height:52px;border-radius:14px;background:#0a1f44;display:flex;align-items:center;justify-content:center;margin-bottom:20px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7fd1ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.2L18 9l-4.2 1.8L12 15l-1.8-4.2L6 9l4.2-1.8z"/></svg></div><div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#C8102E;margin-bottom:8px;">Opción 1 · IA</div><div style="font-size:21px;font-weight:600;color:#0a1f44;margin-bottom:8px;">Búscalo con IA</div><div style="font-size:14px;line-height:1.6;color:#5b6577;margin-bottom:16px;">Sube foto, pega un código, descríbelo o mándalo por audio. La IA identifica la pieza exacta en segundos.</div><div style="font-size:14px;font-weight:600;color:#0a1f44;">Abrir buscador IA →</div></div>
-      <div class="ha-lift" onclick="showPage('cfg')" style="text-align:left;padding:30px 28px;background:#fff;border:1px solid #ececef;border-radius:18px;"><div style="width:52px;height:52px;border-radius:14px;background:#C8102E;display:flex;align-items:center;justify-content:center;margin-bottom:20px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6M6 15v6M6 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM18 3v3M18 12v9M18 6a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg></div><div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#C8102E;margin-bottom:8px;">Opción 2 · Configurador</div><div style="font-size:21px;font-weight:600;color:#0a1f44;margin-bottom:8px;">Ármalo paso a paso</div><div style="font-size:14px;line-height:1.6;color:#5b6577;margin-bottom:16px;">Elige tipo, rosca, ángulo y medida. Solo te mostramos lo compatible: imposible equivocarte.</div><div style="font-size:14px;font-weight:600;color:#0a1f44;">Abrir configurador →</div></div>
-      <a href="https://wa.me/525555550000" class="ha-lift" style="text-decoration:none;display:block;text-align:left;padding:30px 28px;background:#fff;border:1px solid #ececef;border-radius:18px;"><div style="width:52px;height:52px;border-radius:14px;background:#1f9d55;display:flex;align-items:center;justify-content:center;margin-bottom:20px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 0 0-8.5 15.3L2 22l4.8-1.5A10 10 0 1 0 12 2z"/></svg></div><div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#C8102E;margin-bottom:8px;">Opción 3 · Ejecutivo</div><div style="font-size:21px;font-weight:600;color:#0a1f44;margin-bottom:8px;">Cotiza por WhatsApp</div><div style="font-size:14px;line-height:1.6;color:#5b6577;margin-bottom:16px;">¿Prefieres que lo haga una persona? Un ejecutivo te atiende y te cotiza directo por WhatsApp.</div><div style="font-size:14px;font-weight:600;color:#0f6b39;">Hablar con ventas →</div></a>
+      <div class="ha-lift" onclick="navIrIA()" style="text-align:left;padding:30px 28px;background:#fff;border:1px solid #ececef;border-radius:18px;"><div style="width:52px;height:52px;border-radius:14px;background:#eef3fb;border:1px solid #d9e3f3;display:flex;align-items:center;justify-content:center;margin-bottom:20px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l1.6 4.9 4.9 1.6-4.9 1.6L12 16.5l-1.6-4.9L5.5 10l4.9-1.6z"/><path d="M18.5 15.5l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/></svg></div><div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#C8102E;margin-bottom:8px;">Opción 1 · IA</div><div style="font-size:21px;font-weight:600;color:#0a1f44;margin-bottom:8px;">Búscalo con IA</div><div style="font-size:14px;line-height:1.6;color:#5b6577;margin-bottom:16px;">Sube foto, pega un código, descríbelo o mándalo por audio. La IA identifica la pieza exacta en segundos.</div><div style="font-size:14px;font-weight:600;color:#0a1f44;">Abrir buscador IA →</div></div>
+      <div class="ha-lift" onclick="showPage('cfg')" style="text-align:left;padding:30px 28px;background:#fff;border:1px solid #ececef;border-radius:18px;"><div style="width:52px;height:52px;border-radius:14px;background:#fdeef0;border:1px solid #f6d4da;display:flex;align-items:center;justify-content:center;margin-bottom:20px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C8102E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h8M5 8a2.5 2.5 0 1 1 5 0 2.5 2.5 0 0 1-5 0zM19 8h-2M19 16h-8M19 16a2.5 2.5 0 1 0-5 0 2.5 2.5 0 0 0 5 0zM5 16h2"/></svg></div><div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#C8102E;margin-bottom:8px;">Opción 2 · Configurador</div><div style="font-size:21px;font-weight:600;color:#0a1f44;margin-bottom:8px;">Ármalo paso a paso</div><div style="font-size:14px;line-height:1.6;color:#5b6577;margin-bottom:16px;">Elige tipo, rosca, ángulo y medida. Solo te mostramos lo compatible: imposible equivocarte.</div><div style="font-size:14px;font-weight:600;color:#0a1f44;">Abrir configurador →</div></div>
+      <a href="https://wa.me/525555550000" class="ha-lift" style="text-decoration:none;display:block;text-align:left;padding:30px 28px;background:#fff;border:1px solid #ececef;border-radius:18px;"><div style="width:52px;height:52px;border-radius:14px;background:#e9f7ef;border:1px solid #cfe9da;display:flex;align-items:center;justify-content:center;margin-bottom:20px;"><svg width="24" height="24" viewBox="0 0 32 32" fill="none" stroke="#1f9d55" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4a12 12 0 0 0-10.3 18.1L4 28l6.1-1.6A12 12 0 1 0 16 4z"/><path d="M12.2 10.4c.3 0 .6 0 .8.6l1 2.3c.1.3.1.4 0 .6l-.6.9c-.2.2-.3.4-.1.7a8.7 8.7 0 0 0 4 3.5c.4.2.6.1.8-.1l.8-1c.2-.2.3-.2.6-.1l2.2 1.1c.3.1.4.3.4.5 0 1.2-1 2.3-2.1 2.5-.9.1-2 .3-6.1-1.9-3-2.2-4-4.8-4.2-5.6-.2-.8.4-2.4.9-2.9.3-.3.6-.5.9-.5z"/></svg></div><div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#C8102E;margin-bottom:8px;">Opción 3 · Ejecutivo</div><div style="font-size:21px;font-weight:600;color:#0a1f44;margin-bottom:8px;">Cotiza por WhatsApp</div><div style="font-size:14px;line-height:1.6;color:#5b6577;margin-bottom:16px;">¿Prefieres que lo haga una persona? Un ejecutivo te atiende y te cotiza directo por WhatsApp.</div><div style="font-size:14px;font-weight:600;color:#0f6b39;">Hablar con ventas →</div></a>
     </div>
   </div>
 
@@ -1085,17 +1106,8 @@
       <div style="border:1px solid #ececef;border-radius:16px;padding:28px;"><div style="font-size:19px;font-weight:600;color:#0a1f44;margin-bottom:8px;">Asesoría técnica real</div><div style="font-size:15px;line-height:1.6;color:#5b6577;">¿No sabes qué pieza es? Te ayudamos a identificarla por WhatsApp con un especialista.</div></div>
     </div>
   </div>
+</div><!-- /.ha -->
 
-  <!-- TRIPLE CTA -->
-  <div class="ha-sec" style="background:#0a1f44;">
-    <div style="text-align:center;margin-bottom:44px;"><h3 class="ha-title" style="color:#fff;margin-bottom:10px;">¿Listo para tu conector?</h3><p style="font-size:17px;color:rgba(255,255,255,.6);margin:0;">Como prefieras: en línea o por WhatsApp.</p></div>
-    <div class="ha-cta">
-      <div onclick="showPage('cfg')" class="ha-lift" style="background:#fff;border-radius:16px;padding:30px;text-align:center;"><div style="font-size:19px;font-weight:600;color:#0a1f44;margin-bottom:8px;">Comprar en línea</div><div style="font-size:14px;line-height:1.55;color:#5b6577;margin-bottom:20px;">Pago seguro y factura inmediata.</div><div style="background:#C8102E;color:#fff;font-size:15px;font-weight:600;padding:12px;border-radius:10px;">Ir a la tienda</div></div>
-      <a href="https://wa.me/525555550000" class="ha-lift" style="text-decoration:none;display:block;background:#fff;border-radius:16px;padding:30px;text-align:center;"><div style="font-size:19px;font-weight:600;color:#0a1f44;margin-bottom:8px;">Hablar con ventas</div><div style="font-size:14px;line-height:1.55;color:#5b6577;margin-bottom:20px;">Asesoría directa por WhatsApp.</div><div style="background:#1f9d55;color:#fff;font-size:15px;font-weight:600;padding:12px;border-radius:10px;">WhatsApp</div></a>
-    </div>
-  </div>
-
-</div>
 <!-- ===== /HOME OPCIÓN A ===== -->
 
   
@@ -1180,7 +1192,7 @@
     <button class="page-header-back" onclick="showPage('home')" title="Regresar">&#8592;</button>
     <div>
       <div class="page-header-title">Cross Reference</div>
-      <div class="page-header-sub">Encuentra el equivalente Adaptek de cualquier marca</div>
+      <div class="page-header-sub">Encuentra el equivalente Adaptekk de cualquier marca</div>
     </div>
   </div>
   <div class="cross-page">
@@ -1212,7 +1224,7 @@
 
     <!-- RESULT -->
     <div class="cross-result" id="cross-result">
-      <div style="font-size:12px;font-weight:500;letter-spacing:0;text-transform:none;color:#0071e3;margin-bottom:6px;" id="cr-head">Producto encontrado</div>
+      <div style="font-size:12px;font-weight:500;letter-spacing:0;text-transform:none;color:#C8102E;margin-bottom:6px;" id="cr-head">Producto encontrado</div>
       <div style="font-size:12px;font-weight:500;letter-spacing:0;color:#86868b;text-transform:none;margin-bottom:4px;" id="cr-brand"></div><div class="cross-result-part" id="cr-part"></div>
       <div class="cross-result-name" id="cr-name"></div>
       <div id="cr-stockprice" style="font-size:14px;color:#001F5B;font-weight:600;margin:2px 0 12px;"></div>
@@ -1279,8 +1291,8 @@
 .qty-btn:hover{background:#e3e3e8;}
 .qty-input{width:38px;height:32px;border:none;background:transparent;text-align:center;font-size:15px;font-weight:600;color:#001F5B;-moz-appearance:textfield;}
 .qty-input::-webkit-outer-spin-button,.qty-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
-.cart-remove{background:none;border:none;cursor:pointer;color:#0071e3;font-size:13px;font-weight:400;padding:6px 2px;margin-top:8px;transition:color .15s;}
-.cart-remove:hover{color:#0058b8;text-decoration:underline;}
+.cart-remove{background:none;border:none;cursor:pointer;color:#86868b;font-size:13px;font-weight:500;padding:6px 2px;margin-top:8px;transition:color .15s;}
+.cart-remove:hover{color:#C8102E;text-decoration:underline;}
 
 /* Resumen: tarjeta blanca suave, sticky */
 .cart-summary{background:#f5f5f7;border-radius:18px;padding:28px 26px;position:sticky;top:90px;}
@@ -1288,15 +1300,16 @@
 .cart-total-row{display:flex;justify-content:space-between;align-items:baseline;padding:11px 0;font-size:15px;color:#001F5B;}
 .cart-total-row span:first-child{color:#86868b;}
 .cart-total-divider{height:1px;background:#d2d2d7;margin:8px 0;}
-.cart-total-row.final{font-size:22px;font-weight:600;color:#001F5B;padding-top:14px;}
+.cart-total-row.final{font-size:15px;font-weight:600;color:#001F5B;padding-top:14px;flex-wrap:wrap;}
 .cart-total-row.final span:first-child{color:#001F5B;}
+.cart-total-row.final span:last-child{flex-basis:100%;text-align:right;font-size:21px;margin-top:4px;letter-spacing:-.3px;}
 
 /* Botones tipo Apple: pill, azul para primario */
-.cart-btn{width:100%;padding:14px;border:none;border-radius:980px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-weight:600;font-size:16px;letter-spacing:0;text-transform:none;margin-top:12px;transition:background .18s,transform .1s;}
+.cart-btn{width:100%;padding:14px;border:none;border-radius:12px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-weight:600;font-size:16px;letter-spacing:0;text-transform:none;margin-top:12px;transition:background .18s,transform .1s;}
 .cart-btn:active{transform:scale(.985);}
-.cart-btn.primary{background:#0071e3;color:#fff;}
-.cart-btn.primary:hover{background:#0077ed;}
-.cart-btn.secondary{background:transparent;color:#0071e3;border:none;padding:8px;}
+.cart-btn.primary{background:#C8102E;color:#fff;}
+.cart-btn.primary:hover{background:#a50d26;}
+.cart-btn.secondary{background:transparent;color:#0a1f44;border:none;padding:8px;}
 .cart-btn.secondary:hover{text-decoration:underline;}
 .cart-btn.pdf{background:#e8e8ed;color:#001F5B;}
 .cart-btn.pdf:hover{background:#dcdce1;}
@@ -1731,24 +1744,24 @@ window.descargarCotizacion = function() {
     + '<meta name="viewport" content="width=device-width,initial-scale=1">'
     + '<title>Cotizaci\u00f3n ' + folio + ' \u2014 ' + esc(E.nombre) + '</title>'
     + '<style>'
-    + '*{box-sizing:border-box;} body{font-family:Arial,Helvetica,sans-serif;margin:0;color:#222;background:#fff;}'
-    + '.sheet{max-width:800px;margin:0 auto;}'
-    + 'table.items{width:100%;border-collapse:collapse;} table.items th{background:#001F5B;color:#fff;padding:10px 8px;text-align:left;font-size:11px;letter-spacing:.5px;}'
-    + '.header{background:#001F5B;padding:28px 32px;color:#fff;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;}'
-    + '.logo{font-size:34px;font-weight:900;letter-spacing:1px;line-height:1;} .red{color:#C8102E;}'
-    + '.empresa{font-size:11px;line-height:1.6;opacity:.92;text-align:right;}'
-    + '.section{padding:24px 32px;} .meta{display:flex;gap:40px;flex-wrap:wrap;margin-bottom:22px;}'
-    + '.meta div{font-size:13px;} .meta .lbl{color:#888;font-size:10px;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;}'
-    + '.total-row{padding:14px 8px;text-align:right;font-weight:900;font-size:17px;color:#001F5B;}'
-    + '.note{margin-top:22px;padding:14px 16px;background:#FFF8E1;border-radius:8px;font-size:12px;color:#795548;line-height:1.6;}'
-    + '.foot{background:#f5f5f7;padding:18px 32px;text-align:center;font-size:11px;color:#888;line-height:1.7;}'
-    + '.btnbar{padding:16px 32px;text-align:center;} .btnbar button{background:#001F5B;color:#fff;border:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin:0 6px;}'
-    + '.btnbar button.alt{background:#25D366;}'
+    + '*{box-sizing:border-box;} body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;margin:0;color:#1d1d1f;background:#f1f2f5;padding:24px 12px;-webkit-font-smoothing:antialiased;}'
+    + '.sheet{max-width:760px;margin:0 auto;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 8px 40px rgba(16,32,72,.10);}'
+    + 'table.items{width:100%;border-collapse:collapse;} table.items th{background:#f5f6f9;color:#86868b;padding:11px 12px;text-align:left;font-size:10px;letter-spacing:.6px;text-transform:uppercase;font-weight:700;border-bottom:1px solid #eceef2;}'
+    + '.header{background:#0a1f44;padding:30px 34px;color:#fff;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;}'
+    + '.logo{font-size:30px;font-weight:700;letter-spacing:-.6px;line-height:1;} .red{color:#C8102E;}'
+    + '.empresa{font-size:11px;line-height:1.7;opacity:.78;text-align:right;}'
+    + '.section{padding:28px 34px;} .meta{display:flex;gap:40px;flex-wrap:wrap;margin-bottom:24px;}'
+    + '.meta div{font-size:13px;color:#1d1d1f;} .meta .lbl{color:#9aa3b2;font-size:10px;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;}'
+    + '.total-row{padding:14px 12px;text-align:right;font-weight:700;font-size:18px;color:#0a1f44;letter-spacing:-.3px;}'
+    + '.note{margin-top:22px;padding:15px 17px;background:#fff8e6;border-radius:10px;font-size:12px;color:#86702a;line-height:1.6;}'
+    + '.foot{background:#0a1426;padding:20px 34px;text-align:center;font-size:11px;color:rgba(255,255,255,.5);line-height:1.7;}'
+    + '.btnbar{padding:18px 34px;text-align:center;background:#fff;} .btnbar button{background:#C8102E;color:#fff;border:none;padding:13px 28px;border-radius:11px;font-size:14px;font-weight:600;cursor:pointer;margin:0 6px;font-family:inherit;}'
+    + '.btnbar button.alt{background:#1f9d55;}'
     + '@media print{.btnbar{display:none;}}'
     + '</style></head><body><div class="sheet">'
     + '<div class="header">'
       + '<div><div class="logo">Adaptekk<span class="red">.</span></div>'
-      + '<div style="font-size:11px;opacity:.7;margin-top:6px;">Conecta sin l\u00edmites</div></div>'
+      + '<div style="font-size:11px;opacity:.7;margin-top:7px;">Conectores y adaptadores hidr\u00e1ulicos</div></div>'
       + '<div class="empresa"><b>' + esc(E.razonSocial) + '</b><br>RFC: ' + esc(E.rfc) + '<br>' + esc(E.direccion)
       + '<br>Tel: ' + esc(E.tel) + '<br>' + esc(E.email) + ' \u00b7 ' + esc(E.web) + '</div>'
     + '</div>'
@@ -1771,7 +1784,7 @@ window.descargarCotizacion = function() {
       + '<button onclick="window.print()">\u2399 Imprimir / Guardar PDF</button>'
       + '<button class="alt" onclick="window.open(\'https://wa.me/' + esc(E.whatsapp) + '\',\'_blank\')">\u260e Contactar ejecutivo</button>'
     + '</div>'
-    + '<div class="foot">\u00a9 ' + new Date().getFullYear() + ' ' + esc(E.razonSocial) + ' \u00b7 ' + esc(E.web) + ' \u00b7 ' + esc(E.email) + '<br>Conecta sin l\u00edmites</div>'
+    + '<div class="foot">\u00a9 ' + new Date().getFullYear() + ' ' + esc(E.razonSocial) + ' \u00b7 ' + esc(E.web) + ' \u00b7 ' + esc(E.email) + '</div>'
     + '</div></body></html>';
 
   // Abrir en ventana nueva para imprimir/guardar como PDF directamente
@@ -1809,10 +1822,10 @@ cartUpdateBadge();
 .co-step{display:flex;flex-direction:column;align-items:center;flex:1;position:relative;}
 .co-step::before{content:'';position:absolute;top:13px;left:-50%;width:100%;height:2px;background:#e8e8ed;z-index:0;}
 .co-step:first-child::before{display:none;}
-.co-step.done::before,.co-step.active::before{background:#0071e3;}
+.co-step.done::before,.co-step.active::before{background:#C8102E;}
 .co-step-dot{width:28px;height:28px;border-radius:50%;background:#fff;border:2px solid #d2d2d7;color:#aeaeb2;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;z-index:1;transition:all .25s;}
-.co-step.active .co-step-dot{border-color:#0071e3;background:#0071e3;color:#fff;}
-.co-step.done .co-step-dot{border-color:#0071e3;background:#0071e3;color:#fff;}
+.co-step.active .co-step-dot{border-color:#C8102E;background:#C8102E;color:#fff;}
+.co-step.done .co-step-dot{border-color:#C8102E;background:#C8102E;color:#fff;}
 .co-step-lbl{font-size:11px;font-weight:500;letter-spacing:.2px;text-transform:none;color:#aeaeb2;margin-top:8px;}
 .co-step.active .co-step-lbl,.co-step.done .co-step-lbl{color:#001F5B;}
 /* Tarjeta blanca limpia */
@@ -1822,18 +1835,18 @@ cartUpdateBadge();
 /* Selección invitado/cuenta */
 .co-choice{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 .co-choice-card{border:1.5px solid #e8e8ed;border-radius:14px;padding:28px 18px;text-align:center;cursor:pointer;transition:all .2s;background:#fff;}
-.co-choice-card:hover{border-color:#0071e3;}
-.co-choice-card.sel{border-color:#0071e3;background:#f5f9ff;box-shadow:0 0 0 3px rgba(0,113,227,.1);}
+.co-choice-card:hover{border-color:#C8102E;}
+.co-choice-card.sel{border-color:#C8102E;background:#fdf4f5;box-shadow:0 0 0 3px rgba(200,16,46,.1);}
 .co-choice-ico{font-size:28px;margin-bottom:8px;}
 .co-choice-t{font-weight:600;color:#001F5B;font-size:16px;}
 .co-choice-d{font-size:12px;color:#86868b;margin-top:4px;line-height:1.4;}
 /* Opciones de envío */
 .co-ship{border:1.5px solid #e8e8ed;border-radius:14px;padding:18px;display:flex;align-items:center;gap:14px;cursor:pointer;margin-bottom:12px;transition:all .2s;background:#fff;}
-.co-ship:hover{border-color:#0071e3;}
-.co-ship.sel{border-color:#0071e3;background:#f5f9ff;box-shadow:0 0 0 3px rgba(0,113,227,.1);}
+.co-ship:hover{border-color:#C8102E;}
+.co-ship.sel{border-color:#C8102E;background:#fdf4f5;box-shadow:0 0 0 3px rgba(200,16,46,.1);}
 .co-ship-radio{width:20px;height:20px;border-radius:50%;border:2px solid #c5c5cc;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:border-color .2s;}
-.co-ship.sel .co-ship-radio{border-color:#0071e3;}
-.co-ship.sel .co-ship-radio::after{content:'';width:10px;height:10px;border-radius:50%;background:#0071e3;}
+.co-ship.sel .co-ship-radio{border-color:#C8102E;}
+.co-ship.sel .co-ship-radio::after{content:'';width:10px;height:10px;border-radius:50%;background:#C8102E;}
 .co-ship-name{font-weight:600;color:#001F5B;font-size:15px;}
 .co-ship-time{font-size:12px;color:#86868b;margin-top:2px;}
 .co-ship-price{margin-left:auto;font-weight:600;color:#001F5B;white-space:nowrap;font-size:15px;}
@@ -1841,9 +1854,9 @@ cartUpdateBadge();
 .co-nav{display:flex;gap:12px;margin-top:8px;}
 .co-btn{flex:1;padding:14px;border:none;border-radius:980px;cursor:pointer;font-weight:600;font-size:16px;letter-spacing:0;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;transition:background .2s,transform .1s;}
 .co-btn:active{transform:scale(.985);}
-.co-btn.primary{background:#0071e3;color:#fff;}
-.co-btn.primary:hover{background:#0077ed;}
-.co-btn.primary:disabled{background:#c5dafc;cursor:not-allowed;}
+.co-btn.primary{background:#C8102E;color:#fff;}
+.co-btn.primary:hover{background:#a50d26;}
+.co-btn.primary:disabled{background:#eec3ca;cursor:not-allowed;}
 .co-btn.ghost{background:#f5f5f7;color:#001F5B;flex:0 0 auto;padding:14px 24px;}
 .co-btn.ghost:hover{background:#ececf0;}
 .co-err{font-size:12px;color:#e5342b;margin-top:5px;display:none;}
@@ -1855,11 +1868,11 @@ cartUpdateBadge();
 .co-sum-block{background:#f5f5f7;border:none;border-radius:14px;padding:16px 18px;margin-bottom:12px;position:relative;}
 .co-sum-block h4{margin:0 0 8px;font-size:11px;letter-spacing:.3px;text-transform:uppercase;color:#86868b;font-weight:600;}
 .co-sum-block p{margin:0;font-size:14px;color:#001F5B;line-height:1.5;}
-.co-edit{position:absolute;top:14px;right:16px;font-size:13px;color:#0071e3;font-weight:400;cursor:pointer;text-decoration:none;background:none;border:none;font-family:inherit;}
+.co-edit{position:absolute;top:14px;right:16px;font-size:13px;color:#C8102E;font-weight:400;cursor:pointer;text-decoration:none;background:none;border:none;font-family:inherit;}
 .co-edit:hover{text-decoration:underline;}
 .co-toggle{display:flex;gap:10px;margin-bottom:16px;}
 .co-toggle button{flex:1;padding:13px;border:1.5px solid #e8e8ed;border-radius:12px;background:#fff;cursor:pointer;font-weight:600;font-size:14px;color:#001F5B;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;transition:all .2s;}
-.co-toggle button.sel{border-color:#0071e3;background:#0071e3;color:#fff;}
+.co-toggle button.sel{border-color:#C8102E;background:#C8102E;color:#fff;}
 @media(max-width:640px){.co-choice{grid-template-columns:1fr;}.co-title{font-size:26px;}}
 </style>
 
@@ -1951,7 +1964,7 @@ cartUpdateBadge();
           <input type="checkbox" id="co-confirm-fact" checked style="width:17px;height:17px;accent-color:#001F5B;"/>
           Facturar este pedido a estos datos
         </label>
-        <a onclick="coEditFiscal()" style="display:inline-block;margin-top:13px;color:#0071e3;font-size:13px;cursor:pointer;font-weight:500;">Usar otros datos fiscales</a>
+        <a onclick="coEditFiscal()" style="display:inline-block;margin-top:13px;color:#C8102E;font-size:13px;cursor:pointer;font-weight:500;">Usar otros datos fiscales</a>
       </div>
 
       <div id="co-fact-form" style="display:none;background:#FAFBFF;border-radius:8px;padding:14px;">
@@ -2038,9 +2051,9 @@ cartUpdateBadge();
     <div class="co-card" id="co-saved-addr-card" style="display:none;">
       <div class="co-title">Direcci&#243;n de env&#237;o</div>
       <div class="co-sub">Enviaremos tu pedido a la direcci&#243;n que tienes registrada.</div>
-      <div id="co-addr-saved-opt" onclick="coAddrMode('saved')" style="border:1.5px solid #0071e3;background:#F5F9FF;border-radius:12px;padding:16px;cursor:pointer;">
+      <div id="co-addr-saved-opt" onclick="coAddrMode('saved')" style="border:1.5px solid #C8102E;background:#FDF4F5;border-radius:12px;padding:16px;cursor:pointer;">
         <div style="display:flex;align-items:flex-start;gap:12px;">
-          <span id="co-addr-saved-dot" style="width:18px;height:18px;border-radius:50%;border:2px solid #0071e3;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;"><span style="width:9px;height:9px;border-radius:50%;background:#0071e3;display:block;"></span></span>
+          <span id="co-addr-saved-dot" style="width:18px;height:18px;border-radius:50%;border:2px solid #C8102E;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;"><span style="width:9px;height:9px;border-radius:50%;background:#C8102E;display:block;"></span></span>
           <div>
             <div style="font-size:14px;font-weight:600;color:#001F5B;" id="co-saved-name">Direcci&#243;n registrada</div>
             <div style="font-size:13px;color:#5A6675;margin-top:3px;line-height:1.55;" id="co-saved-lines">&mdash;</div>
@@ -2316,11 +2329,11 @@ window.coAddrMode = function(mode){
   var formCard=document.getElementById('co-addr-form-card'); if(formCard) formCard.style.display = saved ? 'none' : 'block';
   var so=document.getElementById('co-addr-saved-opt'), oo=document.getElementById('co-addr-other-opt');
   var sd=document.getElementById('co-addr-saved-dot'), od=document.getElementById('co-addr-other-dot');
-  var dot='<span style="width:9px;height:9px;border-radius:50%;background:#0071e3;display:block;"></span>';
-  if(so){ so.style.borderColor = saved?'#0071e3':'#e8e8ed'; so.style.background = saved?'#F5F9FF':'#fff'; }
-  if(oo){ oo.style.borderColor = saved?'#e8e8ed':'#0071e3'; oo.style.background = saved?'#fff':'#F5F9FF'; }
-  if(sd){ sd.style.borderColor = saved?'#0071e3':'#c5c5cc'; sd.innerHTML = saved?dot:''; }
-  if(od){ od.style.borderColor = saved?'#c5c5cc':'#0071e3'; od.innerHTML = saved?'':dot; }
+  var dot='<span style="width:9px;height:9px;border-radius:50%;background:#C8102E;display:block;"></span>';
+  if(so){ so.style.borderColor = saved?'#C8102E':'#e8e8ed'; so.style.background = saved?'#FDF4F5':'#fff'; }
+  if(oo){ oo.style.borderColor = saved?'#e8e8ed':'#C8102E'; oo.style.background = saved?'#fff':'#FDF4F5'; }
+  if(sd){ sd.style.borderColor = saved?'#C8102E':'#c5c5cc'; sd.innerHTML = saved?dot:''; }
+  if(od){ od.style.borderColor = saved?'#c5c5cc':'#C8102E'; od.innerHTML = saved?'':dot; }
   // Cambió la dirección base: limpiar tarifas previas y la selección
   window.CO_SHIP_STATUS='idle'; window.CO_RATES=[]; window.CO_QUOTATION_ID=null;
   if (window.CHECKOUT) window.CHECKOUT.envio = null;
@@ -2804,32 +2817,32 @@ window.coConfirmar = function(){
 .pay-sub{font-size:15px;color:#86868b;margin:0 0 22px;line-height:1.5;}
 .pay-folio{display:inline-block;background:#f5f5f7;color:#001F5B;font-weight:500;font-size:13px;padding:5px 14px;border-radius:980px;font-family:'SF Mono',monospace;}
 .pay-method{border:1.5px solid #e8e8ed;border-radius:14px;padding:18px;display:flex;align-items:center;gap:14px;cursor:pointer;margin-bottom:12px;transition:all .2s;background:#fff;}
-.pay-method:hover{border-color:#0071e3;}
-.pay-method.sel{border-color:#0071e3;background:#f5f9ff;box-shadow:0 0 0 3px rgba(0,113,227,.1);}
+.pay-method:hover{border-color:#C8102E;}
+.pay-method.sel{border-color:#C8102E;background:#fdf4f5;box-shadow:0 0 0 3px rgba(200,16,46,.1);}
 .pay-method-ico{font-size:28px;width:40px;text-align:center;flex-shrink:0;}
 .pay-method-t{font-weight:600;color:#001F5B;font-size:16px;}
 .pay-method-d{font-size:13px;color:#86868b;margin-top:3px;}
 .pay-method-radio{width:20px;height:20px;border-radius:50%;border:2px solid #c5d0e0;flex-shrink:0;margin-left:auto;display:flex;align-items:center;justify-content:center;}
-.pay-method.sel .pay-method-radio{border-color:#0071e3;}
-.pay-method.sel .pay-method-radio::after{content:'';width:10px;height:10px;border-radius:50%;background:#0071e3;}
+.pay-method.sel .pay-method-radio{border-color:#C8102E;}
+.pay-method.sel .pay-method-radio::after{content:'';width:10px;height:10px;border-radius:50%;background:#C8102E;}
 .pay-panel{border:1px solid #e8e8ed;border-radius:14px;padding:20px;margin-bottom:14px;background:#fff;}
 .pay-bank-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eef1f6;font-size:14px;}
 .pay-bank-row:last-child{border-bottom:none;}
 .pay-bank-lbl{color:#86868b;}
 .pay-bank-val{font-weight:600;color:#001F5B;font-family:'SF Mono',monospace;}
-.pay-copy{background:none;border:1px solid #d2d2d7;border-radius:980px;font-size:11px;padding:3px 12px;cursor:pointer;color:#0071e3;margin-left:8px;font-weight:500;}
+.pay-copy{background:none;border:1px solid #d2d2d7;border-radius:980px;font-size:11px;padding:3px 12px;cursor:pointer;color:#C8102E;margin-left:8px;font-weight:500;}
 .pay-btn{width:100%;padding:15px;border:none;border-radius:980px;cursor:pointer;font-weight:600;font-size:16px;letter-spacing:0;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;transition:background .2s;}
 .pay-btn.mp{background:#009EE3;color:#fff;}
 .pay-opt-chip{display:inline-block;background:#f5f5f7;color:#001F5B;font-size:13px;font-weight:500;padding:7px 14px;border-radius:980px;border:none;}
 .pay-tab{display:inline-block;background:#f5f5f7;color:#001F5B;font-size:13px;font-weight:600;padding:9px 16px;border-radius:980px;border:1.5px solid transparent;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;transition:all .18s;}
 .pay-tab:hover{background:#ececf1;}
-.pay-tab-sel{background:#0071e3;color:#fff;border-color:#0071e3;}
+.pay-tab-sel{background:#C8102E;color:#fff;border-color:#C8102E;}
 .pay-btn.mp:hover{background:#0084c7;}
 .pay-btn.mp:disabled{background:#9fd4ec;cursor:not-allowed;}
-.pay-btn.transfer{background:#0071e3;color:#fff;}
-.pay-btn.transfer:hover{background:#0077ed;}
+.pay-btn.transfer{background:#C8102E;color:#fff;}
+.pay-btn.transfer:hover{background:#a50d26;}
 .pay-upload{border:1.5px dashed #d2d2d7;border-radius:14px;padding:18px;text-align:center;cursor:pointer;background:#fff;font-size:14px;color:#86868b;margin:12px 0;display:block;}
-.pay-upload:hover{border-color:#0071e3;}
+.pay-upload:hover{border-color:#C8102E;}
 .pay-total-box{background:#f5f5f7;color:#001F5B;border-radius:14px;padding:20px 22px;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
 .pay-total-box .lbl{font-size:15px;opacity:1;color:#86868b;letter-spacing:0;text-transform:none;}
 .pay-total-box .amt{font-size:24px;font-weight:600;letter-spacing:-.3px;}
@@ -2849,7 +2862,7 @@ window.coConfirmar = function(){
 
   <div class="pay-card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-      <div class="pay-title" style="margin:0;">Tu pedido</div>
+      <div class="pay-title" style="margin:0;white-space:nowrap;">Tu pedido</div>
       <span class="pay-folio" id="pay-folio">PED-XXXXX</span>
     </div>
     <div class="pay-total-box">
@@ -2916,7 +2929,8 @@ window.coConfirmar = function(){
 <div id="page-gracias" style="display:none;">
   <div style="max-width:640px;margin:0 auto;padding:40px 16px 60px;">
     <div style="background:#fff;border:1px solid #e8e8ed;border-radius:18px;padding:48px 36px;text-align:center;box-shadow:none;">
-      <div id="gracias-icon" style="font-size:15px;font-weight:600;color:#1d7d34;margin-bottom:14px;letter-spacing:0;">Pago confirmado</div>
+      <div style="width:72px;height:72px;border-radius:50%;background:#e7f6ee;display:flex;align-items:center;justify-content:center;margin:0 auto 22px;"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#1d7d34" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+      <div id="gracias-icon" style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#1d7d34;margin-bottom:10px;">Pago confirmado</div>
       <h2 id="gracias-titulo" style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:34px;font-weight:600;color:#001F5B;margin:6px 0;letter-spacing:-.5px;">Gracias por tu compra</h2>
       <p id="gracias-sub" style="font-size:17px;color:#86868b;margin:8px 0 32px;line-height:1.5;">Tu pedido fue confirmado. Te enviamos un correo con todos los detalles.</p>
 
@@ -2938,15 +2952,15 @@ window.coConfirmar = function(){
       <div id="gracias-extra" style="font-size:15px;color:#86868b;margin-bottom:28px;line-height:1.5;"></div>
 
       <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:14px;">
-        <button onclick="window.descargarComprobantePDF()" style="background:#0071e3;color:#fff;border:none;padding:13px 28px;border-radius:980px;font-weight:600;cursor:pointer;font-size:16px;">Descargar comprobante</button>
+        <button onclick="window.descargarComprobantePDF()" style="background:#C8102E;color:#fff;border:none;padding:13px 28px;border-radius:980px;font-weight:600;cursor:pointer;font-size:16px;">Descargar comprobante</button>
       </div>
       <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;align-items:center;">
-        <button onclick="showPage('home')" style="background:none;color:#0071e3;border:none;padding:8px 12px;font-weight:400;cursor:pointer;font-size:16px;">Volver al inicio</button>
-        <button onclick="showPage('cfg')" style="background:none;color:#0071e3;border:none;padding:8px 12px;font-weight:400;cursor:pointer;font-size:16px;">Seguir comprando</button>
+        <button onclick="showPage('home')" style="background:none;color:#C8102E;border:none;padding:8px 12px;font-weight:400;cursor:pointer;font-size:16px;">Volver al inicio</button>
+        <button onclick="showPage('cfg')" style="background:none;color:#C8102E;border:none;padding:8px 12px;font-weight:400;cursor:pointer;font-size:16px;">Seguir comprando</button>
       </div>
 
       <div style="margin-top:28px;font-size:14px;color:#86868b;">
-        ¿Dudas con tu pedido? <a href="#" onclick="contactarEjecutivo('post-compra');return false;" style="color:#0071e3;font-weight:400;text-decoration:none;">Contáctanos por WhatsApp</a>
+        ¿Dudas con tu pedido? <a href="#" onclick="contactarEjecutivo('post-compra');return false;" style="color:#C8102E;font-weight:400;text-decoration:none;">Contáctanos por WhatsApp</a>
       </div>
     </div>
   </div>
@@ -3192,7 +3206,7 @@ window.mostrarPaginaGracias = function(info){
     if (titulo) titulo.textContent = 'Pedido registrado';
     if (sub) sub.textContent = 'Tu pedido quedó reservado. Una vez que realices tu transferencia, espera unos minutos en esta página: en cuanto el banco confirme tu pago, esto se actualizará solo.';
     if (estado){ estado.textContent = 'Esperando pago'; estado.style.color = '#9a6a00'; }
-    if (extra) extra.innerHTML = '<div style="background:#f5f9ff;border:1px solid #cfe3ff;border-radius:12px;padding:14px;font-size:14px;color:#0071e3;">'
+    if (extra) extra.innerHTML = '<div style="background:#fdf4f5;border:1px solid #cfe3ff;border-radius:12px;padding:14px;font-size:14px;color:#C8102E;">'
       + '<b>Esperando confirmación de tu pago.</b><br>Si ya transferiste, no cierres esta página. El estado se actualizará automáticamente al acreditarse (puede tardar unos minutos).'
       + '</div>';
     // Mantener el sondeo activo en esta pantalla (por si no venía corriendo)
@@ -3238,7 +3252,7 @@ window.descargarComprobantePDF = function(){
   doc.text('Adaptekk.', ML, 50);
   doc.setFont('helvetica','normal'); doc.setFontSize(9.5);
   doc.setTextColor(198,210,232);
-  doc.text('Conecta sin l\u00edmites  ·  Conectores hidr\u00e1ulicos', ML, 70);
+  doc.text('Conectores y adaptadores hidr\u00e1ulicos', ML, 70);
   doc.setFontSize(8.5); doc.setTextColor(170,186,214);
   doc.text('COMPROBANTE DE PEDIDO', MR, 44, {align:'right'});
   doc.setFontSize(9); doc.setTextColor(230,236,246);
@@ -5212,59 +5226,59 @@ async function pclLoadOrders(){
     <div class="tut-grid">
 
       <div class="tut-card">
-        <div class="tut-icon">&#128220;</div>
+        <div class="tut-icon"><svg viewBox="0 0 24 24"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v16h5.5a1.5 1.5 0 0 0 1.5-1.5z"/></svg></div>
         <div class="tut-title">Catálogo General AT</div>
         <div class="tut-desc">Catálogo completo con más de 3,200 referencias, números de parte AT, dimensiones y especificaciones técnicas.</div>
         <a href="#" class="tut-link" onclick="alert('PDF en preparacion. Disponible pronto.')">&#8594; Descargar PDF</a>
       </div>
 
       <div class="tut-card">
-        <div class="tut-icon">&#128297;</div>
+        <div class="tut-icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="3.2"/><path d="M9 10.2V20l2-2 2 2M11.8 8.2 19 15M14 5l4 4"/></svg></div>
         <div class="tut-title">Cómo Identificar Roscas Británicas</div>
         <div class="tut-desc">Guía paso a paso para identificar roscas BSPP, BSPT y JIS usando herramientas básicas de taller.</div>
         <a href="#" class="tut-link" onclick="alert('Tutorial en preparacion.')">&#8594; Ver guía</a>
       </div>
 
       <div class="tut-card">
-        <div class="tut-icon">&#128200;</div>
+        <div class="tut-icon"><svg viewBox="0 0 24 24"><path d="M5 19 19 5l-3-1M5 19l-1-3M5 19h7M8 16l3 3"/><path d="M9 9l2 2M12 6l2 2M6 12l2 2"/></svg></div>
         <div class="tut-title">Cómo Identificar Roscas Métricas</div>
         <div class="tut-desc">Diferencia entre DIN 24°, Métrico Cara Plana y Puerto Métrico. Tablas de paso de rosca incluidas.</div>
         <a href="#" class="tut-link" onclick="alert('Tutorial en preparacion.')">&#8594; Ver guía</a>
       </div>
 
       <div class="tut-card">
-        <div class="tut-icon">&#128274;</div>
+        <div class="tut-icon"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div>
         <div class="tut-title">Métodos de Sellado</div>
         <div class="tut-desc">Cuándo usar cinta teflón, compuesto sellador, o-ring o sellado por compresión según el tipo de rosca.</div>
         <a href="#" class="tut-link" onclick="alert('Guia en preparacion.')">&#8594; Ver guía</a>
       </div>
 
       <div class="tut-card">
-        <div class="tut-icon">&#128295;</div>
+        <div class="tut-icon"><svg viewBox="0 0 24 24"><path d="M14 4l6 6-8 8H6v-6z"/><path d="M12.5 5.5 15 8M4 20h6"/></svg></div>
         <div class="tut-title">Instalación de Adaptadores</div>
         <div class="tut-desc">Torques recomendados, secuencia de apriete y errores comunes al instalar adaptadores hidráulicos.</div>
         <a href="#" class="tut-link" onclick="alert('Tutorial en preparacion.')">&#8594; Ver guía</a>
       </div>
 
       <div class="tut-card">
-        <div class="tut-icon">&#127941;</div>
+        <div class="tut-icon"><svg viewBox="0 0 24 24"><path d="M12 3l2.2 1.5 2.6-.3 1 2.4 2.2 1.4-.6 2.6.6 2.6-2.2 1.4-1 2.4-2.6-.3L12 21l-2.2-1.5-2.6.3-1-2.4-2.2-1.4.6-2.6L4 7.6l2.2-1.4 1-2.4 2.6.3z"/><path d="M9.5 12l1.8 1.8 3.2-3.6"/></svg></div>
         <div class="tut-title">Certificado ISO 9001</div>
         <div class="tut-desc">Certificación vigente de nuestro sistema de gestión de calidad para fabricación de adaptadores hidráulicos.</div>
         <a href="#" class="tut-link" onclick="alert('Certificado en preparacion.')">&#8594; Descargar PDF</a>
       </div>
 
       <div class="tut-card">
-        <div class="tut-icon">&#128203;</div>
+        <div class="tut-icon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/></svg></div>
         <div class="tut-title">Solicitar Crédito Empresarial</div>
         <div class="tut-desc">Formato de solicitud de crédito para distribuidores y empresas con compras recurrentes.</div>
-        <a href="https://wa.me/5215555550000?text=Hola%20Adaptek%2C%20quiero%20solicitar%20credito%20empresarial." target="_blank" class="tut-link">&#8594; Solicitar por WhatsApp</a>
+        <a href="https://wa.me/5215555550000?text=Hola%20Adaptekk%2C%20quiero%20solicitar%20credito%20empresarial." target="_blank" class="tut-link">&#8594; Solicitar por WhatsApp</a>
       </div>
 
       <div class="tut-card">
-        <div class="tut-icon">&#128092;</div>
+        <div class="tut-icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="10" r="2.2"/><path d="M3 19c.6-3.2 3-5 6-5s5.4 1.8 6 5M15.5 14.2c2 .3 3.6 1.7 4.2 4"/></svg></div>
         <div class="tut-title">Programa de Distribuidores</div>
         <div class="tut-desc">Precios de mayoreo, condiciones de distribución y zonas disponibles en la República Mexicana.</div>
-        <a href="https://wa.me/5215555550000?text=Hola%20Adaptek%2C%20me%20interesa%20ser%20distribuidor." target="_blank" class="tut-link">&#8594; Más información</a>
+        <a href="https://wa.me/5215555550000?text=Hola%20Adaptekk%2C%20me%20interesa%20ser%20distribuidor." target="_blank" class="tut-link">&#8594; Más información</a>
       </div>
 
     </div>
@@ -5676,7 +5690,19 @@ function crossAddToCart(){
 // Imágenes de conectores DESACTIVADAS temporalmente: los archivos assets/conn-*.png aún no
 // están subidos y generaban errores 404 en consola. Para reactivarlas cuando subas las imágenes,
 // reemplaza {} por el mapa de abajo.
-var CONNECTOR_IMGS={};
+var _ci=function(inner){return 'data:image/svg+xml;utf8,'+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 64' fill='none' stroke='#0a1f44' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'>"+inner+"</svg>");};
+var CONNECTOR_IMGS={
+  nr:_ci("<rect x='5' y='27' width='22' height='10' rx='3'/><rect x='29' y='22' width='22' height='20' rx='4'/><rect x='53' y='27' width='22' height='10' rx='3'/>"),
+  c90:_ci("<rect x='5' y='34' width='25' height='10' rx='3'/><rect x='30' y='30' width='18' height='18' rx='4'/><rect x='34' y='6' width='10' height='24' rx='3'/>"),
+  c45:_ci("<rect x='5' y='42' width='20' height='10' rx='3'/><rect x='26' y='36' width='16' height='16' rx='4'/><rect x='44' y='18' width='22' height='10' rx='3' transform='rotate(-45 55 23)'/>"),
+  tee:_ci("<rect x='5' y='27' width='20' height='10' rx='3'/><rect x='27' y='22' width='20' height='20' rx='4'/><rect x='49' y='27' width='20' height='10' rx='3'/><rect x='32' y='42' width='10' height='17' rx='3'/>"),
+  crx:_ci("<rect x='30' y='22' width='20' height='20' rx='4'/><rect x='5' y='27' width='21' height='10' rx='3'/><rect x='54' y='27' width='21' height='10' rx='3'/><rect x='35' y='3' width='10' height='15' rx='3'/><rect x='35' y='46' width='10' height='15' rx='3'/>"),
+  bh:_ci("<rect x='4' y='27' width='20' height='10' rx='3'/><rect x='26' y='22' width='16' height='20' rx='4'/><rect x='45' y='15' width='6' height='34' rx='2'/><rect x='54' y='27' width='20' height='10' rx='3'/>"),
+  bh90:_ci("<rect x='4' y='34' width='17' height='10' rx='3'/><rect x='22' y='27' width='6' height='24' rx='2'/><rect x='31' y='30' width='17' height='18' rx='4'/><rect x='35' y='6' width='10' height='24' rx='3'/>"),
+  bh45:_ci("<rect x='3' y='42' width='16' height='10' rx='3'/><rect x='20' y='35' width='6' height='24' rx='2'/><rect x='29' y='35' width='15' height='15' rx='4'/><rect x='45' y='19' width='20' height='10' rx='3' transform='rotate(-45 55 24)'/>"),
+  bhtee:_ci("<rect x='3' y='27' width='15' height='10' rx='3'/><rect x='19' y='20' width='6' height='24' rx='2'/><rect x='28' y='22' width='20' height='20' rx='4'/><rect x='50' y='27' width='20' height='10' rx='3'/><rect x='33' y='42' width='10' height='16' rx='3'/>"),
+  tap:_ci("<rect x='8' y='27' width='18' height='10' rx='3'/><rect x='26' y='22' width='20' height='20' rx='4'/><path d='M46 23 q13 9 0 18'/>")
+};
 /* MAPA ORIGINAL (restaurar al subir las imágenes a /assets):
 var CONNECTOR_IMGS={"bspt":"assets/conn-bspt.png","bspp":"assets/conn-bspp.png","orfs":"assets/conn-orfs.png","npt":"assets/conn-npt.png","jic":"assets/conn-jic.png","orb":"assets/conn-orb.png","tee":"assets/conn-tee.jpg","c45":"assets/conn-c45.jpg","c90":"assets/conn-c90.jpg","tap":"assets/conn-tap.jpg","nr":"assets/conn-nr.png","jico":"assets/conn-jico.png","bite":"assets/conn-bite.png","jis":"assets/conn-jis.png","komatsu":"assets/conn-komatsu.png","crx":"assets/conn-crx.png","bh":"assets/conn-bh.png","bh90":"assets/conn-bh90.png","bh45":"assets/conn-bh45.png","bhtee":"assets/conn-bhtee.png"};
 */
@@ -5859,8 +5885,8 @@ function renderStep(){
   function _extDone(ei){var e=exts[ei]||{};return !!(e.std&&e.gen&&e.med);}
   function _extCard(ei){
     var e=exts[ei]||{}, hasStd=!!e.std, done=_extDone(ei), ltr=LTR[ei];
-    var accent=done?'#1d7d34':(hasStd?'#0071e3':'#c7c7cc');
-    var bg=done?'#f1f9f3':(hasStd?'#f5f9ff':'#fbfbfd');
+    var accent=done?'#1d7d34':(hasStd?'#C8102E':'#c7c7cc');
+    var bg=done?'#f1f9f3':(hasStd?'#fdf4f5':'#fbfbfd');
     var bd=done?'#bfe6c8':(hasStd?'#cfe4ff':'#ececf0');
     var parts=[]; if(e.std)parts.push(e.std.label); if(e.gen)parts.push(e.gen.label); if(e.med)parts.push(e.med);
     var detail=parts.length?parts.join('  ·  '):'Selecciona estándar';
@@ -5910,7 +5936,7 @@ function renderStep(){
     col.style.cssText='border:1px solid '+(done?'#c4eccf':'#e8e8ed')+';border-radius:16px;overflow:hidden;';
     var hdr=document.createElement('div');
     hdr.style.cssText='padding:16px 18px;background:'+(done?'#f0faf2':'#f5f5f7')+';display:flex;align-items:center;gap:10px;';
-    hdr.innerHTML='<span style="width:22px;height:22px;border-radius:50%;background:'+(done?'#1d7d34':'#0071e3')+';color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;">'+ltr+'</span>'
+    hdr.innerHTML='<span style="width:22px;height:22px;border-radius:50%;background:'+(done?'#1d7d34':'#C8102E')+';color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;">'+ltr+'</span>'
       +'<span style="font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:16px;font-weight:600;color:#001F5B;letter-spacing:-.2px;">Extremo '+ltr+'</span>'
       +(done?'<span style="margin-left:auto;color:#1d7d34;font-size:13px;font-weight:600;">Listo</span>':'');
     col.appendChild(hdr);
@@ -5920,7 +5946,7 @@ function renderStep(){
     s1.innerHTML='<div style="font-size:12px;font-weight:600;letter-spacing:0;text-transform:none;color:#86868b;margin-bottom:8px;">Estándar</div>';
     if(ext.std){
       var sv=document.createElement('div');
-      sv.style.cssText='display:flex;align-items:center;justify-content:space-between;background:#f5f9ff;border:1.5px solid #0071e3;border-radius:10px;padding:10px 14px;';
+      sv.style.cssText='display:flex;align-items:center;justify-content:space-between;background:#fdf4f5;border:1.5px solid #C8102E;border-radius:10px;padding:10px 14px;';
       sv.innerHTML='<span style="font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:16px;font-weight:600;color:#001F5B;">'+ext.std.label+'</span>';
       var cb=document.createElement('button');cb.innerHTML='&#10005;';
       cb.style.cssText='background:none;border:none;color:#aaa;cursor:pointer;font-size:13px;';
@@ -5949,7 +5975,7 @@ function renderStep(){
           }
           btn.innerHTML=_cell+'<span style="font-size:12px;font-weight:600;color:#001F5B;text-align:center;line-height:1.15;">'+e.label+'</span>';
           btn.title=e.sub;
-          btn.onmouseenter=function(){btn.style.borderColor='#0071e3';btn.style.boxShadow='0 4px 14px rgba(0,113,227,.12)';btn.style.transform='translateY(-1px)';};
+          btn.onmouseenter=function(){btn.style.borderColor='#C8102E';btn.style.boxShadow='0 4px 14px rgba(0,113,227,.12)';btn.style.transform='translateY(-1px)';};
           btn.onmouseleave=function(){btn.style.borderColor='#e8e8ed';btn.style.boxShadow='none';btn.style.transform='none';};
           btn.onclick=(function(ee,i){return function(){exts[i].std=ee;exts[i].gen=null;exts[i].med=null;renderStep();};})(e,ei);
           gr.appendChild(btn);
@@ -5964,7 +5990,7 @@ function renderStep(){
       s2.innerHTML='<div style="font-size:12px;font-weight:600;letter-spacing:0;text-transform:none;color:#86868b;margin-bottom:8px;">Género</div>';
       if(ext.gen){
         var gv=document.createElement('div');
-        gv.style.cssText='display:flex;align-items:center;justify-content:space-between;background:#f5f9ff;border:1.5px solid #0071e3;border-radius:10px;padding:10px 14px;';
+        gv.style.cssText='display:flex;align-items:center;justify-content:space-between;background:#fdf4f5;border:1.5px solid #C8102E;border-radius:10px;padding:10px 14px;';
         gv.innerHTML='<span style="font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:16px;font-weight:600;color:#001F5B;">'+ext.gen.label+'</span>';
         var gcb=document.createElement('button');gcb.innerHTML='&#10005;';
         gcb.style.cssText='background:none;border:none;color:#aaa;cursor:pointer;font-size:13px;';
@@ -5976,7 +6002,7 @@ function renderStep(){
           var btn=document.createElement('div');
           btn.style.cssText='border:1px solid #e8e8ed;background:#fff;padding:14px 8px;border-radius:12px;cursor:pointer;text-align:center;min-height:52px;display:flex;align-items:center;justify-content:center;';
           btn.innerHTML='<div style="font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:14px;font-weight:500;color:#001F5B;line-height:1.25;">'+gen.label+'</div>';
-          btn.onmouseenter=function(){btn.style.borderColor='#0071e3';btn.style.boxShadow='0 4px 14px rgba(0,113,227,.12)';btn.style.transform='translateY(-1px)';};
+          btn.onmouseenter=function(){btn.style.borderColor='#C8102E';btn.style.boxShadow='0 4px 14px rgba(0,113,227,.12)';btn.style.transform='translateY(-1px)';};
           btn.onmouseleave=function(){btn.style.borderColor='#e8e8ed';btn.style.boxShadow='none';btn.style.transform='none';};
           btn.onclick=(function(g,i){return function(){exts[i].gen=g;exts[i].med=null;renderStep();};})(gen,ei);
           gr2.appendChild(btn);
@@ -5990,7 +6016,7 @@ function renderStep(){
       s3.innerHTML='<div style="font-size:12px;font-weight:600;letter-spacing:0;text-transform:none;color:#86868b;margin-bottom:8px;">Medida</div>';
       if(ext.med){
         var mv=document.createElement('div');
-        mv.style.cssText='display:flex;align-items:center;justify-content:space-between;background:#f5f9ff;border:1.5px solid #0071e3;border-radius:10px;padding:10px 14px;';
+        mv.style.cssText='display:flex;align-items:center;justify-content:space-between;background:#fdf4f5;border:1.5px solid #C8102E;border-radius:10px;padding:10px 14px;';
         mv.innerHTML='<span style="font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:20px;font-weight:600;color:#001F5B;">'+ext.med+'</span>';
         var mcb=document.createElement('button');mcb.innerHTML='&#10005;';
         mcb.style.cssText='background:none;border:none;color:#aaa;cursor:pointer;font-size:13px;';
@@ -6002,7 +6028,7 @@ function renderStep(){
         sizes.forEach(function(m){
           var btn=document.createElement('button');btn.textContent=m;
           btn.style.cssText='border:1px solid #e8e8ed;background:#fff;padding:11px 8px;border-radius:12px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:15px;font-weight:500;color:#001F5B;text-align:center;';
-          btn.onmouseenter=function(){btn.style.borderColor='#0071e3';btn.style.boxShadow='0 4px 14px rgba(0,113,227,.12)';btn.style.transform='translateY(-1px)';};
+          btn.onmouseenter=function(){btn.style.borderColor='#C8102E';btn.style.boxShadow='0 4px 14px rgba(0,113,227,.12)';btn.style.transform='translateY(-1px)';};
           btn.onmouseleave=function(){btn.style.borderColor='#e8e8ed';btn.style.boxShadow='none';btn.style.transform='none';};
           btn.onclick=(function(m,i){return function(){exts[i].med=m;renderStep();};})(m,ei);
           gr3.appendChild(btn);
@@ -6135,7 +6161,7 @@ function renderResultPanel(p, data, params){
     b.textContent=m[1];
     b.style.cssText='flex:1;max-width:180px;padding:13px;border-radius:980px;cursor:pointer;'
       +'font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:15px;font-weight:600;letter-spacing:0;'
-      +(on?'background:#0071e3;color:#fff;border:1.5px solid #0071e3;':'background:#fff;color:#001F5B;border:1.5px solid #e8e8ed;');
+      +(on?'background:#C8102E;color:#fff;border:1.5px solid #C8102E;':'background:#fff;color:#001F5B;border:1.5px solid #e8e8ed;');
     b.onclick=function(){ if(material!==m[0]){ material=m[0]; renderResult(); } };
     matWrap.appendChild(b);
   });
@@ -6212,7 +6238,7 @@ function renderResultPanel(p, data, params){
   // Add to cart button — oculto cuando hay cadenas (cada cadena agrega sus propias piezas)
   if (!(data._chains && data._chains.length > 0)) {
   var cartBtn=document.createElement('button');
-  cartBtn.style.cssText='grid-column:1/-1;background:#0071e3;color:#fff;border:none;padding:15px;border-radius:980px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:16px;font-weight:600;letter-spacing:0;margin-bottom:8px;';
+  cartBtn.style.cssText='grid-column:1/-1;background:#C8102E;color:#fff;border:none;padding:15px;border-radius:980px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:16px;font-weight:600;letter-spacing:0;margin-bottom:8px;';
   cartBtn.innerHTML='Agregar al carrito';
   cartBtn.onclick=function(){
     var product = {
@@ -6265,7 +6291,7 @@ function renderChainCards(p, chains){
     card.innerHTML=head+list;
     var btn=document.createElement('button');
     btn.textContent='Agregar esta combinaci\u00f3n al carrito';
-    btn.style.cssText='width:100%;margin-top:14px;background:#0071e3;color:#fff;border:none;padding:12px;border-radius:980px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:14px;font-weight:600;';
+    btn.style.cssText='width:100%;margin-top:14px;background:#C8102E;color:#fff;border:none;padding:12px;border-radius:980px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:14px;font-weight:600;';
     btn.onclick=(function(items){return function(){
       (items||[]).forEach(function(it){
         window.cartAdd({ at_code:it.code, name:it.name||it.code, price:it.price||0, qty_available:it.qty||0, status:((it.qty||0)>0?'stock':'fabricado') });
@@ -6507,9 +6533,8 @@ function addBotMessage(html, isLoading) {
   var msgs = document.getElementById('chat-messages');
   if (msgs) msgs.style.display = 'flex';
   var d = document.createElement('div');
-  d.style.cssText = 'display:flex;gap:10px;align-items:flex-start;';
-  d.innerHTML = '<div style="width:32px;height:32px;border-radius:50%;background:#0d1b2a;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></div>'+
-    '<div style="background:#F0F5FC;border-radius:0 10px 10px 10px;padding:11px 14px;max-width:85%;font-size:14px;line-height:1.6;color:#111;">'+html+'</div>';
+  d.style.cssText = 'display:flex;';
+  d.innerHTML = '<div style="background:#F0F5FC;border-radius:10px;padding:11px 14px;max-width:100%;font-size:14px;line-height:1.6;color:#111;">'+html+'</div>';
   if (isLoading) d.id = 'chat-loading';
   msgs.appendChild(d);
   msgs.scrollTop = msgs.scrollHeight;
@@ -6526,7 +6551,7 @@ function sendChatMessage() {
 
   var imgSrc = hasImg ? 'data:'+chatImageType+';base64,'+chatImageBase64 : null;
   var userLabel = text || (hasImg ? '(imagen adjunta)' : '(documento adjunto)');
-  if (!text && hasDoc && !hasImg && chatDocName) userLabel = '\uD83D\uDCC4 ' + chatDocName;
+  if (!text && hasDoc && !hasImg && chatDocName) userLabel = chatDocName;
   addUserMessage(userLabel, imgSrc);
   input.value = ''; input.style.height = 'auto';
 
@@ -6557,6 +6582,7 @@ function sendChatMessage() {
       ? data.content[0].text
       : (data.error ? 'Error: ' + data.error.message : 'Error en la respuesta.');
     var formatted = reply
+      .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}\u{2B00}-\u{2BFF}\uFE0F]/gu,'')
       .replace(/^#{1,6}\s*/gm,'')
       .replace(/^\s*[-–—]{3,}\s*$/gm,'')
       .replace(/\*\*(AT-[A-Z0-9\-]+)\*\*/g,'$1')
@@ -6573,7 +6599,7 @@ function sendChatMessage() {
         var aiAt = (reply.match(/AT-[A-Z0-9\-]+/)||[''])[0];
     formatted += '<div style="display:flex;gap:7px;margin-top:10px;flex-wrap:wrap;">'
       + '<a href="https://wa.me/525555550000?text=' + encodeURIComponent('Hola, quiero cotizar el conector ' + (aiAtNum||'')) + '" target="_blank" style="display:inline-block;background:#25D366;color:#fff;text-decoration:none;padding:7px 13px;border-radius:4px;font-size:12px;font-weight:700;">Cotizar por WhatsApp</a>'
-      + '<button onclick="showPage(\'cfg\')" style="background:#001F5B;color:#fff;border:none;padding:7px 13px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:700;">&#128295; Configurar</button>'
+      + '<button onclick="showPage(\'cfg\')" style="background:#001F5B;color:#fff;border:none;padding:7px 13px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:700;">Configurar</button>'
       + '</div>';
     addBotMessage(formatted);
     if (hasImg) clearChatImage();
@@ -7484,7 +7510,7 @@ function regValPhone() {
 </script>
 
 <div class="wa-float">
-  <a class="wa-bubble" href="https://wa.me/5215555550000?text=Hola%20Adaptek%2C%20quiero%20cotizar." target="_blank" rel="noopener">
+  <a class="wa-bubble" href="https://wa.me/5215555550000?text=Hola%20Adaptekk%2C%20quiero%20cotizar." target="_blank" rel="noopener">
     <svg viewBox="0 0 24 24" width="28" height="28" fill="white" xmlns="http://www.w3.org/2000/svg" aria-label="WhatsApp"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.71.306 1.263.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
   </a>
 </div>
@@ -7731,7 +7757,7 @@ function regValPhone() {
       <span style="font-size:19px;font-weight:600;color:#001F5B;letter-spacing:-.3px;" id="drawer-total">$0.00</span>
     </div>
     <button onclick="closeCartDrawer();showPage('cart');"
-      style="width:100%;background:#0071e3;color:#fff;border:none;padding:14px;border-radius:980px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:16px;font-weight:600;letter-spacing:0;margin-bottom:10px;">
+      style="width:100%;background:#C8102E;color:#fff;border:none;padding:14px;border-radius:980px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:16px;font-weight:600;letter-spacing:0;margin-bottom:10px;">
       Ver carrito completo
     </button>
     <button onclick="closeCartDrawer();showPage('cart');setTimeout(irACheckout,200);"
@@ -7739,7 +7765,7 @@ function regValPhone() {
       Continuar al pago
     </button>
     <button onclick="contactarEjecutivo('carrito flotante');"
-      style="width:100%;background:none;color:#0071e3;border:none;padding:12px;border-radius:980px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:15px;font-weight:400;letter-spacing:0;margin-top:6px;">
+      style="width:100%;background:none;color:#C8102E;border:none;padding:12px;border-radius:980px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:15px;font-weight:400;letter-spacing:0;margin-top:6px;">
       Contactar a un ejecutivo
     </button>
   </div>
@@ -8104,7 +8130,7 @@ updateFAB();
       card.appendChild(el('div','font-size:12px;color:#86868b;line-height:1.4;margin-bottom:10px;min-height:32px;', p.name||''));
       card.appendChild(el('div','margin-bottom:6px;', precioTxt(p.price)));
       card.appendChild(el('div','margin-bottom:12px;', dispo(p.qty)));
-      var btn = el('button','margin-top:auto;background:#0071e3;color:#fff;border:none;padding:10px;border-radius:980px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;','Agregar al carrito');
+      var btn = el('button','margin-top:auto;background:#C8102E;color:#fff;border:none;padding:10px;border-radius:980px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;','Agregar al carrito');
       btn.onclick=(function(prod){ return function(){
         window.cartAdd({ at_code:prod.code, name:prod.name||prod.code, price:prod.price||0, qty_available:prod.qty||0, status:((prod.qty||0)>0?'stock':'fabricado') });
         if (typeof showToast==='function') showToast('Agregado al carrito');
