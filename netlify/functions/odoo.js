@@ -653,6 +653,41 @@ async function sendEmailAtt(to, subject, html, attachments) {
   return result;
 }
 
+// ── Plantillas de correo (diseño cloud) — fuente única para todos los correos ──
+const MAIL_SUBJECTS = {
+  "01-registro-recibido": "Recibimos tu registro en Adaptekk",
+  "02-registro-aprobado": "Tu cuenta Adaptekk fue aprobada — 5% activo",
+  "03-compra-recibida": "Recibimos tu pedido {{folio}}",
+  "04-pago-recibido": "Pago confirmado — pedido {{folio}}",
+  "05-envio-en-camino": "Tu pedido {{folio}} va en camino",
+  "06-cotizacion-enviada": "Tu cotización {{folio}} de Adaptekk",
+  "07-instrucciones-spei": "Completa tu pago — datos SPEI ({{folio}})"
+};
+
+const MAIL_TEMPLATES = {
+  "01-registro-recibido": "<!DOCTYPE html>\n<html lang=\"es\"><head><meta charset=\"UTF-8\"/><meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\"/>\n<title>Recibimos tu registro — Adaptekk</title>\n<!-- CORREO 01 · Se envía cuando el cliente crea su cuenta (queda en revisión). Marcadores: {{nombre}} -->\n</head>\n<body style=\"margin:0;padding:0;background:#eef1f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;\">\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#eef1f5;padding:24px 0;\"><tr><td align=\"center\">\n<table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:600px;max-width:92%;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(16,32,72,.10);\">\n<tr><td style=\"background:#0a1f44;padding:24px;text-align:center;\"><span style=\"font-size:22px;font-weight:700;letter-spacing:-.4px;color:#fff;\">Adaptekk<span style=\"color:#C8102E;\">.</span></span></td></tr>\n<tr><td style=\"padding:34px 32px;text-align:center;\">\n<div style=\"width:56px;height:56px;border-radius:50%;background:#eef3fc;line-height:56px;margin:0 auto 16px;font-size:26px;color:#15418f;\"><svg width=\"26\" height=\"26\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#15418f\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"vertical-align:middle;\"><circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M12 7.5V12l3 1.8\"/></svg></div>\n<h1 style=\"font-size:22px;font-weight:700;color:#0a1f44;margin:0 0 8px;\">Recibimos tu registro, {{nombre}}</h1>\n<p style=\"font-size:15px;line-height:1.6;color:#5b6577;margin:0 0 22px;\">Tu cuenta está en revisión. Nuestro equipo la valida normalmente en menos de 24 h hábiles; te avisamos por este medio en cuanto quede activa.</p>\n<div style=\"background:#f5f6f9;border-radius:10px;padding:16px 18px;text-align:left;font-size:14px;color:#5b6577;line-height:1.6;\">Mientras tanto puedes explorar el catálogo y armar tu pedido. Al aprobarse tu cuenta verás precios con tu <b style=\"color:#0a1f44;\">5% de descuento</b> aplicado.</div>\n</td></tr>\n<tr><td style=\"background:#0a1426;padding:20px 32px;text-align:center;\"><p style=\"font-size:12px;color:rgba(255,255,255,.5);margin:0;line-height:1.7;\">Adaptekk S.A. de C.V. · ventas@adaptekk.com · +52 (55) 5555-0000<br/>Conectores y adaptadores hidráulicos</p></td></tr>\n</table></td></tr></table>\n</body></html>\n",
+  "02-registro-aprobado": "<!DOCTYPE html>\n<html lang=\"es\"><head><meta charset=\"UTF-8\"/><meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\"/>\n<title>Tu cuenta fue aprobada — Adaptekk</title>\n<!-- CORREO 02 · Se envía cuando gerencia aprueba el registro. Marcadores: {{nombre}} {{url_tienda}} -->\n</head>\n<body style=\"margin:0;padding:0;background:#eef1f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;\">\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#eef1f5;padding:24px 0;\"><tr><td align=\"center\">\n<table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:600px;max-width:92%;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(16,32,72,.10);\">\n<tr><td style=\"background:linear-gradient(120deg,#0a1f44,#15346f);padding:30px 24px;text-align:center;\">\n<div style=\"font-size:22px;font-weight:700;color:#fff;margin-bottom:12px;\">Adaptekk<span style=\"color:#C8102E;\">.</span></div>\n<div style=\"font-size:34px;font-weight:800;color:#5ef0a0;line-height:1;\">&minus;5%</div>\n<div style=\"font-size:13px;color:rgba(255,255,255,.7);margin-top:6px;\">activo en todos tus precios</div>\n</td></tr>\n<tr><td style=\"padding:32px;text-align:center;\">\n<div style=\"width:56px;height:56px;border-radius:50%;background:#e7f6ee;line-height:56px;margin:0 auto 14px;font-size:28px;color:#1f9d55;\"><svg width=\"28\" height=\"28\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#1f9d55\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"vertical-align:middle;\"><path d=\"M20 6 9 17l-5-5\"/></svg></div>\n<h1 style=\"font-size:22px;font-weight:700;color:#0a1f44;margin:0 0 8px;\">¡Tu cuenta fue aprobada, {{nombre}}!</h1>\n<p style=\"font-size:15px;line-height:1.6;color:#5b6577;margin:0 0 24px;\">Ya puedes ver precios con tu 5% de descuento, disponibilidad en stock y comprar en línea con factura CFDI.</p>\n<a href=\"{{url_tienda}}\" style=\"display:inline-block;background:#15418f;color:#fff;font-size:15px;font-weight:600;text-decoration:none;padding:13px 34px;border-radius:12px;\">Entrar a mi cuenta</a>\n</td></tr>\n<tr><td style=\"background:#0a1426;padding:20px 32px;text-align:center;\"><p style=\"font-size:12px;color:rgba(255,255,255,.5);margin:0;line-height:1.7;\">Adaptekk S.A. de C.V. · ventas@adaptekk.com · +52 (55) 5555-0000</p></td></tr>\n</table></td></tr></table>\n</body></html>\n",
+  "03-compra-recibida": "<!DOCTYPE html>\n<html lang=\"es\"><head><meta charset=\"UTF-8\"/><meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\"/>\n<title>Recibimos tu pedido — Adaptekk</title>\n<!-- CORREO 03 · Se envía cuando el cliente confirma la compra (antes/pendiente de pago). Marcadores: {{nombre}} {{folio}} {{total}} {{url_pedido}} -->\n</head>\n<body style=\"margin:0;padding:0;background:#eef1f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;\">\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#eef1f5;padding:24px 0;\"><tr><td align=\"center\">\n<table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:600px;max-width:92%;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(16,32,72,.10);\">\n<tr><td style=\"background:#0a1f44;padding:24px;text-align:center;\"><span style=\"font-size:22px;font-weight:700;color:#fff;\">Adaptekk<span style=\"color:#C8102E;\">.</span></span></td></tr>\n<tr><td style=\"padding:34px 32px;text-align:center;\">\n<h1 style=\"font-size:22px;font-weight:700;color:#0a1f44;margin:0 0 8px;\">Recibimos tu pedido</h1>\n<p style=\"font-size:15px;line-height:1.6;color:#5b6577;margin:0 0 22px;\">Gracias, {{nombre}}. Tu pedido <b style=\"color:#0a1f44;\">{{folio}}</b> quedó registrado. Te confirmamos en cuanto recibamos el pago.</p>\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f5f6f9;border-radius:10px;margin-bottom:22px;\">\n<tr><td style=\"padding:16px 18px;font-size:14px;color:#5b6577;\">Total</td><td style=\"padding:16px 18px;text-align:right;font-size:15px;font-weight:700;color:#0a1f44;\">{{total}}</td></tr></table>\n<a href=\"{{url_pedido}}\" style=\"display:inline-block;background:#15418f;color:#fff;font-size:15px;font-weight:600;text-decoration:none;padding:13px 34px;border-radius:12px;\">Ver mi pedido</a>\n</td></tr>\n<tr><td style=\"background:#0a1426;padding:20px 32px;text-align:center;\"><p style=\"font-size:12px;color:rgba(255,255,255,.5);margin:0;line-height:1.7;\">Adaptekk S.A. de C.V. · ventas@adaptekk.com · +52 (55) 5555-0000</p></td></tr>\n</table></td></tr></table>\n</body></html>\n",
+  "04-pago-recibido": "<!DOCTYPE html>\n<html lang=\"es\"><head><meta charset=\"UTF-8\"/><meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\"/>\n<title>Pago confirmado — Adaptekk</title>\n<!-- CORREO 04 · Se envía cuando se confirma el pago. Adjuntar: Comprobante.pdf y Factura CFDI (PDF+XML). Marcadores: {{nombre}} {{folio}} {{total}} {{entrega}} {{url_pedido}} -->\n</head>\n<body style=\"margin:0;padding:0;background:#eef1f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;\">\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#eef1f5;padding:24px 0;\"><tr><td align=\"center\">\n<table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:600px;max-width:92%;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(16,32,72,.10);\">\n<tr><td style=\"background:#0a1f44;padding:24px;text-align:center;\"><span style=\"font-size:22px;font-weight:700;color:#fff;\">Adaptekk<span style=\"color:#C8102E;\">.</span></span></td></tr>\n<tr><td style=\"padding:34px 32px;text-align:center;\">\n<div style=\"width:60px;height:60px;border-radius:50%;background:#e7f6ee;line-height:60px;margin:0 auto 16px;font-size:30px;color:#1f9d55;\"><svg width=\"28\" height=\"28\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#1f9d55\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"vertical-align:middle;\"><path d=\"M20 6 9 17l-5-5\"/></svg></div>\n<h1 style=\"font-size:22px;font-weight:700;color:#0a1f44;margin:0 0 8px;\">¡Pago confirmado, {{nombre}}!</h1>\n<p style=\"font-size:15px;line-height:1.6;color:#5b6577;margin:0 0 22px;\">Recibimos tu pago del pedido <b style=\"color:#0a1f44;\">{{folio}}</b>. Ya lo estamos preparando.</p>\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f5f6f9;border-radius:10px;margin-bottom:22px;\">\n<tr><td style=\"padding:14px 18px;font-size:14px;color:#5b6577;\">Total pagado</td><td style=\"padding:14px 18px;text-align:right;font-size:15px;font-weight:700;color:#0a1f44;\">{{total}}</td></tr>\n<tr><td style=\"padding:0 18px 14px;font-size:14px;color:#5b6577;\">Entrega estimada</td><td style=\"padding:0 18px 14px;text-align:right;font-size:14px;color:#0a1f44;\">{{entrega}}</td></tr></table>\n<a href=\"{{url_pedido}}\" style=\"display:inline-block;background:#15418f;color:#fff;font-size:15px;font-weight:600;text-decoration:none;padding:13px 34px;border-radius:12px;\">Ver mi pedido</a>\n<p style=\"font-size:12px;color:#9aa3b2;margin:18px 0 0;\">Adjuntos: Comprobante.pdf · Factura CFDI (PDF + XML)</p>\n</td></tr>\n<tr><td style=\"background:#0a1426;padding:20px 32px;text-align:center;\"><p style=\"font-size:12px;color:rgba(255,255,255,.5);margin:0;line-height:1.7;\">Adaptekk S.A. de C.V. · ventas@adaptekk.com · +52 (55) 5555-0000</p></td></tr>\n</table></td></tr></table>\n</body></html>\n",
+  "05-envio-en-camino": "<!DOCTYPE html>\n<html lang=\"es\"><head><meta charset=\"UTF-8\"/><meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\"/>\n<title>Tu pedido va en camino — Adaptekk</title>\n<!-- CORREO 05 · Se envía cuando el pedido se despacha. Marcadores: {{nombre}} {{folio}} {{paqueteria}} {{guia}} {{url_rastreo}} {{entrega}} -->\n</head>\n<body style=\"margin:0;padding:0;background:#eef1f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;\">\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#eef1f5;padding:24px 0;\"><tr><td align=\"center\">\n<table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:600px;max-width:92%;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(16,32,72,.10);\">\n<tr><td style=\"background:#0a1f44;padding:24px;text-align:center;\"><span style=\"font-size:22px;font-weight:700;color:#fff;\">Adaptekk<span style=\"color:#C8102E;\">.</span></span></td></tr>\n<tr><td style=\"padding:34px 32px;text-align:center;\">\n<div style=\"width:56px;height:56px;border-radius:50%;background:#eef3fc;line-height:56px;margin:0 auto 16px;font-size:26px;color:#15418f;\"><svg width=\"26\" height=\"26\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#15418f\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"vertical-align:middle;\"><path d=\"M3 7h11v8H3zM14 10h4l3 3v2h-7z\"/><circle cx=\"7\" cy=\"17\" r=\"1.6\"/><circle cx=\"17.5\" cy=\"17\" r=\"1.6\"/></svg></div>\n<h1 style=\"font-size:22px;font-weight:700;color:#0a1f44;margin:0 0 8px;\">Tu pedido va en camino</h1>\n<p style=\"font-size:15px;line-height:1.6;color:#5b6577;margin:0 0 22px;\">{{nombre}}, tu pedido <b style=\"color:#0a1f44;\">{{folio}}</b> ya salió. Llega aproximadamente el <b style=\"color:#0a1f44;\">{{entrega}}</b>.</p>\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f5f6f9;border-radius:10px;margin-bottom:22px;\">\n<tr><td style=\"padding:14px 18px;font-size:14px;color:#5b6577;\">Paquetería</td><td style=\"padding:14px 18px;text-align:right;font-size:14px;font-weight:600;color:#0a1f44;\">{{paqueteria}}</td></tr>\n<tr><td style=\"padding:0 18px 14px;font-size:14px;color:#5b6577;\">Guía</td><td style=\"padding:0 18px 14px;text-align:right;font-size:14px;font-weight:600;color:#0a1f44;font-family:monospace;\">{{guia}}</td></tr></table>\n<a href=\"{{url_rastreo}}\" style=\"display:inline-block;background:#15418f;color:#fff;font-size:15px;font-weight:600;text-decoration:none;padding:13px 34px;border-radius:12px;\">Rastrear mi envío</a>\n</td></tr>\n<tr><td style=\"background:#0a1426;padding:20px 32px;text-align:center;\"><p style=\"font-size:12px;color:rgba(255,255,255,.5);margin:0;line-height:1.7;\">Adaptekk S.A. de C.V. · ventas@adaptekk.com · +52 (55) 5555-0000</p></td></tr>\n</table></td></tr></table>\n</body></html>\n",
+  "06-cotizacion-enviada": "<!DOCTYPE html>\n<html lang=\"es\"><head><meta charset=\"UTF-8\"/><meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\"/>\n<title>Tu cotización — Adaptekk</title>\n<!-- CORREO 06 · Se envía cuando se genera una cotización. Adjuntar: Cotizacion.pdf. Marcadores: {{nombre}} {{folio}} {{total}} {{validez}} {{url_whatsapp}} -->\n</head>\n<body style=\"margin:0;padding:0;background:#eef1f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;\">\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#eef1f5;padding:24px 0;\"><tr><td align=\"center\">\n<table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:600px;max-width:92%;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(16,32,72,.10);\">\n<tr><td style=\"background:#0a1f44;padding:24px;text-align:center;\"><span style=\"font-size:22px;font-weight:700;color:#fff;\">Adaptekk<span style=\"color:#C8102E;\">.</span></span></td></tr>\n<tr><td style=\"padding:34px 32px;text-align:center;\">\n<div style=\"width:56px;height:56px;border-radius:50%;background:#eef3fc;line-height:56px;margin:0 auto 16px;font-size:24px;color:#15418f;\"><svg width=\"25\" height=\"25\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#15418f\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"vertical-align:middle;\"><path d=\"M6 3h8l4 4v14H6z\"/><path d=\"M14 3v4h4M9 13h6M9 16h6\"/></svg></div>\n<h1 style=\"font-size:22px;font-weight:700;color:#0a1f44;margin:0 0 8px;\">Tu cotización {{folio}}</h1>\n<p style=\"font-size:15px;line-height:1.6;color:#5b6577;margin:0 0 22px;\">Hola {{nombre}}, adjuntamos tu cotización en PDF. Es válida por <b style=\"color:#0a1f44;\">{{validez}}</b>.</p>\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f5f6f9;border-radius:10px;margin-bottom:22px;\">\n<tr><td style=\"padding:16px 18px;font-size:14px;color:#5b6577;\">Total estimado</td><td style=\"padding:16px 18px;text-align:right;font-size:15px;font-weight:700;color:#0a1f44;\">{{total}}</td></tr></table>\n<a href=\"{{url_whatsapp}}\" style=\"display:inline-block;background:#25D366;color:#fff;font-size:15px;font-weight:600;text-decoration:none;padding:13px 34px;border-radius:12px;\">Confirmar por WhatsApp</a>\n<p style=\"font-size:12px;color:#9aa3b2;margin:18px 0 0;\">Adjunto: Cotizacion-{{folio}}.pdf</p>\n</td></tr>\n<tr><td style=\"background:#0a1426;padding:20px 32px;text-align:center;\"><p style=\"font-size:12px;color:rgba(255,255,255,.5);margin:0;line-height:1.7;\">Adaptekk S.A. de C.V. · ventas@adaptekk.com · +52 (55) 5555-0000</p></td></tr>\n</table></td></tr></table>\n</body></html>\n",
+  "07-instrucciones-spei": "<!DOCTYPE html>\n<html lang=\"es\"><head><meta charset=\"UTF-8\"/><meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\"/>\n<title>Datos para tu transferencia — Adaptekk</title>\n<!-- CORREO 07 · Se envía al elegir SPEI. Marcadores: {{nombre}} {{folio}} {{importe}} {{clabe}} {{concepto}} -->\n</head>\n<body style=\"margin:0;padding:0;background:#eef1f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;\">\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#eef1f5;padding:24px 0;\"><tr><td align=\"center\">\n<table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:600px;max-width:92%;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(16,32,72,.10);\">\n<tr><td style=\"background:#0a1f44;padding:24px;text-align:center;\"><span style=\"font-size:22px;font-weight:700;color:#fff;\">Adaptekk<span style=\"color:#C8102E;\">.</span></span></td></tr>\n<tr><td style=\"padding:32px;\">\n<h1 style=\"font-size:20px;font-weight:700;color:#0a1f44;margin:0 0 6px;text-align:center;\">Completa tu pago por transferencia</h1>\n<p style=\"font-size:14px;line-height:1.55;color:#5b6577;margin:0 0 20px;text-align:center;\">{{nombre}}, transfiere el importe exacto a esta CLABE. En cuanto se confirme preparamos tu pedido <b style=\"color:#0a1f44;\">{{folio}}</b>.</p>\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"border:1px solid #e7e9ef;border-radius:10px;overflow:hidden;margin-bottom:16px;\">\n<tr><td style=\"padding:12px 16px;font-size:13px;color:#86868b;border-bottom:1px solid #f0f0f2;\">Importe</td><td style=\"padding:12px 16px;text-align:right;font-size:15px;font-weight:700;color:#0a1f44;border-bottom:1px solid #f0f0f2;\">{{importe}}</td></tr>\n<tr><td style=\"padding:12px 16px;font-size:13px;color:#86868b;border-bottom:1px solid #f0f0f2;\">CLABE</td><td style=\"padding:12px 16px;text-align:right;font-size:14px;font-weight:700;color:#0a1f44;border-bottom:1px solid #f0f0f2;font-family:monospace;\">{{clabe}}</td></tr>\n<tr><td style=\"padding:12px 16px;font-size:13px;color:#86868b;\">Concepto</td><td style=\"padding:12px 16px;text-align:right;font-size:14px;font-weight:700;color:#0a1f44;font-family:monospace;\">{{concepto}}</td></tr></table>\n<div style=\"background:#fff8e6;border-radius:9px;padding:12px 14px;font-size:13px;color:#86702a;line-height:1.5;\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#86702a\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"vertical-align:-2px;margin-right:5px;\"><circle cx=\"12\" cy=\"13\" r=\"8\"/><path d=\"M12 9v4l2.5 1.5M9 2h6\"/></svg>Vigencia 24 h. Después tendrás que generar el pedido de nuevo.</div>\n</td></tr>\n<tr><td style=\"background:#0a1426;padding:20px 32px;text-align:center;\"><p style=\"font-size:12px;color:rgba(255,255,255,.5);margin:0;line-height:1.7;\">Adaptekk S.A. de C.V. · pagos@adaptekk.com · +52 (55) 5555-0000</p></td></tr>\n</table></td></tr></table>\n</body></html>\n"
+};
+
+function fillTpl(str, vars){
+  vars = vars || {};
+  return Object.keys(vars).reduce(function(acc, k){
+    return acc.split('{{' + k + '}}').join(vars[k] == null ? '' : String(vars[k]));
+  }, str);
+}
+
+// Devuelve {subject, html} con las variables sustituidas
+function renderMail(template, vars){
+  const tpl = MAIL_TEMPLATES[template];
+  if(!tpl) return null;
+  return { subject: fillTpl(MAIL_SUBJECTS[template] || 'Adaptekk', vars||{}), html: fillTpl(tpl, vars||{}) };
+}
+
 // ── Métricas (contadores propios en un partner oculto ADAPTEKK_METRICS) ──
 async function getMetricsPartner(uid) {
   const searchText = await xmlrpc(uid, 'res.partner', 'search',
@@ -751,22 +786,6 @@ async function bumpMetric(kind, payload) {
 }
 
 // Envía el correo de confirmación al cliente y un aviso al equipo de Adaptekk.
-// Correo al cliente con su guía de envío (rastreo + PDF de etiqueta).
-function guiaEmailHtml(folio, g){
-  const carrier = g.carrier ? `<p style="font-size:14px;color:#555;margin:4px 0;">Paqueter\u00eda: <b>${g.carrier}</b>${g.service?(' \u00b7 '+g.service):''}</p>` : '';
-  const track = g.tracking ? `<p style="font-size:15px;margin:8px 0;"><b>N\u00famero de rastreo:</b> ${g.tracking}</p>` : '';
-  const label = g.label_url
-    ? `<p style="margin:18px 0;"><a href="${g.label_url}" style="background:#001F5B;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700;font-size:14px;">Ver / descargar tu gu\u00eda (PDF)</a></p>`
-    : `<p style="font-size:13px;color:#888;margin:14px 0;">Tu gu\u00eda se est\u00e1 generando; te llegar\u00e1 el PDF en breve.</p>`;
-  return `<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;border:1px solid #eee;border-radius:10px;overflow:hidden;">
-    <div style="background:#001F5B;padding:18px 24px;color:#fff;font-size:20px;font-weight:800;">Adaptekk<span style="color:#C8102E;">.</span></div>
-    <div style="padding:24px;">
-      <h2 style="color:#1a7d34;margin:0 0 6px;">\u00a1Tu pedido va en camino!</h2>
-      <p style="font-size:14px;color:#555;">Tu pedido <b>${folio}</b> ya fue surtido y enviado.</p>
-      ${carrier}${track}${label}
-      <p style="font-size:12px;color:#888;margin-top:18px;">Gracias por tu compra. \u2014 Equipo Adaptekk</p>
-    </div></div>`;
-}
 async function enviarCorreosPedido(orden, folio, total, metodo, estado, destinatarios) {
   // destinatarios: 'ambos' (default) | 'solo_equipo' | 'solo_cliente'
   destinatarios = destinatarios || 'ambos';
@@ -789,33 +808,17 @@ async function enviarCorreosPedido(orden, folio, total, metodo, estado, destinat
   const envioTxt = co.envio ? (co.envio.name || co.envio.id) : 'Por definir';
   const aprobado = estado === 'aprobado';
 
-  // ── Correo al CLIENTE ──
+  // ── Correo al CLIENTE (plantillas de diseño 03 compra / 04 pago) ──
   if (clienteEmail && destinatarios !== 'solo_equipo') {
-    const htmlCliente = `
-      <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;">
-        <div style="background:#001F5B;padding:20px;text-align:center;">
-          <span style="color:#fff;font-size:24px;font-weight:bold;letter-spacing:1px;">ADAP<span style="color:#C8102E;">TEK</span>K</span>
-        </div>
-        <div style="padding:24px;background:#fff;">
-          <h2 style="color:#001F5B;margin:0 0 6px;">${aprobado ? '¡Gracias por tu compra!' : 'Pedido registrado'}</h2>
-          <p style="color:#555;font-size:14px;line-height:1.5;">Hola ${clienteNombre}, ${aprobado
-            ? 'tu pago fue aprobado y tu pedido está confirmado.'
-            : 'recibimos tu pedido y está reservado. Te confirmamos en cuanto se acredite tu pago.'}</p>
-          <div style="background:#f7f9fc;border-radius:8px;padding:16px;margin:16px 0;">
-            <p style="margin:4px 0;font-size:14px;"><b>Pedido:</b> ${folio}</p>
-            <p style="margin:4px 0;font-size:14px;"><b>Total:</b> ${fmt(total)} MXN</p>
-            <p style="margin:4px 0;font-size:14px;"><b>Método:</b> ${metodo === 'spei' ? 'Transferencia SPEI' : 'Tarjeta'}</p>
-            <p style="margin:4px 0;font-size:14px;"><b>Envío:</b> ${envioTxt}</p>
-          </div>
-          <table style="width:100%;border-collapse:collapse;margin:12px 0;">
-            <tr><th style="text-align:left;padding:6px 8px;border-bottom:2px solid #001F5B;font-size:12px;color:#888;">PRODUCTO</th>
-                <th style="text-align:center;padding:6px 8px;border-bottom:2px solid #001F5B;font-size:12px;color:#888;">CANT.</th></tr>
-            ${filas}
-          </table>
-          <p style="color:#888;font-size:12px;margin-top:20px;">Si tienes dudas, responde a este correo o escríbenos por WhatsApp. ¡Gracias por confiar en Adaptekk!</p>
-        </div>
-      </div>`;
-    try { await sendEmail(clienteEmail, `${aprobado ? 'Compra confirmada' : 'Pedido registrado'} — ${folio} | Adaptekk`, htmlCliente); } catch(_){}
+    const entrega = (co.envio && (co.envio.time || co.envio.eta || co.envio.entrega)) || '2–4 días hábiles';
+    const m = renderMail(aprobado ? '04-pago-recibido' : '03-compra-recibida', {
+      nombre: String(clienteNombre||'').split(' ')[0] || clienteNombre || '',
+      folio: folio,
+      total: fmt(total) + ' MXN',
+      entrega: entrega,
+      url_pedido: SITE_URL + '/'
+    });
+    if (m) { try { await sendEmail(clienteEmail, m.subject, m.html); } catch(_){} }
   }
 
   // ── Aviso al EQUIPO (ADMIN_EMAIL) ──
@@ -1375,6 +1378,14 @@ exports.handler = async function(event, context) {
           });
         }
 
+        // ── CORREO AL CLIENTE: registro recibido (plantilla de diseño 01) ──
+        if (email) {
+          try {
+            const m01 = renderMail('01-registro-recibido', { nombre: String(name||'').split(' ')[0] || name || '' });
+            if (m01) await sendEmail(email, m01.subject, m01.html);
+          } catch(_){}
+        }
+
         // Add zone to Odoo comment
         const zonaInfo = zona ? `\nZona: ${zona}` : '';
         if (zona && partnerId) {
@@ -1614,29 +1625,11 @@ exports.handler = async function(event, context) {
 
       // Send email to client
       if (status === 'aprobar') {
-        const approveHtml = `
-          <div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;">
-            <div style="background:#001F5B;padding:24px;text-align:center;">
-              <span style="font-family:Arial Black;font-size:28px;font-weight:900;color:#fff;">ADAP</span><span style="font-family:Arial Black;font-size:28px;font-weight:900;color:#C8102E;">TEK</span><span style="font-family:Arial Black;font-size:28px;font-weight:900;color:#fff;">K</span>
-            </div>
-            <div style="padding:32px;background:#fff;border:1px solid #eee;">
-              <div style="background:#D1FAE5;border-radius:8px;padding:16px;text-align:center;margin-bottom:20px;">
-                <div style="font-size:40px;margin-bottom:8px;">&#9989;</div>
-                <div style="font-size:18px;font-weight:800;color:#065F46;">Tu cuenta ha sido verificada</div>
-              </div>
-              <p style="color:#555;">Hola <strong>${client_name}</strong>,</p>
-              <p style="color:#555;">Tu cuenta en Adaptekk ha sido verificada exitosamente. Ya puedes acceder a:</p>
-              <ul style="color:#555;line-height:2;">
-                <li>Precios reales de todos los productos</li>
-                <li>Stock disponible en tiempo real</li>
-                <li>Solicitar cotizaciones formales</li>
-                <li>Historial de pedidos</li>
-              </ul>
-              <a href="${SITE_URL}" style="display:block;background:#001F5B;color:#fff;text-align:center;padding:14px;border-radius:6px;text-decoration:none;font-weight:700;margin-top:20px;font-size:15px;">Acceder a Adaptekk →</a>
-            </div>
-            <div style="background:#f5f5f5;padding:14px;text-align:center;font-size:11px;color:#aaa;">© 2026 Adaptekk S.A. de C.V. — Conecta sin límites</div>
-          </div>`;
-        await sendEmail(client_email, '✅ Tu cuenta Adaptekk fue verificada — ya puedes ver precios', approveHtml);
+        const m02 = renderMail('02-registro-aprobado', {
+          nombre: String(client_name||'').split(' ')[0] || client_name || '',
+          url_tienda: SITE_URL
+        });
+        if (m02) { try { await sendEmail(client_email, m02.subject, m02.html); } catch(_){} }
 
       } else if (status === 'rechazar') {
         const rejectHtml = `
@@ -2285,7 +2278,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-23-guia-error-real-v30', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-24-cotizacion-correo-v33', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
     }
 
     // ── DIAGNÓSTICO DE CATÁLOGO: analiza los códigos AT en Odoo para diseñar el armado por piezas ──
@@ -2823,6 +2816,31 @@ exports.handler = async function(event, context) {
       return {statusCode:200, headers, body: JSON.stringify(rv)};
     }
 
+    // ── ENVIAR COTIZACIÓN por correo (plantilla de diseño 06, con PDF adjunto) ──
+    if (action === 'enviar_cotizacion') {
+      const to = String(body.to || '').trim();
+      if (!to || to.indexOf('@') < 1) return {statusCode:400, headers, body: JSON.stringify({ok:false, error:'Correo no válido'})};
+      const m06 = renderMail('06-cotizacion-enviada', {
+        nombre: String(body.nombre || '').split(' ')[0] || '',
+        folio: body.folio || '',
+        total: body.total || '',
+        validez: body.validez || '15 días hábiles',
+        url_whatsapp: body.whatsapp || SITE_URL
+      });
+      if (!m06) return {statusCode:500, headers, body: JSON.stringify({ok:false, error:'Plantilla 06 no disponible'})};
+      try {
+        let r;
+        if (body.pdf_base64) {
+          r = await sendEmailAtt(to, m06.subject, m06.html, [{ filename: body.pdf_name || ('Cotizacion-' + (body.folio||'') + '.pdf'), content: body.pdf_base64 }]);
+        } else {
+          r = await sendEmail(to, m06.subject, m06.html);
+        }
+        return {statusCode:200, headers, body: JSON.stringify({ ok: !!(r && r.id), id: (r && r.id) || null })};
+      } catch(e) {
+        return {statusCode:200, headers, body: JSON.stringify({ ok:false, error:String(e && e.message || e) })};
+      }
+    }
+
     // ── SKYDROPX (PRO): cotizar envío ──
     // body: { zip_to, estado/area_level1, ciudad/area_level2, colonia/area_level3, weight(kg), length, width, height }
     if (action === 'cotizar_envio') {
@@ -3031,9 +3049,23 @@ exports.handler = async function(event, context) {
         await xmlrpc(uid, 'sale.order', 'write', `<value><array><data><value><int>${saleId}</int></value></data></array></value><value><struct><member><name>note</name>${xmlStr(newNote)}</member></struct></value>`);
       } catch(e){}
 
-      // 8) Avisar al cliente con la guía
+      // 8) Avisar al cliente con la guía (plantilla de diseño 05)
       let emailed=false; const clientEmail = con.email || con.correo || '';
-      if (clientEmail) { try { const r = await sendEmail(clientEmail, `Tu pedido va en camino — ${saleName||'Adaptekk'} | Adaptekk`, guiaEmailHtml(saleName||'tu pedido', guia)); emailed = !!(r && r.id); } catch(e){} }
+      if (clientEmail) {
+        try {
+          const nombreCli = String(con.nombre || con.contacto || con.name || '').split(' ')[0] || '';
+          const m5 = renderMail('05-envio-en-camino', {
+            nombre: nombreCli,
+            folio: saleName || 'tu pedido',
+            paqueteria: guia.carrier || '',
+            guia: guia.tracking || '',
+            url_rastreo: guia.tracking_url || guia.label_url || SITE_URL,
+            entrega: guia.entrega || '2–4 días hábiles'
+          });
+          const r = m5 ? await sendEmail(clientEmail, m5.subject, m5.html) : null;
+          emailed = !!(r && r.id);
+        } catch(e){}
+      }
 
       return {statusCode:200, headers, body: JSON.stringify({ ok:true, guia, emailed, cliente: clientEmail||null })};
     }
@@ -4286,6 +4318,18 @@ exports.handler = async function(event, context) {
         clabe = process.env.SPEI_CLABE;
         if (!banco)        banco = process.env.SPEI_BANCO || '';
         if (!beneficiario) beneficiario = process.env.SPEI_BENEFICIARIO || '';
+      }
+
+      // ── Correo al CLIENTE con los datos de la transferencia (plantilla de diseño 07) ──
+      if (clabe && payer && payer.email) {
+        try {
+          const _nom = String(payer.first_name || (orden.checkout && orden.checkout.contacto && orden.checkout.contacto.nombre) || '').split(' ')[0] || '';
+          const _imp = '$' + Number(montoCobro||0).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' MXN';
+          const m07 = renderMail('07-instrucciones-spei', {
+            nombre: _nom, folio: folio, importe: _imp, clabe: clabe, concepto: referencia || folio
+          });
+          if (m07) await sendEmail(payer.email, m07.subject, m07.html);
+        } catch(_){}
       }
 
       // Siempre exitoso: el pedido quedó reservado. La CLABE viene de MP o de la cuenta fija (env);
