@@ -2308,7 +2308,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-24-guia-full-v38', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-24-guia-wrap-v39', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
     }
 
     // ── DIAGNÓSTICO DE CATÁLOGO: analiza los códigos AT en Odoo para diseñar el armado por piezas ──
@@ -3112,7 +3112,7 @@ exports.handler = async function(event, context) {
       if (_cnClass) shipBody.consignment_note = _cnClass;
       if (_pkgType) shipBody.package_type = _pkgType;
       try {
-        const sr = await fetchTimeout(t.base+'/api/v1/shipments', { method:'POST', headers:{'Authorization':'Bearer '+t.token,'Content-Type':'application/json'}, body: JSON.stringify(shipBody) }, 9000);
+        const sr = await fetchTimeout(t.base+'/api/v1/shipments', { method:'POST', headers:{'Authorization':'Bearer '+t.token,'Content-Type':'application/json'}, body: JSON.stringify({ shipment: shipBody }) }, 9000);
         ship = await sr.json();
       } catch(e){ return {statusCode:200, headers, body: JSON.stringify({ok:false, step:'shipment', error:String(e&&e.message||e), rate:chosen})}; }
       // parsear rastreo + etiqueta de varias formas posibles del JSON:API
