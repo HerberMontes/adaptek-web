@@ -2308,7 +2308,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-24-guia-wrap-v39', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-24-guia-ref-v40', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
     }
 
     // ── DIAGNÓSTICO DE CATÁLOGO: analiza los códigos AT en Odoo para diseñar el armado por piezas ──
@@ -3086,7 +3086,7 @@ exports.handler = async function(event, context) {
         company: process.env.SKYDROPX_ORIGIN_COMPANY||'Adaptekk',
         phone: String(process.env.SKYDROPX_ORIGIN_PHONE||'8181170177').trim(),
         email: process.env.SKYDROPX_ORIGIN_EMAIL||'validaciones@adaptekk.com',
-        reference: ''
+        reference: 'Almacen'
       };
       const addrTo = {
         country_code: 'MX',
@@ -3099,7 +3099,7 @@ exports.handler = async function(event, context) {
         company: '',
         phone: String(con.telefono||con.tel||con.phone||'').trim(),
         email: con.email||con.correo||'',
-        reference: dir.referencia||dir.reference||''
+        reference: dir.referencia||dir.reference||'Entrega'
       };
       const shipBody = {
         address_from: addrFrom,
