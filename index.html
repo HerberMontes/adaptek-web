@@ -1753,21 +1753,21 @@ window.descargarCotizacion = function() {
     + '*{box-sizing:border-box;} body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;margin:0;color:#1d1d1f;background:#f1f2f5;padding:24px 12px;-webkit-font-smoothing:antialiased;}'
     + '.sheet{max-width:760px;margin:0 auto;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 8px 40px rgba(16,32,72,.10);}'
     + 'table.items{width:100%;border-collapse:collapse;} table.items th{background:#f5f6f9;color:#86868b;padding:11px 12px;text-align:left;font-size:10px;letter-spacing:.6px;text-transform:uppercase;font-weight:700;border-bottom:1px solid #eceef2;}'
-    + '.header{background:#0a1f44;padding:30px 34px;color:#fff;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;}'
-    + '.logo{font-size:30px;font-weight:700;letter-spacing:-.6px;line-height:1;} .red{color:#C8102E;}'
-    + '.empresa{font-size:11px;line-height:1.7;opacity:.78;text-align:right;}'
+    + '.header{background:#fff;padding:30px 34px 24px;color:#0a1f44;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;border-bottom:1px solid #eceef2;}'
+    + '.logo{font-size:30px;font-weight:700;letter-spacing:-.6px;line-height:1;color:#0a1f44;} .red{color:#C8102E;}'
+    + '.empresa{font-size:11px;line-height:1.7;color:#8a93a3;text-align:right;}'
     + '.section{padding:28px 34px;} .meta{display:flex;gap:40px;flex-wrap:wrap;margin-bottom:24px;}'
     + '.meta div{font-size:13px;color:#1d1d1f;} .meta .lbl{color:#9aa3b2;font-size:10px;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;}'
     + '.total-row{padding:14px 12px;text-align:right;font-weight:700;font-size:18px;color:#0a1f44;letter-spacing:-.3px;}'
     + '.note{margin-top:22px;padding:15px 17px;background:#fff8e6;border-radius:10px;font-size:12px;color:#86702a;line-height:1.6;}'
-    + '.foot{background:#0a1426;padding:20px 34px;text-align:center;font-size:11px;color:rgba(255,255,255,.5);line-height:1.7;}'
+    + '.foot{background:#fafbfc;padding:20px 34px;text-align:center;font-size:11px;color:#9aa3b2;line-height:1.7;border-top:1px solid #eceef2;}'
     + '.btnbar{padding:18px 34px;text-align:center;background:#fff;} .btnbar button{background:#C8102E;color:#fff;border:none;padding:13px 28px;border-radius:11px;font-size:14px;font-weight:600;cursor:pointer;margin:0 6px;font-family:inherit;}'
     + '.btnbar button.alt{background:#1f9d55;}'
     + '@media print{.btnbar{display:none;}}'
     + '</style></head><body><div class="sheet">'
     + '<div class="header">'
       + '<div><div class="logo">Adaptekk<span class="red">.</span></div>'
-      + '<div style="font-size:11px;opacity:.7;margin-top:7px;">Conectores y adaptadores hidr\u00e1ulicos</div></div>'
+      + '<div style="font-size:11px;color:#8a93a3;margin-top:7px;">Conectores y adaptadores hidr\u00e1ulicos</div></div>'
       + '<div class="empresa"><b>' + esc(E.razonSocial) + '</b><br>RFC: ' + esc(E.rfc) + '<br>' + esc(E.direccion)
       + '<br>Tel: ' + esc(E.tel) + '<br>' + esc(E.email) + ' \u00b7 ' + esc(E.web) + '</div>'
     + '</div>'
@@ -1818,14 +1818,17 @@ window.cotizacionPDFBase64 = function(folio){
     var registered = window.clientLevel() === 'registered';
     var fmt = window.fmtMXN;
     var fecha = new Date().toLocaleDateString('es-MX',{year:'numeric',month:'long',day:'numeric'});
-    doc.setFillColor(navy[0],navy[1],navy[2]); doc.rect(0,0,W,100,'F');
-    doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(25);
-    doc.text('Adaptekk.', ML, 50);
-    doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(198,210,232);
+    doc.setFillColor(255,255,255); doc.rect(0,0,W,108,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(25); doc.setTextColor(navy[0],navy[1],navy[2]);
+    doc.text('Adaptekk', ML, 50);
+    var _aw = doc.getTextWidth('Adaptekk');
+    doc.setTextColor(200,16,46); doc.text('.', ML+_aw+1.5, 50);
+    doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(138,147,163);
     doc.text('Conectores y adaptadores hidr\u00e1ulicos', ML, 70);
-    doc.setFontSize(8.5); doc.setTextColor(170,186,214);
-    doc.text('COTIZACI\u00d3N', MR, 44, {align:'right'});
-    doc.setFontSize(9); doc.setTextColor(230,236,246); doc.text(folio, MR, 62, {align:'right'});
+    doc.setFontSize(8); doc.setTextColor(160,168,180);
+    doc.text('COTIZACI\u00d3N', MR, 42, {align:'right'});
+    doc.setFontSize(11); doc.setFont('helvetica','bold'); doc.setTextColor(navy[0],navy[1],navy[2]); doc.text(folio, MR, 60, {align:'right'});
+    doc.setDrawColor(227,232,240); doc.setLineWidth(1); doc.line(ML, 92, MR, 92);
     var y=132;
     doc.setTextColor(muted[0],muted[1],muted[2]); doc.setFont('helvetica','normal'); doc.setFontSize(8);
     doc.text('FECHA', ML, y); doc.text('VALIDEZ', ML+150, y); doc.text('CLIENTE', ML+300, y);
@@ -1908,10 +1911,10 @@ cartUpdateBadge();
 .co-step{display:flex;flex-direction:column;align-items:center;flex:1;position:relative;}
 .co-step::before{content:'';position:absolute;top:13px;left:-50%;width:100%;height:2px;background:#e8e8ed;z-index:0;}
 .co-step:first-child::before{display:none;}
-.co-step.done::before,.co-step.active::before{background:#C8102E;}
+.co-step.done::before,.co-step.active::before{background:#15418f;}
 .co-step-dot{width:28px;height:28px;border-radius:50%;background:#fff;border:2px solid #d2d2d7;color:#aeaeb2;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;z-index:1;transition:all .25s;}
-.co-step.active .co-step-dot{border-color:#C8102E;background:#C8102E;color:#fff;}
-.co-step.done .co-step-dot{border-color:#C8102E;background:#C8102E;color:#fff;}
+.co-step.active .co-step-dot{border-color:#15418f;background:#15418f;color:#fff;}
+.co-step.done .co-step-dot{border-color:#15418f;background:#15418f;color:#fff;}
 .co-step-lbl{font-size:11px;font-weight:500;letter-spacing:.2px;text-transform:none;color:#aeaeb2;margin-top:8px;}
 .co-step.active .co-step-lbl,.co-step.done .co-step-lbl{color:#001F5B;}
 /* Tarjeta blanca limpia */
@@ -1921,18 +1924,18 @@ cartUpdateBadge();
 /* Selección invitado/cuenta */
 .co-choice{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 .co-choice-card{border:1.5px solid #e8e8ed;border-radius:14px;padding:28px 18px;text-align:center;cursor:pointer;transition:all .2s;background:#fff;}
-.co-choice-card:hover{border-color:#C8102E;}
-.co-choice-card.sel{border-color:#C8102E;background:#fdf4f5;box-shadow:0 0 0 3px rgba(200,16,46,.1);}
+.co-choice-card:hover{border-color:#15418f;}
+.co-choice-card.sel{border-color:#15418f;background:#eef3fc;box-shadow:0 0 0 3px rgba(21,65,143,.12);}
 .co-choice-ico{font-size:28px;margin-bottom:8px;}
 .co-choice-t{font-weight:600;color:#001F5B;font-size:16px;}
 .co-choice-d{font-size:12px;color:#86868b;margin-top:4px;line-height:1.4;}
 /* Opciones de envío */
 .co-ship{border:1.5px solid #e8e8ed;border-radius:14px;padding:18px;display:flex;align-items:center;gap:14px;cursor:pointer;margin-bottom:12px;transition:all .2s;background:#fff;}
-.co-ship:hover{border-color:#C8102E;}
-.co-ship.sel{border-color:#C8102E;background:#fdf4f5;box-shadow:0 0 0 3px rgba(200,16,46,.1);}
+.co-ship:hover{border-color:#15418f;}
+.co-ship.sel{border-color:#15418f;background:#eef3fc;box-shadow:0 0 0 3px rgba(21,65,143,.12);}
 .co-ship-radio{width:20px;height:20px;border-radius:50%;border:2px solid #c5c5cc;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:border-color .2s;}
-.co-ship.sel .co-ship-radio{border-color:#C8102E;}
-.co-ship.sel .co-ship-radio::after{content:'';width:10px;height:10px;border-radius:50%;background:#C8102E;}
+.co-ship.sel .co-ship-radio{border-color:#15418f;}
+.co-ship.sel .co-ship-radio::after{content:'';width:10px;height:10px;border-radius:50%;background:#15418f;}
 .co-ship-name{font-weight:600;color:#001F5B;font-size:15px;}
 .co-ship-time{font-size:12px;color:#86868b;margin-top:2px;}
 .co-ship-price{margin-left:auto;font-weight:600;color:#001F5B;white-space:nowrap;font-size:15px;}
@@ -1940,9 +1943,9 @@ cartUpdateBadge();
 .co-nav{display:flex;gap:12px;margin-top:8px;}
 .co-btn{flex:1;padding:14px;border:none;border-radius:980px;cursor:pointer;font-weight:600;font-size:16px;letter-spacing:0;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;transition:background .2s,transform .1s;}
 .co-btn:active{transform:scale(.985);}
-.co-btn.primary{background:#C8102E;color:#fff;}
-.co-btn.primary:hover{background:#a50d26;}
-.co-btn.primary:disabled{background:#eec3ca;cursor:not-allowed;}
+.co-btn.primary{background:#15418f;color:#fff;}
+.co-btn.primary:hover{background:#001F5B;}
+.co-btn.primary:disabled{background:#b9c9e8;cursor:not-allowed;}
 .co-btn.ghost{background:#f5f5f7;color:#001F5B;flex:0 0 auto;padding:14px 24px;}
 .co-btn.ghost:hover{background:#ececf0;}
 .co-err{font-size:12px;color:#e5342b;margin-top:5px;display:none;}
@@ -1954,11 +1957,11 @@ cartUpdateBadge();
 .co-sum-block{background:#f5f5f7;border:none;border-radius:14px;padding:16px 18px;margin-bottom:12px;position:relative;}
 .co-sum-block h4{margin:0 0 8px;font-size:11px;letter-spacing:.3px;text-transform:uppercase;color:#86868b;font-weight:600;}
 .co-sum-block p{margin:0;font-size:14px;color:#001F5B;line-height:1.5;}
-.co-edit{position:absolute;top:14px;right:16px;font-size:13px;color:#C8102E;font-weight:400;cursor:pointer;text-decoration:none;background:none;border:none;font-family:inherit;}
+.co-edit{position:absolute;top:14px;right:16px;font-size:13px;color:#15418f;font-weight:400;cursor:pointer;text-decoration:none;background:none;border:none;font-family:inherit;}
 .co-edit:hover{text-decoration:underline;}
 .co-toggle{display:flex;gap:10px;margin-bottom:16px;}
 .co-toggle button{flex:1;padding:13px;border:1.5px solid #e8e8ed;border-radius:12px;background:#fff;cursor:pointer;font-weight:600;font-size:14px;color:#001F5B;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;transition:all .2s;}
-.co-toggle button.sel{border-color:#C8102E;background:#C8102E;color:#fff;}
+.co-toggle button.sel{border-color:#15418f;background:#15418f;color:#fff;}
 @media(max-width:640px){.co-choice{grid-template-columns:1fr;}.co-title{font-size:26px;}}
 </style>
 
@@ -2003,7 +2006,7 @@ cartUpdateBadge();
       <div class="co-sub">Para confirmarte el pedido y coordinarte la entrega.</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         <div class="auth-field">
-          <label class="auth-label">Nombre completo <span style="color:#C8102E;">*</span></label>
+          <label class="auth-label">Nombre completo <span style="color:#15418f;">*</span></label>
           <input id="co-nombre" type="text" class="auth-input" placeholder="Nombre y apellido"/>
         </div>
         <div class="auth-field">
@@ -2012,11 +2015,11 @@ cartUpdateBadge();
         </div>
       </div>
       <div class="auth-field">
-        <label class="auth-label">Email <span style="color:#C8102E;">*</span></label>
+        <label class="auth-label">Email <span style="color:#15418f;">*</span></label>
         <input id="co-email" type="email" class="auth-input" placeholder="correo@empresa.com"/>
       </div>
       <div class="auth-field">
-        <label class="auth-label">Tel&#233;fono (10 d&#237;gitos) <span style="color:#C8102E;">*</span></label>
+        <label class="auth-label">Tel&#233;fono (10 d&#237;gitos) <span style="color:#15418f;">*</span></label>
         <input id="co-tel" type="tel" class="auth-input" placeholder="55 1234 5678" maxlength="12"
           oninput="this.value=this.value.replace(/[^0-9 ]/g,'')"/>
       </div>
@@ -2050,23 +2053,23 @@ cartUpdateBadge();
           <input type="checkbox" id="co-confirm-fact" checked style="width:17px;height:17px;accent-color:#001F5B;"/>
           Facturar este pedido a estos datos
         </label>
-        <a onclick="coEditFiscal()" style="display:inline-block;margin-top:13px;color:#C8102E;font-size:13px;cursor:pointer;font-weight:500;">Usar otros datos fiscales</a>
+        <a onclick="coEditFiscal()" style="display:inline-block;margin-top:13px;color:#15418f;font-size:13px;cursor:pointer;font-weight:500;">Usar otros datos fiscales</a>
       </div>
 
       <div id="co-fact-form" style="display:none;background:#FAFBFF;border-radius:8px;padding:14px;">
         <div class="auth-field">
-          <label class="auth-label">RFC <span style="color:#C8102E;">*</span></label>
+          <label class="auth-label">RFC <span style="color:#15418f;">*</span></label>
           <input id="co-rfc" type="text" class="auth-input" placeholder="Ej: XAXX010101000" maxlength="13"
             style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9&Ñ]/g,'')"/>
           <div class="co-err" id="co-err-rfc">&#9888; RFC inv&#225;lido (12 d&#237;gitos persona moral, 13 persona f&#237;sica)</div>
         </div>
         <div class="auth-field">
-          <label class="auth-label">Raz&#243;n social <span style="color:#C8102E;">*</span></label>
+          <label class="auth-label">Raz&#243;n social <span style="color:#15418f;">*</span></label>
           <input id="co-razon" type="text" class="auth-input" placeholder="Como aparece en tu constancia fiscal"/>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
           <div class="auth-field">
-            <label class="auth-label">R&#233;gimen fiscal <span style="color:#C8102E;">*</span></label>
+            <label class="auth-label">R&#233;gimen fiscal <span style="color:#15418f;">*</span></label>
             <select id="co-regimen" class="auth-input" style="background:#fff;">
               <option value="">-- Selecciona --</option>
               <optgroup label="Personas Morales">
@@ -2088,7 +2091,7 @@ cartUpdateBadge();
             </select>
           </div>
           <div class="auth-field">
-            <label class="auth-label">Uso CFDI <span style="color:#C8102E;">*</span></label>
+            <label class="auth-label">Uso CFDI <span style="color:#15418f;">*</span></label>
             <select id="co-uso" class="auth-input" style="background:#fff;">
               <option value="">-- Selecciona --</option>
               <option value="G01">G01 - Adquisici&#243;n de mercanc&#237;as</option>
@@ -2100,7 +2103,7 @@ cartUpdateBadge();
           </div>
         </div>
         <div class="auth-field" style="margin-bottom:0;">
-          <label class="auth-label">CP fiscal <span style="color:#C8102E;">*</span></label>
+          <label class="auth-label">CP fiscal <span style="color:#15418f;">*</span></label>
           <input id="co-cpfiscal" type="text" class="auth-input" placeholder="5 d&#237;gitos del domicilio fiscal" maxlength="5"
             oninput="this.value=this.value.replace(/[^0-9]/g,'')"/>
         </div>
@@ -2108,7 +2111,7 @@ cartUpdateBadge();
         <!-- Constancia + guardar en perfil (solo con sesión) -->
         <div id="co-fiscal-extra" style="display:none;margin-top:14px;">
           <div class="auth-field" style="margin-bottom:10px;">
-            <label class="auth-label">Constancia de Situaci&#243;n Fiscal (PDF) <span style="color:#C8102E;">*</span></label>
+            <label class="auth-label">Constancia de Situaci&#243;n Fiscal (PDF) <span style="color:#15418f;">*</span></label>
             <input type="file" id="co-constancia-file" accept="application/pdf,.pdf" style="display:none" onchange="coConstanciaPick(this)"/>
             <div id="co-constancia-box" onclick="document.getElementById('co-constancia-file').click()" style="display:flex;align-items:center;gap:10px;border:1.5px dashed #C9D6EA;border-radius:8px;padding:12px;cursor:pointer;background:#fff;">
               <span style="width:34px;height:34px;border-radius:8px;background:#EEF3FB;display:flex;align-items:center;justify-content:center;flex:none;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#001F5B" stroke-width="1.7"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span>
@@ -2137,9 +2140,9 @@ cartUpdateBadge();
     <div class="co-card" id="co-saved-addr-card" style="display:none;">
       <div class="co-title">Direcci&#243;n de env&#237;o</div>
       <div class="co-sub">Enviaremos tu pedido a la direcci&#243;n que tienes registrada.</div>
-      <div id="co-addr-saved-opt" onclick="coAddrMode('saved')" style="border:1.5px solid #C8102E;background:#FDF4F5;border-radius:12px;padding:16px;cursor:pointer;">
+      <div id="co-addr-saved-opt" onclick="coAddrMode('saved')" style="border:1.5px solid #15418f;background:#FDF4F5;border-radius:12px;padding:16px;cursor:pointer;">
         <div style="display:flex;align-items:flex-start;gap:12px;">
-          <span id="co-addr-saved-dot" style="width:18px;height:18px;border-radius:50%;border:2px solid #C8102E;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;"><span style="width:9px;height:9px;border-radius:50%;background:#C8102E;display:block;"></span></span>
+          <span id="co-addr-saved-dot" style="width:18px;height:18px;border-radius:50%;border:2px solid #15418f;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;"><span style="width:9px;height:9px;border-radius:50%;background:#15418f;display:block;"></span></span>
           <div>
             <div style="font-size:14px;font-weight:600;color:#001F5B;" id="co-saved-name">Direcci&#243;n registrada</div>
             <div style="font-size:13px;color:#5A6675;margin-top:3px;line-height:1.55;" id="co-saved-lines">&mdash;</div>
@@ -2157,30 +2160,30 @@ cartUpdateBadge();
       <div class="co-sub">Ingresa tu CP y autocompletamos colonia, ciudad y estado.</div>
       <div style="display:grid;grid-template-columns:140px 1fr;gap:10px;">
         <div class="auth-field" style="position:relative;">
-          <label class="auth-label">C&#243;digo postal <span style="color:#C8102E;">*</span></label>
+          <label class="auth-label">C&#243;digo postal <span style="color:#15418f;">*</span></label>
           <input id="co-cp" type="text" class="auth-input" placeholder="06600" maxlength="5"
             oninput="this.value=this.value.replace(/[^0-9]/g,'');coBuscarCP(this.value)"/>
           <div id="co-cp-spinner" style="display:none;position:absolute;right:10px;bottom:12px;font-size:13px;">&#9203;</div>
         </div>
         <div class="auth-field">
-          <label class="auth-label">Calle y n&#250;mero <span style="color:#C8102E;">*</span></label>
+          <label class="auth-label">Calle y n&#250;mero <span style="color:#15418f;">*</span></label>
           <input id="co-calle" type="text" class="auth-input" placeholder="Ej: Insurgentes Sur 1234 Int. 5"/>
         </div>
       </div>
       <div id="co-cp-msg" style="font-size:11px;color:#aaa;margin:-6px 0 10px;">Escribe tu CP de 5 d&#237;gitos</div>
       <div class="auth-field">
-        <label class="auth-label">Colonia <span style="color:#C8102E;">*</span></label>
+        <label class="auth-label">Colonia <span style="color:#15418f;">*</span></label>
         <select id="co-colonia" class="auth-input" style="background:#fff;">
           <option value="">-- Ingresa primero tu CP --</option>
         </select>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         <div class="auth-field">
-          <label class="auth-label">Ciudad / Municipio <span style="color:#C8102E;">*</span></label>
+          <label class="auth-label">Ciudad / Municipio <span style="color:#15418f;">*</span></label>
           <input id="co-ciudad" type="text" class="auth-input" placeholder="Se sugiere con el CP"/>
         </div>
         <div class="auth-field">
-          <label class="auth-label">Estado <span style="color:#C8102E;">*</span></label>
+          <label class="auth-label">Estado <span style="color:#15418f;">*</span></label>
           <input id="co-estado" type="text" class="auth-input" placeholder="Autocompletado"/>
         </div>
       </div>
@@ -2415,11 +2418,11 @@ window.coAddrMode = function(mode){
   var formCard=document.getElementById('co-addr-form-card'); if(formCard) formCard.style.display = saved ? 'none' : 'block';
   var so=document.getElementById('co-addr-saved-opt'), oo=document.getElementById('co-addr-other-opt');
   var sd=document.getElementById('co-addr-saved-dot'), od=document.getElementById('co-addr-other-dot');
-  var dot='<span style="width:9px;height:9px;border-radius:50%;background:#C8102E;display:block;"></span>';
-  if(so){ so.style.borderColor = saved?'#C8102E':'#e8e8ed'; so.style.background = saved?'#FDF4F5':'#fff'; }
-  if(oo){ oo.style.borderColor = saved?'#e8e8ed':'#C8102E'; oo.style.background = saved?'#fff':'#FDF4F5'; }
-  if(sd){ sd.style.borderColor = saved?'#C8102E':'#c5c5cc'; sd.innerHTML = saved?dot:''; }
-  if(od){ od.style.borderColor = saved?'#c5c5cc':'#C8102E'; od.innerHTML = saved?'':dot; }
+  var dot='<span style="width:9px;height:9px;border-radius:50%;background:#15418f;display:block;"></span>';
+  if(so){ so.style.borderColor = saved?'#15418f':'#e8e8ed'; so.style.background = saved?'#FDF4F5':'#fff'; }
+  if(oo){ oo.style.borderColor = saved?'#e8e8ed':'#15418f'; oo.style.background = saved?'#fff':'#FDF4F5'; }
+  if(sd){ sd.style.borderColor = saved?'#15418f':'#c5c5cc'; sd.innerHTML = saved?dot:''; }
+  if(od){ od.style.borderColor = saved?'#c5c5cc':'#15418f'; od.innerHTML = saved?'':dot; }
   // Cambió la dirección base: limpiar tarifas previas y la selección
   window.CO_SHIP_STATUS='idle'; window.CO_RATES=[]; window.CO_QUOTATION_ID=null;
   if (window.CHECKOUT) window.CHECKOUT.envio = null;
@@ -2519,7 +2522,7 @@ function coRenderShipping(){
     return;
   }
   if (st === 'error'){
-    box.innerHTML = '<div style="padding:10px 4px;color:#C8102E;font-size:13px;">No pudimos cotizar el env\u00edo. Revisa tu direcci\u00f3n e int\u00e9ntalo de nuevo.</div>' + coShipBtn('Reintentar');
+    box.innerHTML = '<div style="padding:10px 4px;color:#15418f;font-size:13px;">No pudimos cotizar el env\u00edo. Revisa tu direcci\u00f3n e int\u00e9ntalo de nuevo.</div>' + coShipBtn('Reintentar');
     return;
   }
   if (st === 'empty' || !window.CO_RATES.length){
@@ -2726,7 +2729,7 @@ window.coNext = function(from){
       // Constancia obligatoria para usuarios con sesión
       if (window.currentClientUser && !window._coConstanciaReady) {
         coShowErr('co-err-constancia', true);
-        var cbox = document.getElementById('co-constancia-box'); if (cbox) cbox.style.borderColor = '#C8102E';
+        var cbox = document.getElementById('co-constancia-box'); if (cbox) cbox.style.borderColor = '#15418f';
         return;
       }
       window.CHECKOUT.factura = { rfc:rfc, razon:razon, regimen:regimen, uso:uso, cp:cpf };
@@ -3348,18 +3351,19 @@ window.descargarComprobantePDF = function(){
   var aprobado = (P.estado === 'aprobado' || P.estado === 'pagado' || P.estado === 'confirmado');
 
   // ── Encabezado ──
-  doc.setFillColor(navy[0],navy[1],navy[2]);
-  doc.rect(0,0,W,104,'F');
-  doc.setTextColor(255,255,255);
-  doc.setFont('helvetica','bold'); doc.setFontSize(25);
-  doc.text('Adaptekk.', ML, 50);
-  doc.setFont('helvetica','normal'); doc.setFontSize(9.5);
-  doc.setTextColor(198,210,232);
+  doc.setFillColor(255,255,255);
+  doc.rect(0,0,W,108,'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(25); doc.setTextColor(navy[0],navy[1],navy[2]);
+  doc.text('Adaptekk', ML, 50);
+  var _aw = doc.getTextWidth('Adaptekk');
+  doc.setTextColor(red[0],red[1],red[2]); doc.text('.', ML+_aw+1.5, 50);
+  doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(138,147,163);
   doc.text('Conectores y adaptadores hidr\u00e1ulicos', ML, 70);
-  doc.setFontSize(8.5); doc.setTextColor(170,186,214);
-  doc.text('COMPROBANTE DE PEDIDO', MR, 44, {align:'right'});
-  doc.setFontSize(9); doc.setTextColor(230,236,246);
-  doc.text((P.folio||''), MR, 62, {align:'right'});
+  doc.setFontSize(8); doc.setTextColor(160,168,180);
+  doc.text('COMPROBANTE DE PEDIDO', MR, 42, {align:'right'});
+  doc.setFontSize(11); doc.setFont('helvetica','bold'); doc.setTextColor(navy[0],navy[1],navy[2]);
+  doc.text((P.folio||''), MR, 60, {align:'right'});
+  doc.setDrawColor(line[0],line[1],line[2]); doc.setLineWidth(1); doc.line(ML, 92, MR, 92);
 
   // ── Estado (pill) ──
   var y = 140;
@@ -3393,9 +3397,9 @@ window.descargarComprobantePDF = function(){
 
   // ── Tabla de productos ──
   y += 110;
-  doc.setFillColor(navy[0],navy[1],navy[2]);
+  doc.setFillColor(245,246,249);
   doc.roundedRect(ML, y, MR-ML, 28, 5, 5, 'F');
-  doc.setTextColor(255,255,255); doc.setFontSize(9); doc.setFont('helvetica','bold');
+  doc.setTextColor(navy[0],navy[1],navy[2]); doc.setFontSize(9); doc.setFont('helvetica','bold');
   doc.text('PRODUCTO', ML+14, y+18);
   doc.text('CANT.', MR-150, y+18, {align:'center'});
   doc.text('C\u00d3DIGO', MR-14, y+18, {align:'right'});
