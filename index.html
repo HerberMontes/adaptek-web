@@ -4430,9 +4430,55 @@ function almRenderSurtir(){
       +'<div style="display:flex;align-items:center;gap:10px;"><span style="font-size:13px;font-weight:700;color:'+(ok?'#1F9D55':'#5b6577')+';">'+l.done+' / '+l.need+'</span>'
       +(ok?'<span style="color:#1F9D55;font-size:16px;">&#10003;</span>':'<button onclick="almMark('+i+')" style="background:none;border:1px solid #dde6f0;color:#5b6577;border-radius:8px;padding:5px 9px;font-size:11px;cursor:pointer;">marcar</button>')
       +'</div></div>';
-  }).join('');
+  }).join('') + (typeof almBolsasHtml==='function'?almBolsasHtml(lines):'');
 }
 function almMark(i){ var l=window.ALM.lines[i]; if(l&&l.done<l.need){ l.done++; almRenderSurtir(); } }
+
+// ── Bolsas con cierre (5 tamaños) y distribución del pedido por tamaño del conector ──
+window.BOLSAS = [
+  { id:1, nombre:'Chica',        dim:'8 \u00d7 12 cm',  maxDash:6,   cap:15 },
+  { id:2, nombre:'Mediana',      dim:'12 \u00d7 18 cm', maxDash:10,  cap:10 },
+  { id:3, nombre:'Grande',       dim:'18 \u00d7 25 cm', maxDash:16,  cap:6  },
+  { id:4, nombre:'Extra grande', dim:'25 \u00d7 35 cm', maxDash:24,  cap:3  },
+  { id:5, nombre:'Jumbo',        dim:'35 \u00d7 45 cm', maxDash:999, cap:2  }
+];
+function _dashDeCodigo(code){
+  var nums=String(code||'').match(/\d{1,2}/g);
+  if(!nums) return null;
+  var vals=nums.map(function(n){return parseInt(n,10);}).filter(function(n){return n>0 && n<=64;});
+  return vals.length?Math.max.apply(null,vals):null;
+}
+function _bolsaParaDash(dash){
+  if(dash==null) return window.BOLSAS[1];
+  for(var i=0;i<window.BOLSAS.length;i++){ if(dash<=window.BOLSAS[i].maxDash) return window.BOLSAS[i]; }
+  return window.BOLSAS[window.BOLSAS.length-1];
+}
+function almBolsasHtml(lines){
+  try{
+    var grupos={};
+    (lines||[]).forEach(function(l){
+      var b=_bolsaParaDash(_dashDeCodigo(l.code));
+      var g=grupos[b.id]||(grupos[b.id]={bolsa:b, qty:0, codes:{}});
+      g.qty+=(l.need||1); g.codes[l.code]=(g.codes[l.code]||0)+(l.need||1);
+    });
+    var dist=Object.keys(grupos).map(function(k){return grupos[k];}).sort(function(a,b){return a.bolsa.id-b.bolsa.id;});
+    if(!dist.length) return '';
+    var totalBolsas=dist.reduce(function(a,g){return a+Math.ceil(g.qty/g.bolsa.cap);},0);
+    return '<div style="background:#fff;border:1px solid #e7ecf3;border-radius:12px;padding:13px 15px;margin-top:12px;">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;"><span style="font-size:12px;font-weight:800;color:#0a1f44;">Distribuci\u00f3n en bolsas</span><span style="font-size:11px;color:#15418f;font-weight:700;">'+totalBolsas+' bolsa'+(totalBolsas>1?'s':'')+' en total</span></div>'
+      +dist.map(function(g){
+          var n=Math.ceil(g.qty/g.bolsa.cap);
+          var codes=Object.keys(g.codes).map(function(c){return g.codes[c]+'\u00d7 '+c;}).join(', ');
+          return '<div style="display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #f2f5f9;">'
+            +'<div><div style="font-size:12.5px;font-weight:700;color:#0a1f44;">Bolsa '+g.bolsa.nombre+' <span style="color:#8895a7;font-weight:500;">('+g.bolsa.dim+')</span></div>'
+            +'<div style="font-size:11px;color:#8895a7;margin-top:2px;">'+codes+'</div></div>'
+            +'<div style="text-align:right;white-space:nowrap;"><div style="font-size:13px;font-weight:800;color:#15418f;">'+n+' bolsa'+(n>1?'s':'')+'</div><div style="font-size:10.5px;color:#8895a7;">'+g.qty+' pza</div></div>'
+          +'</div>';
+        }).join('')
+      +'<div style="font-size:10.5px;color:#9aa7b8;margin-top:8px;">Sugerido por la medida del conector (dash size del c\u00f3digo). Ajusta al empacar si hace falta.</div>'
+      +'</div>';
+  }catch(e){ return ''; }
+}
 function almScanMsg(ok,msg){
   var el=document.getElementById('alm-scan-msg'); if(!el) return;
   el.style.display='block'; el.style.background=ok?'#E8F6EE':'#FCE9EC'; el.style.color=ok?'#1F7D34':'#C8102E';
