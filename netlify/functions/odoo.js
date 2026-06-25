@@ -2308,7 +2308,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-24-guia-demo-v37', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-24-guia-full-v38', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
     }
 
     // ── DIAGNÓSTICO DE CATÁLOGO: analiza los códigos AT en Odoo para diseñar el armado por piezas ──
@@ -3070,14 +3070,49 @@ exports.handler = async function(event, context) {
       //    consignment_note = clave SAT producto/servicio ; package_type = código de empaque SAT.
       //    Se toman de variables de entorno para no fijar un código fiscal incorrecto.
       let ship=null;
-      const shipBody = { quotation_id: quoteId, rate_id: chosen.id, carrier_name: chosen.carrier };
       let _cnClass = process.env.SKYDROPX_CN_CLASS_CODE || '';
       if (!_cnClass) { _cnClass = await _satCodeDeOrden(uid, saleId); }
       const _pkgType = process.env.SKYDROPX_PACKAGING_CODE || '4G';
+      // La API PRO exige el objeto completo (no acepta solo quotation_id + rate_id):
+      // direcciones completas de origen y destino, paquete, rate_id y Carta Porte.
+      const addrFrom = {
+        country_code: 'MX',
+        postal_code: String(process.env.SKYDROPX_ORIGIN_CP||'').trim(),
+        area_level1: process.env.SKYDROPX_ORIGIN_STATE||'',
+        area_level2: process.env.SKYDROPX_ORIGIN_CITY||'',
+        area_level3: process.env.SKYDROPX_ORIGIN_COLONIA||'Industrial Nacional II',
+        street1: process.env.SKYDROPX_ORIGIN_STREET||'Canada 115',
+        name: process.env.SKYDROPX_ORIGIN_NAME||'Almacen Adaptekk',
+        company: process.env.SKYDROPX_ORIGIN_COMPANY||'Adaptekk',
+        phone: String(process.env.SKYDROPX_ORIGIN_PHONE||'8181170177').trim(),
+        email: process.env.SKYDROPX_ORIGIN_EMAIL||'validaciones@adaptekk.com',
+        reference: ''
+      };
+      const addrTo = {
+        country_code: 'MX',
+        postal_code: String(dir.cp||dir.postal_code||dir.zip||'').trim(),
+        area_level1: dir.estado||dir.area_level1||'',
+        area_level2: dir.ciudad||dir.area_level2||'',
+        area_level3: dir.colonia||dir.area_level3||dir.neighborhood||'',
+        street1: dir.calle||dir.street||dir.linea1||dir.direccion||dir.address1||'',
+        name: con.nombre||con.contacto||con.name||'Cliente',
+        company: '',
+        phone: String(con.telefono||con.tel||con.phone||'').trim(),
+        email: con.email||con.correo||'',
+        reference: dir.referencia||dir.reference||''
+      };
+      const shipBody = {
+        address_from: addrFrom,
+        address_to: addrTo,
+        parcels: [{ weight: parcel.weight, distance_unit:'CM', mass_unit:'KG', height: parcel.height, width: parcel.width, length: parcel.length }],
+        quotation_id: quoteId,
+        rate_id: chosen.id,
+        carrier_name: chosen.carrier
+      };
       if (_cnClass) shipBody.consignment_note = _cnClass;
       if (_pkgType) shipBody.package_type = _pkgType;
       try {
-        const sr = await fetchTimeout(t.base+'/api/v1/shipments', { method:'POST', headers:{'Authorization':'Bearer '+t.token,'Content-Type':'application/json'}, body: JSON.stringify(shipBody) }, 7000);
+        const sr = await fetchTimeout(t.base+'/api/v1/shipments', { method:'POST', headers:{'Authorization':'Bearer '+t.token,'Content-Type':'application/json'}, body: JSON.stringify(shipBody) }, 9000);
         ship = await sr.json();
       } catch(e){ return {statusCode:200, headers, body: JSON.stringify({ok:false, step:'shipment', error:String(e&&e.message||e), rate:chosen})}; }
       // parsear rastreo + etiqueta de varias formas posibles del JSON:API
