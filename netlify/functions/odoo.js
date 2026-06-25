@@ -586,7 +586,9 @@ async function crearOrdenOdoo(uid, orden, estado, shipOverride) {
       const prod = await findOrCreateProduct(uid, code, it.name || code);
       if (!prod || !prod.id) continue;
       // Precio: el real de Odoo si lo tiene; si es pieza nueva (price 0) usa el del cliente
-      const unit = (prod.price && prod.price > 0) ? prod.price : (parseFloat(it.price) || 0);
+      const unit0 = (prod.price && prod.price > 0) ? prod.price : (parseFloat(it.price) || 0);
+      // 5% de descuento de socio para clientes registrados (coincide con lo mostrado en el sitio)
+      const unit = (orden && orden.registered) ? Math.round(unit0 * 0.95 * 100) / 100 : unit0;
       total += unit * qty;
       // order_line en formato Odoo: (0,0,{...})
       const lineStruct = `<value><struct>
@@ -2308,7 +2310,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-24-ubicacion-v43', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-25-precio-fijo-v44', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
     }
 
     // ── DIAGNÓSTICO DE CATÁLOGO: analiza los códigos AT en Odoo para diseñar el armado por piezas ──
