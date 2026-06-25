@@ -1410,7 +1410,7 @@
       </button>
 
       <div id="cart-range-note" style="display:none;background:#fff;border-radius:12px;padding:13px;font-size:12px;color:#86868b;margin-top:14px;line-height:1.5;">
-        Estás viendo un <b>rango de precios estimado</b>. Regístrate para ver el precio exacto, disponibilidad de stock y tiempos de entrega.
+        Regístrate para obtener <b>5% de descuento de socio</b>, disponibilidad de stock y tiempos de entrega.
       </div>
 
       <div class="trust-strip" style="margin-top:16px;">
@@ -1440,8 +1440,9 @@ window.EMPRESA = {
   banco: { banco:'BBVA', titular:'Adaptekk S.A. de C.V.', cuenta:'', clabe:'' }
 };
 
-// Invitados ven RANGO de precios (precio base a base + factor). Registrados ven precio exacto.
-window.PRECIO_RANGO = 0.15;
+// Invitados y registrados ven PRECIO FIJO. Registrados llevan 5% de descuento de socio.
+window.PRECIO_RANGO = 0.15; // (ya no se usa para mostrar; se conserva por compatibilidad)
+window.DESC_REGISTRADO = 0.05; // 5% para clientes registrados
 
 // Tiempos de producción por estatus (días hábiles)
 window.LEADTIMES = {
@@ -1470,22 +1471,23 @@ window.precioDisplay = function(price, qty){
   qty = qty || 1;
   if (!price || price <= 0) return null;
   if (window.clientLevel() === 'registered') {
-    return { text: window.fmtMXN(price) + ' MXN',
-             sub: 'c/u | Total: ' + window.fmtMXN(price*qty) };
+    var pr = price * (1 - window.DESC_REGISTRADO);
+    return { text: window.fmtMXN(pr) + ' MXN',
+             sub: 'c/u con \u22125% socio | Total: ' + window.fmtMXN(pr*qty) };
   }
-  var hi = price * (1 + window.PRECIO_RANGO);
-  return { text: window.fmtMXN(price) + ' \u2013 ' + window.fmtMXN(hi),
-           sub: 'rango estimado c/u' };
+  return { text: window.fmtMXN(price) + ' MXN',
+           sub: 'c/u | Total: ' + window.fmtMXN(price*qty) };
 };
 
-// Subtotal del carrito según nivel: {exact} o {min,max}
+// Subtotal del carrito según nivel. Devuelve {exact} (precio fijo). Registrados con 5%.
 window.cartTotals = function(){
   var min=0, sinPrecio=0;
   (window.CART||[]).forEach(function(p){
     if (p.price > 0) min += p.price * (p.qty||1); else sinPrecio++;
   });
-  if (window.clientLevel() === 'registered') return { exact:min, sinPrecio:sinPrecio };
-  return { min:min, max:min*(1+window.PRECIO_RANGO), sinPrecio:sinPrecio };
+  var exact = (window.clientLevel() === 'registered') ? min*(1-window.DESC_REGISTRADO) : min;
+  exact = Math.round(exact*100)/100;
+  return { exact: exact, min: exact, max: exact, sinPrecio: sinPrecio };
 };
 
 // Los precios capturados YA incluyen IVA (precio final). Este helper saca el desglose:
@@ -1742,9 +1744,7 @@ window.descargarCotizacion = function() {
   }).join('');
 
   var t = window.cartTotals();
-  var total = registered
-    ? window.fmtMXN(t.exact) + ' MXN'
-    : (window.fmtMXN(t.min) + ' \u2013 ' + window.fmtMXN(t.max) + ' MXN (rango estimado)');
+  var total = window.fmtMXN(t.exact) + ' MXN';
 
   var html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">'
     + '<meta name="viewport" content="width=device-width,initial-scale=1">'
@@ -1783,7 +1783,7 @@ window.descargarCotizacion = function() {
       + '<tfoot><tr><td colspan="5" style="padding:14px 8px;text-align:right;font-weight:700;font-size:14px;">TOTAL ESTIMADO:</td>'
       + '<td class="total-row">' + total + '</td></tr></tfoot></table>'
       + '<div class="note">\u26a0 Esta cotizaci\u00f3n es informativa y no constituye factura. '
-      + (registered ? 'Los precios reflejan tu lista vigente como cliente registrado.' : 'Los precios se muestran como rango estimado; reg\u00edstrate o contacta a un ejecutivo para precio cerrado, disponibilidad y tiempos de entrega.')
+      + (registered ? 'Los precios reflejan tu lista vigente como cliente registrado.' : 'Reg\u00edstrate para obtener 5% de descuento de socio, disponibilidad de stock y tiempos de entrega.')
       + ' Para confirmar tu pedido escribe a ' + esc(E.email) + ' o por WhatsApp ' + esc(E.tel) + '.</div>'
     + '</div>'
     + '<div class="btnbar">'
@@ -1857,11 +1857,11 @@ window.cotizacionPDFBase64 = function(folio){
       doc.setDrawColor(line[0],line[1],line[2]); doc.line(ML,y+6,MR,y+6);
     });
     var t = window.cartTotals();
-    var total = registered ? (fmt(t.exact)+' MXN') : (fmt(t.min)+' \u2013 '+fmt(t.max)+' MXN (rango)');
+    var total = fmt(t.exact)+' MXN';
     y+=30; doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(navy[0],navy[1],navy[2]);
     doc.text('TOTAL ESTIMADO:', MR-210, y, {align:'right'}); doc.text(total, MR-8, y, {align:'right'});
     y+=26; doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(muted[0],muted[1],muted[2]);
-    var nota = 'Cotizaci\u00f3n informativa, no constituye factura. '+(registered?'Precios seg\u00fan tu lista vigente como cliente registrado.':'Precios como rango estimado; reg\u00edstrate o contacta a un ejecutivo para precio cerrado, disponibilidad y tiempos.');
+    var nota = 'Cotizaci\u00f3n informativa, no constituye factura. '+(registered?'Precios seg\u00fan tu lista vigente como cliente registrado.':'Reg\u00edstrate para 5% de descuento de socio, disponibilidad y tiempos de entrega.');
     doc.text(doc.splitTextToSize(nota, MR-ML), ML, y);
     return (doc.output('datauristring').split(',')[1]) || null;
   } catch(e){ return null; }
@@ -1878,7 +1878,7 @@ window.enviarCotizacionCorreo = function(){
   var nombre = (registered && window.currentClientUser) ? String(window.currentClientUser.name||'').split(' ')[0] : '';
   var folio = 'COT-' + Date.now().toString().slice(-6);
   var t = window.cartTotals();
-  var total = registered ? (window.fmtMXN(t.exact)+' MXN') : (window.fmtMXN(t.min)+' \u2013 '+window.fmtMXN(t.max)+' MXN');
+  var total = window.fmtMXN(t.exact)+' MXN';
   var E = window.EMPRESA; var wa = (E && E.whatsapp) ? ('https://wa.me/'+E.whatsapp) : '';
   if (typeof showToast==='function') showToast('Enviando cotizaci\u00f3n\u2026');
   var pdf = window.cotizacionPDFBase64(folio);
@@ -2884,7 +2884,8 @@ window.coConfirmar = function(){
     folio: 'PED-' + Date.now().toString(36).toUpperCase(),
     fecha: new Date().toISOString(),
     checkout: window.CHECKOUT,
-    items: window.CART
+    items: window.CART,
+    registered: !!(window.clientLevel && window.clientLevel()==='registered')
   };
   try { sessionStorage.setItem('adaptekk_orden_borrador', JSON.stringify(orden)); } catch(e){}
   // FASE 3 (Pago) conecta aquí →
@@ -8731,9 +8732,7 @@ function renderDrawer() {
 
   // Total
   var t = window.cartTotals();
-  var total = registered
-    ? window.fmtMXN(t.exact) + ' MXN'
-    : window.fmtMXN(t.min) + ' – ' + window.fmtMXN(t.max);
+  var total = window.fmtMXN(t.exact) + ' MXN';
   document.getElementById('drawer-total').textContent = total;
 }
 
