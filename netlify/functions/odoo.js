@@ -301,6 +301,37 @@ function xmlExtractField(xml, field) {
   return end >= 0 ? content.substring(0, end).trim() : content.trim();
 }
 
+// ── Lee la Clave Producto/Servicio del SAT (UNSPSC) del producto del pedido,
+//    para usarla como consignment_note (Carta Porte) de Skydropx. Best-effort. ──
+async function _satCodeDeOrden(uid, saleId) {
+  try {
+    const olDom = `<value><array><data>${xmlStr('order_id')}<value><string>=</string></value><value><int>${saleId}</int></value></data></array></value>`;
+    const ol = await odooSearchRead(uid, 'sale.order.line', olDom, ['product_id'], 1);
+    const pm = ol.match(/<name>product_id<\/name>\s*<value>\s*<array>[\s\S]*?<int>(\d+)<\/int>/);
+    const productId = pm ? parseInt(pm[1]) : 0;
+    if (!productId) return '';
+    const pr = await odooSearchRead(uid, 'product.product',
+      `<value><array><data>${xmlStr('id')}<value><string>=</string></value><value><int>${productId}</int></value></data></array></value>`,
+      ['product_tmpl_id','unspsc_code_id'], 1);
+    let disp = '';
+    let um = pr.match(/<name>unspsc_code_id<\/name>\s*<value>\s*<array>[\s\S]*?<string>([^<]*)<\/string>/);
+    if (um) disp = um[1];
+    if (!disp) {
+      const tm = pr.match(/<name>product_tmpl_id<\/name>\s*<value>\s*<array>[\s\S]*?<int>(\d+)<\/int>/);
+      const tmplId = tm ? parseInt(tm[1]) : 0;
+      if (tmplId) {
+        const tr = await odooSearchRead(uid, 'product.template',
+          `<value><array><data>${xmlStr('id')}<value><string>=</string></value><value><int>${tmplId}</int></value></data></array></value>`,
+          ['unspsc_code_id'], 1);
+        const tum = tr.match(/<name>unspsc_code_id<\/name>\s*<value>\s*<array>[\s\S]*?<string>([^<]*)<\/string>/);
+        if (tum) disp = tum[1];
+      }
+    }
+    const cm = String(disp).match(/(\d{6,8})/);
+    return cm ? cm[1] : '';
+  } catch(e) { return ''; }
+}
+
 // ── SKYDROPX (PRO): obtiene un bearer token vía OAuth client_credentials ──
 // Requiere variables de entorno: SKYDROPX_CLIENT_ID, SKYDROPX_CLIENT_SECRET.
 // SKYDROPX_BASE opcional (default producción; usa https://sb-pro.skydropx.com para sandbox).
@@ -2277,7 +2308,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-24-rediseno2-correos-v34', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-24-cartaporte-sat-bolsas-v36', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
     }
 
     // ── DIAGNÓSTICO DE CATÁLOGO: analiza los códigos AT en Odoo para diseñar el armado por piezas ──
@@ -3007,10 +3038,18 @@ exports.handler = async function(event, context) {
       const want = String(envioData.car||'').toLowerCase();
       const chosen = (want && norm.find(r=> (r.carrier||'').toLowerCase().indexOf(want)>=0)) || norm[0];
 
-      // 6) Crear el envío (guía). Si Skydropx pide Carta Porte u otro dato, vendrá en 'raw' para afinar.
+      // 6) Crear el envío (guía). Para paqueterías terrestres (Sendex) el SAT exige Carta Porte:
+      //    consignment_note = clave SAT producto/servicio ; package_type = código de empaque SAT.
+      //    Se toman de variables de entorno para no fijar un código fiscal incorrecto.
       let ship=null;
+      const shipBody = { quotation_id: quoteId, rate_id: chosen.id, carrier_name: chosen.carrier };
+      let _cnClass = process.env.SKYDROPX_CN_CLASS_CODE || '';
+      if (!_cnClass) { _cnClass = await _satCodeDeOrden(uid, saleId); }
+      const _pkgType = process.env.SKYDROPX_PACKAGING_CODE || '4G';
+      if (_cnClass) shipBody.consignment_note = _cnClass;
+      if (_pkgType) shipBody.package_type = _pkgType;
       try {
-        const sr = await fetchTimeout(t.base+'/api/v1/shipments', { method:'POST', headers:{'Authorization':'Bearer '+t.token,'Content-Type':'application/json'}, body: JSON.stringify({ quotation_id: quoteId, rate_id: chosen.id, carrier_name: chosen.carrier }) }, 7000);
+        const sr = await fetchTimeout(t.base+'/api/v1/shipments', { method:'POST', headers:{'Authorization':'Bearer '+t.token,'Content-Type':'application/json'}, body: JSON.stringify(shipBody) }, 7000);
         ship = await sr.json();
       } catch(e){ return {statusCode:200, headers, body: JSON.stringify({ok:false, step:'shipment', error:String(e&&e.message||e), rate:chosen})}; }
       // parsear rastreo + etiqueta de varias formas posibles del JSON:API
