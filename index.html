@@ -4311,8 +4311,15 @@ function almRenderDetSurtido(){
       +'<div style="font-size:12.5px;font-weight:800;color:#0f6b39;margin-bottom:5px;">Guía generada</div>'
       +'<div style="font-size:12.5px;color:#0a1f44;">Paquetería: <b>'+(g.carrier||d.carrier||'—')+'</b></div>'
       +'<div style="font-size:12.5px;color:#0a1f44;margin-top:2px;">Rastreo: <b>'+g.tracking+'</b></div>'
+      +(g.tracking_url?('<div style="margin-top:6px;"><a href="'+g.tracking_url+'" target="_blank" rel="noopener" style="color:#2a6fdb;font-size:12px;font-weight:700;">Rastrear con la paquetería</a></div>'):'')
       +(g.label_url?('<a href="'+g.label_url+'" target="_blank" rel="noopener" style="display:inline-block;margin-top:9px;background:#001F5B;color:#fff;text-decoration:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;">Abrir etiqueta (PDF)</a>'):'')
       +'<div style="margin-top:10px;"><button onclick="almGenerarGuiaSurtido('+d.id+')" style="background:#fff;border:1px solid #C8102E;color:#C8102E;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Regenerar guía</button></div>'
+      +'</div>';
+  } else if(g&&g.shipment_id){
+    guiaBlock='<div style="background:#fff8e6;border:1px solid #ffe1a8;border-radius:12px;padding:13px 15px;">'
+      +'<div style="font-size:12.5px;font-weight:800;color:#b07d12;margin-bottom:5px;">Guía en proceso</div>'
+      +'<div style="font-size:12px;color:#7a6420;line-height:1.45;margin-bottom:10px;">La paquetería ('+(g.carrier||'—')+') está generando el número de rastreo y la etiqueta. Dale "Actualizar" en un momento.</div>'
+      +'<button id="alm-det-guia-btn" onclick="almActualizarGuiaSurtido('+d.id+')" style="width:100%;background:#15418f;color:#fff;border:none;padding:12px;border-radius:10px;font-size:13.5px;font-weight:700;cursor:pointer;">Actualizar guía (rastreo / etiqueta)</button>'
       +'</div>';
   } else {
     guiaBlock='<div style="background:#fff6f7;border:1px solid #f3d3d8;border-radius:12px;padding:13px 15px;">'
@@ -4334,6 +4341,24 @@ function almRenderDetSurtido(){
     +(dirStr?('<div style="font-size:12px;color:#8895a7;font-weight:600;margin-bottom:4px;">Dirección de entrega</div><div style="font-size:12.5px;color:#0a1f44;margin-bottom:14px;line-height:1.4;">'+dirStr+'</div>'):'')
     +'<div style="font-size:12px;color:#8895a7;font-weight:600;margin-bottom:4px;">Productos</div><div style="margin-bottom:16px;">'+prods+'</div>'
     +'<div id="alm-det-guia-result">'+guiaBlock+'</div>';
+}
+function almActualizarGuiaSurtido(id){
+  var btn=document.getElementById('alm-det-guia-btn');
+  if(btn){ btn.disabled=true; btn.textContent='Consultando paquetería…'; btn.style.opacity='.6'; btn.style.cursor='wait'; }
+  fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'actualizar_guia',picking_id:id,reenviar:true})})
+  .then(function(r){return r.json();}).then(function(d){
+    if(d&&d.ok&&d.guia){
+      if(window.ALM.detSurt) window.ALM.detSurt.guia=d.guia;
+      almRenderDetSurtido();
+      if(typeof showToast==='function') showToast(d.listo?('Guía lista'+(d.emailed?' · correo reenviado':'')):'Aún en proceso, intenta de nuevo en un momento');
+    } else {
+      if(typeof showToast==='function') showToast((d&&d.error)?d.error:'No se pudo actualizar');
+      if(btn){ btn.disabled=false; btn.textContent='Actualizar guía (rastreo / etiqueta)'; btn.style.opacity='1'; btn.style.cursor='pointer'; }
+    }
+  }).catch(function(){
+    if(typeof showToast==='function') showToast('Error de conexión');
+    if(btn){ btn.disabled=false; btn.textContent='Actualizar guía (rastreo / etiqueta)'; btn.style.opacity='1'; btn.style.cursor='pointer'; }
+  });
 }
 function almGenerarGuiaSurtido(id){
   var res=document.getElementById('alm-det-guia-result'); var btn=document.getElementById('alm-det-guia-btn');
@@ -4426,7 +4451,7 @@ function almRenderSurtir(){
     var pesoTxt=(l.peso>0)?('<div style="font-size:11px;color:#7a8699;margin-top:2px;">'+String(l.peso).replace(/\.?0+$/,'')+' kg c/u · '+String(l.pesoTot||0).replace(/\.?0+$/,'')+' kg total</div>'):'';
     return '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 13px;border:1.5px solid '+(ok?'#bfe6cb':'#e7e9ef')+';background:'+(ok?'#F2FBF5':'#fff')+';border-radius:10px;margin-bottom:8px;">'
       +'<div><div style="font-size:13px;font-weight:700;color:#0a1f44;letter-spacing:.3px;">'+(l.code||'—')+'</div>'
-      +'<div style="font-size:11.5px;color:#8895a7;">'+(l.ubic||'')+'</div>'+pesoTxt+'</div>'
+      +(l.ubic?('<div style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;background:#eef3fb;border:1px solid #d7e3f4;border-radius:7px;padding:3px 8px;"><span style="font-size:11px;color:#15418f;font-weight:700;">Ubicación:</span><span style="font-size:11.5px;color:#0a1f44;font-weight:700;">'+l.ubic+'</span></div>'):'<div style="font-size:11px;color:#b06a00;margin-top:4px;">Sin ubicación asignada</div>')+pesoTxt+'</div>'
       +'<div style="display:flex;align-items:center;gap:10px;"><span style="font-size:13px;font-weight:700;color:'+(ok?'#1F9D55':'#5b6577')+';">'+l.done+' / '+l.need+'</span>'
       +(ok?'<span style="color:#1F9D55;font-size:16px;">&#10003;</span>':'<button onclick="almMark('+i+')" style="background:none;border:1px solid #dde6f0;color:#5b6577;border-radius:8px;padding:5px 9px;font-size:11px;cursor:pointer;">marcar</button>')
       +'</div></div>';
