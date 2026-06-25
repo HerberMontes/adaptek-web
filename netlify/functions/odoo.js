@@ -2308,7 +2308,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-24-cartaporte-sat-bolsas-v36', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-24-guia-demo-v37', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
     }
 
     // ── DIAGNÓSTICO DE CATÁLOGO: analiza los códigos AT en Odoo para diseñar el armado por piezas ──
@@ -2993,6 +2993,34 @@ exports.handler = async function(event, context) {
       if (!em) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'El pedido no trae datos de envío guardados (se creó antes de esta versión). Vuelve a hacer un pedido de prueba.'})};
       let envioData; try { envioData = JSON.parse(Buffer.from(em[1],'base64').toString('utf8')); } catch(e){ return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'Datos de envío ilegibles'})}; }
       const dir = envioData.dir||{}, con = envioData.con||{};
+
+      // 3.5) MODO DEMO: cierra el ciclo sin Skydropx ni Carta Porte (guía de prueba + correo real 05).
+      if (/^(1|true|si|s\u00ed)$/i.test(String(process.env.SKYDROPX_GUIA_DEMO||'').trim())) {
+        const guia = {
+          tracking: 'DEMO-' + Date.now().toString().slice(-9),
+          carrier: (envioData.car || 'Demo Express'),
+          service: 'Demo', label_url: '', shipment_id: 'demo', status: 'demo',
+          entrega: '2\u20134 d\u00edas h\u00e1biles', demo: true
+        };
+        try {
+          const b64 = Buffer.from(JSON.stringify(guia)).toString('base64');
+          const newNote = (note + '\n[GUIA]' + b64 + '[/GUIA]').trim();
+          await xmlrpc(uid, 'sale.order', 'write', `<value><array><data><value><int>${saleId}</int></value></data></array></value><value><struct><member><name>note</name>${xmlStr(newNote)}</member></struct></value>`);
+        } catch(e){}
+        let emailed=false; const clientEmail = con.email || con.correo || '';
+        if (clientEmail) {
+          try {
+            const nombreCli = String(con.nombre || con.contacto || con.name || '').split(' ')[0] || '';
+            const m5 = renderMail('05-envio-en-camino', {
+              nombre: nombreCli, folio: saleName || 'tu pedido', paqueteria: guia.carrier,
+              guia: guia.tracking, url_rastreo: SITE_URL, entrega: guia.entrega
+            });
+            const r = m5 ? await sendEmail(clientEmail, m5.subject, m5.html) : null;
+            emailed = !!(r && r.id);
+          } catch(e){}
+        }
+        return {statusCode:200, headers, body: JSON.stringify({ ok:true, demo:true, guia, emailed, cliente: clientEmail||null })};
+      }
 
       // 4) Token Skydropx. Por defecto SANDBOX (gratis, aislado del checkout).
       //    Si SKYDROPX_GUIA_PROD=1 -> PRODUCCIÓN (guía real, se cobra). Opt-in explícito.
