@@ -2308,7 +2308,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-24-guia-ref-v40', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-24-diag-dim-v42', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
     }
 
     // ── DIAGNÓSTICO DE CATÁLOGO: analiza los códigos AT en Odoo para diseñar el armado por piezas ──
@@ -2965,7 +2965,7 @@ exports.handler = async function(event, context) {
       const uid = await odooAuth();
       if (!uid) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'odoo auth'})};
       // 1) Resolver la orden de venta (desde picking_id o folio)
-      let saleId=null, saleName='', note='';
+      let saleId=null, saleName='', note='', folioCliente='';
       try {
         if (body.picking_id) {
           const pk = await odooSearchRead(uid, 'stock.picking', `<value><array><data>${xmlStr('id')}<value><string>=</string></value><value><int>${parseInt(body.picking_id)}</int></value></data></array></value>`, ['id','origin'], 1);
@@ -2975,10 +2975,12 @@ exports.handler = async function(event, context) {
         const dom = body.folio
           ? `<value><array><data>${xmlStr('client_order_ref')}<value><string>=</string></value>${xmlStr(String(body.folio))}</data></array></value>`
           : `<value><array><data>${xmlStr('name')}<value><string>=</string></value>${xmlStr(saleName)}</data></array></value>`;
-        const so = await odooSearchRead(uid, 'sale.order', dom, ['id','name','note'], 1);
+        const so = await odooSearchRead(uid, 'sale.order', dom, ['id','name','note','client_order_ref'], 1);
         const im = so.match(/<name>id<\/name>\s*<value><int>(\d+)<\/int>/);
         saleId = im ? parseInt(im[1]) : null;
         if (!saleName){ const nmn = so.match(/<name>name<\/name>\s*<value>\s*<string>([^<]*)<\/string>/); saleName = nmn ? nmn[1] : ''; }
+        const fcm = so.match(/<name>client_order_ref<\/name>\s*<value>\s*<string>([^<]*)<\/string>/);
+        folioCliente = fcm ? fcm[1].trim() : '';
         const nm = so.match(/<name>note<\/name>\s*<value>\s*<string>([\s\S]*?)<\/string>/);
         note = nm ? nm[1] : '';
       } catch(e){ return {statusCode:200, headers, body: JSON.stringify({ok:false, step:'find_order', error:String(e&&e.message||e)})}; }
@@ -3012,7 +3014,7 @@ exports.handler = async function(event, context) {
           try {
             const nombreCli = String(con.nombre || con.contacto || con.name || '').split(' ')[0] || '';
             const m5 = renderMail('05-envio-en-camino', {
-              nombre: nombreCli, folio: saleName || 'tu pedido', paqueteria: guia.carrier,
+              nombre: nombreCli, folio: folioCliente || saleName || 'tu pedido', paqueteria: guia.carrier,
               guia: guia.tracking, url_rastreo: SITE_URL, entrega: guia.entrega
             });
             const r = m5 ? await sendEmail(clientEmail, m5.subject, m5.html) : null;
@@ -3117,12 +3119,12 @@ exports.handler = async function(event, context) {
       } catch(e){ return {statusCode:200, headers, body: JSON.stringify({ok:false, step:'shipment', error:String(e&&e.message||e), rate:chosen})}; }
       // parsear rastreo + etiqueta de varias formas posibles del JSON:API
       function digLabel(obj){
-        let tracking=null, label=null, status=null, shipId=null;
-        const scan=(a)=>{ if(!a) return; tracking=tracking||a.tracking_number||a.trackingNumber||null; label=label||a.label_url||a.labelUrl||null; status=status||a.status||null; };
+        let tracking=null, label=null, status=null, shipId=null, trackingUrl=null;
+        const scan=(a)=>{ if(!a) return; tracking=tracking||a.tracking_number||a.trackingNumber||null; label=label||a.label_url||a.labelUrl||null; status=status||a.status||null; trackingUrl=trackingUrl||a.tracking_url_provider||a.tracking_url||a.trackingUrlProvider||a.tracking_url_carrier||null; };
         if (obj){ const d=obj.data||obj; shipId=(d&&d.id)||null; scan(d&&d.attributes); scan(d); const inc=obj.included; if(Array.isArray(inc)) inc.forEach(x=>scan(x&&x.attributes)); }
-        return { tracking, label, status, shipId };
+        return { tracking, label, status, shipId, trackingUrl };
       }
-      const got = digLabel(ship);
+      let got = digLabel(ship);
       if (!got.tracking && !got.label && !got.shipId) {
         // Extraer el motivo real que devuelve Skydropx (saldo, carta porte, dirección, etc.)
         function digErr(obj){
@@ -3141,7 +3143,25 @@ exports.handler = async function(event, context) {
           : ('Skydropx no devolvió guía. Respuesta: ' + (snippet || 'vacía'));
         return {statusCode:200, headers, body: JSON.stringify({ok:false, step:'shipment_parse', error: errMsg, reason: reason||null, raw: ship, rate: chosen})};
       }
-      const guia = { tracking: got.tracking||null, label_url: got.label||null, carrier: chosen.carrier, service: chosen.service, shipment_id: got.shipId||null, status: got.status||(got.label?'listo':'generando') };
+
+      // 6.5) La etiqueta/rastreo de Sendex se generan async; reconsultar el envío unas veces (corto, por el timeout).
+      if (got.shipId && (!got.tracking || !got.label || !got.trackingUrl)) {
+        for (let i=0; i<3; i++) {
+          await new Promise(r=>setTimeout(r,1500));
+          try {
+            const pr = await fetchTimeout(t.base+'/api/v1/shipments/'+got.shipId, { headers:{'Authorization':'Bearer '+t.token,'Content-Type':'application/json'} }, 4000);
+            const pj = await pr.json();
+            const g2 = digLabel(pj);
+            got.tracking = got.tracking || g2.tracking;
+            got.label = got.label || g2.label;
+            got.trackingUrl = got.trackingUrl || g2.trackingUrl;
+            if (g2.status) got.status = g2.status;
+            if (got.tracking && got.label) break;
+          } catch(e){}
+        }
+      }
+
+      const guia = { tracking: got.tracking||null, label_url: got.label||null, tracking_url: got.trackingUrl||null, carrier: chosen.carrier, service: chosen.service, shipment_id: got.shipId||null, status: got.status||(got.label?'listo':'generando') };
 
       // 7) Guardar [GUIA] en la nota (sin borrar lo demás)
       try {
@@ -3157,7 +3177,7 @@ exports.handler = async function(event, context) {
           const nombreCli = String(con.nombre || con.contacto || con.name || '').split(' ')[0] || '';
           const m5 = renderMail('05-envio-en-camino', {
             nombre: nombreCli,
-            folio: saleName || 'tu pedido',
+            folio: folioCliente || saleName || 'tu pedido',
             paqueteria: guia.carrier || '',
             guia: guia.tracking || '',
             url_rastreo: guia.tracking_url || guia.label_url || SITE_URL,
@@ -3169,6 +3189,111 @@ exports.handler = async function(event, context) {
       }
 
       return {statusCode:200, headers, body: JSON.stringify({ ok:true, guia, emailed, cliente: clientEmail||null })};
+    }
+
+    // ── ACTUALIZAR GUÍA: trae tracking + etiqueta cuando Sendex ya los generó (async) ──
+    if (action === 'actualizar_guia') {
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'odoo auth'})};
+      let saleId=null, saleName='', note='', folioCliente='';
+      try {
+        if (body.picking_id) {
+          const pk = await odooSearchRead(uid, 'stock.picking', `<value><array><data>${xmlStr('id')}<value><string>=</string></value><value><int>${parseInt(body.picking_id)}</int></value></data></array></value>`, ['id','origin'], 1);
+          const om = pk.match(/<name>origin<\/name>\s*<value>\s*<string>([^<]*)<\/string>/); saleName = om ? om[1].trim() : '';
+        }
+        const dom = body.folio
+          ? `<value><array><data>${xmlStr('client_order_ref')}<value><string>=</string></value>${xmlStr(String(body.folio))}</data></array></value>`
+          : `<value><array><data>${xmlStr('name')}<value><string>=</string></value>${xmlStr(saleName)}</data></array></value>`;
+        const so = await odooSearchRead(uid, 'sale.order', dom, ['id','name','note','client_order_ref'], 1);
+        const im = so.match(/<name>id<\/name>\s*<value><int>(\d+)<\/int>/); saleId = im ? parseInt(im[1]) : null;
+        if (!saleName){ const nmn = so.match(/<name>name<\/name>\s*<value>\s*<string>([^<]*)<\/string>/); saleName = nmn ? nmn[1] : ''; }
+        const fcm = so.match(/<name>client_order_ref<\/name>\s*<value>\s*<string>([^<]*)<\/string>/); folioCliente = fcm ? fcm[1].trim() : '';
+        const nm = so.match(/<name>note<\/name>\s*<value>\s*<string>([\s\S]*?)<\/string>/); note = nm ? nm[1] : '';
+      } catch(e){ return {statusCode:200, headers, body: JSON.stringify({ok:false, error:String(e&&e.message||e)})}; }
+      if (!saleId) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'No se encontró la orden'})};
+      const gm = note.match(/\[GUIA\]([A-Za-z0-9+/=]+)\[\/GUIA\]/);
+      if (!gm) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'Este pedido no tiene guía generada todavía'})};
+      let guia; try { guia = JSON.parse(Buffer.from(gm[1],'base64').toString('utf8')); } catch(_){ return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'Guía ilegible'})}; }
+      if (!guia.shipment_id) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'La guía no tiene envío para consultar', guia})};
+
+      // token (mismo modo que crear_guia)
+      const usarProd = /^(1|true|si|s\u00ed)$/i.test(String(process.env.SKYDROPX_GUIA_PROD||'').trim());
+      let t;
+      if (usarProd) { t = await skydropxToken(); }
+      else {
+        const sbBase = process.env.SKYDROPX_SANDBOX_BASE || 'https://sb-pro.skydropx.com';
+        t = await skydropxToken(sbBase, { id:(process.env.SKYDROPX_SANDBOX_CLIENT_ID||'').trim(), secret:(process.env.SKYDROPX_SANDBOX_CLIENT_SECRET||'').trim() });
+      }
+      if (t.error) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'Skydropx: '+t.error, guia})};
+
+      let tracking=guia.tracking, label=guia.label_url, trackingUrl=guia.tracking_url, status=guia.status;
+      try {
+        const pr = await fetchTimeout(t.base+'/api/v1/shipments/'+guia.shipment_id, { headers:{'Authorization':'Bearer '+t.token,'Content-Type':'application/json'} }, 6000);
+        const pj = await pr.json();
+        const scan=(a)=>{ if(!a) return; tracking=tracking||a.tracking_number||a.trackingNumber; label=label||a.label_url||a.labelUrl; if(a.status) status=a.status; trackingUrl=trackingUrl||a.tracking_url_provider||a.tracking_url||a.tracking_url_carrier; };
+        const d=pj.data||pj; scan(d&&d.attributes); scan(d); if(Array.isArray(pj.included)) pj.included.forEach(x=>scan(x&&x.attributes));
+      } catch(e){ return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'No se pudo consultar Skydropx: '+String(e&&e.message||e), guia})}; }
+
+      guia.tracking=tracking||guia.tracking; guia.label_url=label||guia.label_url; guia.tracking_url=trackingUrl||guia.tracking_url; if(status) guia.status=status;
+      try {
+        const newTag = '[GUIA]'+Buffer.from(JSON.stringify(guia)).toString('base64')+'[/GUIA]';
+        const newNote = note.replace(/\[GUIA\][A-Za-z0-9+/=]+\[\/GUIA\]/, newTag);
+        await xmlrpc(uid, 'sale.order', 'write', `<value><array><data><value><int>${saleId}</int></value></data></array></value><value><struct><member><name>note</name>${xmlStr(newNote)}</member></struct></value>`);
+      } catch(e){}
+
+      // Reenviar correo con el link si ya hay rastreo y se pidió
+      let emailed=false;
+      if (body.reenviar && (guia.tracking || guia.label_url)) {
+        const em = note.match(/\[ENVIO\]([A-Za-z0-9+/=]+)\[\/ENVIO\]/);
+        let con={}; if(em){ try{ con=(JSON.parse(Buffer.from(em[1],'base64').toString('utf8')).con)||{}; }catch(_){} }
+        const clientEmail = con.email||con.correo||'';
+        if (clientEmail) {
+          try {
+            const m5 = renderMail('05-envio-en-camino', { nombre:String(con.nombre||con.contacto||'').split(' ')[0]||'', folio: folioCliente||saleName||'tu pedido', paqueteria: guia.carrier||'', guia: guia.tracking||'', url_rastreo: guia.tracking_url||guia.label_url||SITE_URL, entrega: guia.entrega||'2\u20134 d\u00edas h\u00e1biles' });
+            const r = m5 ? await sendEmail(clientEmail, m5.subject, m5.html) : null; emailed = !!(r&&r.id);
+          } catch(_){}
+        }
+      }
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, guia, emailed, listo: !!(guia.tracking && guia.label_url) })};
+    }
+
+    // ── DIAGNÓSTICO: ver qué campos de dimensión/peso/volumen trae un producto ──
+    if (action === 'diag_dimensiones') {
+      if ((body.gerencia_pass||'') !== (process.env.GERENCIA_PASS||'')) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'gerencia_pass incorrecta'})};
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'odoo auth'})};
+      const code = String(body.code||'').trim();
+      if (!code) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'Falta code'})};
+      try {
+        // localizar product.product por default_code
+        const pdom = `<value><array><data>${xmlStr('default_code')}<value><string>=</string></value>${xmlStr(code)}</data></array></value>`;
+        const pr = await odooSearchRead(uid, 'product.product', pdom, ['id','product_tmpl_id'], 1);
+        const pim = pr.match(/<name>id<\/name>\s*<value><int>(\d+)<\/int>/);
+        const productId = pim ? parseInt(pim[1]) : 0;
+        if (!productId) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'No se encontró el producto '+code})};
+        // leer TODOS los campos del product.template y filtrar los de dimensión/peso/volumen
+        const tm = pr.match(/<name>product_tmpl_id<\/name>\s*<value>\s*<array>[\s\S]*?<int>(\d+)<\/int>/);
+        const tmplId = tm ? parseInt(tm[1]) : 0;
+        // fields_get para ver qué campos existen
+        const fg = await xmlrpc(uid, 'product.template', 'fields_get', `<value><array><data></data></array></value><value><array><data>${xmlStr('string')}${xmlStr('type')}</data></array></value>`);
+        const candidatos = [];
+        const re = /<name>([a-zA-Z0-9_]+)<\/name>/g; let mm;
+        while ((mm = re.exec(fg))) {
+          const f = mm[1];
+          if (/(volume|weight|length|width|height|largo|ancho|alto|peso|dimension|dimen|volumen|diameter|diam|size|medida)/i.test(f)) candidatos.push(f);
+        }
+        // leer los valores de esos campos en el template
+        let valores = {};
+        if (tmplId && candidatos.length) {
+          const flds = candidatos.map(f=>xmlStr(f)).join('');
+          const tr = await odooSearchRead(uid, 'product.template', `<value><array><data>${xmlStr('id')}<value><string>=</string></value><value><int>${tmplId}</int></value></data></array></value>`, candidatos, 1);
+          candidatos.forEach(f=>{
+            const fm = tr.match(new RegExp('<name>'+f+'<\\/name>\\s*<value>\\s*(?:<[a-z]+>)?([^<]*)'));
+            valores[f] = fm ? fm[1].trim() : '';
+          });
+        }
+        return {statusCode:200, headers, body: JSON.stringify({ ok:true, code, product_id:productId, tmpl_id:tmplId, campos_detectados:candidatos, valores })};
+      } catch(e){ return {statusCode:200, headers, body: JSON.stringify({ok:false, error:String(e&&e.message||e)})}; }
     }
 
     // ── LOOKUP POR CÓDIGO (para 'Pedir por código AT') ──
