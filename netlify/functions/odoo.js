@@ -2308,7 +2308,7 @@ exports.handler = async function(event, context) {
 
     // ── PING / VERSIÓN (para verificar qué versión está desplegada) ──
     if (action === 'ping' || action === 'version') {
-      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-24-diag-dim-v42', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
+      return {statusCode:200, headers, body: JSON.stringify({ ok:true, version:'2026-06-24-ubicacion-v43', features:['facturar_pedido','folio_only_search','publicar_y_timbrar','set_sat_code_all','diag_catalogo','armar_conector','catalogo_disponible','catalogo_listar','chat_ia'] })};
     }
 
     // ── DIAGNÓSTICO DE CATÁLOGO: analiza los códigos AT en Odoo para diseñar el armado por piezas ──
@@ -4355,6 +4355,30 @@ exports.handler = async function(event, context) {
           lineas.forEach(l=>{ l.peso_unit = wmap[String(l._pid)]||0; l.peso_total = Math.round(l.peso_unit*(l.cantidad||1)*1000)/1000; });
         }
       } catch(_){ /* si falla, las líneas van sin peso */ }
+      // Ubicación real (estante/bin) por producto, desde stock.quant (no la genérica del movimiento)
+      try {
+        const pids = [...new Set(lineas.map(l=>l._pid).filter(Boolean))];
+        if (pids.length) {
+          const idsXml = pids.map(id=>`<value><int>${id}</int></value>`).join('');
+          const qdom = `<value><array><data>`
+            + `<value><array><data>${xmlStr('product_id')}<value><string>in</string></value><value><array><data>${idsXml}</data></array></value></data></array></value>`
+            + `<value><array><data>${xmlStr('location_id.usage')}<value><string>=</string></value>${xmlStr('internal')}</data></array></value>`
+            + `</data></array></value>`;
+          const qt = await odooSearchRead(uid, 'stock.quant', qdom, ['product_id','location_id','quantity'], pids.length*4);
+          const lmap = {};
+          const qparts = qt.split('<struct>');
+          for (let i=1;i<qparts.length;i++){
+            const s = qparts[i].split('</struct>')[0];
+            const pidm = s.match(/<name>product_id<\/name>\s*<value>\s*<array>[\s\S]*?<int>(\d+)<\/int>/);
+            const pid = pidm ? pidm[1] : null; if(!pid) continue;
+            const locName = extractMany2oneName(s,'location_id');
+            const qm = s.match(/<name>quantity<\/name>\s*<value>\s*<double>([^<]*)<\/double>/);
+            const qty = qm ? parseFloat(qm[1]) : 0;
+            if (locName && (!lmap[pid] || qty > lmap[pid].qty)) lmap[pid] = { loc: locName, qty };
+          }
+          lineas.forEach(l=>{ const e = lmap[String(l._pid)]; if (e && e.loc) l.ubicacion = e.loc; });
+        }
+      } catch(_){ /* si falla, queda la ubicación del movimiento */ }
       lineas.forEach(l=>{ delete l._pid; if(l.peso_unit==null) l.peso_unit=0; if(l.peso_total==null) l.peso_total=0; });
       return {statusCode:200, headers, body: JSON.stringify({ ok:true, lineas })};
     }
