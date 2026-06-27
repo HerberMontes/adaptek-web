@@ -371,32 +371,66 @@
   }
   function noResult(msg){ var d=el('div'); d.style.cssText='background:#FFF7E6;border:1px solid #f0d9a0;border-radius:14px;padding:18px 20px;color:#8a6100;font-size:15px;font-weight:500;'; d.textContent=msg; return d; }
 
+  // control de cantidad - [n] +
+  function qtyStepper(initial, etiqueta, onChange){
+    var qty=initial||1;
+    var wrap=el('div'); wrap.style.cssText='display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap;';
+    var lbl=el('div',null,etiqueta||'Cantidad'); lbl.style.cssText='font-size:13px;font-weight:600;color:'+NAVY+';';
+    wrap.appendChild(lbl);
+    var box=el('div'); box.style.cssText='display:flex;align-items:center;border:1.5px solid #e8e8ed;border-radius:10px;overflow:hidden;';
+    function mkb(sym){ var b=el('button',null,sym); b.style.cssText='width:42px;height:42px;border:none;background:#f7f9fc;color:'+NAVY+';font-size:20px;font-weight:600;cursor:pointer;line-height:1;'; return b; }
+    var minus=mkb('\u2212'), plus=mkb('+');
+    var inp=el('input'); inp.type='number'; inp.min='1'; inp.value=qty; inp.style.cssText='width:56px;height:42px;border:none;border-left:1px solid #e8e8ed;border-right:1px solid #e8e8ed;text-align:center;font-size:16px;font-weight:700;color:'+NAVY+';outline:none;font-family:inherit;';
+    function set(v){ if(!v||v<1)v=1; qty=v; inp.value=v; onChange(v); }
+    minus.addEventListener('click',function(){ set(qty-1); });
+    plus.addEventListener('click',function(){ set(qty+1); });
+    inp.addEventListener('input',function(){ set(parseInt(inp.value)||1); });
+    box.appendChild(minus); box.appendChild(inp); box.appendChild(plus); wrap.appendChild(box);
+    return wrap;
+  }
+
   function resultEnsamble(r){
+    var qty=1;
     var w=el('div'); w.style.maxWidth='560px';
     var head=el('div'); head.style.cssText='display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:18px;';
-    head.innerHTML='<div><span style="display:inline-block;background:#EEF4FF;color:'+NAVY+';font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;">'+r.sistema+'</span> <span style="display:inline-block;background:#f1f1f4;color:#5b6577;font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;">'+r.mallas+'</span><div style="margin-top:10px;font-size:13px;color:#86868b;">Presión: <b style="color:'+NAVY+'">'+M.pres+' PSI</b></div></div><div style="text-align:right;"><div style="font-size:11px;color:#86868b;font-weight:600;text-transform:uppercase;">Precio</div><div style="font-size:26px;font-weight:800;color:'+NAVY+';line-height:1;">'+money(r.precio)+'</div></div>';
+    var precioEl;
+    head.innerHTML='<div><span style="display:inline-block;background:#EEF4FF;color:'+NAVY+';font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;">'+r.sistema+'</span> <span style="display:inline-block;background:#f1f1f4;color:#5b6577;font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;">'+r.mallas+'</span><div style="margin-top:10px;font-size:13px;color:#86868b;">Presión: <b style="color:'+NAVY+'">'+M.pres+' PSI</b></div></div>';
+    var pBox=el('div'); pBox.style.cssText='text-align:right;'; pBox.innerHTML='<div style="font-size:11px;color:#86868b;font-weight:600;text-transform:uppercase;">Precio</div>'; precioEl=el('div',null,money(r.precio)); precioEl.style.cssText='font-size:26px;font-weight:800;color:'+NAVY+';line-height:1;'; pBox.appendChild(precioEl); head.appendChild(pBox);
     w.appendChild(head);
-    var dz=el('div'); dz.style.cssText='border:1px solid #e8e8ed;border-radius:16px;overflow:hidden;margin-bottom:14px;';
-    var rows='<div style="background:#f7f9fc;padding:10px 16px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#86868b;display:flex;justify-content:space-between;"><span>Componente</span><span>Cantidad</span></div>';
-    r.desglose.forEach(function(d){ var u=d.unit==='m'?(d.qty+' m'):(d.qty+' pza');
-      rows+='<div style="padding:13px 16px;border-top:1px solid #f0f0f2;display:flex;justify-content:space-between;gap:10px;"><div style="min-width:0;"><div style="font-weight:700;color:'+NAVY+';font-size:14px;">'+d.code+'</div><div style="font-size:12px;color:#86868b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(d.name||'')+'</div></div><div style="font-weight:700;color:'+NAVY+';font-size:14px;white-space:nowrap;">'+u+'</div></div>'; });
-    dz.innerHTML=rows; w.appendChild(dz);
+    var dz=el('div'); dz.style.cssText='border:1px solid #e8e8ed;border-radius:16px;overflow:hidden;margin-bottom:14px;'; w.appendChild(dz);
+    function pintaDesglose(){
+      var rows='<div style="background:#f7f9fc;padding:10px 16px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#86868b;display:flex;justify-content:space-between;"><span>Componente</span><span>Cantidad</span></div>';
+      r.desglose.forEach(function(d){ var base=d.qty*qty; var u=d.unit==='m'?(+base.toFixed(3)+' m'):(base+' pza');
+        rows+='<div style="padding:13px 16px;border-top:1px solid #f0f0f2;display:flex;justify-content:space-between;gap:10px;"><div style="min-width:0;"><div style="font-weight:700;color:'+NAVY+';font-size:14px;">'+d.code+'</div><div style="font-size:12px;color:#86868b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(d.name||'')+'</div></div><div style="font-weight:700;color:'+NAVY+';font-size:14px;white-space:nowrap;">'+u+'</div></div>'; });
+      dz.innerHTML=rows;
+    }
+    pintaDesglose();
     var nota=el('div'); nota.style.cssText='font-size:13px;color:#5b6577;background:#f7f9fc;border-radius:12px;padding:12px 16px;margin-bottom:8px;line-height:1.5;';
     if(r.cutKnown) nota.innerHTML='Largo total <b>'+r.largoTotal+' m</b>. Se corta la manguera a <b style="color:'+NAVY+'">'+r.metros+' m</b> (se descuentan '+r.cutmm+' mm que ocupan los extremos).';
     else nota.innerHTML='Largo total <b>'+r.largoTotal+' m</b>. <span style="color:#8a6100;">El corte exacto queda pendiente: un extremo no tiene su medida de corte cargada.</span>';
     w.appendChild(nota);
     w.appendChild(fichaManguera(r.manguera.code.split('-')[1]));
-    w.appendChild(primaryBtn('Agregar a mi cotización', function(){ window.MCFG_PENDING=window.MCFG_PENDING||[]; window.MCFG_PENDING.push({tipo:'ensamble',sistema:r.sistema,largoTotal:r.largoTotal,metros:r.metros,precio:r.precio,desglose:r.desglose}); if(typeof window.showToast==='function') window.showToast('\u2713 Ensamble guardado en tu cotización'); else alert('Ensamble guardado.'); }));
+    w.appendChild(qtyStepper(1,'Cantidad de mangueras iguales',function(v){ qty=v; precioEl.textContent=money(r.precio*qty); pintaDesglose(); }));
+    w.appendChild(primaryBtn('Agregar a mi cotización', function(){ window.MCFG_PENDING=window.MCFG_PENDING||[]; var desg=r.desglose.map(function(d){return {code:d.code,name:d.name,qty:+(d.qty*qty).toFixed(3),unit:d.unit};}); window.MCFG_PENDING.push({tipo:'ensamble',sistema:r.sistema,largoTotal:r.largoTotal,metros:r.metros,cantidad:qty,precio:r.precio*qty,desglose:desg}); if(typeof window.showToast==='function') window.showToast('\u2713 '+qty+' ensamble(s) en tu cotización'); else alert('Ensamble guardado.'); }));
     var alt=el('div'); alt.style.cssText='text-align:center;margin-top:12px;'; var a=el('span',null,'Armar otra manguera'); a.style.cssText='font-size:14px;font-weight:600;color:'+NAVY+';cursor:pointer;'; a.addEventListener('click',function(){ M={view:'ensamble',stage:'datos',A:{},B:{},ai:0,bi:0}; render(); }); alt.appendChild(a); w.appendChild(alt);
     return w;
   }
 
   function resultPieza(item,kind,metros){
+    var qty=1;
+    var unit=kind==='manguera'?item.s*(metros||1):item.s; // precio de 1 pieza/tramo
     var w=el('div'); w.style.cssText='border:1px solid #e8e8ed;border-radius:16px;padding:18px 20px;margin-top:8px;max-width:520px;';
-    var precio=kind==='manguera'?item.s*(metros||1):item.s, cant=kind==='manguera'?(metros+' m'):'1 pza';
     var medida = kind==='espiga' ? '<div style="font-size:12px;color:#86868b;margin-top:4px;">Medida de conexión: <b style="color:'+NAVY+'">'+(item.ml||item.th)+'</b></div>' : '';
-    w.innerHTML='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;"><div style="min-width:0;"><div style="font-weight:800;color:'+NAVY+';font-size:17px;">'+item.code+'</div><div style="font-size:13px;color:#86868b;margin-top:3px;">'+(item.name||'')+'</div>'+medida+'<div style="font-size:12px;color:#86868b;margin-top:6px;">Cantidad: <b style="color:'+NAVY+'">'+cant+'</b></div></div><div style="text-align:right;"><div style="font-size:11px;color:#86868b;font-weight:600;text-transform:uppercase;">Precio</div><div style="font-size:23px;font-weight:800;color:'+NAVY+';line-height:1;">'+money(precio)+'</div></div></div>';
-    w.appendChild(primaryBtn('Agregar a mi cotización',function(){ window.MCFG_PENDING=window.MCFG_PENDING||[]; window.MCFG_PENDING.push({tipo:kind,code:item.code,name:item.name,qty:kind==='manguera'?metros:1,precio:precio}); if(typeof window.showToast==='function') window.showToast('\u2713 '+item.code+' agregado a tu cotización'); else alert(item.code+' agregado.'); }));
+    var top=el('div'); top.style.cssText='display:flex;justify-content:space-between;align-items:flex-start;gap:12px;';
+    var cantTxt=el('div'); var precioEl;
+    top.innerHTML='<div style="min-width:0;"><div style="font-weight:800;color:'+NAVY+';font-size:17px;">'+item.code+'</div><div style="font-size:13px;color:#86868b;margin-top:3px;">'+(item.name||'')+'</div>'+medida+'</div>';
+    var pBox=el('div'); pBox.style.cssText='text-align:right;'; pBox.innerHTML='<div style="font-size:11px;color:#86868b;font-weight:600;text-transform:uppercase;">Precio</div>'; precioEl=el('div',null,money(unit)); precioEl.style.cssText='font-size:23px;font-weight:800;color:'+NAVY+';line-height:1;'; pBox.appendChild(precioEl); top.appendChild(pBox);
+    w.appendChild(top);
+    var etiqueta = kind==='manguera' ? ('Cantidad (cortes de '+metros+' m c/u)') : 'Cantidad (piezas)';
+    w.appendChild(qtyStepper(1, etiqueta, function(v){ qty=v; precioEl.textContent=money(unit*qty); }));
+    w.appendChild(primaryBtn('Agregar a mi cotización',function(){ window.MCFG_PENDING=window.MCFG_PENDING||[];
+      var entry = kind==='manguera' ? {tipo:kind,code:item.code,name:item.name,metrosPorTramo:metros,cantidad:qty,qty:+(metros*qty).toFixed(3),precio:unit*qty} : {tipo:kind,code:item.code,name:item.name,cantidad:qty,qty:qty,precio:unit*qty};
+      window.MCFG_PENDING.push(entry); if(typeof window.showToast==='function') window.showToast('\u2713 '+qty+'x '+item.code+' en tu cotización'); else alert(item.code+' agregado.'); }));
     return w;
   }
 })();
