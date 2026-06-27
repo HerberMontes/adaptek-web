@@ -845,6 +845,7 @@
   <!-- Configurador de mangueras: dataset AT (1116 productos) + motor de cotizacion. Expone window.DATA y window.ATConfigurador -->
   <script src="data_at.js"></script>
   <script src="configurador_motor.js"></script>
+  <script src="mcfg.js"></script>
 </head>
 <body>
 
@@ -864,6 +865,7 @@
   <ul class="nav-links">
     <li><a href="#" onclick="showPage('home');return false;">Inicio</a></li>
     <li><a href="#" onclick="showPage('cfg');return false;">Configurador</a></li>
+    <li><a href="#" onclick="showPage('mcfg');return false;">Mangueras</a></li>
     <li><a href="#" onclick="showPage('catalogo');return false;">Catálogo</a></li>
     <li><a href="#" onclick="showPage('cross');return false;">Cross Reference</a></li>
     <li class="nav-acct" id="nav-acct" style="padding:0 4px;display:flex;align-items:center;position:relative;">
@@ -906,6 +908,7 @@
     <a href="#" onclick="showPage('home');toggleMenu();return false;" class="mm-link"><span class="mm-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg></span>Inicio</a>
     <a href="#" onclick="showPage('cfg');toggleMenu();return false;" class="mm-link"><span class="mm-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4l-6 6a1.5 1.5 0 0 0 2 2l6-6a4 4 0 0 0 5.4-5.4l-2.3 2.3-2-2 2.3-2.3Z"/></svg></span>Configurador</a>
     <a href="#" onclick="showPage('catalogo');toggleMenu();return false;" class="mm-link"><span class="mm-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8l9 5 9-5Z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg></span>Catálogo</a>
+    <a href="#" onclick="showPage('mcfg');toggleMenu();return false;" class="mm-link"><span class="mm-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a4 4 0 0 1 4-4h8a4 4 0 0 1 0 8H8a4 4 0 0 1-4-4Z"/><path d="M8 8V6M16 16v2"/></svg></span>Mangueras</a>
     <a href="#" onclick="showPage('cross');toggleMenu();return false;" class="mm-link"><span class="mm-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span>Cross Reference</a>
     <a href="#" onclick="showPage('cart');toggleMenu();return false;" class="mm-link"><span class="mm-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2.5 3.5h2l2.2 11.2a1.5 1.5 0 0 0 1.5 1.2h8.3a1.5 1.5 0 0 0 1.5-1.2L21 7H6"/></svg></span>Mi Lista de Cotización</a>
 
@@ -1186,6 +1189,19 @@
     <div id="cfg-body"></div>
   </div>
 </div><!-- /page-cfg -->
+
+<div id="page-mcfg" style="display:none;">
+  <div class="page-header">
+    <button class="page-header-back" onclick="mcfgHeaderBack()" title="Regresar">&#8592;</button>
+    <div>
+      <div class="page-header-title" id="mcfg-title">Manguera hidráulica</div>
+      <div class="page-header-sub" id="mcfg-sub">¿Qué necesitas?</div>
+    </div>
+  </div>
+  <div class="config-section">
+    <div id="mcfg-body"></div>
+  </div>
+</div><!-- /page-mcfg -->
 
 
 <!-- ═══════════════════════
@@ -6084,7 +6100,7 @@ function setApiKey(k) {
 }
 
 /* ── PAGE ROUTER ── */
-var pages = ['home','cfg','catalogo','cross','tutorials','cart','checkout','pago','gracias','login','register','portal','miportal'];
+var pages = ['home','cfg','mcfg','catalogo','cross','tutorials','cart','checkout','pago','gracias','login','register','portal','miportal'];
 // Registro de cuenta nueva: recopila los datos del formulario y crea el contacto
 // como prospecto pendiente de aprobación (un ejecutivo lo valida después).
 function showRegistroExito(){
@@ -6286,6 +6302,9 @@ function showPage(id, isBack) {
       if(typeof window.cfgReset==='function') window.cfgReset();
       else if(typeof window.renderStep==='function'){ window.renderProgress(); window.renderStep(); }
     },50);
+  }
+  if(id==='mcfg'){
+    setTimeout(function(){ if(typeof window.mcfgReset==='function') window.mcfgReset(); },50);
   }
 }
 // Regresa un paso atras (pagina anterior), nunca reinicia ni manda a inicio salvo que no haya historial.
@@ -8948,6 +8967,10 @@ updateFAB();
     wrap.appendChild(el('div','font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#C8102E;margin-bottom:6px;','Catálogo'));
     wrap.appendChild(el('h1','font-size:30px;font-weight:700;color:#001F5B;margin:0 0 4px;letter-spacing:-.5px;','Conectores y adaptadores'));
     wrap.appendChild(el('p','font-size:14px;color:#86868b;margin:0 0 22px;','Filtra por tipo, estándar y medida. Los resultados se acotan conforme eliges.'));
+    var mban = el('div','display:flex;align-items:center;justify-content:space-between;gap:14px;background:linear-gradient(135deg,#001F5B,#0a2f6e);border-radius:16px;padding:18px 22px;margin:0 0 22px;cursor:pointer;');
+    mban.onclick=function(){ showPage('mcfg'); };
+    mban.innerHTML='<div><div style="font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#9fb4e0;margin-bottom:4px;">Mangueras</div><div style="font-size:18px;font-weight:700;color:#fff;">Manguera hidráulica</div><div style="font-size:13px;color:#c5d2ec;margin-top:2px;">Configura tu ensamble, o pide conectores o metros de manguera</div></div><div style="flex:none;color:#fff;font-size:22px;">&#8594;</div>';
+    wrap.appendChild(mban);
     var rowf = el('div','display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;');
     var side = el('div','flex:0 0 264px;min-width:240px;'); side.id='cat-filtros';
     var main = el('div','flex:1 1 460px;min-width:300px;'); main.id='cat-resultados';
