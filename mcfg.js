@@ -162,7 +162,32 @@
     p.appendChild(g);
   }
 
-  // ====== ENSAMBLE ======
+  // ====== ENSAMBLE (dos columnas, estilo configurador rígido) ======
+  var IMGS=window.CONNECTOR_IMGS||{};
+  function categoria(fam){
+    if(/JIC|NPT|NPS|BOSS|SAE|ORFS/i.test(fam)) return 'AMERICANO';
+    if(/BSP/i.test(fam)) return 'BRITÁNICO';
+    if(/Métrico/i.test(fam)) return 'EUROPEO';
+    if(/Code 6|CAT/i.test(fam)) return 'BRIDA';
+    if(/JIS|Komatsu/i.test(fam)) return 'ORIENTAL';
+    return 'OTRO';
+  }
+  var CAT_ORDER=['AMERICANO','BRITÁNICO','EUROPEO','BRIDA','ORIENTAL','OTRO'];
+  function imgDe(fam){
+    var k=null;
+    if(/JIC/i.test(fam))k='jic'; else if(/NPT/i.test(fam))k='npt'; else if(/BSP/i.test(fam))k='bspp';
+    else if(/BOSS/i.test(fam))k='orb'; else if(/JIS/i.test(fam))k='jis'; else if(/Komatsu/i.test(fam))k='komatsu';
+    return (k&&IMGS[k])?IMGS[k]:null;
+  }
+  function extremoCompleto(lado){ var s=M[lado]; return !!(s.fam&&s.term&&s.ak!=null&&s.th); }
+  function resetDesde(lado, idx){ var s=M[lado]; for(var i=idx;i<EXT_STEPS.length;i++){ s[EXT_STEPS[i].key]=undefined; } }
+  function labelValor(lado, key){
+    var s=M[lado], c=matchAll(EXT_STEPS, pickHasta(s,key))[0];
+    if(key==='fam') return s.fam; if(key==='term') return s.term;
+    if(key==='ak') return c?c.aL:s.ak; if(key==='th') return c?c.ml:s.th; return s[key];
+  }
+  function pickHasta(sel,upto){ var o={}; for(var i=0;i<EXT_STEPS.length;i++){ var k=EXT_STEPS[i].key; if(sel[k]!=null) o[k]=sel[k]; if(k===upto) break; } return o; }
+
   function renderEnsamble(p){
     setHeader('Armar mi manguera','Manguera + 2 extremos');
     if(M.stage==='datos'){
@@ -175,34 +200,25 @@
         var P=parseFloat(E('mcfg-pres').value), L=parseFloat(E('mcfg-largo').value);
         if(!P||P<=0){ alert('Indica la presión de trabajo en PSI.'); return; }
         if(!L||L<=0){ alert('Indica el largo total en metros.'); return; }
-        M.pres=P; M.largo=L; M.stage='A'; M.ai=0; render();
+        M.pres=P; M.largo=L; M.stage='extremos'; render();
       }));
       p.appendChild(wrap); return;
     }
-    if(M.stage==='A'||M.stage==='B'){
-      var lado=M.stage, sel=M[lado], idx=(lado==='A'?M.ai:M.bi)||0, steps=EXT_STEPS;
-      p.appendChild(extremosBar(lado));
-      // migajas del extremo
-      var crumbs=[{label:'Extremo '+lado}]; for(var i=0;i<idx;i++){ (function(i){ var s=steps[i], it=opcionesDe(steps,sel,i).filter(function(o){return o.v===sel[s.key];})[0];
-        crumbs.push({label:(s.crumb?s.crumb(sel[s.key],it&&it.item):sel[s.key]), onClick:function(){ setIdx(lado,i); render(); }}); })(i); }
-      p.appendChild(crumbBar(crumbs));
-      if(idx>=steps.length){ // extremo completo
-        window._cfgOnBack=function(){ setIdx(lado,steps.length-1); render(); };
-        if(lado==='A') p.appendChild(primaryBtn('Continuar al extremo B →', function(){ M.stage='B'; M.bi=0; render(); }));
-        else p.appendChild(primaryBtn('Ver mi manguera →', function(){ M.stage='result'; render(); }));
-        return;
-      }
-      var onBack=function(){ if(idx===0){ if(lado==='A'){ M.stage='datos'; } else { M.stage='A'; } render(); } else { setIdx(lado,idx-1); render(); } };
-      window._cfgOnBack=onBack;
-      var s=steps[idx];
-      p.appendChild(stepHead(s.preg, onBack));
-      var ops=opcionesDe(steps,sel,idx); if(s.numeric) ops.sort(function(a,b){return dnum(a.v)-dnum(b.v);});
-      var g=grid(s.key==='th'?110:150);
-      ops.forEach(function(o){ var lab=s.label?s.label(o.item):o.v; g.appendChild(card(lab,null,function(){ sel[s.key]=o.v; setIdx(lado,idx+1); render(); }, sel[s.key]===o.v)); });
-      p.appendChild(g); return;
+    if(M.stage==='extremos'){
+      window._cfgOnBack=function(){ M.stage='datos'; render(); };
+      // datos arriba
+      var datos=el('div'); datos.style.cssText='display:flex;gap:18px;font-size:13px;margin-bottom:14px;';
+      datos.innerHTML='<span>Presión: <b style="color:'+NAVY+'">'+M.pres+' PSI</b></span><span>Largo total: <b style="color:'+NAVY+'">'+M.largo+' m</b></span>';
+      p.appendChild(datos);
+      p.appendChild(resumenExtremos());
+      var grid2=el('div'); grid2.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px;margin-bottom:14px;';
+      grid2.appendChild(buildColManguera('A')); grid2.appendChild(buildColManguera('B'));
+      p.appendChild(grid2);
+      if(extremoCompleto('A')&&extremoCompleto('B')) p.appendChild(primaryBtn('Ver mi manguera →', function(){ M.stage='result'; render(); }));
+      return;
     }
     if(M.stage==='result'){
-      window._cfgOnBack=function(){ M.stage='B'; render(); };
+      window._cfgOnBack=function(){ M.stage='extremos'; render(); };
       p.appendChild(stepHead('Tu manguera', window._cfgOnBack));
       var A=derivaExtremo(M.A), B=derivaExtremo(M.B);
       if(!A||!B){ p.appendChild(noResult('Falta completar algún extremo.')); return; }
@@ -211,28 +227,96 @@
       p.appendChild(resultEnsamble(r)); return;
     }
   }
-  function setIdx(lado,v){ if(lado==='A') M.ai=v; else M.bi=v; }
-  // deriva {g,sk,th,ak} del extremo para el motor (familia+terminal -> sk único)
   function derivaExtremo(sel){ var c=matchAll(EXT_STEPS,sel)[0]; if(!c) return null; return {g:c.g,sk:c.sk,th:c.th,ak:c.ak}; }
 
-  // resumen de ambos extremos (visible durante la selección)
-  function extremosBar(activo){
-    function cardLado(lado){
-      var sel=M[lado], done=(lado==='A'?M.ai:M.bi)>=EXT_STEPS.length;
-      var on=(lado===activo); var partes=[];
-      EXT_STEPS.forEach(function(s){ if(sel[s.key]!=null){ var it=matchAll(EXT_STEPS, pick(sel,s.key))[0]; partes.push(s.crumb?s.crumb(sel[s.key],it):sel[s.key]); } });
-      var det=partes.length?partes.join(' · '):'Sin definir';
-      var ac=done?'#1d7d34':(on?ROJO:'#c7c7cc');
-      return '<div style="flex:1;min-width:0;background:'+(done?'#f1f9f3':(on?'#fdf4f5':'#fbfbfd'))+';border:1.5px solid '+(done?'#bfe6c8':(on?'#f3c9d0':'#ececf0'))+';border-radius:14px;padding:11px 13px;">'
-        +'<div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:'+ac+';">Extremo '+lado+'</div>'
-        +'<div style="margin-top:5px;font-size:13px;font-weight:'+(partes.length?'600':'400')+';color:'+(partes.length?NAVY:'#b0b0b8')+';line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+det+'</div></div>';
+  // resumen visual de ambos extremos con conector central (como el configurador rígido)
+  function resumenExtremos(){
+    function tarjeta(lado){
+      var done=extremoCompleto(lado), partes=[];
+      EXT_STEPS.forEach(function(s){ if(M[lado][s.key]!=null) partes.push(labelValor(lado,s.key)); });
+      var det=partes.length?partes.join('  ·  '):'Selecciona estándar';
+      var ac=done?'#1d7d34':(partes.length?ROJO:'#c7c7cc');
+      return '<div style="flex:1;min-width:0;background:'+(done?'#f1f9f3':(partes.length?'#fdf4f5':'#fbfbfd'))+';border:1.5px solid '+(done?'#bfe6c8':(partes.length?'#f3c9d0':'#ececf0'))+';border-radius:16px;padding:13px 16px;">'
+        +'<div style="display:flex;align-items:center;gap:9px;"><span style="width:22px;height:22px;border-radius:50%;background:'+ac+';color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;">'+lado+'</span>'
+        +'<span style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:'+ac+';">Extremo '+lado+'</span></div>'
+        +'<div style="margin-top:9px;font-size:'+(partes.length?'15px':'13px')+';font-weight:'+(partes.length?'600':'400')+';color:'+(partes.length?NAVY:'#b0b0b8')+';line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+det+'</div></div>';
     }
-    var d=el('div'); d.style.cssText='margin-bottom:16px;';
-    d.innerHTML='<div style="display:flex;gap:18px;font-size:13px;margin-bottom:10px;"><span>Presión: <b style="color:'+NAVY+'">'+M.pres+' PSI</b></span><span>Largo: <b style="color:'+NAVY+'">'+M.largo+' m</b></span></div>'
-      +'<div style="display:flex;gap:10px;">'+cardLado('A')+cardLado('B')+'</div>';
+    var d=el('div'); d.style.cssText='margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid #f0f0f2;';
+    d.innerHTML='<div style="display:flex;align-items:stretch;">'+tarjeta('A')
+      +'<div style="flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:66px;padding:0 4px;">'
+      +'<div style="display:flex;align-items:center;width:100%;"><span style="flex:1;height:2px;background:#e2e2e7;border-radius:2px;"></span>'
+      +'<span style="flex:none;margin:0 4px;padding:5px 11px;border-radius:999px;background:'+NAVY+';color:#fff;font-size:10px;font-weight:600;white-space:nowrap;">Manguera</span>'
+      +'<span style="flex:1;height:2px;background:#e2e2e7;border-radius:2px;"></span></div>'
+      +'<div style="margin-top:7px;font-size:9px;font-weight:700;letter-spacing:1.5px;color:#c7c7cc;">AT</div></div>'
+      +tarjeta('B')+'</div>';
     return d;
   }
-  function pick(sel,upto){ var o={}; for(var i=0;i<EXT_STEPS.length;i++){ var k=EXT_STEPS[i].key; if(sel[k]!=null) o[k]=sel[k]; if(k===upto) break; } return o; }
+
+  // una columna de extremo (estándar agrupado por categoría + iconos -> terminal -> ángulo -> medida)
+  function buildColManguera(lado){
+    var sel=M[lado], done=extremoCompleto(lado);
+    var col=el('div'); col.style.cssText='border:1px solid '+(done?'#c4eccf':'#e8e8ed')+';border-radius:16px;overflow:hidden;';
+    var hdr=el('div'); hdr.style.cssText='padding:16px 18px;background:'+(done?'#f0faf2':'#f5f5f7')+';display:flex;align-items:center;gap:10px;';
+    hdr.innerHTML='<span style="width:22px;height:22px;border-radius:50%;background:'+(done?'#1d7d34':ROJO)+';color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;">'+lado+'</span><span style="font-size:16px;font-weight:600;color:'+NAVY+';">Extremo '+lado+'</span>'+(done?'<span style="margin-left:auto;color:#1d7d34;font-size:13px;font-weight:600;">Listo</span>':'');
+    col.appendChild(hdr);
+    var bd=el('div'); bd.style.cssText='padding:18px;background:#fff;';
+
+    // chip de valor elegido (con x)
+    function chipElegido(titulo, key, stepIdx, topborder){
+      var sec=el('div'); sec.style.cssText='margin-bottom:8px;'+(topborder?'padding-top:8px;border-top:1px solid #f0f0f0;':'');
+      sec.innerHTML='<div style="font-size:12px;font-weight:600;color:#86868b;margin-bottom:8px;">'+titulo+'</div>';
+      var sv=el('div'); sv.style.cssText='display:flex;align-items:center;justify-content:space-between;background:#fdf4f5;border:1.5px solid '+ROJO+';border-radius:10px;padding:10px 14px;';
+      sv.innerHTML='<span style="font-size:16px;font-weight:600;color:'+NAVY+';">'+labelValor(lado,key)+'</span>';
+      var x=el('button',null,'\u2715'); x.style.cssText='background:none;border:none;color:#aaa;cursor:pointer;font-size:13px;'; x.addEventListener('click',function(){ resetDesde(lado,stepIdx); render(); });
+      sv.appendChild(x); sec.appendChild(sv); return sec;
+    }
+    // grid simple de opciones (terminal/ángulo/medida)
+    function seccionSimple(titulo, key, stepIdx){
+      var sec=el('div'); sec.style.cssText='margin-bottom:8px;padding-top:8px;border-top:1px solid #f0f0f0;';
+      sec.innerHTML='<div style="font-size:12px;font-weight:600;color:#86868b;margin-bottom:8px;">'+titulo+'</div>';
+      var ops=opcionesDe(EXT_STEPS, sel, stepIdx); var s=EXT_STEPS[stepIdx];
+      if(s.numeric) ops.sort(function(a,b){return dnum(a.v)-dnum(b.v);});
+      var gr=el('div'); gr.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:8px;';
+      ops.forEach(function(o){ var lab=s.label?s.label(o.item):o.v;
+        var b=el('div'); b.style.cssText='border:1px solid #e8e8ed;background:#fff;padding:13px 8px;border-radius:12px;cursor:pointer;text-align:center;min-height:48px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:'+NAVY+';';
+        b.textContent=lab;
+        b.addEventListener('mouseenter',function(){b.style.borderColor=ROJO;});
+        b.addEventListener('mouseleave',function(){b.style.borderColor='#e8e8ed';});
+        b.addEventListener('click',function(){ sel[s.key]=o.v; resetDesde(lado,stepIdx+1); render(); });
+        gr.appendChild(b);
+      });
+      sec.appendChild(gr); return sec;
+    }
+    // ESTÁNDAR (agrupado por categoría con iconos)
+    if(sel.fam){ bd.appendChild(chipElegido('Estándar','fam',0,false)); }
+    else {
+      var sE=el('div'); sE.innerHTML='<div style="font-size:12px;font-weight:600;color:#86868b;margin-bottom:8px;">Estándar</div>';
+      var fams=opcionesDe(EXT_STEPS, sel, 0); var porCat={};
+      fams.forEach(function(o){ var cat=categoria(o.v); (porCat[cat]=porCat[cat]||[]).push(o); });
+      CAT_ORDER.forEach(function(cat){ if(!porCat[cat]) return;
+        var gl=el('div'); gl.style.cssText='font-size:11px;color:#aeaeb2;font-weight:500;margin:10px 0 6px;'; gl.textContent=cat; sE.appendChild(gl);
+        var gr=el('div'); gr.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:8px;';
+        porCat[cat].forEach(function(o){
+          var iu=imgDe(o.v);
+          var ph='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#cfd3db" stroke-width="2"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="2.5"/></svg>';
+          var cell = iu ? '<span style="position:relative;width:46px;height:46px;display:inline-flex;align-items:center;justify-content:center;"><span style="position:absolute;inset:0;border-radius:10px;background:#f3f4f8;display:flex;align-items:center;justify-content:center;">'+ph+'</span><img src="'+iu+'" onerror="this.remove()" style="position:relative;width:46px;height:46px;object-fit:contain;border-radius:10px;background:#fff;"/></span>' : '<span style="width:46px;height:46px;border-radius:10px;background:#f3f4f8;display:inline-flex;align-items:center;justify-content:center;">'+ph+'</span>';
+          var b=el('button',null,cell+'<span style="font-size:12px;font-weight:600;color:'+NAVY+';text-align:center;line-height:1.15;">'+o.v+'</span>');
+          b.style.cssText='border:1px solid #e8e8ed;background:#fff;padding:11px 5px;border-radius:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-height:88px;';
+          b.addEventListener('mouseenter',function(){b.style.borderColor=ROJO;b.style.transform='translateY(-1px)';});
+          b.addEventListener('mouseleave',function(){b.style.borderColor='#e8e8ed';b.style.transform='none';});
+          b.addEventListener('click',function(){ sel.fam=o.v; resetDesde(lado,1); render(); });
+          gr.appendChild(b);
+        });
+        sE.appendChild(gr);
+      });
+      bd.appendChild(sE);
+    }
+    // TERMINAL / ÁNGULO / MEDIDA
+    if(sel.fam){ if(sel.term) bd.appendChild(chipElegido('Tipo','term',1,true)); else bd.appendChild(seccionSimple('Macho o hembra','term',1)); }
+    if(sel.term){ if(sel.ak!=null) bd.appendChild(chipElegido('Ángulo','ak',2,true)); else bd.appendChild(seccionSimple('Ángulo','ak',2)); }
+    if(sel.ak!=null){ if(sel.th) bd.appendChild(chipElegido('Medida','th',3,true)); else bd.appendChild(seccionSimple('Medida','th',3)); }
+    col.appendChild(bd); return col;
+  }
 
   // ====== METROS ======
   function renderMetros(p){
