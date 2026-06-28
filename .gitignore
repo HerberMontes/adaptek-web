@@ -33,3 +33,6 @@ dist/
 
 # Pruebas locales (opcional: quita estas líneas si quieres versionarlas en /tests)
 smoketest*.js
+
+# Reportes de diseño y capturas (artefactos locales, no parte del sitio)
+reporte-diseno/
