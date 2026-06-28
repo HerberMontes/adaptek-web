@@ -7456,6 +7456,23 @@ function trackUsage(kind, extra){
     fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).catch(function(){});
   }catch(e){}
 }
+// Mantiene solo las 'keep' imagenes mas recientes en el historial del chat; las anteriores
+// se convierten a texto para no disparar el costo de tokens, pero conservando el seguimiento.
+function pruneChatImages(hist, keep) {
+  var idxs = [];
+  for (var i = 0; i < hist.length; i++) {
+    var c = hist[i].content;
+    if (Array.isArray(c) && c.some(function(b){ return b && b.type === 'image'; })) idxs.push(i);
+  }
+  var convert = idxs.length - keep;
+  for (var k = 0; k < convert; k++) {
+    var ix = idxs[k];
+    var blocks = hist[ix].content;
+    var txt = blocks.filter(function(b){ return b && b.type === 'text'; }).map(function(b){ return b.text; }).join(' ');
+    hist[ix] = { role: 'user', content: (txt ? txt + ' ' : '') + '(imagen enviada antes)' };
+  }
+}
+
 function sendChatMessage() {
   var input  = document.getElementById('chat-input');
   var text   = input.value.trim();
@@ -7498,8 +7515,18 @@ function sendChatMessage() {
       : (data.error ? 'Error: ' + data.error.message : 'Error en la respuesta.');
     if (data.content && data.content[0]) {
       window.chatHistory = window.chatHistory || [];
-      window.chatHistory.push({ role:'user', content: _userHistText });
+      // Guardar el turno del usuario manteniendo la IMAGEN (si la hubo) para que la IA
+      // conserve el contexto visual entre fotos. Las imagenes viejas se podan a texto.
+      if (hasImg) {
+        window.chatHistory.push({ role:'user', content: [
+          { type:'image', source:{ type:'base64', media_type: mediaType, data: chatImageBase64 } },
+          { type:'text', text: userText }
+        ]});
+      } else {
+        window.chatHistory.push({ role:'user', content: _userHistText });
+      }
       window.chatHistory.push({ role:'assistant', content: reply });
+      pruneChatImages(window.chatHistory, 2);
       if (window.chatHistory.length > 16) window.chatHistory = window.chatHistory.slice(-16);
     }
     if (data._usage) trackUsage('ia', { inTok: data._usage.inTok, outTok: data._usage.outTok });
