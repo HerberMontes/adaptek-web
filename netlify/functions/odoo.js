@@ -2590,16 +2590,19 @@ exports.handler = async function(event, context) {
         return { code, familia:'manguera', tipo:'ESP', ss:/-SS(\b|$)/.test(code), hd, endA:{std:sg.std,gen:sg.gen,size:th}, endB:null };
       }
 
-      // Leemos AT% (incluye adaptadores AT- y espigas ATC-). Las mangueras por metro (ATM-) se excluyen.
-      const dom=`<value><array><data>${xmlStr('default_code')}<value><string>=like</string></value>${xmlStr('AT%')}</data></array></value>`;
-      const text=await odooSearchRead(uid,'product.product',dom,['default_code'],12000);
-      const codes=[...text.matchAll(/<name>default_code<\/name>\s*<value>\s*<string>([^<]*)<\/string>/g)].map(m=>m[1]);
-      const pieces=[];
-      for(const c of codes){
-        if (/^ATC-/.test(c)){ const pc=parseConn(c); if(pc) pieces.push(pc); }
-        else if (/^ATM-/.test(c)){ /* manguera por metro: no va en este catalogo */ }
-        else if (/^AT-/.test(c)){ const pc=parseCode(c); if(pc){ pc.familia='adaptador'; pieces.push(pc); } }
+      // Dos busquedas separadas: una para espigas (ATC-) y otra para adaptadores (AT-). Asi ninguna
+      // familia desplaza a la otra por el limite de lectura. Las mangueras por metro (ATM-) no entran
+      // en ningun patron, quedan fuera automaticamente.
+      async function leerCodigos(patron){
+        const d=`<value><array><data>${xmlStr('default_code')}<value><string>=like</string></value>${xmlStr(patron)}</data></array></value>`;
+        const t=await odooSearchRead(uid,'product.product',d,['default_code'],9000);
+        return [...t.matchAll(/<name>default_code<\/name>\s*<value>\s*<string>([^<]*)<\/string>/g)].map(m=>m[1]);
       }
+      const codesEsp = await leerCodigos('ATC-%');
+      const codesAdap = await leerCodigos('AT-%');
+      const pieces=[];
+      for(const c of codesEsp){ const pc=parseConn(c); if(pc) pieces.push(pc); }
+      for(const c of codesAdap){ const pc=parseCode(c); if(pc){ pc.familia='adaptador'; pieces.push(pc); } }
 
       const ends=p=>[p.endA,p.endB].filter(Boolean);
       function endMatch(e){ return e.std===fStd && (!fGen||e.gen===fGen) && (!fSize||e.size===fSize); }
