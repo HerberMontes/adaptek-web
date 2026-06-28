@@ -2550,6 +2550,21 @@ exports.handler = async function(event, context) {
     //    devuelve los productos que coinciden + las facetas disponibles (que se van acotando).
     //    Modelo tipo Brennan: izquierda = filtros (tipo → estándar → medida), derecha = productos.
     // body: { tipo?, std?, gen?, size?, material?:'CS'|'SS', page?, page_size? }
+    // Info en vivo (nombre, precio, stock) de Odoo para una lista de codigos. La usa el catalogo de
+    // espigas de manguera, que arma su lista desde el dataset pero quiere stock/precio reales si existen.
+    if (action === 'catalogo_info') {
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:200, headers, body: JSON.stringify({ok:false, info:{}})};
+      const codes = Array.isArray(body.codes) ? body.codes.slice(0,60) : [];
+      if (!codes.length) return {statusCode:200, headers, body: JSON.stringify({ok:true, info:{}})};
+      const codesXml = codes.map(c=>xmlStr(c)).join('');
+      const d2=`<value><array><data>${xmlStr('default_code')}<value><string>in</string></value><value><array><data>${codesXml}</data></array></value></data></array></value>`;
+      const t2=await odooSearchRead(uid,'product.product',d2,['default_code','name','list_price','qty_available'],codes.length);
+      const info={};
+      t2.split('<struct>').slice(1).forEach(s=>{ const st=s.split('</struct>')[0]; const cd=xmlExtractField(st,'default_code'); if(cd) info[cd]={name:xmlExtractField(st,'name'),price:parseFloat(xmlExtractField(st,'list_price'))||0,qty:parseFloat(xmlExtractField(st,'qty_available'))||0}; });
+      return {statusCode:200, headers, body: JSON.stringify({ok:true, info})};
+    }
+
     if (action === 'catalogo_listar') {
       const uid = await odooAuth();
       if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
