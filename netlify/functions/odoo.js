@@ -1,4 +1,36 @@
 const crypto = require('crypto');
+
+// ── TABLA TECNICA DE IDENTIFICACION DE ROSCAS (normas SAE J514/J1926/J1453, DIN 2353/ISO 8434,
+//    ISO 228 BSP, ANSI NPT). Diametros en milimetros. La IA la usa para convertir una medida del
+//    cliente en una rosca exacta sin adivinar. OD = diametro exterior del macho; ID = diametro
+//    interior de la hembra (aprox). Una rosca conica (NPT/BSPT) reduce hacia la punta.
+const THREAD_TABLE = [
+ 'TABLA DE IDENTIFICACION POR MEDIDA (usala SIEMPRE que tengas un diametro; no adivines):',
+ '',
+ 'JIC 37 (SAE J514) y ORB (SAE J1926) comparten la misma rosca UNF; se distinguen por el sello (JIC=cono 37 sin O-ring; ORB=O-ring en la base). OD macho:',
+ '  dash 4 (1/4") 7/16-20  OD 11.1mm | dash 5 (5/16") 1/2-20 OD 12.7mm | dash 6 (3/8") 9/16-18 OD 14.3mm',
+ '  dash 8 (1/2") 3/4-16 OD 19.0mm | dash 10 (5/8") 7/8-14 OD 22.2mm | dash 12 (3/4") 1.1/16-12 OD 27.0mm',
+ '  dash 16 (1") 1.5/16-12 OD 33.3mm | dash 20 (1.1/4") 1.5/8-12 OD 41.3mm | dash 24 (1.1/2") 1.7/8-12 OD 47.6mm | dash 32 (2") 2.1/2-12 OD 63.5mm',
+ '',
+ 'ORFS / cara plana (SAE J1453), O-ring en la cara frontal, rosca UNF recta. OD macho:',
+ '  dash 4 9/16-18 OD 14.3mm | dash 6 11/16-16 OD 17.5mm | dash 8 13/16-16 OD 20.6mm | dash 10 1-14 OD 25.4mm | dash 12 1.3/16-12 OD 30.2mm | dash 16 1.7/16-12 OD 36.5mm',
+ '',
+ 'METRICO DIN 2353 (ISO 8434), rosca recta fina (paso 1.5 hasta M22, luego 2.0). El MISMO OD puede ser serie Light(L) o Heavy(S) segun el tubo; por eso pide el diametro interior del agujero para saber el tubo. OD macho aprox = numero M:',
+ '  M12x1.5 OD 12.0mm = tubo 6L | M14x1.5 OD 14.0mm = 8L o 6S | M16x1.5 OD 16.0mm = 10L o 8S | M18x1.5 OD 18.0mm = 12L o 10S',
+ '  M20x1.5 OD 20.0mm = 12S | M22x1.5 OD 21.8mm = 15L o 14S | M24x1.5 OD 23.8mm = 16S | M26x1.5 OD 25.8mm = 18L',
+ '  M30x1.5/2 OD 29.8mm = 22L o 20S | M36x2 OD 35.8mm = 28L o 25S | M42x2 OD 41.8mm = 35L o 30S',
+ '  EJEMPLO: una rosca recta de 20.87mm NO es 3/4-16 (eso seria 19.0mm); es M22 (15L o 14S). Mide el agujero: ~15mm=15L, ~14mm=14S.',
+ '',
+ 'NPT / NPSM (americana). NPT es CONICA (reduce hacia la punta, necesita sellador). Su nombre nominal NO es la medida: mide ~1/4" mas. OD macho del primer hilo:',
+ '  1/8 OD 10.2mm | 1/4 OD 13.2mm | 3/8 OD 16.7mm | 1/2 OD 21.0mm | 3/4 OD 26.4mm | 1 OD 33.2mm | 1.1/4 OD 42.0mm | 1.1/2 OD 48.0mm',
+ '',
+ 'BSP (ISO 228 / Whitworth, paso 55). BSPP es RECTA (sella con washer/dowty o cono 60); BSPT es CONICA. OD macho similar a NPT pero distinto paso:',
+ '  1/8 OD 9.7mm | 1/4 OD 13.2mm | 3/8 OD 16.7mm | 1/2 OD 21.0mm | 3/4 OD 26.4mm | 1 OD 33.2mm | 1.1/4 OD 41.9mm | 1.1/2 OD 47.8mm',
+ '',
+ 'OJO con diametros que coinciden: ~21mm puede ser 1/2 NPT, 1/2 BSP o M22. Distingue por: conica=NPT o BSPT; recta con O-ring en base=ORB; recta con cara plana y O-ring=ORFS; recta con cono 37=JIC; recta fina paso 1.5=metrico; recta con washer=BSPP. Si dudas entre NPT y BSP y no hay galga de paso, guiate por el origen del equipo (americano=NPT, europeo/asiatico=BSP) y pide una foto del hilo de cerca.',
+ 'BRIDAS: Code 61 (SAE J518, hasta 3000 psi) y Code 62 (6000 psi) se miden por el diametro de la cabeza/brida, no por rosca. CAT es como Code 62 pero con su patron de tornillos. No tienen macho/hembra.'
+].join('\n');
+
 const ODOO_URL   = process.env.ODOO_URL  || 'https://hydratechgroup.odoo.com';
 const ODOO_DB    = process.env.ODOO_DB   || 'hydratechgroup';
 const ODOO_USER  = process.env.ODOO_USER || 'herber.montes@hydratechgroup.mx';
@@ -119,7 +151,26 @@ async function xmlrpc(uid, model, method, argsXml) {
   return await resp.text();
 }
 
-// Igual que xmlrpc pero permite enviar kwargs (p.ej. context). kwargsInnerXml = members del struct.
+// ── Reglas/correcciones de la IA: viven en ir.config_parameter (clave adaptekk.ia_reglas).
+//    Las edita gerencia desde el portal; la IA las lee al inicio de cada chat.
+function decodeXmlEntities(s){
+  return String(s||'').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&amp;/g,'&');
+}
+async function leerReglasIA(uid){
+  try {
+    const r = await xmlrpc(uid, 'ir.config_parameter', 'get_param', `<value><string>adaptekk.ia_reglas</string></value>`);
+    const m = r.match(/<string>([\s\S]*?)<\/string>/);
+    return m && m[1] ? decodeXmlEntities(m[1]).trim() : '';
+  } catch(e){ return ''; }
+}
+async function guardarReglasIA(uid, texto){
+  // set_param(key, value)
+  const args = `<value><string>adaptekk.ia_reglas</string></value>` + xmlStr(texto);
+  const r = await xmlrpc(uid, 'ir.config_parameter', 'set_param', args);
+  return !/<fault>/.test(r);
+}
+
+// Igual que xmlrpcKw but allow kwargs (p.ej. context). kwargsInnerXml = members del struct.
 async function xmlrpcKw(uid, model, method, argsXml, kwargsInnerXml) {
   const xml = `<?xml version="1.0"?>
 <methodCall><methodName>execute_kw</methodName><params>
@@ -1884,6 +1935,32 @@ exports.handler = async function(event, context) {
       return {statusCode:200, headers, body: JSON.stringify({success:true, user_key, message:'Contrasena actualizada'})};
     }
 
+    // ── REGLAS / CORRECCIONES DE LA IA (solo gerencia): leer y guardar el cuaderno de correcciones
+    //    que la IA aplica en cada chat. Se almacena en Odoo (ir.config_parameter).
+    if (action === 'ia_reglas_get') {
+      const { gerencia_pass } = body;
+      if (!process.env.GERENCIA_PASS || gerencia_pass !== process.env.GERENCIA_PASS) {
+        return {statusCode:401, headers, body: JSON.stringify({ok:false, error:'No autorizado'})};
+      }
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'Odoo auth failed'})};
+      const reglas = await leerReglasIA(uid);
+      return {statusCode:200, headers, body: JSON.stringify({ok:true, reglas})};
+    }
+
+    if (action === 'ia_reglas_set') {
+      const { gerencia_pass, reglas } = body;
+      if (!process.env.GERENCIA_PASS || gerencia_pass !== process.env.GERENCIA_PASS) {
+        return {statusCode:401, headers, body: JSON.stringify({ok:false, error:'No autorizado'})};
+      }
+      if (typeof reglas !== 'string') return {statusCode:400, headers, body: JSON.stringify({ok:false, error:'Falta el texto de reglas'})};
+      if (reglas.length > 20000) return {statusCode:400, headers, body: JSON.stringify({ok:false, error:'El texto es demasiado largo (max 20000 caracteres)'})};
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'Odoo auth failed'})};
+      const ok = await guardarReglasIA(uid, reglas);
+      return {statusCode:200, headers, body: JSON.stringify({ok, message: ok?'Reglas guardadas':'No se pudo guardar'})};
+    }
+
     // ── GET USER PASSWORDS (incluye estado de bloqueo) ──
     if (action === 'get_user_passes') {
       const { gerencia_pass } = body;
@@ -2477,11 +2554,11 @@ exports.handler = async function(event, context) {
       const uid = await odooAuth();
       if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
       const up = v => String(v||'').toUpperCase().trim();
-      const fTipo=up(body.tipo), fStd=up(body.std), fGen=up(body.gen), fSize=String(body.size||'').trim(), fMat=up(body.material);
+      const fTipo=up(body.tipo), fStd=up(body.std), fGen=up(body.gen), fSize=String(body.size||'').trim(), fMat=up(body.material), fFam=up(body.familia);
       const page=Math.max(parseInt(body.page)||1,1);
       const pageSize=Math.min(Math.max(parseInt(body.page_size)||24,1),60);
 
-      const STANDARDS=['BSPP','BSPT','ORFS','NPSM','OFS','BST','MET','UNF','ORB','JIC','NPT','DIN','JIS','KOM','CAT','SAE','BSP','BT','LL','L'].sort((x,y)=>y.length-x.length);
+      const STANDARDS=['BRIDA','BSPP','BSPT','ORFS','NPSM','OFS','BST','MET','UNF','ORB','JIC','NPT','DIN','JIS','KOM','CAT','SAE','BSP','C61','C62','NA','BT','LL','L'].sort((x,y)=>y.length-x.length);
       function splitStdGen(tok){
         if(!tok) return null;
         for (const s of STANDARDS){ if (tok.indexOf(s)===0){ return {std:s, gen: tok.slice(s.length)}; } }
@@ -2503,14 +2580,31 @@ exports.handler = async function(event, context) {
         return { code, tipo, ss, endA:{std:a.std,gen:a.gen,size:medA}, endB: (two&&b&&medB)?{std:b.std,gen:b.gen,size:medB}:null };
       }
 
-      const dom=`<value><array><data>${xmlStr('default_code')}<value><string>=like</string></value>${xmlStr('AT-%')}</data></array></value>`;
-      const text=await odooSearchRead(uid,'product.product',dom,['default_code'],8000);
+      // Espigas / conectores de manguera: codigo ATC-<sistema>-<STD+GEN>-<TH><HD>[-var]
+      // ej ATC-DF-NPTM-0204-2 => NPT macho, rosca th=02 (1/8"), extremo manguera hd=04.
+      function parseConn(code){
+        const p=code.split('-'); if (p.length<4) return null;
+        const sg=splitStdGen(p[2]); const thhd=p[3]||'';
+        const th=thhd.slice(0,2), hd=thhd.slice(2,4);
+        if(!sg||!sg.std||!th) return null;
+        return { code, familia:'manguera', tipo:'ESP', ss:/-SS(\b|$)/.test(code), hd, endA:{std:sg.std,gen:sg.gen,size:th}, endB:null };
+      }
+
+      // Leemos AT% (incluye adaptadores AT- y espigas ATC-). Las mangueras por metro (ATM-) se excluyen.
+      const dom=`<value><array><data>${xmlStr('default_code')}<value><string>=like</string></value>${xmlStr('AT%')}</data></array></value>`;
+      const text=await odooSearchRead(uid,'product.product',dom,['default_code'],12000);
       const codes=[...text.matchAll(/<name>default_code<\/name>\s*<value>\s*<string>([^<]*)<\/string>/g)].map(m=>m[1]);
-      const pieces=[]; for(const c of codes){ const pc=parseCode(c); if(pc) pieces.push(pc); }
+      const pieces=[];
+      for(const c of codes){
+        if (/^ATC-/.test(c)){ const pc=parseConn(c); if(pc) pieces.push(pc); }
+        else if (/^ATM-/.test(c)){ /* manguera por metro: no va en este catalogo */ }
+        else if (/^AT-/.test(c)){ const pc=parseCode(c); if(pc){ pc.familia='adaptador'; pieces.push(pc); } }
+      }
 
       const ends=p=>[p.endA,p.endB].filter(Boolean);
       function endMatch(e){ return e.std===fStd && (!fGen||e.gen===fGen) && (!fSize||e.size===fSize); }
       function prodMatch(p){
+        if (fFam && p.familia!==fFam) return false;
         if (fTipo && p.tipo!==fTipo) return false;
         if (fMat==='SS' && !p.ss) return false;
         if (fMat==='CS' && p.ss) return false;
@@ -2526,6 +2620,17 @@ exports.handler = async function(event, context) {
         fT[p.tipo]=(fT[p.tipo]||0)+1;
         ends(p).forEach(e=>{ if(e.std)fE[e.std]=(fE[e.std]||0)+1; if(e.size)fM[e.size]=(fM[e.size]||0)+1; if(e.gen)fG[e.gen]=(fG[e.gen]||0)+1; });
       }
+      // conteo por familia (manguera vs adaptador), aplicando los demas filtros pero NO el de familia,
+      // para que el filtro macro muestre siempre cuantos hay de cada lado.
+      const famCount={};
+      for(const p of pieces){
+        if (fTipo && p.tipo!==fTipo) continue;
+        if (fMat==='SS' && !p.ss) continue;
+        if (fMat==='CS' && p.ss) continue;
+        if (fStd){ if(!ends(p).some(endMatch)) continue; }
+        else if (fGen||fSize){ if(!ends(p).some(e=>(!fGen||e.gen===fGen)&&(!fSize||e.size===fSize))) continue; }
+        famCount[p.familia]=(famCount[p.familia]||0)+1;
+      }
       const byN=o=>Object.entries(o).sort((a,b)=>b[1]-a[1]).map(([v,n])=>({v,n}));
       const byMed=o=>Object.entries(o).sort((a,b)=>parseInt(a[0])-parseInt(b[0])).map(([v,n])=>({v,n}));
 
@@ -2539,12 +2644,12 @@ exports.handler = async function(event, context) {
         const t2=await odooSearchRead(uid,'product.product',d2,['default_code','name','list_price','qty_available'],pageItems.length);
         t2.split('<struct>').slice(1).forEach(s=>{ const st=s.split('</struct>')[0]; const cd=xmlExtractField(st,'default_code'); if(cd) info[cd]={name:xmlExtractField(st,'name'),price:parseFloat(xmlExtractField(st,'list_price'))||0,qty:parseFloat(xmlExtractField(st,'qty_available'))||0}; });
       }
-      const productos=pageItems.map(p=>Object.assign({code:p.code,tipo:p.tipo,ss:p.ss,endA:p.endA,endB:p.endB}, info[p.code]||{}));
+      const productos=pageItems.map(p=>Object.assign({code:p.code,familia:p.familia,tipo:p.tipo,ss:p.ss,hd:p.hd,endA:p.endA,endB:p.endB}, info[p.code]||{}));
 
       return {statusCode:200, headers, body: JSON.stringify({
         ok:true, total, page, page_size:pageSize,
-        filtros:{tipo:fTipo,std:fStd,gen:fGen,size:fSize,material:fMat},
-        facetas:{ tipos:byN(fT), estandares:byN(fE), generos:byN(fG), medidas:byMed(fM) },
+        filtros:{familia:fFam,tipo:fTipo,std:fStd,gen:fGen,size:fSize,material:fMat},
+        facetas:{ familias:[{v:'manguera',n:famCount.manguera||0},{v:'adaptador',n:famCount.adaptador||0}], tipos:byN(fT), estandares:byN(fE), generos:byN(fG), medidas:byMed(fM) },
         productos
       })};
     }
@@ -2565,7 +2670,11 @@ exports.handler = async function(event, context) {
         ? (process.env.IA_MODEL_VISION || 'claude-sonnet-4-6')
         : (process.env.IA_MODEL_TEXT || 'claude-haiku-4-5-20251001');
       const effMaxTokens = hasImage ? Math.max(maxTokens, 1400) : maxTokens;
-      const SYSTEM = [
+      // Leemos (best-effort) el uid de Odoo y las correcciones que gerencia guardo, para inyectarlas
+      // al prompt. Reusamos este uid para las herramientas (evita autenticar dos veces).
+      let uidIA = null, reglasIA = '';
+      try { uidIA = await odooAuth(); if (uidIA) reglasIA = await leerReglasIA(uidIA); } catch(e){ uidIA = null; }
+      let SYSTEM = [
         'Eres el asistente experto en conectores y adaptadores hidraulicos de Adaptekk (Mexico).',
         'Identificas la pieza exacta que el cliente necesita USANDO EXCLUSIVAMENTE los codigos reales del catalogo de Odoo. NUNCA inventes codigos.',
         'Tu objetivo es RESOLVER rapido: lleva al cliente a la solucion (pieza directa, cadena o fabricacion) en los menos pasos posibles. Si te falta informacion, haz UNA sola pregunta corta y concreta a la vez, nunca una lista de preguntas. En cuanto tengas ambos extremos, llama a la herramienta y presenta la solucion. Profesional, directo y breve.',
@@ -2629,8 +2738,14 @@ exports.handler = async function(event, context) {
         '- Las BRIDAS (Code 61, Code 62, CAT) no tienen macho ni hembra: NO les pongas genero, o usa gen \"B\". Solo necesitan estandar y medida.',
         '- Series de manguera/ferrula: DuoFit = Megafit = serie 210 = 1 a 2 mallas (baja-media presion). TetraFit = Xtrafit = serie 223 = 4 espirales (alta). HexaFit = Spiralfit = serie 240 = 6 espirales (muy alta). El cliente NO necesita saber esto; lo elige el sistema por la presion.',
         '- Si el cliente solo dice \"metrico\" sin Light/Heavy, o solo un numero de rosca metrica (M22, M18...), pregunta en una linea si es serie ligera o pesada, porque cambian la pieza.',
-        '- Se breve y resolutivo en TODA la conversacion: una pregunta corta a la vez, sin parrafos de relleno.'
+        '- Se breve y resolutivo en TODA la conversacion: una pregunta corta a la vez, sin parrafos de relleno.',
+        '',
+        THREAD_TABLE,
       ].join('\n');
+      // Correcciones que gerencia haya guardado: tienen prioridad como guia fuerte.
+      if (reglasIA) {
+        SYSTEM += '\n\nCORRECCIONES DE GERENCIA (las dio el dueno del negocio, que conoce sus piezas; tienen PRIORIDAD y son guia fuerte: aplicalas siempre, salvo que la foto o una medida muestren con toda claridad lo contrario):\n' + reglasIA;
+      }
       let tools = [{
         name:'armar_conector',
         description:'Busca en el catalogo real de Adaptekk como conectar dos extremos A y B (CONECTOR RIGIDO, sin manguera). Devuelve si existe directo en una pieza, cadenas reales de varias piezas, o si se fabrica especial. Usalo cuando el cliente describe un adaptador/conector de dos roscas SIN manguera.',
@@ -2655,7 +2770,7 @@ exports.handler = async function(event, context) {
       if (process.env.IA_WEB_SEARCH==='1' || process.env.IA_WEB_SEARCH==='true') {
         tools.push({ type:'web_search_20250305', name:'web_search', max_uses:3 });
       }
-      let uidIA = null, lastArmar = null, lastCotizarManguera = null, totalIn = 0, totalOut = 0;
+      let lastArmar = null, lastCotizarManguera = null, totalIn = 0, totalOut = 0;
       try {
         for (let iter=0; iter<3; iter++){
           const r = await fetch('https://api.anthropic.com/v1/messages', {
