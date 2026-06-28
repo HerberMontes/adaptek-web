@@ -9046,9 +9046,11 @@ updateFAB();
 <script>
 /* ── CATÁLOGO EN LÍNEA (búsqueda facetada: filtros izq, productos der) ── */
 (function(){
-  var CAT = { tipo:'', std:'', size:'', page:1, pageSize:24 };
+  var CAT = { familia:'', tipo:'', std:'', size:'', page:1, pageSize:24 };
+  var FAMILIA_LABEL = { manguera:'Conectores de manguera', adaptador:'Adaptadores hidráulicos' };
+  function famL(v){ return FAMILIA_LABEL[v]||v; }
   var TIPO_LABEL = { NR:'Recto', C90:'Codo 90°', C45:'Codo 45°', TEE:'Tee', CRX:'Cruz', BH:'Bulkhead', BH45:'Bulkhead 45°', RUN:'Run tee', BRT:'Branch tee', BLK:'Tapón', UN:'Unión' };
-  var STD_LABEL = { JIC:'JIC 37°', NPT:'NPT', BSP:'BSPP', BST:'BSPT', ORB:'O-Ring Boss (ORB)', OFS:'ORFS / Cara plana', MET:'Métrico', DIN:'DIN', JIS:'JIS', KOM:'Komatsu', CAT:'Caterpillar', SAE:'SAE', NPSM:'NPSM', UNF:'UNF', BT:'BSPT', LL:'Serie LL', L:'Serie L' };
+  var STD_LABEL = { JIC:'JIC 37°', NPT:'NPT', BSP:'BSPP', BSPP:'BSPP', BST:'BSPT', BSPT:'BSPT', ORB:'O-Ring Boss (ORB)', OFS:'ORFS / Cara plana', ORFS:'ORFS / Cara plana', MET:'Métrico', DIN:'DIN', JIS:'JIS', KOM:'Komatsu', CAT:'Caterpillar', SAE:'SAE', NPSM:'NPSM', NA:'NPS', UNF:'UNF', C61:'Code 61 (brida)', C62:'Code 62 (brida)', BRIDA:'Code 61 (brida)', BT:'BSPT', LL:'Serie LL', L:'Serie L' };
   function tL(v){ return TIPO_LABEL[v]||v; }
   function sL(v){ return STD_LABEL[v]||v; }
   // Las medidas son dieciseisavos: medida real = código / 16, reducida a fracción de pulgada.
@@ -9104,15 +9106,15 @@ updateFAB();
     var panel = el('div','background:#fff;border:1px solid #e8e8ed;border-radius:16px;padding:6px 18px 14px;box-shadow:0 4px 16px rgba(16,32,72,.04);');
     var head = el('div','display:flex;align-items:center;justify-content:space-between;padding:16px 0 4px;');
     head.appendChild(el('div','font-size:15px;font-weight:700;color:#001F5B;letter-spacing:-.2px;','Filtros'));
-    if (CAT.tipo||CAT.std||CAT.size){
+    if (CAT.familia||CAT.tipo||CAT.std||CAT.size){
       var clr = el('button','background:none;color:#C8102E;border:none;padding:4px;cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:600;','Limpiar');
-      clr.onclick=function(){ CAT.tipo=CAT.std=CAT.size=''; CAT.page=1; catLoad(); };
+      clr.onclick=function(){ CAT.familia=CAT.tipo=CAT.std=CAT.size=''; CAT.page=1; catLoad(); };
       head.appendChild(clr);
     }
     panel.appendChild(head);
-    if (CAT.tipo||CAT.std||CAT.size){
+    if (CAT.familia||CAT.tipo||CAT.std||CAT.size){
       var act = el('div','display:flex;flex-wrap:wrap;gap:6px;padding:6px 0 4px;');
-      [['tipo',CAT.tipo,tL],['std',CAT.std,sL],['size',CAT.size,mL]].forEach(function(p){
+      [['familia',CAT.familia,famL],['tipo',CAT.tipo,tL],['std',CAT.std,sL],['size',CAT.size,mL]].forEach(function(p){
         if(!p[1]) return;
         var chip = el('button','display:inline-flex;align-items:center;gap:6px;background:#eef1f6;color:#001F5B;border:none;border-radius:999px;padding:5px 11px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:600;', p[2](p[1])+' <span style="font-size:13px;">×</span>');
         chip.onclick=function(){ setFilter(p[0], p[1]); };
@@ -9120,10 +9122,36 @@ updateFAB();
       });
       panel.appendChild(act);
     }
-    panel.appendChild(facetSection('Tipo', f.tipos, 'tipo', CAT.tipo, tL));
+    // Filtro macro: tipo de producto (manguera vs adaptador), siempre primero.
+    panel.appendChild(famSection(f.familias));
     panel.appendChild(facetSection('Estándar', f.estandares, 'std', CAT.std, sL));
     panel.appendChild(facetSection('Medida', f.medidas, 'size', CAT.size, mL));
+    // La "forma" (recto, codo, tee) solo aplica a adaptadores rigidos.
+    if (CAT.familia!=='manguera') panel.appendChild(facetSection('Forma', f.tipos, 'tipo', CAT.tipo, tL));
     side.appendChild(panel);
+  }
+
+  // Filtro macro de familia: dos tarjetas grandes arriba de todo.
+  function famSection(familias){
+    var box = el('div','padding:16px 0 4px;');
+    box.appendChild(el('div','font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#9aa3b2;margin-bottom:12px;','Tipo de producto'));
+    var opts = [
+      {v:'manguera', t:'Conectores de manguera', s:'Espigas que se prensan a la manguera'},
+      {v:'adaptador', t:'Adaptadores hidráulicos', s:'Conectores rígidos de rosca a rosca'}
+    ];
+    var byV={}; (familias||[]).forEach(function(x){ byV[x.v]=x.n; });
+    opts.forEach(function(o){
+      var on = (CAT.familia===o.v);
+      var n = byV[o.v]||0;
+      var a = el('button','display:flex;width:100%;align-items:flex-start;gap:10px;background:'+(on?'#001F5B':'#f6f7f9')+';color:'+(on?'#fff':'#1d2433')+';border:1.5px solid '+(on?'#001F5B':'transparent')+';border-radius:12px;padding:13px 14px;margin-bottom:9px;cursor:pointer;font-family:inherit;text-align:left;transition:all .15s ease;',
+        '<span style="flex:1;"><span style="display:block;font-size:13.5px;font-weight:700;margin-bottom:2px;">'+o.t+'</span><span style="display:block;font-size:11.5px;color:'+(on?'rgba(255,255,255,.7)':'#8a93a3')+';line-height:1.35;">'+o.s+'</span></span>'+
+        '<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:'+(on?'rgba(255,255,255,.22)':'#e7eaf0')+';color:'+(on?'#fff':'#8a93a3')+';white-space:nowrap;">'+(on?'×':n)+'</span>');
+      a.onmouseenter=function(){ if(!on){ a.style.background='#eef1f6'; } };
+      a.onmouseleave=function(){ if(!on){ a.style.background='#f6f7f9'; } };
+      a.onclick=function(){ setFilter('familia', o.v); };
+      box.appendChild(a);
+    });
+    return box;
   }
 
   function dispo(qty){
@@ -9182,14 +9210,14 @@ updateFAB();
     }
   }
 
-  function setFilter(kind, val){ CAT[kind] = (CAT[kind]===val ? '' : val); CAT.page=1; catLoad(); }
+  function setFilter(kind, val){ CAT[kind] = (CAT[kind]===val ? '' : val); if (kind==='familia' && CAT.familia==='manguera') CAT.tipo=''; CAT.page=1; catLoad(); }
 
   function catLoad(){
     var c = document.getElementById('page-catalogo'); if(!c) return;
     if (!c._built) buildShell(c);
     renderProducts(null, true);
     fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ action:'catalogo_listar', tipo:CAT.tipo, std:CAT.std, size:CAT.size, page:CAT.page, page_size:CAT.pageSize })
+      body: JSON.stringify({ action:'catalogo_listar', familia:CAT.familia, tipo:CAT.tipo, std:CAT.std, size:CAT.size, page:CAT.page, page_size:CAT.pageSize })
     }).then(function(r){return r.json();}).then(function(d){
       renderFacets(d.facetas||{});
       renderProducts(d, false);
