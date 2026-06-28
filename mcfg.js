@@ -433,4 +433,55 @@
       window.MCFG_PENDING.push(entry); if(typeof window.showToast==='function') window.showToast('\u2713 '+qty+'x '+item.code+' en tu cotización'); else alert(item.code+' agregado.'); }));
     return w;
   }
+  // ====== puente IA: cotiza manguera desde los parámetros que da la IA ======
+  // params: {presion, largo, a:{std,gen,size,ang}, b:{...}}
+  function matchExtremoIA(e){
+    var std=(e.std||'').toLowerCase(), gen=(e.gen||'').toUpperCase(), size=String(e.size||'').replace(/[^0-9]/g,''), ang=(e.ang||'').toLowerCase();
+    if(size&&size.length===1) size='0'+size;
+    function famOK(fam){ fam=fam.toLowerCase();
+      if(/jic|flare/.test(std)) return /jic/.test(fam);
+      if(/nps/.test(std)) return /nps/.test(fam);
+      if(/npt/.test(std)) return /npt/.test(fam);
+      if(/bspt/.test(std)) return /bspt/.test(fam);
+      if(/bsp|gas|whitworth/.test(std)) return /bsp/.test(fam)&&!/asiento/.test(fam);
+      if(/orfs|face|cara plana/.test(std)) return /orfs|cara plana|face/.test(fam);
+      if(/orb|boss/.test(std)) return /boss|orb/.test(fam);
+      if(/heavy|pesad|dks/.test(std)) return /heavy|pesad/.test(fam);
+      if(/light|liger|liviano|dkl/.test(std)) return /light|liger/.test(fam);
+      if(/metric|din/.test(std)) return /métrico|metric/.test(fam);
+      if(/jis/.test(std)) return /jis/.test(fam);
+      if(/komat/.test(std)) return /komat/.test(fam);
+      if(/code\s*62|\b62\b|6000/.test(std)) return /62/.test(fam);
+      if(/code\s*61|\b61\b|3000/.test(std)) return /61/.test(fam);
+      if(/\bcat\b|caterpillar/.test(std)) return /cat/.test(fam);
+      if(/sae/.test(std)) return /sae/.test(fam);
+      return fam.indexOf(std)>=0;
+    }
+    function genOK(c){ if(gen==='M'||gen==='MG') return c.g==='M'; if(gen==='H'||gen==='HG') return c.g==='H'; return true; }
+    function angOK(c){ if(!ang||/recto|straight|0/.test(ang)) return c.ak==='R'; if(/90/.test(ang)) return c.ak==='90'||c.ak==='90L'||c.ak==='90C'; if(/45/.test(ang)) return c.ak==='45'; if(/22/.test(ang)) return c.ak==='22'; if(/67/.test(ang)) return c.ak==='67'; if(/110/.test(ang)) return c.ak==='110'; return true; }
+    var cands=CONNS.filter(function(c){ return famOK(familia(c))&&genOK(c)&&(!size||c.th===size)&&angOK(c); });
+    return cands[0]||null;
+  }
+  window.mcfgCotizarIA=function(params){
+    if(!params) return {error:true, falta:'Faltan datos.'};
+    var ca=matchExtremoIA(params.a||{}), cb=matchExtremoIA(params.b||{});
+    if(!ca) return {error:true, falta:'No encontré en el catálogo el extremo A ('+((params.a&&params.a.std)||'?')+' '+((params.a&&params.a.size)||'')+'). ¿Puedes confirmar ese extremo?'};
+    if(!cb) return {error:true, falta:'No encontré en el catálogo el extremo B ('+((params.b&&params.b.std)||'?')+' '+((params.b&&params.b.size)||'')+'). ¿Puedes confirmar ese extremo?'};
+    var r=AC.cotizar({largo:+params.largo, presion:+params.presion, A:{g:ca.g,sk:ca.sk,th:ca.th,ak:ca.ak}, B:{g:cb.g,sk:cb.sk,th:cb.th,ak:cb.ak}});
+    if(r.error) return {error:true, falta:r.error};
+    return {ok:true, r:r, html: tarjetaCotizacionIA(r, +params.presion)};
+  };
+  function tarjetaCotizacionIA(r, presion){
+    var rows='';
+    r.desglose.forEach(function(d){ var u=d.unit==='m'?(d.qty+' m'):(d.qty+' pza');
+      rows+='<div style="padding:9px 14px;border-top:1px solid #f0f0f2;display:flex;justify-content:space-between;gap:10px;"><div style="min-width:0;"><div style="font-weight:700;color:'+NAVY+';font-size:13px;">'+d.code+'</div><div style="font-size:11px;color:#86868b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(d.name||'')+'</div></div><div style="font-weight:700;color:'+NAVY+';font-size:13px;white-space:nowrap;">'+u+'</div></div>'; });
+    var nota = r.cutKnown ? ('Se corta la manguera a <b>'+r.metros+' m</b> (de '+r.largoTotal+' m totales).') : ('Largo total '+r.largoTotal+' m. Corte exacto pendiente en un extremo.');
+    return '<div style="border:1px solid #e8e8ed;border-radius:14px;overflow:hidden;margin-top:10px;max-width:430px;">'
+      +'<div style="padding:12px 14px;background:#f7f9fc;display:flex;justify-content:space-between;align-items:center;">'
+      +'<div><span style="display:inline-block;background:#EEF4FF;color:'+NAVY+';font-size:10px;font-weight:700;padding:3px 9px;border-radius:999px;">'+r.sistema+'</span> <span style="font-size:11px;color:#86868b;">'+presion+' PSI</span></div>'
+      +'<div style="font-size:19px;font-weight:800;color:'+NAVY+';">'+money(r.precio)+'</div></div>'
+      +rows
+      +'<div style="padding:10px 14px;border-top:1px solid #f0f0f2;font-size:11.5px;color:#5b6577;line-height:1.5;">'+nota+'</div></div>';
+  }
+
 })();
