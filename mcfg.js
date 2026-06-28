@@ -411,7 +411,7 @@
     w.appendChild(nota);
     w.appendChild(fichaManguera(r.manguera.code.split('-')[1]));
     w.appendChild(qtyStepper(1,'Cantidad de mangueras iguales',function(v){ qty=v; precioEl.textContent=money(r.precio*qty); pintaDesglose(); }));
-    w.appendChild(primaryBtn('Agregar a mi cotización', function(){ window.MCFG_PENDING=window.MCFG_PENDING||[]; var desg=r.desglose.map(function(d){return {code:d.code,name:d.name,qty:+(d.qty*qty).toFixed(3),unit:d.unit};}); window.MCFG_PENDING.push({tipo:'ensamble',sistema:r.sistema,largoTotal:r.largoTotal,metros:r.metros,cantidad:qty,precio:r.precio*qty,desglose:desg}); if(typeof window.showToast==='function') window.showToast('\u2713 '+qty+' ensamble(s) en tu cotización'); else alert('Ensamble guardado.'); }));
+    w.appendChild(primaryBtn('Agregar al carrito', function(){ var desg=r.desglose.map(function(d){return {code:d.code,name:d.name,qty:+(d.qty*qty).toFixed(3),unit:d.unit,price:d.price};}); if(typeof window.mcfgAddEnsambleCarrito==='function'){ window.mcfgAddEnsambleCarrito({desglose:desg}); } else if(typeof window.showToast==='function'){ window.showToast('Carrito no disponible'); } }));
     var alt=el('div'); alt.style.cssText='text-align:center;margin-top:12px;'; var a=el('span',null,'Armar otra manguera'); a.style.cssText='font-size:14px;font-weight:600;color:'+NAVY+';cursor:pointer;'; a.addEventListener('click',function(){ M={view:'ensamble',stage:'datos',A:{},B:{},ai:0,bi:0}; render(); }); alt.appendChild(a); w.appendChild(alt);
     return w;
   }
@@ -428,9 +428,13 @@
     w.appendChild(top);
     var etiqueta = kind==='manguera' ? ('Cantidad (cortes de '+metros+' m c/u)') : 'Cantidad (piezas)';
     w.appendChild(qtyStepper(1, etiqueta, function(v){ qty=v; precioEl.textContent=money(unit*qty); }));
-    w.appendChild(primaryBtn('Agregar a mi cotización',function(){ window.MCFG_PENDING=window.MCFG_PENDING||[];
-      var entry = kind==='manguera' ? {tipo:kind,code:item.code,name:item.name,metrosPorTramo:metros,cantidad:qty,qty:+(metros*qty).toFixed(3),precio:unit*qty} : {tipo:kind,code:item.code,name:item.name,cantidad:qty,qty:qty,precio:unit*qty};
-      window.MCFG_PENDING.push(entry); if(typeof window.showToast==='function') window.showToast('\u2713 '+qty+'x '+item.code+' en tu cotización'); else alert(item.code+' agregado.'); }));
+    w.appendChild(primaryBtn('Agregar al carrito',function(){
+      var d = kind==='manguera'
+        ? {code:item.code,name:item.name,qty:+(metros*qty).toFixed(3),unit:'m',price:item.s}
+        : {code:item.code,name:item.name,qty:qty,unit:'pza',price:item.s};
+      if(typeof window.mcfgAddEnsambleCarrito==='function'){ window.mcfgAddEnsambleCarrito({desglose:[d]}); }
+      else if(typeof window.showToast==='function'){ window.showToast('Carrito no disponible'); }
+    }));
     return w;
   }
   // ====== puente IA: cotiza manguera desde los parámetros que da la IA ======
@@ -473,16 +477,20 @@
     return {ok:true, r:r, html: tarjetaCotizacionIA(r, +params.presion)};
   };
   function tarjetaCotizacionIA(r, presion){
+    window.MCFG_IA_QUOTES = window.MCFG_IA_QUOTES || [];
+    var idx = window.MCFG_IA_QUOTES.push({desglose:r.desglose}) - 1;
     var rows='';
     r.desglose.forEach(function(d){ var u=d.unit==='m'?(d.qty+' m'):(d.qty+' pza');
       rows+='<div style="padding:9px 14px;border-top:1px solid #f0f0f2;display:flex;justify-content:space-between;gap:10px;"><div style="min-width:0;"><div style="font-weight:700;color:'+NAVY+';font-size:13px;">'+d.code+'</div><div style="font-size:11px;color:#86868b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(d.name||'')+'</div></div><div style="font-weight:700;color:'+NAVY+';font-size:13px;white-space:nowrap;">'+u+'</div></div>'; });
     var nota = r.cutKnown ? ('Se corta la manguera a <b>'+r.metros+' m</b> (de '+r.largoTotal+' m totales).') : ('Largo total '+r.largoTotal+' m. Corte exacto pendiente en un extremo.');
+    var btn='<button onclick="if(window.mcfgAddEnsambleCarrito&&window.mcfgAddEnsambleCarrito(window.MCFG_IA_QUOTES['+idx+'])){this.textContent=\'Agregado al carrito\';this.disabled=true;this.style.opacity=0.55;this.style.cursor=\'default\';}" style="display:block;width:100%;border:none;border-top:1px solid #f0f0f2;background:'+NAVY+';color:#fff;padding:13px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">Agregar al carrito</button>';
     return '<div style="border:1px solid #e8e8ed;border-radius:14px;overflow:hidden;margin-top:10px;max-width:430px;">'
       +'<div style="padding:12px 14px;background:#f7f9fc;display:flex;justify-content:space-between;align-items:center;">'
       +'<div><span style="display:inline-block;background:#EEF4FF;color:'+NAVY+';font-size:10px;font-weight:700;padding:3px 9px;border-radius:999px;">'+r.sistema+'</span> <span style="font-size:11px;color:#86868b;">'+presion+' PSI</span></div>'
       +'<div style="font-size:19px;font-weight:800;color:'+NAVY+';">'+money(r.precio)+'</div></div>'
       +rows
-      +'<div style="padding:10px 14px;border-top:1px solid #f0f0f2;font-size:11.5px;color:#5b6577;line-height:1.5;">'+nota+'</div></div>';
+      +'<div style="padding:10px 14px;border-top:1px solid #f0f0f2;font-size:11.5px;color:#5b6577;line-height:1.5;">'+nota+'</div>'
+      +btn+'</div>';
   }
 
 })();

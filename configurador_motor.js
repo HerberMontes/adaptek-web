@@ -67,9 +67,9 @@
     var qtyM = metros!=null? metros : largo;
     var precio = mang.s*qtyM + a.s + b.s;
     var costo  = mang.c*qtyM + a.c + b.c;
-    var desglose=[{code:mang.code,name:mang.name,qty:qtyM,unit:'m',sys:mang.sys.join('/'),wp:mang.wp}];
-    if(a.code===b.code) desglose.push({code:a.code,name:a.name,qty:2,unit:'pza'});
-    else { desglose.push({code:a.code,name:a.name,qty:1,unit:'pza'}); desglose.push({code:b.code,name:b.name,qty:1,unit:'pza'}); }
+    var desglose=[{code:mang.code,name:mang.name,qty:qtyM,unit:'m',price:mang.s,sys:mang.sys.join('/'),wp:mang.wp}];
+    if(a.code===b.code) desglose.push({code:a.code,name:a.name,qty:2,unit:'pza',price:a.s});
+    else { desglose.push({code:a.code,name:a.name,qty:1,unit:'pza',price:a.s}); desglose.push({code:b.code,name:b.name,qty:1,unit:'pza',price:b.s}); }
     return {
       sistema:a.sys, mallas:SYS_MALLAS[a.sys], presionClase:SYS_PRESION[a.sys],
       manguera:mang, espigaA:a, espigaB:b, metros:metros, cutmm:cutmm, cutKnown:cutKnown, largoTotal:largo,
