@@ -935,19 +935,23 @@ async function armarConectorCore(body, uid){
   const endsWithA=(byKey[A.std+'|'+A.size]||[]).filter(x=>sameEnd(x.end,A)&&matMatch(x)).length;
   const endsWithB=(byKey[B.std+'|'+B.size]||[]).filter(x=>sameEnd(x.end,B)&&matMatch(x)).length;
 
-  // Regla 1: directo (una pieza). Preferimos el ANGULO correcto: si la IA detecto recto/45/90
-  // usamos ese tipo; si no se especifica, preferimos RECTO (NR), que es lo mas comun. Asi no
-  // devolvemos un codo cuando la pieza es recta.
+  // Regla 1: directo (una pieza). La FORMA la decide lo que la IA ve en la foto (parametro ang):
+  // si dice recto -> pieza recta; 45 -> codo 45; 90 -> codo 90. Respetamos esa forma exacta y NO
+  // la forzamos: si pidio una forma y no existe directo de esa forma, no hay directo (pasa a cadena
+  // o fabricacion). Solo cuando la IA NO especifica forma usamos recto como valor por defecto.
   const upAng = up(body.ang||'');
   const wantTipo = /RECT|NR|^0$/.test(upAng) ? 'NR' : (/90/.test(upAng) ? 'C90' : (/45/.test(upAng) ? 'C45' : ''));
   let directo=null;
   const dirCands=[];
   for (const p of pieces){ if (matMatch(p) && ((sameEnd(p.endA,A)&&sameEnd(p.endB,B))||(sameEnd(p.endA,B)&&sameEnd(p.endB,A)))){ dirCands.push(p); } }
   if (dirCands.length){
-    const pick = (wantTipo && dirCands.find(p=>up(p.tipo)===wantTipo))
-              || dirCands.find(p=>up(p.tipo)==='NR')
-              || dirCands[0];
-    directo = pick.code;
+    if (wantTipo){
+      const exact = dirCands.find(p=>up(p.tipo)===wantTipo);
+      directo = exact ? exact.code : null;   // forma pedida y no existe directo => no hay directo
+    } else {
+      const pick = dirCands.find(p=>up(p.tipo)==='NR') || dirCands[0];
+      directo = pick.code;                   // sin forma especificada: recto por defecto
+    }
   }
 
   // Regla 2: cadenas (BFS, las más cortas primero)
@@ -993,9 +997,12 @@ async function armarConectorCore(body, uid){
     const items = enrich(ch);
     const en_stock = items.length>0 && items.every(p=>(p.qty||0)>0);
     const precio_total = items.reduce((s,p)=>s+(p.price||0),0);
-    return { piezas: ch.length, en_stock, precio_total, items };
+    // contar codos/tees en la cadena para preferir cadenas RECTAS (la pieza original suele ser recta)
+    const codos = ch.filter(c=>/-C45-|-C90-|-TEE-/.test(String(c).toUpperCase())).length;
+    return { piezas: ch.length, en_stock, precio_total, codos, items };
   });
   scored.sort((a,b)=>{
+    if (a.codos!==b.codos) return a.codos-b.codos;        // primero las rectas (menos codos)
     if (a.en_stock!==b.en_stock) return a.en_stock ? -1 : 1;
     if (a.precio_total!==b.precio_total) return a.precio_total-b.precio_total;
     return a.piezas-b.piezas;
@@ -2588,8 +2595,12 @@ exports.handler = async function(event, context) {
         '- Cara plana al frente con un O-ring (junta) => ORFS (cara plana).',
         '- O-ring en la base de una rosca recta => ORB / BOSS.',
         '- Una tuerca que gira libre sobre el cuerpo => hembra giratoria. Rosca por fuera sin tuerca => macho.',
-        '- Cuerpo doblado => codo (estima 45 o 90 segun el angulo que veas). Si el cuerpo esta DERECHO / en linea recta (los dos extremos apuntan en la misma direccion), es RECTO: la gran mayoria de los adaptadores son rectos. NUNCA digas codo si la pieza se ve derecha. Pasa esto en el parametro ang de armar_conector (recto, 45 o 90).',
+        '- FORMA (dato obligatorio, identificalo a OJO en la foto): determina siempre si la pieza es RECTA (los dos extremos en linea, apuntando en la misma direccion), CODO 45 o CODO 90, y pasala en el parametro ang (recto / 45 / 90). Es parte de la identificacion visual, igual de importante que el estandar. Reporta lo que REALMENTE ves: si se ve derecha es recto, si se ve doblada mide el angulo del codo. No fuerces recto ni fuerces codo; el sistema te dara exactamente la forma que indiques.',
         'MUY IMPORTANTE: observa CADA extremo por separado y descrIbelo antes de concluir (largo de la rosca, si hay cono abocinado, tuerca, O-ring, forma del cuerpo). Es muy comun que los dos extremos sean DIFERENTES (por ejemplo un lado JIC 37/flare, que suele ser mas corto y con cono, y el otro NPT o ORB). NUNCA asumas que los dos lados son iguales sin mirarlos uno por uno; ese es el error mas comun.',
+        'ROSCAS METRICAS DIN (aqui es donde mas se equivoca la IA, lee con cuidado): NO fuerces todo a pulgadas. Muchisimos conectores son metricos DIN (tipicos en equipo europeo: rosca recta fina, normalmente paso 1.5mm). Si el diametro exterior medido en milimetros NO cae casi exacto sobre una fraccion comun en pulgadas, es practicamente seguro que es METRICO. Referencia de diametro EXTERIOR de la rosca: ~14mm=M14, ~16mm=M16, ~18mm=M18, ~20mm=M20, ~22mm=M22, ~24mm=M24, ~26mm=M26 (en pulgadas: ~11.1mm=7/16, ~14.3mm=9/16, ~19.0mm=3/4, ~22.2mm=7/8, ~27mm=1-1/16). EJEMPLO REAL: 20.87mm NO es 3/4-16 (eso mide ~19mm); 20.87mm corresponde a metrico M22x1.5. No lo metas a la fuerza como ORB 3/4.',
+        'Metrico DIN tiene DOS series que se confunden muchisimo: Light (L, mas delgada, "ligera") y Heavy (S, mas robusta, "pesada"). Para una misma rosca M el diametro exterior puede coincidir; lo que de verdad las distingue es el tubo que entra. Por eso, cuando sospeches metrico, pide DOS medidas con el calibrador: (1) el diametro EXTERIOR de la rosca (te da la M, por ejemplo M22) y (2) el diametro INTERIOR del agujero donde entra el tubo (te da el tubo: por ejemplo 15mm = serie 15L, o 14mm = serie 14S). Con esas dos medidas defines serie y tamano sin adivinar. Pide el diametro interior y exterior cuando haga falta para estar seguro; es preferible una medida extra a entregar la pieza equivocada.',
+        'Si tienes la herramienta de busqueda web disponible, usala para confirmar equivalencias de la norma DIN 2353 (M -> tubo -> serie L/S) o cualquier conversion de diametro a medida que no recuerdes con certeza, en vez de adivinar.',
+        'No te aferres a tu primera impresion: si una medida nueva contradice lo que dijiste antes (por ejemplo creiste BSP y el O-ring o el diametro indican otra cosa), corrige con naturalidad y sigue. Manten lo que ya identificaste bien de cada extremo a lo largo de la conversacion; no reinicies la identificacion desde cero cada vez que llega una foto nueva.',
         'Tienes acceso a busqueda web: usala libremente para comparar, verificar normas o convertir un diametro exterior a su medida/dash cuando te sirva. La identificacion visual la haces TU con la imagen; la web es para apoyarte con datos. Las SOLUCIONES (codigos, piezas) siempre salen del catalogo de Adaptekk, nunca inventes codigos de internet.',
         'Tras proponer tu identificacion, pide UNA sola confirmacion sencilla y medible con herramientas que cualquiera tiene: el DIAMETRO EXTERIOR de la rosca con una regla o calibrador (vernier), en milimetros o pulgadas; o el ancho de la tuerca (la medida de la llave). NUNCA pidas contar hilos, el paso de rosca, ni una galga de roscas: nadie tiene eso. Con el estandar que TU identificaste mas ese diametro, deduces tu mismo la medida (dash).',
         'Guia paso a paso, lenguaje simple, una indicacion a la vez, como si el cliente no supiera nada. Ejemplo de buen mensaje ante una foto: "Por la foto veo un adaptador con un extremo JIC 37 macho (el cono abocinado con tuerca) y el otro NPT macho (la rosca conica de tuberia). Para darte el codigo exacto solo necesito una medida: con una regla, mide el diametro de afuera de cada rosca y dime cuanto da cada lado." NUNCA respondas pidiendo que el cliente identifique los estandares o las roscas por su cuenta.',
