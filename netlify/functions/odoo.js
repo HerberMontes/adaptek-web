@@ -935,9 +935,20 @@ async function armarConectorCore(body, uid){
   const endsWithA=(byKey[A.std+'|'+A.size]||[]).filter(x=>sameEnd(x.end,A)&&matMatch(x)).length;
   const endsWithB=(byKey[B.std+'|'+B.size]||[]).filter(x=>sameEnd(x.end,B)&&matMatch(x)).length;
 
-  // Regla 1: directo (una pieza)
+  // Regla 1: directo (una pieza). Preferimos el ANGULO correcto: si la IA detecto recto/45/90
+  // usamos ese tipo; si no se especifica, preferimos RECTO (NR), que es lo mas comun. Asi no
+  // devolvemos un codo cuando la pieza es recta.
+  const upAng = up(body.ang||'');
+  const wantTipo = /RECT|NR|^0$/.test(upAng) ? 'NR' : (/90/.test(upAng) ? 'C90' : (/45/.test(upAng) ? 'C45' : ''));
   let directo=null;
-  for (const p of pieces){ if (matMatch(p) && ((sameEnd(p.endA,A)&&sameEnd(p.endB,B))||(sameEnd(p.endA,B)&&sameEnd(p.endB,A)))){ directo=p.code; break; } }
+  const dirCands=[];
+  for (const p of pieces){ if (matMatch(p) && ((sameEnd(p.endA,A)&&sameEnd(p.endB,B))||(sameEnd(p.endA,B)&&sameEnd(p.endB,A)))){ dirCands.push(p); } }
+  if (dirCands.length){
+    const pick = (wantTipo && dirCands.find(p=>up(p.tipo)===wantTipo))
+              || dirCands.find(p=>up(p.tipo)==='NR')
+              || dirCands[0];
+    directo = pick.code;
+  }
 
   // Regla 2: cadenas (BFS, las más cortas primero)
   const chains=[];
@@ -2577,7 +2588,7 @@ exports.handler = async function(event, context) {
         '- Cara plana al frente con un O-ring (junta) => ORFS (cara plana).',
         '- O-ring en la base de una rosca recta => ORB / BOSS.',
         '- Una tuerca que gira libre sobre el cuerpo => hembra giratoria. Rosca por fuera sin tuerca => macho.',
-        '- Cuerpo doblado => codo (estima 45 o 90 segun el angulo que veas).',
+        '- Cuerpo doblado => codo (estima 45 o 90 segun el angulo que veas). Si el cuerpo esta DERECHO / en linea recta (los dos extremos apuntan en la misma direccion), es RECTO: la gran mayoria de los adaptadores son rectos. NUNCA digas codo si la pieza se ve derecha. Pasa esto en el parametro ang de armar_conector (recto, 45 o 90).',
         'MUY IMPORTANTE: observa CADA extremo por separado y descrIbelo antes de concluir (largo de la rosca, si hay cono abocinado, tuerca, O-ring, forma del cuerpo). Es muy comun que los dos extremos sean DIFERENTES (por ejemplo un lado JIC 37/flare, que suele ser mas corto y con cono, y el otro NPT o ORB). NUNCA asumas que los dos lados son iguales sin mirarlos uno por uno; ese es el error mas comun.',
         'Tienes acceso a busqueda web: usala libremente para comparar, verificar normas o convertir un diametro exterior a su medida/dash cuando te sirva. La identificacion visual la haces TU con la imagen; la web es para apoyarte con datos. Las SOLUCIONES (codigos, piezas) siempre salen del catalogo de Adaptekk, nunca inventes codigos de internet.',
         'Tras proponer tu identificacion, pide UNA sola confirmacion sencilla y medible con herramientas que cualquiera tiene: el DIAMETRO EXTERIOR de la rosca con una regla o calibrador (vernier), en milimetros o pulgadas; o el ancho de la tuerca (la medida de la llave). NUNCA pidas contar hilos, el paso de rosca, ni una galga de roscas: nadie tiene eso. Con el estandar que TU identificaste mas ese diametro, deduces tu mismo la medida (dash).',
@@ -2615,7 +2626,8 @@ exports.handler = async function(event, context) {
         input_schema:{ type:'object', properties:{
           a:{type:'object', properties:{ std:{type:'string'}, gen:{type:'string'}, size:{type:'string'} }, required:['std','gen','size']},
           b:{type:'object', properties:{ std:{type:'string'}, gen:{type:'string'}, size:{type:'string'} }, required:['std','gen','size']},
-          material:{type:'string'}
+          material:{type:'string'},
+          ang:{type:'string', description:'Forma de la pieza: "recto" (lo mas comun, cuerpo en linea), "45" o "90" (codo). Si la pieza se ve derecha, es recto.'}
         }, required:['a','b'] }
       },{
         name:'cotizar_manguera',
