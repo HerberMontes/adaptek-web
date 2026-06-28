@@ -438,6 +438,7 @@
   function matchExtremoIA(e){
     var std=(e.std||'').toLowerCase(), gen=(e.gen||'').toUpperCase(), size=String(e.size||'').replace(/[^0-9]/g,''), ang=(e.ang||'').toLowerCase();
     if(size&&size.length===1) size='0'+size;
+    var esBrida = /code|brida|flange|\bcat\b|caterpillar|\b61\b|\b62\b|3000|6000/.test(std);
     function famOK(fam){ fam=fam.toLowerCase();
       if(/jic|flare/.test(std)) return /jic/.test(fam);
       if(/nps/.test(std)) return /nps/.test(fam);
@@ -457,7 +458,7 @@
       if(/sae/.test(std)) return /sae/.test(fam);
       return fam.indexOf(std)>=0;
     }
-    function genOK(c){ if(gen==='M'||gen==='MG') return c.g==='M'; if(gen==='H'||gen==='HG') return c.g==='H'; return true; }
+    function genOK(c){ if(esBrida) return true; if(gen==='M'||gen==='MG') return c.g==='M'; if(gen==='H'||gen==='HG') return c.g==='H'; return true; }
     function angOK(c){ if(!ang||/recto|straight|0/.test(ang)) return c.ak==='R'; if(/90/.test(ang)) return c.ak==='90'||c.ak==='90L'||c.ak==='90C'; if(/45/.test(ang)) return c.ak==='45'; if(/22/.test(ang)) return c.ak==='22'; if(/67/.test(ang)) return c.ak==='67'; if(/110/.test(ang)) return c.ak==='110'; return true; }
     var cands=CONNS.filter(function(c){ return famOK(familia(c))&&genOK(c)&&(!size||c.th===size)&&angOK(c); });
     return cands[0]||null;
