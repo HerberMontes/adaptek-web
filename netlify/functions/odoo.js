@@ -2583,7 +2583,8 @@ exports.handler = async function(event, context) {
         '- Komatsu / komat / equipo komatsu => Komatsu.',
         '- Code 61 / brida 61 / SAE 3000 / flange 3000 => Code 61.',
         '- Code 62 / brida 62 / SAE 6000 / flange 6000 / alta presion brida => Code 62.',
-        '- CAT / Caterpillar / brida caterpillar / flange CAT => CAT.',
+        '- CAT / Caterpillar / brida caterpillar / flange CAT => CAT. OJO: Code 61 y Code 62 son bridas SAE y NO son lo mismo que CAT; si el cliente dice \"Code 62\" manda std \"Code 62\", nunca \"CAT\".',
+        '- Las BRIDAS (Code 61, Code 62, CAT) no tienen macho ni hembra: NO les pongas genero, o usa gen \"B\". Solo necesitan estandar y medida.',
         '- Series de manguera/ferrula: DuoFit = Megafit = serie 210 = 1 a 2 mallas (baja-media presion). TetraFit = Xtrafit = serie 223 = 4 espirales (alta). HexaFit = Spiralfit = serie 240 = 6 espirales (muy alta). El cliente NO necesita saber esto; lo elige el sistema por la presion.',
         '- Si el cliente solo dice \"metrico\" sin Light/Heavy, o solo un numero de rosca metrica (M22, M18...), pregunta en una linea si es serie ligera o pesada, porque cambian la pieza.',
         '- Se breve y resolutivo en TODA la conversacion: una pregunta corta a la vez, sin parrafos de relleno.'
