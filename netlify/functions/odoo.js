@@ -2562,18 +2562,51 @@ exports.handler = async function(event, context) {
         '- Si falta un dato (ej. la medida de un extremo), pidelo amablemente.',
         '- Mantén el hilo: recibiras el historial de la conversacion. Si ya hiciste una pregunta y el cliente responde, combina su respuesta con lo que ya te habia dicho para avanzar; no reinicies desde cero ni repitas preguntas ya contestadas. Cuando ya tengas ambos extremos completos, llama a la herramienta.',
         '- Tu TEXTO debe ser una introduccion BREVE (2 o 3 frases) que explique el panorama: si se arma en una sola pieza, en cadena de cuantas piezas, o si se fabrica. NO enumeres los codigos uno por uno en el texto, porque las opciones con su codigo, precio y disponibilidad se mostraran en tarjetas ordenadas debajo de tu mensaje.',
-        '- Se conciso.'
+        '- Se conciso.',
+        '',
+        'TAMBIEN COTIZAS MANGUERAS HIDRAULICAS ENSAMBLADAS (manguera + dos extremos prensados). Detectas que es manguera cuando el cliente menciona manguera, manguera hidraulica, latiguillo, presion de trabajo, PSI, metros o largo. Para cotizar una manguera necesitas EXACTAMENTE 4 cosas: (1) presion de trabajo en PSI, (2) largo total en metros, (3) extremo A (estandar + genero + medida, y angulo si no es recto), (4) extremo B (igual). La manguera adecuada la elige el sistema solo segun la presion: NO le preguntes al cliente que tipo o medida de manguera quiere.',
+        'REGLA DE ORO para mangueras: si te falta UNO de esos 4 datos, haz UNA sola pregunta corta y directa por el dato que falta (ej. \"¿Cual es el largo total de la manguera en metros?\"). No repreguntes lo que ya te dieron, no expliques de mas, no listes varias preguntas juntas. En cuanto tengas los 4 datos, llama a la herramienta cotizar_manguera.',
+        'No des sermones para confirmar sinonimos. Si el cliente dice un termino del glosario de abajo, traducelo tu mismo en silencio y sigue; a lo mucho confirma en media linea (ej. \"Flare es JIC 37, anotado.\") y continua. Nunca escribas un parrafo largo solo para preguntar si dos terminos son equivalentes.',
+        'Convenciones para cotizar_manguera: presion (numero en PSI), largo (numero en metros), y por cada extremo a y b: std (mismo catalogo de estandares de abajo), gen (M, H, MG, HG), size (en dieciseisavos: 1/4=>04, 3/8=>06, 1/2=>08, 5/8=>10, 3/4=>12, 1=>16, 1-1/4=>20, 1-1/2=>24, 2=>32), ang (recto, 45, 90, 22, 67, 110; si no dicen, asume recto).',
+        '',
+        'GLOSARIO DE MODISMOS Y SINONIMOS (traducelos al estandar del catalogo; el cliente usa muchos nombres para lo mismo):',
+        '- JIC / JIC 37 / 37 grados / flare / abocinado / SAE 37 / cono 37 => JIC. (En el mundo real casi todos dicen \"flare\"; entiendelo como JIC sin hacer drama.)',
+        '- NPT / cono americano / rosca conica americana / tuberia americana => NPT.',
+        '- NPSM / NPS / recto americano => NPS.',
+        '- BSP / BSPP / gas / Whitworth / rosca gas / paralela britanica => BSP.',
+        '- BSPT / BSP conico / gas conico => BSPT.',
+        '- ORFS / cara plana / face seal / O-ring plano / flat face => ORFS.',
+        '- ORB / BOSS / O-ring boss / SAE boss / tapon oring => ORB.',
+        '- Metrico DIN Light / DIN ligero / serie ligera / ligera / liviano / Light / letra L / DKL / DKOL => Metrico DIN Light. (Es metrico DIN serie ligera; mucha gente lo pide como \"L\", \"ligera\" o \"DIN light\".)',
+        '- Metrico DIN Heavy / DIN pesado / serie pesada / pesada / Heavy / letra S / DKS / DKOS => Metrico DIN Heavy. (Metrico DIN serie pesada; lo piden como \"S\", \"pesada\" o \"DIN heavy\". Light y Heavy NO son lo mismo: confirma cual si el cliente solo dice \"metrico\".)',
+        '- JIS / japones / Toyota / BSP japones => JIS.',
+        '- Komatsu / komat / equipo komatsu => Komatsu.',
+        '- Code 61 / brida 61 / SAE 3000 / flange 3000 => Code 61.',
+        '- Code 62 / brida 62 / SAE 6000 / flange 6000 / alta presion brida => Code 62.',
+        '- CAT / Caterpillar / brida caterpillar / flange CAT => CAT.',
+        '- Series de manguera/ferrula: DuoFit = Megafit = serie 210 = 1 a 2 mallas (baja-media presion). TetraFit = Xtrafit = serie 223 = 4 espirales (alta). HexaFit = Spiralfit = serie 240 = 6 espirales (muy alta). El cliente NO necesita saber esto; lo elige el sistema por la presion.',
+        '- Si el cliente solo dice \"metrico\" sin Light/Heavy, o solo un numero de rosca metrica (M22, M18...), pregunta en una linea si es serie ligera o pesada, porque cambian la pieza.',
+        '- Se breve y resolutivo en TODA la conversacion: una pregunta corta a la vez, sin parrafos de relleno.'
       ].join('\n');
       const tools = [{
         name:'armar_conector',
-        description:'Busca en el catalogo real de Adaptekk como conectar dos extremos A y B. Devuelve si existe directo en una pieza, cadenas reales de varias piezas, o si se fabrica especial. Usalo siempre que el cliente describa un conector de dos extremos.',
+        description:'Busca en el catalogo real de Adaptekk como conectar dos extremos A y B (CONECTOR RIGIDO, sin manguera). Devuelve si existe directo en una pieza, cadenas reales de varias piezas, o si se fabrica especial. Usalo cuando el cliente describe un adaptador/conector de dos roscas SIN manguera.',
         input_schema:{ type:'object', properties:{
           a:{type:'object', properties:{ std:{type:'string'}, gen:{type:'string'}, size:{type:'string'} }, required:['std','gen','size']},
           b:{type:'object', properties:{ std:{type:'string'}, gen:{type:'string'}, size:{type:'string'} }, required:['std','gen','size']},
           material:{type:'string'}
         }, required:['a','b'] }
+      },{
+        name:'cotizar_manguera',
+        description:'Cotiza una MANGUERA HIDRAULICA ensamblada (manguera + dos extremos prensados). Usalo SOLO cuando ya tengas los 4 datos: presion (PSI), largo (metros) y los dos extremos con estandar, genero y medida. El sistema elige la manguera adecuada por la presion.',
+        input_schema:{ type:'object', properties:{
+          presion:{type:'number', description:'Presion de trabajo en PSI'},
+          largo:{type:'number', description:'Largo total de la manguera en metros'},
+          a:{type:'object', properties:{ std:{type:'string'}, gen:{type:'string'}, size:{type:'string'}, ang:{type:'string'} }, required:['std','gen','size']},
+          b:{type:'object', properties:{ std:{type:'string'}, gen:{type:'string'}, size:{type:'string'}, ang:{type:'string'} }, required:['std','gen','size']}
+        }, required:['presion','largo','a','b'] }
       }];
-      let uidIA = null, lastArmar = null, totalIn = 0, totalOut = 0;
+      let uidIA = null, lastArmar = null, lastCotizarManguera = null, totalIn = 0, totalOut = 0;
       try {
         for (let iter=0; iter<3; iter++){
           const r = await fetch('https://api.anthropic.com/v1/messages', {
@@ -2587,6 +2620,7 @@ exports.handler = async function(event, context) {
           const toolUses = (data.content||[]).filter(b=>b.type==='tool_use');
           if (data.stop_reason!=='tool_use' || !toolUses.length){
             if (lastArmar) data._armar = lastArmar;
+            if (lastCotizarManguera) data._cotizar_manguera = lastCotizarManguera;
             data._usage = { inTok: totalIn, outTok: totalOut };
             return {statusCode:200, headers, body: JSON.stringify(data)};
           }
@@ -2598,6 +2632,9 @@ exports.handler = async function(event, context) {
               if (!uidIA) uidIA = await odooAuth();
               out = uidIA ? await armarConectorCore(tu.input||{}, uidIA) : {error:'No se pudo conectar al catalogo'};
               if (out && out.ok) lastArmar = out;
+            } else if (tu.name==='cotizar_manguera'){
+              lastCotizarManguera = tu.input || {};
+              out = {ok:true, mensaje:'Datos completos recibidos. La cotizacion de la manguera (sistema y manguera elegidos por la presion, las dos espigas, los metros a cortar y el precio) se mostrara al cliente en una tarjeta debajo de tu mensaje. Da SOLO una introduccion breve de 1 o 2 frases, en prosa, sin enumerar codigos ni precios.'};
             } else { out = {error:'herramienta desconocida'}; }
             results.push({ type:'tool_result', tool_use_id:tu.id, content: JSON.stringify(out).slice(0,6000) });
           }
@@ -2610,6 +2647,7 @@ exports.handler = async function(event, context) {
         const df = await rf.json();
         if (df.usage) { totalIn += (df.usage.input_tokens||0); totalOut += (df.usage.output_tokens||0); }
         if (lastArmar) df._armar = lastArmar;
+        if (lastCotizarManguera) df._cotizar_manguera = lastCotizarManguera;
         df._usage = { inTok: totalIn, outTok: totalOut };
         return {statusCode:200, headers, body: JSON.stringify(df)};
       } catch(e){
