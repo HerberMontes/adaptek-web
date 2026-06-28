@@ -2540,7 +2540,13 @@ exports.handler = async function(event, context) {
       const messages = Array.isArray(body.messages) ? body.messages.slice() : null;
       if (!messages || !messages.length) return {statusCode:200, headers, body: JSON.stringify({ error:{ message:'No se recibieron mensajes para la IA.' } })};
       const maxTokens = Math.min(Math.max(parseInt(body.max_tokens)||900, 50), 2000);
-      const MODEL = 'claude-haiku-4-5-20251001';
+      // Cuando el mensaje trae imagen o documento, usamos un modelo mucho mas fuerte en VISION
+      // (Sonnet) para identificar bien el conector; para texto seguimos con Haiku (rapido y barato).
+      const hasImage = messages.some(function(m){ return Array.isArray(m.content) && m.content.some(function(b){ return b && (b.type==='image' || b.type==='document'); }); });
+      const MODEL = hasImage
+        ? (process.env.IA_MODEL_VISION || 'claude-sonnet-4-6')
+        : (process.env.IA_MODEL_TEXT || 'claude-haiku-4-5-20251001');
+      const effMaxTokens = hasImage ? Math.max(maxTokens, 1400) : maxTokens;
       const SYSTEM = [
         'Eres el asistente experto en conectores y adaptadores hidraulicos de Adaptekk (Mexico).',
         'Identificas la pieza exacta que el cliente necesita USANDO EXCLUSIVAMENTE los codigos reales del catalogo de Odoo. NUNCA inventes codigos.',
@@ -2572,6 +2578,8 @@ exports.handler = async function(event, context) {
         '- O-ring en la base de una rosca recta => ORB / BOSS.',
         '- Una tuerca que gira libre sobre el cuerpo => hembra giratoria. Rosca por fuera sin tuerca => macho.',
         '- Cuerpo doblado => codo (estima 45 o 90 segun el angulo que veas).',
+        'MUY IMPORTANTE: observa CADA extremo por separado y descrIbelo antes de concluir (largo de la rosca, si hay cono abocinado, tuerca, O-ring, forma del cuerpo). Es muy comun que los dos extremos sean DIFERENTES (por ejemplo un lado JIC 37/flare, que suele ser mas corto y con cono, y el otro NPT o ORB). NUNCA asumas que los dos lados son iguales sin mirarlos uno por uno; ese es el error mas comun.',
+        'Tienes acceso a busqueda web: usala libremente para comparar, verificar normas o convertir un diametro exterior a su medida/dash cuando te sirva. La identificacion visual la haces TU con la imagen; la web es para apoyarte con datos. Las SOLUCIONES (codigos, piezas) siempre salen del catalogo de Adaptekk, nunca inventes codigos de internet.',
         'Tras proponer tu identificacion, pide UNA sola confirmacion sencilla y medible con herramientas que cualquiera tiene: el DIAMETRO EXTERIOR de la rosca con una regla o calibrador (vernier), en milimetros o pulgadas; o el ancho de la tuerca (la medida de la llave). NUNCA pidas contar hilos, el paso de rosca, ni una galga de roscas: nadie tiene eso. Con el estandar que TU identificaste mas ese diametro, deduces tu mismo la medida (dash).',
         'Guia paso a paso, lenguaje simple, una indicacion a la vez, como si el cliente no supiera nada. Ejemplo de buen mensaje ante una foto: "Por la foto veo un adaptador con un extremo JIC 37 macho (el cono abocinado con tuerca) y el otro NPT macho (la rosca conica de tuberia). Para darte el codigo exacto solo necesito una medida: con una regla, mide el diametro de afuera de cada rosca y dime cuanto da cada lado." NUNCA respondas pidiendo que el cliente identifique los estandares o las roscas por su cuenta.',
         'Cuando ya tengas identificados los dos extremos y su medida (por foto + la confirmacion del diametro), llama a la herramienta que corresponda (armar_conector si es adaptador rigido, cotizar_manguera si es manguera) sin volver a preguntar.',
@@ -2601,7 +2609,7 @@ exports.handler = async function(event, context) {
         '- Si el cliente solo dice \"metrico\" sin Light/Heavy, o solo un numero de rosca metrica (M22, M18...), pregunta en una linea si es serie ligera o pesada, porque cambian la pieza.',
         '- Se breve y resolutivo en TODA la conversacion: una pregunta corta a la vez, sin parrafos de relleno.'
       ].join('\n');
-      const tools = [{
+      let tools = [{
         name:'armar_conector',
         description:'Busca en el catalogo real de Adaptekk como conectar dos extremos A y B (CONECTOR RIGIDO, sin manguera). Devuelve si existe directo en una pieza, cadenas reales de varias piezas, o si se fabrica especial. Usalo cuando el cliente describe un adaptador/conector de dos roscas SIN manguera.',
         input_schema:{ type:'object', properties:{
@@ -2619,13 +2627,18 @@ exports.handler = async function(event, context) {
           b:{type:'object', properties:{ std:{type:'string'}, gen:{type:'string'}, size:{type:'string'}, ang:{type:'string'} }, required:['std','gen','size']}
         }, required:['presion','largo','a','b'] }
       }];
+      // Busqueda web (server tool de Anthropic): tiene costo y debe estar habilitada en la cuenta.
+      // Se activa poniendo la variable de entorno IA_WEB_SEARCH=1 en Netlify. Por defecto, apagada.
+      if (process.env.IA_WEB_SEARCH==='1' || process.env.IA_WEB_SEARCH==='true') {
+        tools.push({ type:'web_search_20250305', name:'web_search', max_uses:3 });
+      }
       let uidIA = null, lastArmar = null, lastCotizarManguera = null, totalIn = 0, totalOut = 0;
       try {
         for (let iter=0; iter<3; iter++){
           const r = await fetch('https://api.anthropic.com/v1/messages', {
             method:'POST',
             headers:{ 'Content-Type':'application/json', 'x-api-key':apiKey, 'anthropic-version':'2023-06-01' },
-            body: JSON.stringify({ model:MODEL, max_tokens:maxTokens, system:SYSTEM, tools, messages })
+            body: JSON.stringify({ model:MODEL, max_tokens:effMaxTokens, system:SYSTEM, tools, messages })
           });
           const data = await r.json();
           if (data.usage) { totalIn += (data.usage.input_tokens||0); totalOut += (data.usage.output_tokens||0); }
@@ -2655,7 +2668,7 @@ exports.handler = async function(event, context) {
         }
         const rf = await fetch('https://api.anthropic.com/v1/messages', {
           method:'POST', headers:{ 'Content-Type':'application/json', 'x-api-key':apiKey, 'anthropic-version':'2023-06-01' },
-          body: JSON.stringify({ model:MODEL, max_tokens:maxTokens, system:SYSTEM, messages })
+          body: JSON.stringify({ model:MODEL, max_tokens:effMaxTokens, system:SYSTEM, messages })
         });
         const df = await rf.json();
         if (df.usage) { totalIn += (df.usage.input_tokens||0); totalOut += (df.usage.output_tokens||0); }
