@@ -53,7 +53,11 @@
                     .sort(function(x,y){return x.c-y.c;})[0];
       if(!mang) continue;
       var ord=mang.s + a.s + b.s;
-      if(!best || ord<best._ord) best={a:a,b:b,mang:mang,_ord:ord};
+      // Preferencia: la espiga debe ser de la medida del conector (hd == th = espiga directa, no reductora).
+      // Si ambos extremos son la misma medida, gana la manguera de esa medida. Si difieren, entre las
+      // combinaciones con calibre comun se toma la mas economica.
+      var match=(a.hd===a.th?1:0)+(b.hd===b.th?1:0);
+      if(!best || match>best._match || (match===best._match && ord<best._ord)) best={a:a,b:b,mang:mang,_ord:ord,_match:match};
     }
     if(!best) return {error:'Ninguna combinación cumple '+presion+' PSI con esas conexiones.'};
     var a=best.a, b=best.b, mang=best.mang;
