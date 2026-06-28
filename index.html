@@ -9140,6 +9140,8 @@ updateFAB();
       {v:'adaptador', t:'Adaptadores hidráulicos', s:'Conectores rígidos de rosca a rosca'}
     ];
     var byV={}; (familias||[]).forEach(function(x){ byV[x.v]=x.n; });
+    // La familia de manguera se cuenta desde el dataset del configurador (no esta en Odoo).
+    byV['manguera'] = (window.DATA && window.DATA.conns) ? window.DATA.conns.length : (byV['manguera']||0);
     opts.forEach(function(o){
       var on = (CAT.familia===o.v);
       var n = byV[o.v]||0;
@@ -9210,15 +9212,63 @@ updateFAB();
     }
   }
 
-  function setFilter(kind, val){ CAT[kind] = (CAT[kind]===val ? '' : val); if (kind==='familia' && CAT.familia==='manguera') CAT.tipo=''; CAT.page=1; catLoad(); }
+  function setFilter(kind, val){ CAT[kind] = (CAT[kind]===val ? '' : val); if (kind==='familia'){ CAT.tipo=''; CAT.std=''; CAT.size=''; } CAT.page=1; catLoad(); }
+
+  // ── Familia "Conectores de manguera" (espigas): se arma desde el dataset del configurador
+  //    (window.DATA.conns), porque no son productos sueltos en Odoo. Pedimos stock/precio en vivo.
+  var GEN_LBL = { M:'Macho', H:'Hembra', HG:'Hembra giratoria' };
+  function mangueraAll(){ return (window.DATA && window.DATA.conns) ? window.DATA.conns : []; }
+  function mangueraFiltradas(){
+    return mangueraAll().filter(function(c){
+      if (CAT.std && c.sl !== CAT.std) return false;
+      if (CAT.size && c.th !== CAT.size) return false;
+      return true;
+    });
+  }
+  function mangueraFacets(list){
+    var fE={}, fM={};
+    list.forEach(function(c){ if(c.sl) fE[c.sl]=(fE[c.sl]||0)+1; if(c.th) fM[c.th]=(fM[c.th]||0)+1; });
+    var byN=function(o){ return Object.keys(o).map(function(k){return {v:k,n:o[k]};}).sort(function(a,b){return b.n-a.n;}); };
+    var byMed=function(o){ return Object.keys(o).map(function(k){return {v:k,n:o[k]};}).sort(function(a,b){return (parseInt(a.v)||999)-(parseInt(b.v)||999);}); };
+    return { estandares: byN(fE), medidas: byMed(fM) };
+  }
+  function mangueraNombre(c){
+    var g = GEN_LBL[c.g]||'';
+    return (c.sl||'Conector') + (g?(' '+g):'') + (c.ml?(' '+c.ml):'') + ' — espiga para manguera ' + mL(c.hd);
+  }
+  function catLoadManguera(){
+    var c = document.getElementById('page-catalogo'); if(!c) return;
+    if (!c._built) buildShell(c);
+    renderProducts(null, true);
+    var list = mangueraFiltradas();
+    var facets = mangueraFacets(list);
+    var total = list.length;
+    var start = (CAT.page-1)*CAT.pageSize;
+    var pageItems = list.slice(start, start+CAT.pageSize);
+    renderFacets({ familias:[{v:'manguera',n:mangueraAll().length},{v:'adaptador',n:(window._adapCount||0)}], estandares:facets.estandares, medidas:facets.medidas, tipos:[] });
+    if (!pageItems.length){ renderProducts({ ok:true, total:0, page:CAT.page, page_size:CAT.pageSize, productos:[] }, false); return; }
+    var codes = pageItems.map(function(x){ return x.code; });
+    function pinta(info){
+      var productos = pageItems.map(function(x){
+        var od = info[x.code] || {};
+        return { code:x.code, familia:'manguera', name: od.name || mangueraNombre(x), price: (od.price!=null?od.price:x.s), qty: (od.qty!=null?od.qty:null) };
+      });
+      renderProducts({ ok:true, total:total, page:CAT.page, page_size:CAT.pageSize, productos:productos }, false);
+    }
+    fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'catalogo_info', codes:codes })
+    }).then(function(r){return r.json();}).then(function(d){ pinta((d&&d.info)||{}); }).catch(function(){ pinta({}); });
+  }
 
   function catLoad(){
+    if (CAT.familia==='manguera'){ catLoadManguera(); return; }
     var c = document.getElementById('page-catalogo'); if(!c) return;
     if (!c._built) buildShell(c);
     renderProducts(null, true);
     fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ action:'catalogo_listar', familia:CAT.familia, tipo:CAT.tipo, std:CAT.std, size:CAT.size, page:CAT.page, page_size:CAT.pageSize })
     }).then(function(r){return r.json();}).then(function(d){
+      var fam=(d.facetas&&d.facetas.familias)||[]; var ad=fam.filter(function(x){return x.v==='adaptador';})[0]; if(ad) window._adapCount=ad.n;
       renderFacets(d.facetas||{});
       renderProducts(d, false);
     }).catch(function(){ renderProducts({error:true}, false); });
