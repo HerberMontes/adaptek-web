@@ -4106,6 +4106,7 @@ body.exec-mode .topbar, body.exec-mode > nav, body.exec-mode body > nav{display:
       <span style="width:1px;height:18px;background:rgba(255,255,255,.18);margin:0 4px;"></span>
       <span onclick="execRefrescar()" style="background:rgba(255,255,255,.1);color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;cursor:pointer;font-weight:600;">Actualizar</span>
       <span id="btn-admin-users" onclick="abrirAdminUsuarios()" style="display:none;background:#C8102E;color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;cursor:pointer;font-weight:700;">Usuarios</span>
+      <span id="btn-ia-reglas" onclick="abrirReglasIA()" style="display:none;background:#001F5B;border:1px solid rgba(255,255,255,.25);color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;cursor:pointer;font-weight:700;">Reglas IA</span>
       <span onclick="execLogout()" style="color:rgba(255,255,255,.5);font-size:12px;cursor:pointer;">Salir</span>
     </div>
   </div>
@@ -4171,7 +4172,27 @@ body.exec-mode .topbar, body.exec-mode > nav, body.exec-mode body > nav{display:
         <div style="background:#FFF8E1;border-left:4px solid #FFA000;border-radius:4px;padding:12px 16px;margin-bottom:20px;font-size:13px;color:#795548;">
           Los cambios de contrasena son inmediatos. Avisa al ejecutivo su nueva contrasena.
         </div>
-        <div id="admin-users-list"></div>
+  </div>
+
+  <!-- Reglas / Correcciones de la IA Modal (solo gerencia) -->
+  <div id="ia-reglas-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:2000;overflow-y:auto;" onclick="if(event.target===this)cerrarReglasIA()">
+    <div style="background:#fff;max-width:760px;margin:40px auto;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4);">
+      <div style="background:#001F5B;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-size:15px;font-weight:700;color:#fff;">Reglas y correcciones de la IA</div>
+        <div onclick="cerrarReglasIA()" style="color:rgba(255,255,255,.7);cursor:pointer;font-size:22px;">&#215;</div>
+      </div>
+      <div style="padding:24px;">
+        <div style="background:#EEF3FB;border-left:4px solid #2a6fdb;border-radius:4px;padding:12px 16px;margin-bottom:18px;font-size:13px;color:#33425c;line-height:1.55;">
+          Escribe una correccion por linea, en lenguaje normal. La IA las aplica en TODAS las conversaciones con clientes. Ejemplos:<br>
+          &bull; Una rosca recta de ~20.87 mm es M22 metrico, nunca ORB 3/4.<br>
+          &bull; El conector de la bomba X de la marca Y es recto, no codo.<br>
+          &bull; Si el cliente dice "tipo caterpillar chico" se refiere a Code 61, no CAT.
+        </div>
+        <textarea id="ia-reglas-text" placeholder="Cargando reglas guardadas..." style="width:100%;min-height:300px;padding:14px 16px;border:1.5px solid #dde6f0;border-radius:10px;font-family:'Inter',inherit;font-size:14px;line-height:1.6;color:#1a2740;resize:vertical;box-sizing:border-box;outline:none;"></textarea>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;">
+          <span id="ia-reglas-msg" style="font-size:13px;color:#8895a7;"></span>
+          <button id="ia-reglas-save" onclick="guardarReglasIAUI()" style="background:#001F5B;color:#fff;border:none;padding:11px 26px;border-radius:10px;cursor:pointer;font-weight:700;font-size:14px;font-family:inherit;">Guardar reglas</button>
+        </div>
       </div>
     </div>
   </div>
@@ -4233,6 +4254,8 @@ async function execLogin() {
     if (badge) { badge.textContent = cuenta.nombre; badge.style.background = cuenta.rol==='gerente'?'#C8102E':'rgba(255,255,255,.1)'; }
     var adminBtn = document.getElementById('btn-admin-users');
     if (adminBtn) adminBtn.style.display = cuenta.rol==='gerente' ? 'inline' : 'none';
+    var iaBtn = document.getElementById('btn-ia-reglas');
+    if (iaBtn) iaBtn.style.display = cuenta.rol==='gerente' ? 'inline' : 'none';
     var esGerente = cuenta.rol==='gerente';
     var navT = document.getElementById('exec-nav-tablero');
     if (navT) navT.style.display = esGerente ? 'inline-block' : 'none';
@@ -5177,6 +5200,38 @@ async function bloquearUsuario(key, blocked) {
 }
 
 function cerrarAdminUsuarios() { document.getElementById('admin-users-modal').style.display = 'none'; }
+
+// ── REGLAS / CORRECCIONES DE LA IA (solo gerencia) ──
+async function abrirReglasIA() {
+  var modal = document.getElementById('ia-reglas-modal');
+  var ta = document.getElementById('ia-reglas-text');
+  var msg = document.getElementById('ia-reglas-msg');
+  modal.style.display = 'block';
+  ta.value = ''; ta.placeholder = 'Cargando reglas guardadas...'; msg.textContent = '';
+  try {
+    var r = await fetch('/.netlify/functions/odoo', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'ia_reglas_get', gerencia_pass: execCurrentUser.pass})});
+    var d = await r.json();
+    if (d && d.ok) { ta.value = d.reglas || ''; ta.placeholder = 'Aun no hay reglas. Escribe la primera correccion aqui.'; }
+    else { ta.placeholder = ''; msg.style.color = '#C8102E'; msg.textContent = (d && d.error) || 'No se pudieron cargar las reglas.'; }
+  } catch(e) { ta.placeholder = ''; msg.style.color = '#C8102E'; msg.textContent = 'Error de conexion: ' + e.message; }
+}
+
+async function guardarReglasIAUI() {
+  var ta = document.getElementById('ia-reglas-text');
+  var msg = document.getElementById('ia-reglas-msg');
+  var btn = document.getElementById('ia-reglas-save');
+  btn.disabled = true; var prev = btn.textContent; btn.textContent = 'Guardando...';
+  msg.style.color = '#8895a7'; msg.textContent = '';
+  try {
+    var r = await fetch('/.netlify/functions/odoo', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'ia_reglas_set', reglas: ta.value, gerencia_pass: execCurrentUser.pass})});
+    var d = await r.json();
+    if (d && d.ok) { msg.style.color = '#1F9D55'; msg.textContent = 'Guardado. La IA ya aplica estas reglas.'; }
+    else { msg.style.color = '#C8102E'; msg.textContent = (d && d.error) || 'No se pudo guardar.'; }
+  } catch(e) { msg.style.color = '#C8102E'; msg.textContent = 'Error de conexion: ' + e.message; }
+  btn.disabled = false; btn.textContent = prev;
+}
+
+function cerrarReglasIA() { document.getElementById('ia-reglas-modal').style.display = 'none'; }
 
 async function cambiarPass(key) {
   var input = document.getElementById('newpass-'+key);
