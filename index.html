@@ -1449,7 +1449,7 @@ window.EMPRESA = {
 };
 
 // Invitados y registrados ven PRECIO FIJO. Registrados llevan 5% de descuento de socio.
-window.PRECIO_RANGO = 0.15; // (ya no se usa para mostrar; se conserva por compatibilidad)
+window.PRECIO_RANGO = 0; // sin rango: el precio es el precio (descuento solo aplica a registrados)
 window.DESC_REGISTRADO = 0.05; // 5% para clientes registrados
 
 // Tiempos de producción por estatus (días hábiles)
@@ -1705,14 +1705,14 @@ window.renderCart = function() {
     document.getElementById('cart-total').textContent = window.fmtMXN(d.total) + ' MXN';
   } else {
     document.getElementById('cart-item-count').textContent = totalItems + ' producto' + (totalItems!==1?'s':'');
-    document.getElementById('cart-subtotal').textContent = window.fmtMXN(t.min) + ' \u2013 ' + window.fmtMXN(t.max);
+    document.getElementById('cart-subtotal').textContent = window.fmtMXN(t.exact) + ' MXN';
     if (ivaRow) ivaRow.style.display = 'none';
-    document.getElementById('cart-total').textContent = window.fmtMXN(t.min) + ' \u2013 ' + window.fmtMXN(t.max) + ' MXN';
+    document.getElementById('cart-total').textContent = window.fmtMXN(t.exact) + ' MXN';
   }
 
   // Nota para invitados sobre el rango
   var note = document.getElementById('cart-range-note');
-  if (note) note.style.display = registered ? 'none' : 'block';
+  if (note) note.style.display = 'none';
 };
 
 window.irACheckout = function() {
@@ -1762,10 +1762,8 @@ window.descargarCotizacion = function() {
       precio = window.fmtMXN(item.price);
       subtotal = window.fmtMXN(item.price * qty);
     } else if (item.price > 0) {
-      // invitado: rango
-      var hi = item.price * (1 + window.PRECIO_RANGO);
-      precio = window.fmtMXN(item.price) + ' \u2013 ' + window.fmtMXN(hi);
-      subtotal = window.fmtMXN(item.price*qty) + ' \u2013 ' + window.fmtMXN(hi*qty);
+      precio = window.fmtMXN(item.price);
+      subtotal = window.fmtMXN(item.price*qty);
     } else {
       precio = 'Bajo cotizaci\u00f3n'; subtotal = '\u2014';
     }
@@ -1880,7 +1878,7 @@ window.cotizacionPDFBase64 = function(folio){
     (window.CART||[]).forEach(function(item){
       var qty=item.qty||1, precio, subtotal;
       if (registered && item.price>0){ precio=fmt(item.price); subtotal=fmt(item.price*qty); }
-      else if (item.price>0){ var hi=item.price*(1+window.PRECIO_RANGO); precio=fmt(item.price)+'\u2013'+fmt(hi); subtotal=fmt(item.price*qty)+'\u2013'+fmt(hi*qty); }
+      else if (item.price>0){ precio=fmt(item.price); subtotal=fmt(item.price*qty); }
       else { precio='Bajo cotizaci\u00f3n'; subtotal='\u2014'; }
       y+=22; if (y>770){ doc.addPage(); y=60; }
       try { var _d=window.__atImgData&&window.__atImgData[item.at_code]; if(_d){ doc.addImage(_d,'PNG',ML+4,y-12,16,16); } } catch(_e){}
@@ -2857,8 +2855,7 @@ function coRenderSummary(){
   items.innerHTML = (window.CART||[]).map(function(p){
     var qty = p.qty||1; count += qty;
     var line = (p.price||0)*qty; subtotal += line;
-    var priceStr = (registered && p.price>0) ? window.fmtMXN(line)
-      : (p.price>0 ? (window.fmtMXN((p.price)*qty) + ' \u2013 ' + window.fmtMXN(p.price*(1+window.PRECIO_RANGO)*qty)) : '\u2014');
+    var priceStr = (p.price>0) ? window.fmtMXN(line) : '\u2014';
 
     // Disponibilidad / tiempo de entrega por producto
     var lt = window.LEADTIMES[p.status] || window.LEADTIMES.especial;
@@ -2910,11 +2907,10 @@ function coRenderSummary(){
     document.getElementById('co-sum-pricenote').style.display = 'none';
   } else {
     document.getElementById('co-sum-count').textContent = count + ' producto' + (count!==1?'s':'');
-    var lo = subtotal, hi = subtotal*(1+window.PRECIO_RANGO);
-    document.getElementById('co-sum-subtotal').textContent = window.fmtMXN(lo) + ' \u2013 ' + window.fmtMXN(hi);
+    document.getElementById('co-sum-subtotal').textContent = window.fmtMXN(subtotal) + ' MXN';
     if (coIvaRow) coIvaRow.style.display = 'none';
-    document.getElementById('co-sum-total').textContent = window.fmtMXN(lo+ship) + ' \u2013 ' + window.fmtMXN(hi+ship) + ' MXN';
-    document.getElementById('co-sum-pricenote').style.display = 'block';
+    document.getElementById('co-sum-total').textContent = window.fmtMXN(subtotal+ship) + ' MXN';
+    document.getElementById('co-sum-pricenote').style.display = 'none';
   }
 }
 
