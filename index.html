@@ -1464,12 +1464,13 @@ window.clientLevel = function(){
   return window.currentClientUser ? 'registered' : 'guest';
 };
 // ¿La cuenta está VERIFICADA por gerencia? Solo verificados ven stock.
+window.PITCH_DEMO = true; // PITCH: muestra stock (cantidad exacta) y precio a TODOS sin registro. Pon false para volver a lo normal.
 window.clientVerified = function(){
-  return !!(window.currentClientUser && window.currentClientUser.verified);
+  return window.PITCH_DEMO || !!(window.currentClientUser && window.currentClientUser.verified);
 };
 // ¿Ve la CANTIDAD de piezas? Solo cuentas premium/distribuidor (a futuro). Normal: solo "En stock".
 window.clientSeesStockQty = function(){
-  return !!(window.currentClientUser && window.currentClientUser.premium);
+  return window.PITCH_DEMO || !!(window.currentClientUser && window.currentClientUser.premium);
 };
 
 window.fmtMXN = function(n){ return '$' + Number(n||0).toFixed(2); };
