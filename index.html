@@ -1525,9 +1525,9 @@ window.cartAdd = function(product) {
   // product = {at_code, name, price, qty_available, status}
   var existing = window.CART.find(function(p){ return p.at_code === product.at_code; });
   if (existing) {
-    existing.qty = (existing.qty || 1) + 1;
+    existing.qty = (existing.qty || 1) + (product.qty || 1);
   } else {
-    product.qty = 1;
+    product.qty = product.qty || 1;
     window.CART.push(product);
   }
   cartSave();
@@ -7065,37 +7065,72 @@ function renderResult(){
   });
 }
 
+function injectAdkResStyles(){
+  if(document.getElementById('adk-res-styles')) return;
+  var s=document.createElement('style'); s.id='adk-res-styles';
+  s.textContent=
+    '.adk-res{display:flex;gap:26px;align-items:flex-start;}'
+    +'.adk-col{flex:1;min-width:0;}'
+    +'.adk-left{flex:0 0 44%;}'
+    +'.adk-lbl{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:#9aa1ad;font-weight:700;margin:0 0 9px 2px;}'
+    +'.adk-partcard{border:1px solid #e8e8ed;border-radius:14px;padding:15px 18px;margin-bottom:18px;}'
+    +'.adk-part{font-family:"Inter",-apple-system,sans-serif;font-size:26px;font-weight:600;letter-spacing:-.4px;color:#001F5B;word-break:break-all;}'
+    +'.adk-imgcard{border:1px solid #e8e8ed;border-radius:16px;padding:20px;text-align:center;margin-bottom:6px;}'
+    +'.adk-imgcard img{max-width:300px;width:80%;height:auto;}'
+    +'.adk-mat{display:flex;gap:9px;margin-bottom:20px;}'
+    +'.adk-pill{flex:1;text-align:left;border:1.5px solid #e8e8ed;border-radius:13px;padding:12px 14px;cursor:pointer;background:#fff;}'
+    +'.adk-pill-sel{background:#001F5B;border-color:#001F5B;}'
+    +'.adk-pill-t{display:block;font-size:14px;font-weight:600;color:#001F5B;}'
+    +'.adk-pill-sel .adk-pill-t{color:#fff;}'
+    +'.adk-pill-s{display:block;font-size:11px;color:#8b93a0;margin-top:2px;}'
+    +'.adk-pill-sel .adk-pill-s{color:#aeb8d4;}'
+    +'.adk-specs{border:1px solid #e8e8ed;border-radius:16px;padding:4px 18px;margin-bottom:20px;}'
+    +'.adk-srow{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid #f0f1f4;}'
+    +'.adk-srow:last-child{border-bottom:0;}'
+    +'.adk-sk{font-size:13px;color:#8b93a0;}'
+    +'.adk-sv{font-size:13px;color:#001F5B;font-weight:600;text-align:right;}'
+    +'.adk-qty{display:flex;align-items:center;justify-content:space-between;border:1px solid #e8e8ed;border-radius:13px;padding:10px 14px;margin-bottom:12px;}'
+    +'.adk-qty-l{font-size:14px;font-weight:600;color:#001F5B;}'
+    +'.adk-qty-c button{width:34px;height:34px;border:1px solid #e2e4e9;background:#fff;border-radius:9px;font-size:17px;color:#001F5B;cursor:pointer;vertical-align:middle;}'
+    +'.adk-qty-c span{display:inline-block;min-width:34px;text-align:center;font-size:15px;font-weight:700;color:#001F5B;vertical-align:middle;}'
+    +'@media(max-width:860px){.adk-res{flex-direction:column;gap:0;}.adk-left{flex:1 1 auto;width:100%;}}';
+  document.head.appendChild(s);
+}
 function renderResultPanel(p, data, params){
   var atCode = data.at_code || ('AT-'+params.tipo+'-'+params.std_a+(params.std_b?'-'+params.std_b:'')+'-'+params.med_a+(params.med_b?'-'+params.med_b:''));
 
-  // Header
-  var hdr=document.createElement('div');
-  hdr.style.cssText='text-align:center;padding:8px 24px 28px;border-bottom:1px solid #e8e8ed;margin-bottom:24px;';
-  hdr.innerHTML='<div style="font-size:13px;letter-spacing:0;color:#86868b;text-transform:none;margin-bottom:8px;">Número de parte</div>'
-    +'<div style="font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:32px;font-weight:600;color:#001F5B;letter-spacing:-.3px;">'+atCode+'</div>';
-  p.appendChild(hdr);
+  // Layout de dos columnas (en móvil se apila)
+  injectAdkResStyles();
+  var res=document.createElement('div'); res.className='adk-res';
+  var L=document.createElement('div'); L.className='adk-col adk-left';
+  var R=document.createElement('div'); R.className='adk-col adk-right';
+  res.appendChild(L); res.appendChild(R); p.appendChild(res);
 
-  // Imagen del conector (dibujo técnico de la serie)
+  // Número de parte (tarjeta)
+  var hdr=document.createElement('div');
+  hdr.innerHTML='<div class="adk-lbl">N\u00famero de parte</div><div class="adk-partcard"><div class="adk-part">'+atCode+'</div></div>';
+  L.appendChild(hdr);
+
+  // Esquema técnico (dibujo de la serie, protagonista)
   if (typeof window.imgConectorHTML === 'function') {
     var imgBox = document.createElement('div');
-    imgBox.innerHTML = window.imgConectorHTML(atCode, {max:220, alt:atCode});
-    p.appendChild(imgBox);
+    imgBox.innerHTML = '<div class="adk-lbl">Esquema t\u00e9cnico</div><div class="adk-imgcard">'+window.imgConectorHTML(atCode, {max:300, alt:atCode})+'</div>';
+    L.appendChild(imgBox);
   }
 
   // -- Selector de MATERIAL (CS acero al carbon / SS inoxidable) --
+  var matLbl=document.createElement('div'); matLbl.className='adk-lbl'; matLbl.textContent='Material'; R.appendChild(matLbl);
   var matWrap=document.createElement('div');
-  matWrap.style.cssText='display:flex;gap:8px;justify-content:center;margin-bottom:18px;';
-  [['CS','Acero al carbon'],['SS','Inoxidable 316']].forEach(function(m){
+  matWrap.className='adk-mat';
+  [['CS','Acero al carb\u00f3n','Zincado \u00b7 general'],['SS','Inoxidable 316','Anticorrosivo']].forEach(function(m){
     var b=document.createElement('button');
     var on=(material===m[0]);
-    b.textContent=m[1];
-    b.style.cssText='flex:1;max-width:180px;padding:13px;border-radius:980px;cursor:pointer;'
-      +'font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:15px;font-weight:600;letter-spacing:0;'
-      +(on?'background:#C8102E;color:#fff;border:1.5px solid #C8102E;':'background:#fff;color:#001F5B;border:1.5px solid #e8e8ed;');
+    b.className='adk-pill'+(on?' adk-pill-sel':'');
+    b.innerHTML='<span class="adk-pill-t">'+m[1]+'</span><span class="adk-pill-s">'+m[2]+'</span>';
     b.onclick=function(){ if(material!==m[0]){ material=m[0]; renderResult(); } };
     matWrap.appendChild(b);
   });
-  p.appendChild(matWrap);
+  R.appendChild(matWrap);
 
   // Status card — estilo Apple: limpio, precio destacado, disponibilidad discreta
   var statusDiv=document.createElement('div');
@@ -7143,23 +7178,25 @@ function renderResultPanel(p, data, params){
     statusDiv.innerHTML='<div style="font-size:17px;font-weight:600;color:#001F5B;margin-bottom:4px;">Fabricación bajo pedido</div>'
       +'<div style="font-size:14px;color:#86868b;">Contacta a tu ejecutivo para cotización y tiempo de entrega</div>';
   }
-  p.appendChild(statusDiv);
+  // (statusDiv se agrega tras las especificaciones, ver abajo)
 
   // Cadenas de armado (cuando no hay directo pero el motor encontró combinaciones)
-  if (data._chains && data._chains.length > 0) { renderChainCards(p, data._chains); }
+  if (data._chains && data._chains.length > 0) { renderChainCards(R, data._chains); }
   var spec=document.createElement('div');
-  spec.style.cssText='background:#f5f5f7;border-radius:14px;padding:20px;margin-bottom:24px;display:grid;grid-template-columns:1fr 1fr;gap:16px;';
+  spec.className='adk-specs';
   function specRow(label,val){
-    return '<div><div style="font-size:12px;color:#86868b;text-transform:none;letter-spacing:0;margin-bottom:4px;">'+label+'</div>'
-      +'<div style="font-size:15px;font-weight:600;color:#001F5B;">'+val+'</div></div>';
+    return '<div class="adk-srow"><div class="adk-sk">'+label+'</div><div class="adk-sv">'+val+'</div></div>';
   }
   var extA=exts[0]||{};var extB=exts[1]||{};
   spec.innerHTML=
-    specRow('Tipo', tipo ? tipo.label : '—')+
-    specRow('Material', material==='SS'?'Inoxidable 316':'Acero al carbon')+
+    specRow('Tipo', tipo ? tipo.label : '\u2014')+
+    specRow('Material', material==='SS'?'Inoxidable 316':'Acero al carb\u00f3n')+
     specRow('Extremo A', (extA.std?extA.std.label+' ':'')+(extA.gen?extA.gen.label:'')+' '+(extA.med||''))+
     specRow('Extremo B', (extB.std?extB.std.label+' ':'')+(extB.gen?extB.gen.label:'')+' '+(extB.med||''));
-  p.appendChild(spec);
+  var specLbl=document.createElement('div'); specLbl.className='adk-lbl'; specLbl.textContent='Especificaciones';
+  R.appendChild(specLbl);
+  R.appendChild(spec);
+  R.appendChild(statusDiv);
 
   // Action buttons
   var btns=document.createElement('div');
@@ -7167,6 +7204,11 @@ function renderResultPanel(p, data, params){
 
   // Add to cart button — oculto cuando hay cadenas (cada cadena agrega sus propias piezas)
   if (!(data._chains && data._chains.length > 0)) {
+  var _qty=1;
+  var qtyRow=document.createElement('div'); qtyRow.className='adk-qty';
+  qtyRow.innerHTML='<span class="adk-qty-l">Cantidad</span><span class="adk-qty-c"><button type="button" data-d="-1">\u2212</button><span id="adk-qn">1</span><button type="button" data-d="1">+</button></span>';
+  Array.prototype.forEach.call(qtyRow.querySelectorAll('button'),function(bt){ bt.onclick=function(){ _qty=Math.max(1,_qty+parseInt(bt.getAttribute('data-d'),10)); qtyRow.querySelector('#adk-qn').textContent=_qty; }; });
+  R.appendChild(qtyRow);
   var cartBtn=document.createElement('button');
   cartBtn.style.cssText='grid-column:1/-1;background:#C8102E;color:#fff;border:none;padding:15px;border-radius:980px;cursor:pointer;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:16px;font-weight:600;letter-spacing:0;margin-bottom:8px;';
   cartBtn.innerHTML='Agregar al carrito';
@@ -7176,11 +7218,12 @@ function renderResultPanel(p, data, params){
       name: (data.found && data.products && data.products[0]) ? data.products[0].name : atCode,
       price: (data.found && data.products && data.products[0]) ? data.products[0].price : 0,
       qty_available: (data.found && data.products && data.products[0]) ? data.products[0].qty_available : 0,
+      qty: _qty,
       status: data.status || (data.found ? (data.products[0].qty_available > 0 ? 'stock' : 'fabricado') : 'fabricacion_nueva')
     };
     window.cartAdd(product);
   };
-  p.appendChild(cartBtn);
+  R.appendChild(cartBtn);
   }
 
   // Botón único: solicitar cotización por WhatsApp con un ejecutivo (fusiona "WhatsApp" + "Solicitar cotización" para no duplicar)
@@ -7191,7 +7234,7 @@ function renderResultPanel(p, data, params){
   waBtn.style.cssText='display:flex;align-items:center;justify-content:center;gap:9px;background:#25D366;color:#fff;text-align:center;padding:15px;border-radius:980px;text-decoration:none;font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:15px;font-weight:700;letter-spacing:0;';
   waBtn.innerHTML='<svg width="19" height="19" viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.1-1.3A10 10 0 1 0 12 2zm0 18a8 8 0 0 1-4.1-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 20zm4.4-6c-.2-.1-1.4-.7-1.6-.8-.2-.1-.4-.1-.5.1-.2.2-.6.8-.7.9-.1.2-.3.2-.5.1-1.3-.5-2.1-1.1-2.9-2.5-.2-.4.2-.4.6-1.1.1-.2 0-.3 0-.5s-.5-1.3-.7-1.7c-.2-.4-.4-.4-.5-.4h-.5c-.2 0-.5.1-.7.3-.7.7-.9 1.7-.5 2.8.5 1.4 1.5 2.7 3.5 3.7 1.9 1 1.9.7 2.3.6.5 0 1.4-.6 1.6-1.1.2-.5.2-1 .1-1.1z"/></svg>Solicitar cotizaci\u00f3n por WhatsApp';
   btns.appendChild(waBtn);
-  p.appendChild(btns);
+  R.appendChild(btns);
 
   // Back button
   p.appendChild(mkNav(function(){step=0;tipo=null;exts=[];material='CS';renderStep();}));
