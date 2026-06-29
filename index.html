@@ -851,6 +851,76 @@
   <script src="mcfg.js"></script>
 </head>
 <body>
+<script>console.log("%cADAPTEKK build: IA-FIX-2 (page-ia reubicada)","color:#1f9d55;font-weight:bold;font-size:13px");</script>
+<!-- PAGINA ASISTENTE IA (reubicada a nivel superior) -->
+<div id="page-ia" style="display:none;">
+  <div class="ia-wrap">
+    <div class="ia-topbar">
+      <button class="ia-back" onclick="navBack()" aria-label="Volver"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <div><div class="ia-title">Asistente IA</div><div class="ia-sub">Identifica tu conector en segundos</div></div>
+    </div>
+    <div class="ia-cols">
+      <div class="ia-chat-col">
+      <div class="hx-card ia-fs">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid #f0f1f4;">
+        <div style="width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,#2a6fdb,#0a1f44);display:flex;align-items:center;justify-content:center;flex:none;box-shadow:0 6px 16px rgba(42,111,219,.3);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l1.6 4.9 4.9 1.6-4.9 1.6L12 16.5l-1.6-4.9L5.5 10l4.9-1.6z"/><path d="M18.5 15.5l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/></svg>
+        </div>
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:9px;"><span style="font-size:16px;font-weight:700;color:#0a1f44;letter-spacing:-.2px;">Asistente Adaptekk</span><span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#1f9d55;background:#E7F6EE;padding:3px 9px;border-radius:999px;"><span style="width:6px;height:6px;border-radius:50%;background:#1f9d55;"></span>En línea</span></div>
+          <div style="font-size:12.5px;color:#86868b;margin-top:2px;">Responde en segundos · entiende foto, código, texto y voz</div>
+        </div>
+      </div>
+
+      <div style="background:#f6f7f9;border-radius:5px 16px 16px 16px;padding:14px 17px;font-size:14.5px;line-height:1.55;color:#3a4250;margin-bottom:14px;">
+        Hola 👋 Dime qué conector necesitas. Puedes <b style="color:#0a1f44;font-weight:600;">subir una foto</b>, <b style="color:#0a1f44;font-weight:600;">pegar un código</b>, <b style="color:#0a1f44;font-weight:600;">describirlo</b> o mandar un <b style="color:#0a1f44;font-weight:600;">audio</b>.
+      </div>
+      <div id="ia-suggest" style="margin-bottom:16px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:#9aa3b2;margin:2px 0 11px;">Empieza con un ejemplo</div>
+        <div class="ia-sgrid">
+          <button type="button" class="ia-sg" onclick="document.getElementById('chat-img-input').click()"><span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 17l-5-5-7 7"/></svg></span><span><span style="display:block;font-size:13.5px;font-weight:700;color:#0a1f44;">Subir una foto</span><span style="display:block;font-size:12px;color:#8b93a0;margin-top:1px;">La IA reconoce la pieza</span></span></button>
+          <button type="button" class="ia-sg" onclick="var i=document.getElementById('chat-input');i.placeholder='Pega tu código AT, por ejemplo AT-NR-JIC-M08-NPT-M06…';i.focus();"><span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg></span><span><span style="display:block;font-size:13.5px;font-weight:700;color:#0a1f44;">Pegar código AT</span><span style="display:block;font-size:12px;color:#8b93a0;margin-top:1px;">o de otra marca</span></span></button>
+          <button type="button" class="ia-sg" onclick="document.getElementById('chat-input').focus()"><span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span><span><span style="display:block;font-size:13.5px;font-weight:700;color:#0a1f44;">Describir conector</span><span style="display:block;font-size:12px;color:#8b93a0;margin-top:1px;">“codo 45° JIC 1/2”</span></span></button>
+          <button type="button" class="ia-sg" onclick="if(typeof toggleChatVoice==='function')toggleChatVoice()"><span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span><span><span style="display:block;font-size:13.5px;font-weight:700;color:#0a1f44;">Mensaje de voz</span><span style="display:block;font-size:12px;color:#8b93a0;margin-top:1px;">Descríbelo hablando</span></span></button>
+        </div>
+      </div>
+
+      <div id="chat-messages" style="display:none;flex:1;min-height:0;flex-direction:column;gap:10px;padding:2px;text-align:left;overflow-y:auto;margin-bottom:14px;"></div>
+
+      <!-- input area (funcional) -->
+      <div style="margin-top:auto;background:#f6f7f9;border:1px solid #edeef2;border-radius:16px;padding:8px;">
+        <div style="padding:9px 11px 10px;">
+          <textarea id="chat-input" placeholder="Describe tu conector, pega un código o sube una foto…" rows="2" oninput="autoResize(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}" style="width:100%;border:none;outline:none;resize:none;font-family:inherit;font-size:14px;color:#1a1a2e;line-height:1.5;min-height:44px;max-height:160px;padding:0;background:transparent;"></textarea>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 8px 4px;flex-wrap:wrap;gap:8px;">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <label title="Subir imagen" style="display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:#5b6577;padding:8px 12px;border-radius:10px;background:#fff;border:1px solid #e7e9ef;cursor:pointer;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5b6577" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 17l-5-5-7 7"/></svg>Foto<input type="file" accept="image/*" id="chat-img-input" style="display:none" onchange="handleChatImage(this)"/></label>
+            <button type="button" title="Buscar por código AT" onclick="var i=document.getElementById('chat-input');i.placeholder='Pega tu código AT, por ejemplo AT-NR-JIC-M08-NPT-M06…';i.focus();" style="display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:#5b6577;padding:8px 12px;border-radius:10px;background:#fff;border:1px solid #e7e9ef;cursor:pointer;font-family:inherit;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5b6577" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg>Código</button>
+            <button type="button" id="chat-voice-btn" title="Hablar" onclick="toggleChatVoice()" style="display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:#5b6577;padding:8px 12px;border-radius:10px;background:#fff;border:1px solid #e7e9ef;cursor:pointer;font-family:inherit;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5b6577" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>Audio</button>
+          </div>
+          <button type="button" onclick="sendChatMessage()" style="border:none;background:#0a1f44;color:#fff;width:44px;height:44px;border-radius:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;" title="Identificar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        </div>
+        <div id="chat-img-preview-strip" style="display:none;background:#EEF5FF;border:1px solid #dde6f0;border-radius:10px;padding:7px 12px;align-items:center;gap:8px;margin:4px 4px 4px;">
+          <img id="chat-img-thumb" style="height:40px;width:40px;object-fit:cover;border-radius:6px;border:1px solid #dde6f0;"/>
+          <div style="flex:1;"><div style="font-size:11px;font-weight:600;color:#001F5B;" id="chat-img-name">imagen.jpg</div></div>
+          <button type="button" onclick="clearChatImage()" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:15px;">&#10005;</button>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:14px;font-size:12.5px;color:#86868b;">¿Prefieres atención personal? <a href="https://wa.me/525555550000" target="_blank" style="color:#1f9d55;font-weight:600;text-decoration:none;">Habla con un ejecutivo por WhatsApp</a></div>
+    </div>
+      </div>
+      <aside class="ia-sel-col">
+        <div class="ia-sel-head"><span>Mi lista</span><span class="ia-sel-badge" id="ia-sel-count">0</span></div>
+        <div id="ia-sel-list" class="ia-sel-list"></div>
+        <div id="ia-sel-foot" class="ia-sel-foot" style="display:none;">
+          <button type="button" onclick="iaSelToCart()" class="ia-sel-cart">Enviar todo al carrito &#8594;</button>
+          <button type="button" onclick="iaSelClear()" class="ia-sel-clear">Vaciar lista</button>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+
 
 <!-- TOPBAR -->
 <div class="topbar">&#128230; Envíos a toda la República Mexicana &nbsp;|&nbsp; +52 (55) 5555-0000</div>
@@ -9376,9 +9446,9 @@ updateFAB();
 .ia-topbar .ia-back:hover{background:#e9edf3;}
 .ia-topbar .ia-title{font-size:16px;font-weight:700;color:#0a1f44;letter-spacing:-.2px;}
 .ia-topbar .ia-sub{font-size:12px;color:#8b93a0;margin-top:1px;}
-.ia-cols{flex:1;min-height:0;display:flex;gap:20px;padding:20px;max-width:1240px;margin:0 auto;width:100%;}
+.ia-cols{flex:1;min-height:calc(100vh - 150px);display:flex;gap:20px;padding:20px;max-width:1240px;margin:0 auto;width:100%;}
 .ia-chat-col{flex:1;min-width:0;display:flex;flex-direction:column;}
-.ia-chat-col .hx-card.ia-fs{flex:1;min-height:0;border-radius:18px;box-shadow:0 12px 44px rgba(16,32,72,.08);}
+.ia-chat-col .hx-card.ia-fs{flex:1;min-height:540px;border-radius:18px;box-shadow:0 12px 44px rgba(16,32,72,.08);}
 .ia-chat-col .hx-card.ia-fs > div:first-child{display:none;}
 .ia-chat-col .hx-card.ia-fs > #chat-messages{display:flex!important;}
 .ia-sel-col{flex:0 0 320px;background:#fff;border:1px solid #e7eaf1;border-radius:18px;display:flex;flex-direction:column;overflow:hidden;align-self:stretch;}
@@ -9408,72 +9478,6 @@ updateFAB();
   .ia-sgrid{grid-template-columns:1fr;}
 }
 </style>
-<div id="page-ia" style="display:none;">
-  <div class="ia-wrap">
-    <div class="ia-topbar">
-      <button class="ia-back" onclick="navBack()" aria-label="Volver"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
-      <div><div class="ia-title">Asistente IA</div><div class="ia-sub">Identifica tu conector en segundos</div></div>
-    </div>
-    <div class="ia-cols">
-      <div class="ia-chat-col">
-      <div class="hx-card ia-fs">
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid #f0f1f4;">
-        <div style="width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,#2a6fdb,#0a1f44);display:flex;align-items:center;justify-content:center;flex:none;box-shadow:0 6px 16px rgba(42,111,219,.3);">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l1.6 4.9 4.9 1.6-4.9 1.6L12 16.5l-1.6-4.9L5.5 10l4.9-1.6z"/><path d="M18.5 15.5l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/></svg>
-        </div>
-        <div style="flex:1;">
-          <div style="display:flex;align-items:center;gap:9px;"><span style="font-size:16px;font-weight:700;color:#0a1f44;letter-spacing:-.2px;">Asistente Adaptekk</span><span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#1f9d55;background:#E7F6EE;padding:3px 9px;border-radius:999px;"><span style="width:6px;height:6px;border-radius:50%;background:#1f9d55;"></span>En línea</span></div>
-          <div style="font-size:12.5px;color:#86868b;margin-top:2px;">Responde en segundos · entiende foto, código, texto y voz</div>
-        </div>
-      </div>
 
-      <div style="background:#f6f7f9;border-radius:5px 16px 16px 16px;padding:14px 17px;font-size:14.5px;line-height:1.55;color:#3a4250;margin-bottom:14px;">
-        Hola 👋 Dime qué conector necesitas. Puedes <b style="color:#0a1f44;font-weight:600;">subir una foto</b>, <b style="color:#0a1f44;font-weight:600;">pegar un código</b>, <b style="color:#0a1f44;font-weight:600;">describirlo</b> o mandar un <b style="color:#0a1f44;font-weight:600;">audio</b>.
-      </div>
-      <div id="ia-suggest" style="margin-bottom:16px;">
-        <div style="font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:#9aa3b2;margin:2px 0 11px;">Empieza con un ejemplo</div>
-        <div class="ia-sgrid">
-          <button type="button" class="ia-sg" onclick="document.getElementById('chat-img-input').click()"><span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 17l-5-5-7 7"/></svg></span><span><span style="display:block;font-size:13.5px;font-weight:700;color:#0a1f44;">Subir una foto</span><span style="display:block;font-size:12px;color:#8b93a0;margin-top:1px;">La IA reconoce la pieza</span></span></button>
-          <button type="button" class="ia-sg" onclick="var i=document.getElementById('chat-input');i.placeholder='Pega tu código AT, por ejemplo AT-NR-JIC-M08-NPT-M06…';i.focus();"><span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg></span><span><span style="display:block;font-size:13.5px;font-weight:700;color:#0a1f44;">Pegar código AT</span><span style="display:block;font-size:12px;color:#8b93a0;margin-top:1px;">o de otra marca</span></span></button>
-          <button type="button" class="ia-sg" onclick="document.getElementById('chat-input').focus()"><span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span><span><span style="display:block;font-size:13.5px;font-weight:700;color:#0a1f44;">Describir conector</span><span style="display:block;font-size:12px;color:#8b93a0;margin-top:1px;">“codo 45° JIC 1/2”</span></span></button>
-          <button type="button" class="ia-sg" onclick="if(typeof toggleChatVoice==='function')toggleChatVoice()"><span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span><span><span style="display:block;font-size:13.5px;font-weight:700;color:#0a1f44;">Mensaje de voz</span><span style="display:block;font-size:12px;color:#8b93a0;margin-top:1px;">Descríbelo hablando</span></span></button>
-        </div>
-      </div>
-
-      <div id="chat-messages" style="display:none;flex:1;min-height:0;flex-direction:column;gap:10px;padding:2px;text-align:left;overflow-y:auto;margin-bottom:14px;"></div>
-
-      <!-- input area (funcional) -->
-      <div style="margin-top:auto;background:#f6f7f9;border:1px solid #edeef2;border-radius:16px;padding:8px;">
-        <div style="padding:9px 11px 10px;">
-          <textarea id="chat-input" placeholder="Describe tu conector, pega un código o sube una foto…" rows="2" oninput="autoResize(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}" style="width:100%;border:none;outline:none;resize:none;font-family:inherit;font-size:14px;color:#1a1a2e;line-height:1.5;min-height:44px;max-height:160px;padding:0;background:transparent;"></textarea>
-        </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 8px 4px;flex-wrap:wrap;gap:8px;">
-          <div style="display:flex;gap:6px;flex-wrap:wrap;">
-            <label title="Subir imagen" style="display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:#5b6577;padding:8px 12px;border-radius:10px;background:#fff;border:1px solid #e7e9ef;cursor:pointer;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5b6577" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 17l-5-5-7 7"/></svg>Foto<input type="file" accept="image/*" id="chat-img-input" style="display:none" onchange="handleChatImage(this)"/></label>
-            <button type="button" title="Buscar por código AT" onclick="var i=document.getElementById('chat-input');i.placeholder='Pega tu código AT, por ejemplo AT-NR-JIC-M08-NPT-M06…';i.focus();" style="display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:#5b6577;padding:8px 12px;border-radius:10px;background:#fff;border:1px solid #e7e9ef;cursor:pointer;font-family:inherit;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5b6577" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg>Código</button>
-            <button type="button" id="chat-voice-btn" title="Hablar" onclick="toggleChatVoice()" style="display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:#5b6577;padding:8px 12px;border-radius:10px;background:#fff;border:1px solid #e7e9ef;cursor:pointer;font-family:inherit;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5b6577" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>Audio</button>
-          </div>
-          <button type="button" onclick="sendChatMessage()" style="border:none;background:#0a1f44;color:#fff;width:44px;height:44px;border-radius:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;" title="Identificar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
-        </div>
-        <div id="chat-img-preview-strip" style="display:none;background:#EEF5FF;border:1px solid #dde6f0;border-radius:10px;padding:7px 12px;align-items:center;gap:8px;margin:4px 4px 4px;">
-          <img id="chat-img-thumb" style="height:40px;width:40px;object-fit:cover;border-radius:6px;border:1px solid #dde6f0;"/>
-          <div style="flex:1;"><div style="font-size:11px;font-weight:600;color:#001F5B;" id="chat-img-name">imagen.jpg</div></div>
-          <button type="button" onclick="clearChatImage()" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:15px;">&#10005;</button>
-        </div>
-      </div>
-      <div style="text-align:center;margin-top:14px;font-size:12.5px;color:#86868b;">¿Prefieres atención personal? <a href="https://wa.me/525555550000" target="_blank" style="color:#1f9d55;font-weight:600;text-decoration:none;">Habla con un ejecutivo por WhatsApp</a></div>
-    </div>
-      </div>
-      <aside class="ia-sel-col">
-        <div class="ia-sel-head"><span>Mi lista</span><span class="ia-sel-badge" id="ia-sel-count">0</span></div>
-        <div id="ia-sel-list" class="ia-sel-list"></div>
-        <div id="ia-sel-foot" class="ia-sel-foot" style="display:none;">
-          <button type="button" onclick="iaSelToCart()" class="ia-sel-cart">Enviar todo al carrito &#8594;</button>
-          <button type="button" onclick="iaSelClear()" class="ia-sel-clear">Vaciar lista</button>
-        </div>
-      </aside>
-    </div>
-  </div>
-</div>
 </body>
 </html>
