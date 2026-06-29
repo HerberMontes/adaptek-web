@@ -452,6 +452,12 @@ async function skydropxRatePrice(quotationId, rateId) {
 async function resolveShipPrice(co) {
   const envio = (co && co.envio) || null;
   if (!envio) return { ok:true, ship:0 };
+  // MODO DEMO: precios fijos del servidor, sin revalidar contra Skydropx (cuenta bloqueada).
+  // Se activa con SKYDROPX_GUIA_DEMO=1, o si la tarifa elegida es una tarifa demo (id 'demo-...').
+  if (/^(1|true|si|s\u00ed)$/i.test(String(process.env.SKYDROPX_GUIA_DEMO||'').trim()) || /^demo-/.test(String(envio.id||''))) {
+    const ship = (String(envio.id) === 'demo-std') ? 150 : 0;
+    return { ok:true, ship, carrier: envio.carrier || 'Demo', service: envio.service || 'Demo' };
+  }
   const rv = await skydropxRatePrice(envio.quotation_id || envio.quotationId, envio.id || envio.rate_id);
   if (!rv.ok) return { ok:false, error: rv.error };
   return { ok:true, ship: rv.price, carrier: rv.carrier, service: rv.service };
@@ -3096,6 +3102,16 @@ exports.handler = async function(event, context) {
     // ── SKYDROPX (PRO): cotizar envío ──
     // body: { zip_to, estado/area_level1, ciudad/area_level2, colonia/area_level3, weight(kg), length, width, height }
     if (action === 'cotizar_envio') {
+      // ── MODO DEMO de envío (mientras Skydropx esté bloqueado): tarifas sintéticas para
+      //    poder cerrar la compra sin depender de Skydropx. Se activa con SKYDROPX_GUIA_DEMO=1.
+      //    Apaga la variable cuando Skydropx vuelva y regresan las tarifas reales sin tocar código.
+      if (/^(1|true|si|s\u00ed)$/i.test(String(process.env.SKYDROPX_GUIA_DEMO||'').trim())) {
+        const demoRates = [
+          { id:'demo-pickup', carrier:'Recoger en almac\u00e9n',        service:'En sucursal', total:0,   days:0, success:true },
+          { id:'demo-std',    carrier:'Env\u00edo est\u00e1ndar nacional', service:'Demo',        total:150, days:3, success:true }
+        ];
+        return {statusCode:200, headers, body: JSON.stringify({ ok:true, demo:true, quotation_id:'demo', count:demoRates.length, weight_source:'demo', rates:demoRates })};
+      }
       const t = await skydropxToken();
       if (t.error) return {statusCode:200, headers, body: JSON.stringify({ ok:false, error:t.error })};
       const origin = {
