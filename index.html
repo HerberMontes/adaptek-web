@@ -851,12 +851,12 @@
   <script src="mcfg.js"></script>
 </head>
 <body>
-<script>console.log("%cADAPTEKK build: IA-FIX-3 (nav arriba + page-ia ok)","color:#1f9d55;font-weight:bold;font-size:13px");</script>
+<script>console.log("%cADAPTEKK build: IA-FIX-6 (Design + flechas con texto)","color:#1f9d55;font-weight:bold;font-size:13px");</script>
 
 
 
 <!-- TOPBAR -->
-<div class="topbar">&#128230; Envíos a toda la República Mexicana &nbsp;|&nbsp; +52 (55) 5555-0000</div>
+<div class="topbar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:8px;opacity:.9;"><path d="M3 7.5h10v8.5H3z"/><path d="M13 10.5h4l3 3v2.5h-7z"/><circle cx="7" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/></svg>Envíos a toda la República Mexicana &nbsp;|&nbsp; +52 (55) 5555-0000</div>
 
 <!-- NAV -->
 <nav>
@@ -934,15 +934,15 @@
 <div id="page-ia" style="display:none;">
   <div class="ia-wrap">
     <div class="ia-topbar">
-      <button class="ia-back" onclick="navBack()" aria-label="Volver"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <button class="ia-back" onclick="navBack()" aria-label="Volver" style="width:auto;border-radius:999px;padding:0 14px 0 10px;gap:6px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg><span style="font-size:13px;font-weight:600;">Inicio</span></button>
       <div><div class="ia-title">Asistente IA</div><div class="ia-sub">Identifica tu conector en segundos</div></div>
     </div>
     <div class="ia-cols">
       <div class="ia-chat-col">
       <div class="hx-card ia-fs">
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid #f0f1f4;">
-        <div style="width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,#2a6fdb,#0a1f44);display:flex;align-items:center;justify-content:center;flex:none;box-shadow:0 6px 16px rgba(42,111,219,.3);">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l1.6 4.9 4.9 1.6-4.9 1.6L12 16.5l-1.6-4.9L5.5 10l4.9-1.6z"/><path d="M18.5 15.5l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/></svg>
+        <div style="width:46px;height:46px;border-radius:14px;background:#fff;border:1px solid #e7eaf1;display:flex;align-items:center;justify-content:center;flex:none;box-shadow:0 2px 10px rgba(16,32,72,.07);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l1.6 4.9 4.9 1.6-4.9 1.6L12 16.5l-1.6-4.9L5.5 10l4.9-1.6z"/><path d="M18.5 15.5l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/></svg>
         </div>
         <div style="flex:1;">
           <div style="display:flex;align-items:center;gap:9px;"><span style="font-size:16px;font-weight:700;color:#0a1f44;letter-spacing:-.2px;">Asistente Adaptekk</span><span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#1f9d55;background:#E7F6EE;padding:3px 9px;border-radius:999px;"><span style="width:6px;height:6px;border-radius:50%;background:#1f9d55;"></span>En línea</span></div>
@@ -951,7 +951,7 @@
       </div>
 
       <div style="background:#f6f7f9;border-radius:5px 16px 16px 16px;padding:14px 17px;font-size:14.5px;line-height:1.55;color:#3a4250;margin-bottom:14px;">
-        Hola 👋 Dime qué conector necesitas. Puedes <b style="color:#0a1f44;font-weight:600;">subir una foto</b>, <b style="color:#0a1f44;font-weight:600;">pegar un código</b>, <b style="color:#0a1f44;font-weight:600;">describirlo</b> o mandar un <b style="color:#0a1f44;font-weight:600;">audio</b>.
+        ¡Hola! Dime qué conector necesitas. Puedes <b style="color:#0a1f44;font-weight:600;">subir una foto</b>, <b style="color:#0a1f44;font-weight:600;">pegar un código</b>, <b style="color:#0a1f44;font-weight:600;">describirlo</b> o mandar un <b style="color:#0a1f44;font-weight:600;">audio</b>.
       </div>
       <div id="ia-suggest" style="margin-bottom:16px;">
         <div style="font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:#9aa3b2;margin:2px 0 11px;">Empieza con un ejemplo</div>
@@ -1245,7 +1245,7 @@
 ═══════════════════════ -->
 <div id="page-cfg" style="display:none;">
   <div class="page-header">
-    <button class="page-header-back" onclick="cfgHeaderBack()" title="Regresar">&#8592;</button>
+    <button class="page-header-back" id="cfg-back-btn" onclick="cfgHeaderBack()" title="Regresar" style="width:auto;min-width:0;padding:0 15px 0 12px;border-radius:999px;display:inline-flex;align-items:center;gap:7px;white-space:nowrap;">&#8592;<span id="cfg-back-label" style="font-size:13.5px;font-weight:600;">Página principal</span></button>
     <div>
       <div class="page-header-title" id="cfg-title">Seleccionar Conector</div>
       <div class="page-header-sub" id="cfg-sub">Configura tu adaptador paso a paso</div>
@@ -1265,7 +1265,7 @@
 
 <div id="page-cross" style="display:none;">
   <div class="page-header">
-    <button class="page-header-back" onclick="showPage('home')" title="Regresar">&#8592;</button>
+    <button class="page-header-back" onclick="showPage('home')" title="Regresar" style="width:auto;min-width:0;padding:0 15px 0 12px;border-radius:999px;display:inline-flex;align-items:center;gap:7px;white-space:nowrap;">&#8592;<span style="font-size:13.5px;font-weight:600;">Página principal</span></button>
     <div>
       <div class="page-header-title">Cross Reference</div>
       <div class="page-header-sub">Encuentra el equivalente Adaptekk de cualquier marca</div>
@@ -1392,6 +1392,12 @@
 .cart-btn.pdf:hover{background:#f3f6fb;border-color:#15418f;}
 .cart-btn.wa{background:#25D366;color:#fff;}
 .cart-btn.wa:hover{background:#20bd5a;}
+.cart-btn.add{background:#fff;color:#15418f;border:2px solid #15418f;}
+.cart-btn.add:hover{background:#eef3fb;}
+.cart-basic{display:flex;gap:10px;margin-top:16px;}
+.cart-mini{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;background:transparent;color:#5b6577;border:1px solid #e0e8f3;border-radius:10px;padding:11px 8px;font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s,border-color .15s,color .15s;}
+.cart-mini:hover{background:#f5f8fc;border-color:#cdd9ea;color:#001F5B;}
+.cart-mini svg{width:15px;height:15px;flex:none;}
 .cart-empty{text-align:center;padding:72px 24px 90px;max-width:540px;margin:0 auto;}
 .cart-empty-ico{width:88px;height:88px;border-radius:50%;background:linear-gradient(180deg,#F5F8FC,#E9F0F8);display:flex;align-items:center;justify-content:center;margin:0 auto 26px;box-shadow:inset 0 0 0 1px #E2EAF4;}
 .cart-empty-ico svg{width:40px;height:40px;stroke:#001F5B;opacity:.9;}
@@ -1414,7 +1420,7 @@
 
 <!-- Header -->
 <div class="shop-head">
-  <button class="back" onclick="showPage('home')" aria-label="Volver al inicio">&#8592;</button>
+  <button class="back" onclick="showPage('home')" aria-label="Volver al inicio" style="width:auto;min-width:0;padding:0 15px 0 12px;border-radius:999px;display:inline-flex;align-items:center;gap:7px;white-space:nowrap;">&#8592;<span style="font-size:13.5px;font-weight:600;">Página principal</span></button>
   <div>
     <h1>Carrito</h1>
     <div class="sub" id="cart-subtitle">0 productos</div>
@@ -1469,19 +1475,17 @@
       <button class="cart-btn primary" onclick="irACheckout()">
         Continuar al pago
       </button>
-      <button class="cart-btn pdf" onclick="descargarCotizacion()">
-        Descargar cotización (PDF)
-      </button>
-      <button class="cart-btn pdf" onclick="enviarCotizacionCorreo()" style="background:#15418f;color:#fff;">
-        Enviar cotización a mi correo
-      </button>
-      <button class="cart-btn secondary" onclick="showPage('cfg')">
+      <button class="cart-btn add" onclick="showPage('cfg')">
         Agregar más productos
       </button>
-
       <button class="cart-btn wa" onclick="contactarEjecutivo('carrito')">
         Contactar a un ejecutivo
       </button>
+
+      <div class="cart-basic">
+        <button class="cart-mini" onclick="descargarCotizacion()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 5 5-5M5 21h14"/></svg>Descargar PDF</button>
+        <button class="cart-mini" onclick="enviarCotizacionCorreo()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>Enviar a correo</button>
+      </div>
 
       <div id="cart-range-note" style="display:none;background:#fff;border-radius:12px;padding:13px;font-size:12px;color:#86868b;margin-top:14px;line-height:1.5;">
         Regístrate para obtener <b>5% de descuento de socio</b>, disponibilidad de stock y tiempos de entrega.
@@ -2071,7 +2075,7 @@ cartUpdateBadge();
 
 <!-- Header -->
 <div class="shop-head">
-  <button class="back" onclick="showPage('cart')" aria-label="Volver al carrito">&#8592;</button>
+  <button class="back" onclick="showPage('cart')" aria-label="Volver al carrito" style="width:auto;min-width:0;padding:0 15px 0 12px;border-radius:999px;display:inline-flex;align-items:center;gap:7px;white-space:nowrap;">&#8592;<span style="font-size:13.5px;font-weight:600;">Carrito</span></button>
   <div>
     <h1>Checkout</h1>
     <div class="sub" id="co-header-sub">Completa tu pedido</div>
@@ -2232,7 +2236,7 @@ cartUpdateBadge();
 
       <div class="co-err" id="co-err-2">&#9888; Completa los datos fiscales obligatorios.</div>
       <div class="co-nav">
-        <button class="co-btn ghost" onclick="coBack(2)">&#8592;</button>
+        <button class="co-btn ghost" onclick="coBack(2)">&#8592; Datos</button>
         <button class="co-btn primary" onclick="coNext(2)">Continuar &#8594;</button>
       </div>
     </div>
@@ -2303,7 +2307,7 @@ cartUpdateBadge();
       <div id="co-ship-list"></div>
       <div class="co-err" id="co-err-3">&#9888; Completa la direcci&#243;n y elige una paqueter&#237;a.</div>
       <div class="co-nav">
-        <button class="co-btn ghost" onclick="coBack(3)">&#8592;</button>
+        <button class="co-btn ghost" onclick="coBack(3)">&#8592; Factura</button>
         <button class="co-btn primary" onclick="coNext(3)">Ver resumen &#8594;</button>
       </div>
     </div>
@@ -2328,7 +2332,7 @@ cartUpdateBadge();
         &#9888; Precios de productos sujetos a verificaci&#243;n de cuenta. Un ejecutivo confirmar&#225; el total antes del pago.
       </div>
       <div class="co-nav" style="margin-top:16px;">
-        <button class="co-btn ghost" onclick="coBack(4)">&#8592;</button>
+        <button class="co-btn ghost" onclick="coBack(4)">&#8592; Envío</button>
         <button class="co-btn primary" onclick="coConfirmar()">Continuar al pago &#8594;</button>
       </div>
       <div style="text-align:center;margin-top:14px;font-size:11px;color:#aaa;">Tus datos están protegidos &nbsp;|&nbsp; Aún no se realiza ningún cargo</div>
@@ -3045,7 +3049,7 @@ window.coConfirmar = function(){
 
 <!-- Header -->
 <div class="shop-head">
-  <button class="back" onclick="showPage('checkout');coGoStep(4);" aria-label="Volver al resumen">&#8592;</button>
+  <button class="back" onclick="showPage('checkout');coGoStep(4);" aria-label="Volver al resumen" style="width:auto;min-width:0;padding:0 15px 0 12px;border-radius:999px;display:inline-flex;align-items:center;gap:7px;white-space:nowrap;">&#8592;<span style="font-size:13.5px;font-weight:600;">Resumen</span></button>
   <div>
     <h1>Pago</h1>
     <div class="sub">Elige c&#243;mo quieres pagar &#183; Paso 5 de 5</div>
@@ -6151,7 +6155,7 @@ async function pclLoadOrders(){
 ═══════════════════════ -->
 <div id="page-tutorials" style="display:none;">
   <div class="page-header">
-    <button class="page-header-back" onclick="showPage('home')" title="Regresar">&#8592;</button>
+    <button class="page-header-back" onclick="showPage('home')" title="Regresar" style="width:auto;min-width:0;padding:0 15px 0 12px;border-radius:999px;display:inline-flex;align-items:center;gap:7px;white-space:nowrap;">&#8592;<span style="font-size:13.5px;font-weight:600;">Página principal</span></button>
     <div>
       <div class="page-header-title">Catálogos y Tutoriales</div>
       <div class="page-header-sub">Recursos técnicos y documentación</div>
@@ -6826,6 +6830,12 @@ function cfgHeaderBack(){
     showPage('home');
   }
 }
+// Pone el texto del destino en la flecha de retroceso del configurador y a dónde va.
+function cfgSetBack(label, fn){
+  var l = document.getElementById('cfg-back-label');
+  if (l) l.textContent = label || 'Página principal';
+  window._cfgOnBack = fn || null;
+}
 
 function renderProgress(){
   var pg=eid('cfg-progress');
@@ -6839,7 +6849,7 @@ function renderStep(){
 
   // ── STEP 0: Seleccionar tipo ──
   if(step===0){
-    window._cfgOnBack = null; // en el primer paso, la flecha del encabezado va a inicio
+    cfgSetBack('Página principal', null); // en el primer paso, la flecha del encabezado va a inicio
     var ct=eid('cfg-title'); if(ct)ct.textContent='Seleccionar Conector';
     var cs=eid('cfg-sub'); if(cs)cs.textContent='Configura tu adaptador paso a paso';
     var p=mkdiv('config-panel active');
@@ -7032,7 +7042,7 @@ function renderStep(){
 
   var allDone=exts.every(function(e){return e.std&&e.gen&&e.med;});
   var resetFn=function(){step=0;tipo=null;exts=[];material='CS';renderStep();};
-  mkNav(resetFn);
+  cfgSetBack('Tipo de adaptador', resetFn);
   var foot=document.createElement('div');
   foot.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px;';
   var rb=document.createElement('button');
@@ -7293,7 +7303,8 @@ function renderResultPanel(p, data, params){
     R.appendChild(_adkFrag('<div class="adk-reassure"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#a8afba" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.4-3 8-7 10-4-2-7-5.6-7-10V6z"/></svg>Respuesta del ejecutivo en menos de 1 h</div>'));
   }
 
-  p.appendChild(mkNav(function(){step=0;tipo=null;exts=[];material='CS';renderStep();}));
+  p.appendChild(mkNav(function(){ step=1; renderStep(); }));
+  cfgSetBack('Extremos', function(){ step=1; renderStep(); });
 }
 
 // Dibuja las cadenas de armado (cada opción = lista de piezas reales del catálogo)
@@ -9447,12 +9458,15 @@ updateFAB();
 .ia-topbar .ia-back:hover{background:#e9edf3;}
 .ia-topbar .ia-title{font-size:16px;font-weight:700;color:#0a1f44;letter-spacing:-.2px;}
 .ia-topbar .ia-sub{font-size:12px;color:#8b93a0;margin-top:1px;}
-.ia-cols{flex:1;min-height:calc(100vh - 150px);display:flex;gap:20px;padding:20px;max-width:1240px;margin:0 auto;width:100%;}
+.ia-cols{flex:1;min-height:calc(100vh - 150px);display:flex;gap:24px;padding:20px 28px;max-width:1480px;margin:0 auto;width:100%;}
 .ia-chat-col{flex:1;min-width:0;display:flex;flex-direction:column;}
 .ia-chat-col .hx-card.ia-fs{flex:1;min-height:540px;border-radius:18px;box-shadow:0 12px 44px rgba(16,32,72,.08);}
 .ia-chat-col .hx-card.ia-fs > div:first-child{display:none;}
 .ia-chat-col .hx-card.ia-fs > #chat-messages{display:flex!important;}
-.ia-sel-col{flex:0 0 320px;background:#fff;border:1px solid #e7eaf1;border-radius:18px;display:flex;flex-direction:column;overflow:hidden;align-self:stretch;}
+.ia-chat-col .hx-card.ia-fs:has(#chat-messages:empty) #ia-suggest{flex:1;display:flex;flex-direction:column;min-height:0;}
+.ia-chat-col .hx-card.ia-fs:has(#chat-messages:empty) #ia-suggest .ia-sgrid{flex:1;grid-auto-rows:1fr;}
+.ia-chat-col .hx-card.ia-fs:has(#chat-messages:empty) > #chat-messages{flex:0 0 auto!important;}
+.ia-sel-col{flex:0 0 360px;background:#fff;border:1px solid #e7eaf1;border-radius:18px;display:flex;flex-direction:column;overflow:hidden;align-self:stretch;}
 .ia-sel-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid #eef0f3;font-size:15px;font-weight:700;color:#0a1f44;}
 .ia-sel-badge{background:#0a1f44;color:#fff;border-radius:999px;font-size:12px;min-width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;padding:0 7px;}
 .ia-sel-list{flex:1;min-height:0;overflow:auto;padding:10px;}
@@ -9468,10 +9482,10 @@ updateFAB();
 .ia-sel-clear{width:100%;background:#fff;color:#8b93a0;border:1px solid #e7eaf1;padding:10px;border-radius:12px;cursor:pointer;font-size:13px;font-family:inherit;}
 .ia-add-btn{background:#eef3fb;color:#0a1f44;border:1px solid #d9e3f3;padding:9px 15px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;}
 .ia-add-btn:hover{background:#e2ecfa;}
-.ia-sgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
-.ia-sg{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #e7eaf1;border-radius:14px;padding:13px 15px;cursor:pointer;text-align:left;font-family:inherit;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;}
+.ia-sgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.ia-sg{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid #e7eaf1;border-radius:14px;padding:18px 18px;min-height:84px;cursor:pointer;text-align:left;font-family:inherit;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;}
 .ia-sg:hover{border-color:#bcd0f0;box-shadow:0 8px 22px rgba(16,32,72,.08);transform:translateY(-2px);}
-.ia-sg .ic{width:38px;height:38px;border-radius:11px;background:#eef3fb;display:flex;align-items:center;justify-content:center;flex:none;}
+.ia-sg .ic{width:44px;height:44px;border-radius:12px;background:#eef3fb;display:flex;align-items:center;justify-content:center;flex:none;}
 @media(max-width:860px){
   #page-ia .ia-wrap{min-height:calc(100vh - 50px);}
   .ia-cols{flex-direction:column;padding:12px;gap:12px;}
