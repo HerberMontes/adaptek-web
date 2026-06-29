@@ -842,6 +842,8 @@
   <script src="https://sdk.mercadopago.com/js/v2"></script>
   <!-- jsPDF para generar el comprobante de pedido en PDF (descargable en el navegador) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- Imagen de conector por código AT (pantalla + PDF). Resuelve /img/series/xxxx.png -->
+  <script src="adaptekk_imagenes.js"></script>
   <!-- Configurador de mangueras: dataset AT (1116 productos) + motor de cotizacion. Expone window.DATA y window.ATConfigurador -->
   <script src="data_at.js"></script>
   <script src="configurador_motor.js"></script>
@@ -1235,6 +1237,7 @@
       <div style="font-size:12px;font-weight:500;letter-spacing:0;text-transform:none;color:#C8102E;margin-bottom:6px;" id="cr-head">Producto encontrado</div>
       <div style="font-size:12px;font-weight:500;letter-spacing:0;color:#86868b;text-transform:none;margin-bottom:4px;" id="cr-brand"></div><div class="cross-result-part" id="cr-part"></div>
       <div class="cross-result-name" id="cr-name"></div>
+      <div id="cr-img"></div>
       <div id="cr-stockprice" style="font-size:14px;color:#001F5B;font-weight:600;margin:2px 0 12px;"></div>
       <div class="cross-specs" id="cr-specs"></div>
       <div class="cross-actions">
@@ -1530,6 +1533,7 @@ window.cartAdd = function(product) {
   cartSave();
   cartUpdateBadge();
   cartShowAdded(product.at_code);
+  if(window.precargarPDFImgs){ try{ window.precargarPDFImgs([product.at_code]); }catch(_e){} }
 };
 
 window.cartRemove = function(at_code) {
@@ -1767,7 +1771,7 @@ window.descargarCotizacion = function() {
     return '<tr style="border-bottom:1px solid #eee;">'
       + '<td style="padding:9px 8px;font-size:12px;">' + (i+1) + '</td>'
       + '<td style="padding:9px 8px;font-family:monospace;font-size:12px;font-weight:700;color:#001F5B;">' + esc(item.at_code) + '</td>'
-      + '<td style="padding:9px 8px;font-size:12px;">' + esc(item.name||'') + '</td>'
+      + '<td style="padding:9px 8px;font-size:12px;"><div style="display:flex;align-items:center;gap:9px;"><img src="' + ((typeof window.imgConectorURL==='function')?window.imgConectorURL(item.at_code):'/img/series/_placeholder.png') + '" onerror="this.style.display=\'none\'" style="width:42px;height:auto;border:1px solid #eee;border-radius:4px;flex:none;"/><span>' + esc(item.name||'') + '</span></div></td>'
       + '<td style="padding:9px 8px;text-align:center;">' + qty + '</td>'
       + '<td style="padding:9px 8px;text-align:right;font-size:12px;">' + precio + '</td>'
       + '<td style="padding:9px 8px;text-align:right;font-weight:700;font-size:12px;">' + subtotal + '</td>'
@@ -1869,7 +1873,7 @@ window.cotizacionPDFBase64 = function(folio){
     doc.text(String(cli).slice(0,26), ML+300, y+15);
     y+=44; doc.setFillColor(245,246,249); doc.rect(ML,y-14,MR-ML,22,'F');
     doc.setTextColor(muted[0],muted[1],muted[2]); doc.setFont('helvetica','bold'); doc.setFontSize(8);
-    doc.text('C\u00d3DIGO', ML+8, y); doc.text('DESCRIPCI\u00d3N', ML+130, y);
+    doc.text('C\u00d3DIGO', ML+30, y); doc.text('DESCRIPCI\u00d3N', ML+152, y);
     doc.text('CANT', MR-150, y, {align:'right'}); doc.text('P.UNIT', MR-78, y, {align:'right'}); doc.text('SUBTOTAL', MR-8, y, {align:'right'});
     doc.setFont('helvetica','normal'); doc.setTextColor(ink[0],ink[1],ink[2]); doc.setFontSize(9);
     (window.CART||[]).forEach(function(item){
@@ -1877,11 +1881,12 @@ window.cotizacionPDFBase64 = function(folio){
       if (registered && item.price>0){ precio=fmt(item.price); subtotal=fmt(item.price*qty); }
       else if (item.price>0){ var hi=item.price*(1+window.PRECIO_RANGO); precio=fmt(item.price)+'\u2013'+fmt(hi); subtotal=fmt(item.price*qty)+'\u2013'+fmt(hi*qty); }
       else { precio='Bajo cotizaci\u00f3n'; subtotal='\u2014'; }
-      y+=20; if (y>770){ doc.addPage(); y=60; }
+      y+=22; if (y>770){ doc.addPage(); y=60; }
+      try { var _d=window.__atImgData&&window.__atImgData[item.at_code]; if(_d){ doc.addImage(_d,'PNG',ML+4,y-12,16,16); } } catch(_e){}
       doc.setFont('helvetica','bold'); doc.setTextColor(navy[0],navy[1],navy[2]); doc.setFontSize(9);
-      doc.text(String(item.at_code||'').slice(0,18), ML+8, y);
+      doc.text(String(item.at_code||'').slice(0,16), ML+30, y);
       doc.setFont('helvetica','normal'); doc.setTextColor(ink[0],ink[1],ink[2]);
-      doc.text(String(item.name||'').slice(0,34), ML+130, y);
+      doc.text(String(item.name||'').slice(0,30), ML+152, y);
       doc.text(String(qty), MR-150, y, {align:'right'});
       doc.setFontSize(7.5); doc.text(precio, MR-78, y, {align:'right'}); doc.setFontSize(9);
       doc.text(subtotal, MR-8, y, {align:'right'});
@@ -1912,6 +1917,8 @@ window.enviarCotizacionCorreo = function(){
   var total = window.fmtMXN(t.exact)+' MXN';
   var E = window.EMPRESA; var wa = (E && E.whatsapp) ? ('https://wa.me/'+E.whatsapp) : '';
   if (typeof showToast==='function') showToast('Enviando cotizaci\u00f3n\u2026');
+  var _codes=(window.CART||[]).map(function(i){return i.at_code;});
+  (window.precargarPDFImgs?window.precargarPDFImgs(_codes):Promise.resolve()).then(function(){
   var pdf = window.cotizacionPDFBase64(folio);
   fetch('/.netlify/functions/odoo',{method:'POST',headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ action:'enviar_cotizacion', to:email, nombre:nombre, folio:folio, total:total, validez:'15 d\u00edas h\u00e1biles', whatsapp:wa, pdf_base64:pdf, pdf_name:'Cotizacion-'+folio+'.pdf' })
@@ -1919,6 +1926,7 @@ window.enviarCotizacionCorreo = function(){
     if (d && d.ok){ if(typeof showToast==='function') showToast('Cotizaci\u00f3n enviada a '+email); }
     else { if(typeof showToast==='function') showToast((d&&d.error)?('No se pudo enviar: '+d.error):'No se pudo enviar la cotizaci\u00f3n'); }
   }).catch(function(){ if(typeof showToast==='function') showToast('Error de conexi\u00f3n al enviar'); });
+  });
 };
 
 
@@ -6552,6 +6560,7 @@ async function crossSearch(val) {
   var cartBtn = document.getElementById('cr-cart');
   var specsEl = document.getElementById('cr-specs');
   var headEl  = document.getElementById('cr-head');
+  var _ciR=document.getElementById('cr-img'); if(_ciR) _ciR.innerHTML='';
 
   if(prod){
     window._crossProduct = prod;
@@ -6559,6 +6568,7 @@ async function crossSearch(val) {
     document.getElementById('cr-brand').textContent = brandLabel ? ('Equivale a tu ' + brandLabel) : '';
     document.getElementById('cr-part').textContent = prod.at_code;
     document.getElementById('cr-name').textContent = prod.name || '';
+    var _ciF=document.getElementById('cr-img'); if(_ciF && window.imgConectorHTML) _ciF.innerHTML=window.imgConectorHTML(prod.at_code,{max:200});
     var priceTxt = prod.price>0 ? ('$'+Number(prod.price).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2})+' MXN') : 'Precio bajo cotización';
     var stockTxt = '';
     if(window.clientVerified && window.clientVerified()){
@@ -6576,6 +6586,7 @@ async function crossSearch(val) {
     document.getElementById('cr-brand').textContent = brandLabel ? ('Equivale a tu ' + brandLabel) : '';
     document.getElementById('cr-part').textContent = local.part;
     document.getElementById('cr-name').textContent = local.name || '';
+    var _ciL=document.getElementById('cr-img'); if(_ciL && window.imgConectorHTML) _ciL.innerHTML=window.imgConectorHTML(local.part,{max:200});
     document.getElementById('cr-stockprice').textContent = '';
     if(specsEl) specsEl.innerHTML = (local.specs||[]).map(function(s){return '<span class="cross-spec">'+s+'</span>';}).join('');
     if(cartBtn) cartBtn.style.display = 'none';
@@ -7063,6 +7074,13 @@ function renderResultPanel(p, data, params){
   hdr.innerHTML='<div style="font-size:13px;letter-spacing:0;color:#86868b;text-transform:none;margin-bottom:8px;">Número de parte</div>'
     +'<div style="font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:32px;font-weight:600;color:#001F5B;letter-spacing:-.3px;">'+atCode+'</div>';
   p.appendChild(hdr);
+
+  // Imagen del conector (dibujo técnico de la serie)
+  if (typeof window.imgConectorHTML === 'function') {
+    var imgBox = document.createElement('div');
+    imgBox.innerHTML = window.imgConectorHTML(atCode, {max:220, alt:atCode});
+    p.appendChild(imgBox);
+  }
 
   // -- Selector de MATERIAL (CS acero al carbon / SS inoxidable) --
   var matWrap=document.createElement('div');
