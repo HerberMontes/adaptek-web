@@ -939,9 +939,24 @@
   .ha-hero{padding:64px 40px 4px;text-align:center;}
   .ha-h2{font-size:52px;line-height:1.05;font-weight:800;letter-spacing:-1.6px;color:#0a1f44;margin:0 auto 16px;max-width:740px;}
   .ha-lead{font-size:19px;line-height:1.5;color:#5b6577;max-width:560px;margin:0 auto;font-weight:400;}
-  .ha-paths{padding:36px 40px 22px;display:grid;grid-template-columns:1.5fr 1fr;gap:24px;max-width:1180px;margin:0 auto;align-items:start;}
-  .hx-card{border-radius:22px;padding:30px;display:flex;flex-direction:column;background:#fff;border:1px solid #ececf1;box-shadow:0 18px 50px rgba(16,32,72,.09);}
-  .ha-paths>.hx-card:first-child{min-height:540px;max-height:620px;}
+  .ha-paths{padding:36px 40px 22px;display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:1040px;margin:0 auto;align-items:stretch;}
+  .hx-card{border-radius:22px;padding:32px;display:flex;flex-direction:column;background:#fff;border:1px solid #ececf1;box-shadow:0 18px 50px rgba(16,32,72,.09);transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;}
+  .hx-card.hx-path{position:relative;overflow:hidden;padding-top:36px;}
+  .hx-card.hx-path:hover{transform:translateY(-5px);box-shadow:0 28px 64px rgba(16,32,72,.15);border-color:#dde3ee;}
+  .hx-accent{position:absolute;top:0;left:0;right:0;height:4px;}
+  .hx-ic{width:54px;height:54px;border-radius:15px;display:flex;align-items:center;justify-content:center;flex:none;margin-bottom:22px;}
+  .hx-tag{display:inline-flex;align-self:flex-start;align-items:center;gap:7px;font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;margin-bottom:13px;}
+  .hx-tag .dt{width:6px;height:6px;border-radius:50%;background:currentColor;}
+  .hx-t{font-size:23px;font-weight:800;letter-spacing:-.5px;color:#0a1f44;margin:0 0 11px;}
+  .hx-d{font-size:14.5px;line-height:1.62;color:#5b6577;margin:0 0 22px;}
+  .hx-ex{margin-top:auto;margin-bottom:22px;background:#f7f9fc;border:1px solid #eef1f6;border-radius:15px;padding:17px 19px;}
+  .hx-exlbl{font-size:10.5px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:#9aa3b2;margin-bottom:13px;}
+  .hx-ex ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px;}
+  .hx-ex li{display:flex;align-items:flex-start;gap:12px;font-size:13.5px;line-height:1.45;color:#3a4656;font-weight:500;}
+  .hx-num{width:24px;height:24px;border-radius:8px;flex:none;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;}
+  .hx-btn{width:100%;background:#0a1f44;color:#fff;border:none;padding:16px;border-radius:13px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .18s ease,transform .1s ease;display:flex;align-items:center;justify-content:center;gap:8px;}
+  .hx-btn:hover{background:#14306b;}
+  .hx-btn:active{transform:translateY(1px);}
   .hx-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 13px;border-radius:999px;align-self:flex-start;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;}
   .hx-chip{cursor:pointer;text-align:left;font-size:13.5px;line-height:1.45;color:#5b6577;background:#f6f7f9;border:1px solid #edeef2;padding:11px 14px;border-radius:12px;transition:all .15s ease;}
   .hx-chip:hover{color:#0a1f44;background:#fff;border-color:#cdd3dd;box-shadow:0 4px 14px rgba(16,32,72,.06);}
@@ -997,67 +1012,43 @@
   <div class="ha-paths">
 
     <!-- ASISTENTE IA -->
-    <div class="hx-card">
-      <div style="display:flex;align-items:center;gap:13px;margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid #f0f1f4;">
-        <div style="width:42px;height:42px;border-radius:12px;background:#fff;border:1px solid #e2e6ee;display:flex;align-items:center;justify-content:center;flex:none;">
-          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#0a1f44" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l1.6 4.9 4.9 1.6-4.9 1.6L12 16.5l-1.6-4.9L5.5 10l4.9-1.6z"/><path d="M18.5 15.5l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/></svg>
-        </div>
-        <div style="flex:1;">
-          <div style="display:flex;align-items:center;gap:9px;"><span style="font-size:16px;font-weight:600;color:#0a1f44;letter-spacing:-.2px;">Asistente Adaptekk</span><span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:500;color:#1f9d55;"><span style="width:6px;height:6px;border-radius:50%;background:#1f9d55;"></span>En línea</span></div>
-          <div style="font-size:13px;color:#86868b;margin-top:1px;">Identifica tu conector en segundos</div>
-        </div>
+    <div class="hx-card hx-path">
+      <div class="hx-accent" style="background:#2a6fdb;"></div>
+      <div class="hx-ic" style="background:#eef3fb;border:1px solid #d9e3f3;">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l1.6 4.9 4.9 1.6-4.9 1.6L12 16.5l-1.6-4.9L5.5 10l4.9-1.6z"/><path d="M18.5 15.5l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/></svg>
       </div>
-
-      <div style="background:#f6f7f9;border-radius:5px 16px 16px 16px;padding:14px 16px;font-size:14px;line-height:1.55;color:#3a4250;margin-bottom:16px;">
-        Hola, dime qué conector necesitas. Puedes subir una <b style="color:#0a1f44;font-weight:600;">foto</b>, pegar un <b style="color:#0a1f44;font-weight:600;">código</b>, <b style="color:#0a1f44;font-weight:600;">describirlo</b> o mandar un <b style="color:#0a1f44;font-weight:600;">audio</b>.
+      <div class="hx-tag" style="color:#2a6fdb;"><span class="dt"></span>Guiado · Conversacional</div>
+      <h3 class="hx-t">Asistente IA</h3>
+      <p class="hx-d">Habla con el asistente para describir tu proyecto de forma natural. Te hará preguntas, entenderá tus necesidades y arma la configuración adecuada paso a paso.</p>
+      <div class="hx-ex">
+        <div class="hx-exlbl">Cómo funciona</div>
+        <ol>
+          <li><span class="hx-num" style="background:#eaf1fc;color:#2a6fdb;">1</span>Describe tu pieza por foto, código, texto o audio</li>
+          <li><span class="hx-num" style="background:#eaf1fc;color:#2a6fdb;">2</span>El asistente te pregunta solo lo que falta</li>
+          <li><span class="hx-num" style="background:#eaf1fc;color:#2a6fdb;">3</span>Recibe la configuración lista para añadir al carrito</li>
+        </ol>
       </div>
-
-      <div id="chat-messages" style="display:none;flex:1;min-height:0;flex-direction:column;gap:10px;padding:2px;text-align:left;overflow-y:auto;margin-bottom:14px;"></div>
-
-      <!-- input area (funcional) -->
-      <div style="margin-top:auto;background:#f6f7f9;border:1px solid #edeef2;border-radius:16px;padding:8px;">
-        <div style="padding:9px 11px 10px;">
-          <textarea id="chat-input" placeholder="Describe tu conector, pega un código o sube una foto…" rows="2" oninput="autoResize(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}" style="width:100%;border:none;outline:none;resize:none;font-family:inherit;font-size:14px;color:#1a1a2e;line-height:1.5;min-height:44px;max-height:160px;padding:0;background:transparent;"></textarea>
-        </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 8px 4px;flex-wrap:wrap;gap:8px;">
-          <div style="display:flex;gap:6px;flex-wrap:wrap;">
-            <label title="Subir imagen" style="display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:#5b6577;padding:8px 12px;border-radius:10px;background:#fff;border:1px solid #e7e9ef;cursor:pointer;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5b6577" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 17l-5-5-7 7"/></svg>Foto<input type="file" accept="image/*" id="chat-img-input" style="display:none" onchange="handleChatImage(this)"/></label>
-            <button type="button" title="Buscar por código AT" onclick="var i=document.getElementById('chat-input');i.placeholder='Pega tu código AT, por ejemplo AT-NR-JIC-M08-NPT-M06…';i.focus();" style="display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:#5b6577;padding:8px 12px;border-radius:10px;background:#fff;border:1px solid #e7e9ef;cursor:pointer;font-family:inherit;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5b6577" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg>Código</button>
-            <button type="button" id="chat-voice-btn" title="Hablar" onclick="toggleChatVoice()" style="display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:#5b6577;padding:8px 12px;border-radius:10px;background:#fff;border:1px solid #e7e9ef;cursor:pointer;font-family:inherit;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5b6577" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>Audio</button>
-          </div>
-          <button type="button" onclick="sendChatMessage()" style="border:none;background:#C8102E;color:#fff;width:44px;height:44px;border-radius:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;" title="Identificar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
-        </div>
-        <div id="chat-img-preview-strip" style="display:none;background:#EEF5FF;border:1px solid #dde6f0;border-radius:10px;padding:7px 12px;align-items:center;gap:8px;margin:4px 4px 4px;">
-          <img id="chat-img-thumb" style="height:40px;width:40px;object-fit:cover;border-radius:6px;border:1px solid #dde6f0;"/>
-          <div style="flex:1;"><div style="font-size:11px;font-weight:600;color:#001F5B;" id="chat-img-name">imagen.jpg</div></div>
-          <button type="button" onclick="clearChatImage()" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:15px;">&#10005;</button>
-        </div>
-      </div>
-      <div style="text-align:center;margin-top:14px;font-size:12.5px;color:#86868b;">¿Prefieres atención personal? <a href="https://wa.me/525555550000" target="_blank" style="color:#1f9d55;font-weight:600;text-decoration:none;">Habla con un ejecutivo por WhatsApp</a></div>
+      <button type="button" onclick="navIrIA()" class="hx-btn">Comenzar con el asistente &#8594;</button>
     </div>
 
     <!-- CONFIGURADOR -->
-    <div class="hx-card">
-      <div style="display:flex;align-items:center;gap:13px;margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid #f0f1f4;">
-        <div style="width:42px;height:42px;border-radius:12px;background:#fff;border:1px solid #e2e6ee;display:flex;align-items:center;justify-content:center;flex:none;">
-          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#0a1f44" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h8M5 8a2.5 2.5 0 1 1 5 0 2.5 2.5 0 0 1-5 0zM19 8h-2M19 16h-8M19 16a2.5 2.5 0 1 0-5 0 2.5 2.5 0 0 0 5 0zM5 16h2"/></svg>
-        </div>
-        <div style="flex:1;">
-          <div style="display:flex;align-items:center;gap:9px;"><span style="font-size:16px;font-weight:600;color:#0a1f44;letter-spacing:-.2px;">Configurador</span><span style="font-size:11.5px;font-weight:600;color:#C8102E;">Guiado</span></div>
-          <div style="font-size:13px;color:#86868b;margin-top:1px;">Ármalo paso a paso, sin errores</div>
-        </div>
+    <div class="hx-card hx-path">
+      <div class="hx-accent" style="background:#0a1f44;"></div>
+      <div class="hx-ic" style="background:#f3f5f9;border:1px solid #e2e6ee;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0a1f44" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h8M5 8a2.5 2.5 0 1 1 5 0 2.5 2.5 0 0 1-5 0zM19 8h-2M19 16h-8M19 16a2.5 2.5 0 1 0-5 0 2.5 2.5 0 0 0 5 0zM5 16h2"/></svg>
       </div>
-
-      <div style="font-size:24px;font-weight:700;letter-spacing:-.5px;color:#0a1f44;margin-bottom:7px;">¿Prefieres armarlo tú?</div>
-      <div style="font-size:14.5px;line-height:1.55;color:#5b6577;margin-bottom:18px;">Selección guiada. Solo te mostramos lo compatible: imposible equivocarte.</div>
-
-      <div style="border-top:1px solid #f0f0f2;">
-        <div class="hx-step"><span class="d">1</span><div style="font-size:14.5px;font-weight:600;color:#0a1f44;">Tipo de conector</div></div>
-        <div class="hx-step" style="border-top:1px solid #f5f5f7;"><span class="d">2</span><div style="font-size:14.5px;font-weight:600;color:#0a1f44;">Rosca y ángulo</div></div>
-        <div class="hx-step" style="border-top:1px solid #f5f5f7;"><span class="d">3</span><div style="font-size:14.5px;font-weight:600;color:#0a1f44;">Medida exacta</div></div>
+      <div class="hx-tag" style="color:#8a93a3;"><span class="dt"></span>Manual · Control total</div>
+      <h3 class="hx-t">Configurador</h3>
+      <p class="hx-d">Configura tu pieza manualmente seleccionando cada opción. Ideal si ya sabes exactamente las especificaciones que necesitas y quieres control total.</p>
+      <div class="hx-ex">
+        <div class="hx-exlbl">Paso a paso</div>
+        <ol>
+          <li><span class="hx-num" style="background:#eef1f6;color:#0a1f44;">1</span>Elige el tipo de conector</li>
+          <li><span class="hx-num" style="background:#eef1f6;color:#0a1f44;">2</span>Define rosca, ángulo y medida exacta</li>
+          <li><span class="hx-num" style="background:#eef1f6;color:#0a1f44;">3</span>Confirma y añade al carrito sin errores</li>
+        </ol>
       </div>
-
-      <div onclick="showPage('cfg')" style="margin-top:20px;background:#0a1f44;color:#fff;font-size:15px;font-weight:600;padding:15px;border-radius:13px;text-align:center;cursor:pointer;">Abrir configurador →</div>
+      <button type="button" onclick="showPage('cfg')" class="hx-btn">Abrir configurador &#8594;</button>
     </div>
 
   </div>
@@ -6172,7 +6163,7 @@ function setApiKey(k) {
 }
 
 /* ── PAGE ROUTER ── */
-var pages = ['home','cfg','catalogo','cross','tutorials','cart','checkout','pago','gracias','login','register','portal','miportal'];
+var pages = ['home','cfg','catalogo','cross','tutorials','cart','checkout','pago','gracias','login','register','portal','miportal','ia'];
 // Registro de cuenta nueva: recopila los datos del formulario y crea el contacto
 // como prospecto pendiente de aprobación (un ejecutivo lo valida después).
 function showRegistroExito(){
@@ -6369,6 +6360,7 @@ function showPage(id, isBack) {
   var nb = document.getElementById('nav-back'); if (nb) nb.style.display = 'none';
   if (id === 'cart' && typeof renderCart === 'function') { renderCart(); }
   if (id === 'catalogo' && typeof renderCatalogo === 'function') { renderCatalogo(); }
+  if (id === 'ia') { if (typeof window.iaRenderSel === 'function') window.iaRenderSel(); if (typeof _iaFocusChat === 'function') _iaFocusChat(); }
   if(id==='cfg'){
     setTimeout(function(){
       if(typeof window.cfgReset==='function') window.cfgReset();
@@ -7659,6 +7651,7 @@ function sendChatMessage() {
       if (_cot.ok) formatted += _cot.html;
       else formatted += '<div style="margin-top:10px;background:#FFF7E6;border:1px solid #f0d9a0;border-radius:12px;padding:11px 14px;color:#8a6100;font-size:13px;">'+(_cot.falta||'No pude completar la cotización.')+'</div>';
     }
+    if (aiAt) { formatted += '<div style="margin-top:12px;"><button type="button" class="ia-add-btn" onclick="iaAddSel({code:\'' + aiAt + '\'})">+ Agregar a mi lista</button></div>'; }
     addBotMessage(formatted);
     if (hasImg) clearChatImage();
     if (hasDoc) clearChatDoc();
@@ -8360,10 +8353,54 @@ function navAcctGo(view){
     else { if(typeof pclGo==='function') pclGo(view); }
   }, 90);
 }
-function navIrIA(){
-  showPage('home');
-  setTimeout(function(){ var i=document.getElementById('chat-input'); if(i){ i.focus(); i.scrollIntoView({behavior:'smooth',block:'center'}); } }, 250);
-}
+function navIrIA(){ showPage('ia'); }
+
+// ===== Asistente IA · "Mi lista" (selecciones, aparte del carrito) =====
+window.IA_SEL = window.IA_SEL || [];
+try { var _iaRaw = localStorage.getItem('adk_ia_sel'); if (_iaRaw) window.IA_SEL = JSON.parse(_iaRaw) || []; } catch(e){}
+function _iaSelSave(){ try { localStorage.setItem('adk_ia_sel', JSON.stringify(window.IA_SEL)); } catch(e){} }
+window.iaAddSel = function(item){
+  if (!item || !item.code) return;
+  var ex = window.IA_SEL.find(function(x){ return x.code === item.code; });
+  if (ex){ ex.qty = (ex.qty||1) + (item.qty||1); }
+  else { window.IA_SEL.push({ code:item.code, name:item.name||item.code, tipo:item.tipo||'conector', price:(item.price||0), qty:(item.qty||1) }); }
+  _iaSelSave(); window.iaRenderSel();
+  if (typeof showToast === 'function') showToast('Agregado a tu lista');
+};
+window.iaSelQty = function(code, d){
+  var x = window.IA_SEL.find(function(i){ return i.code === code; }); if (!x) return;
+  x.qty = Math.max(1, (x.qty||1) + d); _iaSelSave(); window.iaRenderSel();
+};
+window.iaSelRemove = function(code){
+  window.IA_SEL = window.IA_SEL.filter(function(i){ return i.code !== code; }); _iaSelSave(); window.iaRenderSel();
+};
+window.iaSelClear = function(){ window.IA_SEL = []; _iaSelSave(); window.iaRenderSel(); };
+window.iaSelToCart = function(){
+  if (!window.IA_SEL.length) return;
+  window.IA_SEL.forEach(function(it){
+    if (typeof window.cartAdd === 'function'){
+      window.cartAdd({ at_code:it.code, name:it.name, price:(it.price||0), qty_available:0, qty:(it.qty||1), status:(it.price>0?'stock':'fabricacion_nueva') });
+    }
+  });
+  window.iaSelClear();
+  showPage('cart');
+};
+window.iaRenderSel = function(){
+  var box = document.getElementById('ia-sel-list'); if (!box) return;
+  var cnt = document.getElementById('ia-sel-count'); if (cnt) cnt.textContent = window.IA_SEL.length;
+  var foot = document.getElementById('ia-sel-foot'); if (foot) foot.style.display = window.IA_SEL.length ? 'block' : 'none';
+  if (!window.IA_SEL.length){
+    box.innerHTML = '<div style="padding:28px 12px;text-align:center;color:#9aa1ad;font-size:13.5px;line-height:1.6;">Aún no agregas piezas.<br/>Identifícalas en el chat y toca <b>Agregar a mi lista</b>.</div>';
+    return;
+  }
+  box.innerHTML = window.IA_SEL.map(function(it){
+    var nm = (it.name && it.name !== it.code) ? '<div class="ia-sel-name">'+it.name+'</div>' : '';
+    return '<div class="ia-sel-item"><div style="flex:1;min-width:0;"><div class="ia-sel-code">'+it.code+'</div>'+nm+'</div>'
+      + '<div class="ia-sel-qty"><button type="button" onclick="iaSelQty(\''+it.code+'\',-1)">\u2212</button><span>'+(it.qty||1)+'</span><button type="button" onclick="iaSelQty(\''+it.code+'\',1)">+</button></div>'
+      + '<button type="button" class="ia-sel-x" onclick="iaSelRemove(\''+it.code+'\')" title="Quitar">\u2715</button></div>';
+  }).join('');
+};
+function _iaFocusChat(){ setTimeout(function(){ var i=document.getElementById('chat-input'); if(i){ i.focus(); } }, 120); }
 document.addEventListener('click', function(e){
   var m=document.getElementById('nav-acct-menu'); var u=document.getElementById('nav-user');
   if(m && m.classList.contains('open') && u && !u.contains(e.target)){ m.classList.remove('open'); }
@@ -9327,5 +9364,112 @@ updateFAB();
   window.renderCatalogo = catLoad;
 })();
 </script>
+<style>
+#page-ia{background:#f4f6f9;}
+#page-ia .ia-wrap{display:flex;flex-direction:column;min-height:calc(100vh - 60px);}
+.ia-topbar{display:flex;align-items:center;gap:13px;padding:13px 18px;background:#fff;border-bottom:1px solid #eceef2;flex:none;position:sticky;top:0;z-index:5;}
+.ia-topbar .ia-back{width:38px;height:38px;border:none;background:#f3f5f8;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#0a1f44;flex:none;}
+.ia-topbar .ia-back:hover{background:#e9edf3;}
+.ia-topbar .ia-title{font-size:16px;font-weight:700;color:#0a1f44;letter-spacing:-.2px;}
+.ia-topbar .ia-sub{font-size:12px;color:#8b93a0;margin-top:1px;}
+.ia-cols{flex:1;min-height:0;display:flex;gap:20px;padding:20px;max-width:1240px;margin:0 auto;width:100%;}
+.ia-chat-col{flex:1;min-width:0;display:flex;flex-direction:column;}
+.ia-chat-col .hx-card.ia-fs{flex:1;min-height:0;border-radius:18px;box-shadow:0 12px 44px rgba(16,32,72,.08);}
+.ia-chat-col .hx-card.ia-fs > div:first-child{display:none;}
+.ia-chat-col .hx-card.ia-fs > #chat-messages{display:flex!important;}
+.ia-sel-col{flex:0 0 320px;background:#fff;border:1px solid #e7eaf1;border-radius:18px;display:flex;flex-direction:column;overflow:hidden;align-self:stretch;}
+.ia-sel-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid #eef0f3;font-size:15px;font-weight:700;color:#0a1f44;}
+.ia-sel-badge{background:#0a1f44;color:#fff;border-radius:999px;font-size:12px;min-width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;padding:0 7px;}
+.ia-sel-list{flex:1;min-height:0;overflow:auto;padding:10px;}
+.ia-sel-item{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid #eef0f3;border-radius:12px;margin-bottom:8px;}
+.ia-sel-code{font-size:13px;font-weight:700;color:#0a1f44;word-break:break-all;}
+.ia-sel-name{font-size:11.5px;color:#8b93a0;margin-top:2px;}
+.ia-sel-qty{display:flex;align-items:center;gap:2px;background:#f3f6fb;border-radius:9px;padding:3px;flex:none;}
+.ia-sel-qty button{width:26px;height:26px;border:0;background:#fff;border-radius:7px;cursor:pointer;color:#0a1f44;font-size:15px;}
+.ia-sel-qty span{min-width:24px;text-align:center;font-weight:700;font-size:13px;}
+.ia-sel-x{border:0;background:none;color:#c2c7d0;cursor:pointer;font-size:14px;flex:none;}
+.ia-sel-foot{padding:14px;border-top:1px solid #eef0f3;}
+.ia-sel-cart{width:100%;background:#0a1f44;color:#fff;border:0;padding:13px;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer;margin-bottom:8px;font-family:inherit;}
+.ia-sel-clear{width:100%;background:#fff;color:#8b93a0;border:1px solid #e7eaf1;padding:10px;border-radius:12px;cursor:pointer;font-size:13px;font-family:inherit;}
+.ia-add-btn{background:#eef3fb;color:#0a1f44;border:1px solid #d9e3f3;padding:9px 15px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;}
+.ia-add-btn:hover{background:#e2ecfa;}
+.ia-sgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.ia-sg{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #e7eaf1;border-radius:14px;padding:13px 15px;cursor:pointer;text-align:left;font-family:inherit;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;}
+.ia-sg:hover{border-color:#bcd0f0;box-shadow:0 8px 22px rgba(16,32,72,.08);transform:translateY(-2px);}
+.ia-sg .ic{width:38px;height:38px;border-radius:11px;background:#eef3fb;display:flex;align-items:center;justify-content:center;flex:none;}
+@media(max-width:860px){
+  #page-ia .ia-wrap{min-height:calc(100vh - 50px);}
+  .ia-cols{flex-direction:column;padding:12px;gap:12px;}
+  .ia-sel-col{flex:none;max-height:42vh;}
+  .ia-sgrid{grid-template-columns:1fr;}
+}
+</style>
+<div id="page-ia" style="display:none;">
+  <div class="ia-wrap">
+    <div class="ia-topbar">
+      <button class="ia-back" onclick="navBack()" aria-label="Volver"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <div><div class="ia-title">Asistente IA</div><div class="ia-sub">Identifica tu conector en segundos</div></div>
+    </div>
+    <div class="ia-cols">
+      <div class="ia-chat-col">
+      <div class="hx-card ia-fs">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid #f0f1f4;">
+        <div style="width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,#2a6fdb,#0a1f44);display:flex;align-items:center;justify-content:center;flex:none;box-shadow:0 6px 16px rgba(42,111,219,.3);">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l1.6 4.9 4.9 1.6-4.9 1.6L12 16.5l-1.6-4.9L5.5 10l4.9-1.6z"/><path d="M18.5 15.5l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/></svg>
+        </div>
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:9px;"><span style="font-size:16px;font-weight:700;color:#0a1f44;letter-spacing:-.2px;">Asistente Adaptekk</span><span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#1f9d55;background:#E7F6EE;padding:3px 9px;border-radius:999px;"><span style="width:6px;height:6px;border-radius:50%;background:#1f9d55;"></span>En línea</span></div>
+          <div style="font-size:12.5px;color:#86868b;margin-top:2px;">Responde en segundos · entiende foto, código, texto y voz</div>
+        </div>
+      </div>
+
+      <div style="background:#f6f7f9;border-radius:5px 16px 16px 16px;padding:14px 17px;font-size:14.5px;line-height:1.55;color:#3a4250;margin-bottom:14px;">
+        Hola 👋 Dime qué conector necesitas. Puedes <b style="color:#0a1f44;font-weight:600;">subir una foto</b>, <b style="color:#0a1f44;font-weight:600;">pegar un código</b>, <b style="color:#0a1f44;font-weight:600;">describirlo</b> o mandar un <b style="color:#0a1f44;font-weight:600;">audio</b>.
+      </div>
+      <div id="ia-suggest" style="margin-bottom:16px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:#9aa3b2;margin:2px 0 11px;">Empieza con un ejemplo</div>
+        <div class="ia-sgrid">
+          <button type="button" class="ia-sg" onclick="document.getElementById('chat-img-input').click()"><span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 17l-5-5-7 7"/></svg></span><span><span style="display:block;font-size:13.5px;font-weight:700;color:#0a1f44;">Subir una foto</span><span style="display:block;font-size:12px;color:#8b93a0;margin-top:1px;">La IA reconoce la pieza</span></span></button>
+          <button type="button" class="ia-sg" onclick="var i=document.getElementById('chat-input');i.placeholder='Pega tu código AT, por ejemplo AT-NR-JIC-M08-NPT-M06…';i.focus();"><span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg></span><span><span style="display:block;font-size:13.5px;font-weight:700;color:#0a1f44;">Pegar código AT</span><span style="display:block;font-size:12px;color:#8b93a0;margin-top:1px;">o de otra marca</span></span></button>
+          <button type="button" class="ia-sg" onclick="document.getElementById('chat-input').focus()"><span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span><span><span style="display:block;font-size:13.5px;font-weight:700;color:#0a1f44;">Describir conector</span><span style="display:block;font-size:12px;color:#8b93a0;margin-top:1px;">“codo 45° JIC 1/2”</span></span></button>
+          <button type="button" class="ia-sg" onclick="if(typeof toggleChatVoice==='function')toggleChatVoice()"><span class="ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span><span><span style="display:block;font-size:13.5px;font-weight:700;color:#0a1f44;">Mensaje de voz</span><span style="display:block;font-size:12px;color:#8b93a0;margin-top:1px;">Descríbelo hablando</span></span></button>
+        </div>
+      </div>
+
+      <div id="chat-messages" style="display:none;flex:1;min-height:0;flex-direction:column;gap:10px;padding:2px;text-align:left;overflow-y:auto;margin-bottom:14px;"></div>
+
+      <!-- input area (funcional) -->
+      <div style="margin-top:auto;background:#f6f7f9;border:1px solid #edeef2;border-radius:16px;padding:8px;">
+        <div style="padding:9px 11px 10px;">
+          <textarea id="chat-input" placeholder="Describe tu conector, pega un código o sube una foto…" rows="2" oninput="autoResize(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}" style="width:100%;border:none;outline:none;resize:none;font-family:inherit;font-size:14px;color:#1a1a2e;line-height:1.5;min-height:44px;max-height:160px;padding:0;background:transparent;"></textarea>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 8px 4px;flex-wrap:wrap;gap:8px;">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <label title="Subir imagen" style="display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:#5b6577;padding:8px 12px;border-radius:10px;background:#fff;border:1px solid #e7e9ef;cursor:pointer;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5b6577" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 17l-5-5-7 7"/></svg>Foto<input type="file" accept="image/*" id="chat-img-input" style="display:none" onchange="handleChatImage(this)"/></label>
+            <button type="button" title="Buscar por código AT" onclick="var i=document.getElementById('chat-input');i.placeholder='Pega tu código AT, por ejemplo AT-NR-JIC-M08-NPT-M06…';i.focus();" style="display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:#5b6577;padding:8px 12px;border-radius:10px;background:#fff;border:1px solid #e7e9ef;cursor:pointer;font-family:inherit;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5b6577" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg>Código</button>
+            <button type="button" id="chat-voice-btn" title="Hablar" onclick="toggleChatVoice()" style="display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:#5b6577;padding:8px 12px;border-radius:10px;background:#fff;border:1px solid #e7e9ef;cursor:pointer;font-family:inherit;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5b6577" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>Audio</button>
+          </div>
+          <button type="button" onclick="sendChatMessage()" style="border:none;background:#0a1f44;color:#fff;width:44px;height:44px;border-radius:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;" title="Identificar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        </div>
+        <div id="chat-img-preview-strip" style="display:none;background:#EEF5FF;border:1px solid #dde6f0;border-radius:10px;padding:7px 12px;align-items:center;gap:8px;margin:4px 4px 4px;">
+          <img id="chat-img-thumb" style="height:40px;width:40px;object-fit:cover;border-radius:6px;border:1px solid #dde6f0;"/>
+          <div style="flex:1;"><div style="font-size:11px;font-weight:600;color:#001F5B;" id="chat-img-name">imagen.jpg</div></div>
+          <button type="button" onclick="clearChatImage()" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:15px;">&#10005;</button>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:14px;font-size:12.5px;color:#86868b;">¿Prefieres atención personal? <a href="https://wa.me/525555550000" target="_blank" style="color:#1f9d55;font-weight:600;text-decoration:none;">Habla con un ejecutivo por WhatsApp</a></div>
+    </div>
+      </div>
+      <aside class="ia-sel-col">
+        <div class="ia-sel-head"><span>Mi lista</span><span class="ia-sel-badge" id="ia-sel-count">0</span></div>
+        <div id="ia-sel-list" class="ia-sel-list"></div>
+        <div id="ia-sel-foot" class="ia-sel-foot" style="display:none;">
+          <button type="button" onclick="iaSelToCart()" class="ia-sel-cart">Enviar todo al carrito &#8594;</button>
+          <button type="button" onclick="iaSelClear()" class="ia-sel-clear">Vaciar lista</button>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
 </body>
 </html>
