@@ -956,6 +956,10 @@
   .hx-num{width:24px;height:24px;border-radius:8px;flex:none;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;}
   .hx-btn{width:100%;background:#0a1f44;color:#fff;border:none;padding:16px;border-radius:13px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .18s ease,transform .1s ease;display:flex;align-items:center;justify-content:center;gap:8px;}
   .hx-btn:hover{background:#14306b;}
+  .hx-btn.r{background:#C8102E;}
+  .hx-btn.r:hover{background:#a00c24;}
+  .hx-btn.b{background:#001F5B;}
+  .hx-btn.b:hover{background:#00164a;}
   .hx-btn:active{transform:translateY(1px);}
   .hx-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 13px;border-radius:999px;align-self:flex-start;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;}
   .hx-chip{cursor:pointer;text-align:left;font-size:13.5px;line-height:1.45;color:#5b6577;background:#f6f7f9;border:1px solid #edeef2;padding:11px 14px;border-radius:12px;transition:all .15s ease;}
@@ -1013,42 +1017,42 @@
 
     <!-- ASISTENTE IA -->
     <div class="hx-card hx-path">
-      <div class="hx-accent" style="background:#2a6fdb;"></div>
-      <div class="hx-ic" style="background:#eef3fb;border:1px solid #d9e3f3;">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l1.6 4.9 4.9 1.6-4.9 1.6L12 16.5l-1.6-4.9L5.5 10l4.9-1.6z"/><path d="M18.5 15.5l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/></svg>
+      <div class="hx-accent" style="background:#C8102E;"></div>
+      <div class="hx-ic" style="background:#EAF0FB;border:1px solid #CFDCEF;">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#001F5B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l1.6 4.9 4.9 1.6-4.9 1.6L12 16.5l-1.6-4.9L5.5 10l4.9-1.6z"/><path d="M18.5 15.5l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/></svg>
       </div>
-      <div class="hx-tag" style="color:#2a6fdb;"><span class="dt"></span>Guiado · Conversacional</div>
+      <div class="hx-tag" style="color:#001F5B;"><span class="dt"></span>Guiado · Conversacional</div>
       <h3 class="hx-t">Asistente IA</h3>
       <p class="hx-d">Habla con el asistente para describir tu proyecto de forma natural. Te hará preguntas, entenderá tus necesidades y arma la configuración adecuada paso a paso.</p>
       <div class="hx-ex">
         <div class="hx-exlbl">Cómo funciona</div>
         <ol>
-          <li><span class="hx-num" style="background:#eaf1fc;color:#2a6fdb;">1</span>Describe tu pieza por foto, código, texto o audio</li>
-          <li><span class="hx-num" style="background:#eaf1fc;color:#2a6fdb;">2</span>El asistente te pregunta solo lo que falta</li>
-          <li><span class="hx-num" style="background:#eaf1fc;color:#2a6fdb;">3</span>Recibe la configuración lista para añadir al carrito</li>
+          <li><span class="hx-num" style="background:#EAF0FB;color:#001F5B;">1</span>Describe tu pieza por foto, código, texto o audio</li>
+          <li><span class="hx-num" style="background:#EAF0FB;color:#001F5B;">2</span>El asistente te pregunta solo lo que falta</li>
+          <li><span class="hx-num" style="background:#EAF0FB;color:#001F5B;">3</span>Recibe la configuración lista para añadir al carrito</li>
         </ol>
       </div>
-      <button type="button" onclick="navIrIA()" class="hx-btn">Comenzar con el asistente &#8594;</button>
+      <button type="button" onclick="navIrIA()" class="hx-btn r">Comenzar con el asistente IA &#8594;</button>
     </div>
 
     <!-- CONFIGURADOR -->
     <div class="hx-card hx-path">
-      <div class="hx-accent" style="background:#0a1f44;"></div>
-      <div class="hx-ic" style="background:#f3f5f9;border:1px solid #e2e6ee;">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0a1f44" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h8M5 8a2.5 2.5 0 1 1 5 0 2.5 2.5 0 0 1-5 0zM19 8h-2M19 16h-8M19 16a2.5 2.5 0 1 0-5 0 2.5 2.5 0 0 0 5 0zM5 16h2"/></svg>
+      <div class="hx-accent" style="background:#001F5B;"></div>
+      <div class="hx-ic" style="background:#EAF0FB;border:1px solid #CFDCEF;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#001F5B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h8M5 8a2.5 2.5 0 1 1 5 0 2.5 2.5 0 0 1-5 0zM19 8h-2M19 16h-8M19 16a2.5 2.5 0 1 0-5 0 2.5 2.5 0 0 0 5 0zM5 16h2"/></svg>
       </div>
-      <div class="hx-tag" style="color:#8a93a3;"><span class="dt"></span>Manual · Control total</div>
+      <div class="hx-tag" style="color:#001F5B;"><span class="dt"></span>Manual · Control total</div>
       <h3 class="hx-t">Configurador</h3>
       <p class="hx-d">Configura tu pieza manualmente seleccionando cada opción. Ideal si ya sabes exactamente las especificaciones que necesitas y quieres control total.</p>
       <div class="hx-ex">
         <div class="hx-exlbl">Paso a paso</div>
         <ol>
-          <li><span class="hx-num" style="background:#eef1f6;color:#0a1f44;">1</span>Elige el tipo de conector</li>
-          <li><span class="hx-num" style="background:#eef1f6;color:#0a1f44;">2</span>Define rosca, ángulo y medida exacta</li>
-          <li><span class="hx-num" style="background:#eef1f6;color:#0a1f44;">3</span>Confirma y añade al carrito sin errores</li>
+          <li><span class="hx-num" style="background:#EAF0FB;color:#001F5B;">1</span>Elige el tipo de conector</li>
+          <li><span class="hx-num" style="background:#EAF0FB;color:#001F5B;">2</span>Define rosca, ángulo y medida exacta</li>
+          <li><span class="hx-num" style="background:#EAF0FB;color:#001F5B;">3</span>Confirma y añade al carrito sin errores</li>
         </ol>
       </div>
-      <button type="button" onclick="showPage('cfg')" class="hx-btn">Abrir configurador &#8594;</button>
+      <button type="button" onclick="showPage('cfg')" class="hx-btn b">Abrir configurador &#8594;</button>
     </div>
 
   </div>
