@@ -11,9 +11,9 @@
 
   // info de cada sistema para el paso de presión/mallas (tabla Strobbe + presiones de referencia)
   var SYS_INFO={
-    DuoFit:{serie:'Megafit · Serie 210', mallas:'1 a 2 mallas', presion:'Media-alta · hasta ~5,800 psi', desc:'Hidráulica general e industrial. La opción más flexible.', uso:'Maquinaria general, agrícola y construcción'},
-    TetraFit:{serie:'Xtrafit · Serie 223', mallas:'2 mallas / 4 espirales', presion:'Alta · hasta ~6,500 psi', desc:'Hidráulica móvil y trabajo pesado. Construcción robusta.', uso:'Equipo pesado y alto impulso'},
-    HexaFit:{serie:'Spiralfit · Serie 240', mallas:'4 a 6 espirales', presion:'Muy alta · hasta ~6,000 psi', desc:'Trabajo pesado extremo. Máxima resistencia.', uso:'Minería, gran caudal e impulsos severos'}
+    DuoFit:{serie:'Serie 210', img:'mng-serie210', mallas:'1 a 2 mallas', desc:'Versátil para hidráulica industrial y estacionaria. Férrula universal sin pelar la manguera.', uso:'Mangueras de 1 y 2 mallas y hasta 4 espirales'},
+    TetraFit:{serie:'Serie 223', img:'mng-serie223', mallas:'2 mallas / 4 espirales', desc:'Para hidráulica móvil y trabajo pesado. Cuerpo reforzado y férrula universal sin pelado de manguera.', uso:'Mangueras de 2 mallas y 4 espirales'},
+    HexaFit:{serie:'Serie 240', img:'mng-serie240', mallas:'4 a 6 espirales', desc:'Máxima resistencia para trabajo pesado extremo. Férrula universal sin pelado de manguera.', uso:'Mangueras de 4 y 6 espirales'}
   };
   var SYS_ORDER=['DuoFit','TetraFit','HexaFit'];
 
@@ -30,6 +30,44 @@
     if(c.g==='H') return 'Hembra giratoria';
     if(c.g==='B') return 'Brida'; if(c.g==='C') return 'CAT'; return c.sl;
   }
+
+  // ===== Imágenes de conector de manguera: assets/mng-<serie>-<estandar>-<genero>[-a<ang>].png =====
+  var MNG_SERIE={DuoFit:'210',TetraFit:'223',HexaFit:'240'};
+  function mngStd(fam){ fam=(fam||'').toLowerCase();
+    if(/code\s*61|\b61\b/.test(fam)) return 'code61';
+    if(/code\s*62|\b62\b/.test(fam)) return 'code62';
+    if(/\bcat\b|caterpillar/.test(fam)) return 'catstyle';
+    if(/jic|flare/.test(fam)) return 'jic';
+    if(/boss|orb/.test(fam)) return 'orb';
+    if(/sae/.test(fam)) return 'sae';
+    if(/asiento|plano|orfs|cara plana|face/.test(fam)) return 'plano';
+    if(/heavy|pesad|dks|3861/.test(fam)) return 'din3861';
+    if(/light|liger|dkl|dkol|dkos|3865|métrico|metric|\bdin\b/.test(fam)) return 'din3865';
+    if(/bsp/.test(fam)) return 'bspo';
+    if(/npt/.test(fam)) return 'npt';
+    if(/nps/.test(fam)) return 'nps';
+    if(/komat/.test(fam)) return 'komatsu';
+    if(/jis/.test(fam)) return 'jis';
+    return null; }
+  function mngGenTerm(t){ t=(t||'').toLowerCase();
+    if(/hembra/.test(t)) return 'hg';
+    if(/macho giratori/.test(t)) return 'mg';
+    if(/macho/.test(t)) return 'm';
+    return ''; }
+  function mngImgSel(sys,fam,term){ var serie=MNG_SERIE[sys]; if(!serie) return null;
+    var std=mngStd(fam); if(!std) return null; var gen=mngGenTerm(term);
+    return 'assets/mng-'+serie+'-'+std+(gen?'-'+gen:'')+'.png'; }
+  function mngImgItem(c){ if(!c) return null; var serie=MNG_SERIE[c.sys]; if(!serie) return null;
+    var std=mngStd(familia(c)); if(!std) return null;
+    var gen=(c.g==='M')?(/giratori/i.test(c.sl)?'mg':'m'):(c.g==='H'?'hg':'');
+    var ang=(c.ang&&!/^(0|recto|straight)$/i.test(String(c.ang)))?String(c.ang).replace(/[^0-9]/g,''):'';
+    return 'assets/mng-'+serie+'-'+std+(gen?'-'+gen:'')+(ang?'-a'+ang:'')+'.png'; }
+  function cardImg(label,sub,imgUrl,onClick,sel){
+    var d=el('div','config-opt');
+    var im = imgUrl ? ('<div style="text-align:center;margin:-2px 0 10px;"><img src="'+imgUrl+'" onerror="this.style.display=\'none\'" style="width:100%;max-width:96px;height:78px;object-fit:contain;"/></div>') : '';
+    d.innerHTML=im+'<div class="config-opt-label">'+label+'</div>'+(sub?'<div class="config-opt-sub">'+sub+'</div>':'');
+    if(sel){ d.style.borderColor=ROJO; d.style.boxShadow='0 0 0 3px rgba(200,16,46,.1)'; }
+    d.addEventListener('click',onClick); return d; }
 
   function card(label,sub,onClick,sel){
     var d=el('div','config-opt');
@@ -125,9 +163,10 @@
     var g=grid(240);
     SYS_ORDER.forEach(function(sys){ if(!disp[sys]) return; var info=SYS_INFO[sys];
       var d=el('div','config-opt'); d.style.cssText+=';text-align:left;align-items:stretch;min-height:0;padding:18px 18px;';
-      d.innerHTML='<div style="font-size:17px;font-weight:800;color:'+NAVY+';">'+sys+'</div>'
+      var _imgSys = info.img ? ('<div style="text-align:center;margin:-4px 0 12px;"><img src="assets/'+info.img+'.png" onerror="this.style.display=\'none\'" style="width:100%;max-width:150px;height:120px;object-fit:contain;"/></div>') : '';
+      d.innerHTML=_imgSys
+        +'<div style="font-size:17px;font-weight:800;color:'+NAVY+';">'+sys+'</div>'
         +'<div style="font-size:11px;font-weight:600;color:#86868b;margin:2px 0 10px;">'+info.serie+'</div>'
-        +'<div style="font-size:12px;font-weight:700;color:'+ROJO+';margin-bottom:6px;">'+info.presion+'</div>'
         +'<div style="font-size:12px;color:#5b6577;line-height:1.5;margin-bottom:6px;">'+info.desc+'</div>'
         +'<div style="font-size:11px;color:#9aa3b2;">'+info.mallas+' · '+info.uso+'</div>';
       d.addEventListener('click',function(){ onPick(sys); });
@@ -158,7 +197,10 @@
     p.appendChild(stepHead(s.preg, onBack));
     var ops=opcionesDe(steps,sel,idx); if(s.numeric) ops.sort(function(a,b){return dnum(a.v)-dnum(b.v);});
     var g=grid(s.key==='th'?110:150);
-    ops.forEach(function(o){ var lab=s.label?s.label(o.item):o.v; g.appendChild(card(lab,null,function(){ sel[s.key]=o.v; M.idx=idx+1; render(); }, sel[s.key]===o.v)); });
+    ops.forEach(function(o){ var lab=s.label?s.label(o.item):o.v;
+      if(s.key==='term'){ var _iu=mngImgSel(sel.sys, sel.fam, o.v); g.appendChild(cardImg(lab,null,_iu,function(){ sel[s.key]=o.v; M.idx=idx+1; render(); }, sel[s.key]===o.v)); }
+      else { g.appendChild(card(lab,null,function(){ sel[s.key]=o.v; M.idx=idx+1; render(); }, sel[s.key]===o.v)); }
+    });
     p.appendChild(g);
   }
 
@@ -423,7 +465,9 @@
     var medida = kind==='espiga' ? '<div style="font-size:12px;color:#86868b;margin-top:4px;">Medida de conexión: <b style="color:'+NAVY+'">'+(item.ml||item.th)+'</b></div>' : '';
     var top=el('div'); top.style.cssText='display:flex;justify-content:space-between;align-items:flex-start;gap:12px;';
     var cantTxt=el('div'); var precioEl;
-    top.innerHTML='<div style="min-width:0;"><div style="font-weight:800;color:'+NAVY+';font-size:17px;">'+item.code+'</div><div style="font-size:13px;color:#86868b;margin-top:3px;">'+(item.name||'')+'</div>'+medida+'</div>';
+    var _piu = (kind==='espiga') ? mngImgItem(item) : null;
+    var _pimg = _piu ? ('<img src="'+_piu+'" onerror="this.style.display=\'none\'" style="width:66px;height:66px;object-fit:contain;flex:none;margin-right:14px;border-radius:10px;background:#fff;border:1px solid #eef1f6;"/>') : '';
+    top.innerHTML='<div style="display:flex;align-items:flex-start;min-width:0;">'+_pimg+'<div style="min-width:0;"><div style="font-weight:800;color:'+NAVY+';font-size:17px;">'+item.code+'</div><div style="font-size:13px;color:#86868b;margin-top:3px;">'+(item.name||'')+'</div>'+medida+'</div></div>';
     var pBox=el('div'); pBox.style.cssText='text-align:right;'; pBox.innerHTML='<div style="font-size:11px;color:#86868b;font-weight:600;text-transform:uppercase;">Precio</div>'; precioEl=el('div',null,money(unit)); precioEl.style.cssText='font-size:23px;font-weight:800;color:'+NAVY+';line-height:1;'; pBox.appendChild(precioEl); top.appendChild(pBox);
     w.appendChild(top);
     var etiqueta = kind==='manguera' ? ('Cantidad (cortes de '+metros+' m c/u)') : 'Cantidad (piezas)';
