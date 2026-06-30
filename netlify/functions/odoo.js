@@ -2063,11 +2063,11 @@ exports.handler = async function(event, context) {
 
     // ── BUSCAR PRODUCTO POR CONFIGURADOR ──
     if (action === 'buscar_por_configurador') {
-      const { tipo, std_a, gen_a, med_a, std_b, gen_b, med_b, material } = body;
+      const { tipo, std_a, gen_a, med_a, std_b, gen_b, med_b, std_c, gen_c, med_c, std_d, gen_d, med_d, material } = body;
       const uid = await odooAuth();
       if (!uid) return {statusCode:401, headers, body: JSON.stringify({error:'Odoo auth failed'})};
 
-      const tipoMap = {'NR':'NR','C90':'C90','C45':'C45','TEE':'TEE','TAP':'TAP'};
+      const tipoMap = {'NR':'NR','C90':'C90','C45':'C45','TEE':'TEE','CRX':'CRX','TAP':'TAP','BH':'BH','BH90':'BH90','BH45':'BH45','BHTEE':'BHTEE'};
       const tipoCode = tipoMap[tipo] || 'NR';
       const matSuffix = (material === 'SS') ? '-SS' : '';
 
@@ -2081,29 +2081,39 @@ exports.handler = async function(event, context) {
         return isNaN(n) ? String(x) : (n < 10 ? '0' : '') + n;
       };
       const stdGen = (std, gen) => (std || '') + (gen || '');   // JIC + M = JICM
-      const buildPrefix = (eA, eB) => {
-        const ma = medCode(eA.med);
-        const sgA = stdGen(eA.std, eA.gen);
-        if (!eB || !eB.std) {                       // tapón (1 extremo)
-          return 'AT-' + tipoCode + '-' + sgA + '-' + ma;
-        }
-        const mb = medCode(eB.med);
-        const sgB = stdGen(eB.std, eB.gen);
-        return 'AT-' + tipoCode + '-' + sgA + '-' + sgB + '-' + ma + '-' + mb;
+      // Prefijo para N extremos: AT-TIPO-sg1-sg2-...-m1-m2-... (género PEGADO; medidas al final)
+      // Tapón(1): AT-TIPO-sgA-mA · Recto/codo(2): AT-TIPO-sgA-sgB-mA-mB · Tee(3) y Cruz(4) análogo.
+      const buildPrefixN = (ends) => {
+        const sgs = ends.map(e => stdGen(e.std, e.gen));
+        const meds = ends.map(e => medCode(e.med));
+        return 'AT-' + tipoCode + '-' + sgs.join('-') + '-' + meds.join('-');
+      };
+      // Permutaciones (orden-independiente): el producto es el mismo sin importar el orden de puntas.
+      const permute = (arr) => {
+        if (arr.length <= 1) return [arr];
+        const out = [];
+        arr.forEach((v, i) => {
+          const rest = arr.slice(0, i).concat(arr.slice(i + 1));
+          permute(rest).forEach(p => out.push([v].concat(p)));
+        });
+        return out;
       };
 
-      const eA = { std: std_a, gen: gen_a, med: med_a };
-      const eB = std_b ? { std: std_b, gen: gen_b, med: med_b } : null;
+      const endsRaw = [
+        { std: std_a, gen: gen_a, med: med_a },
+        std_b ? { std: std_b, gen: gen_b, med: med_b } : null,
+        std_c ? { std: std_c, gen: gen_c, med: med_c } : null,
+        std_d ? { std: std_d, gen: gen_d, med: med_d } : null
+      ].filter(e => e && e.std);
 
-      // ORDEN-INDEPENDIENTE: probamos (A,B) y (B,A) — el producto es el mismo.
+      // Construimos prefijos de todas las permutaciones, deduplicados (configs simétricas → 1).
       const prefixes = [];
-      if (eB) {
-        prefixes.push(buildPrefix(eA, eB));
-        prefixes.push(buildPrefix(eB, eA));
-      } else {
-        prefixes.push(buildPrefix(eA, null));
-      }
-      const atCode = prefixes[0];   // código base para mostrar / nombrar fabricación nueva
+      const _seen = new Set();
+      permute(endsRaw).forEach(order => {
+        const pfx = buildPrefixN(order);
+        if (!_seen.has(pfx)) { _seen.add(pfx); prefixes.push(pfx); }
+      });
+      const atCode = buildPrefixN(endsRaw);   // código base (orden tal como llegó) para mostrar
 
       // Búsqueda por PREFIJO con =like 'PREFIJO%'
       async function searchByPrefix(prefix) {
