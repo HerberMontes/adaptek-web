@@ -854,7 +854,7 @@
   <script src="mcfg.js"></script>
 </head>
 <body>
-<script>console.log("%cADAPTEKK build: IA-FIX-13 (imagenes de genero)","color:#1f9d55;font-weight:bold;font-size:13px");</script>
+<script>console.log("%cADAPTEKK build: IA-FIX-15 (tees 3 y cruz 4 extremos)","color:#1f9d55;font-weight:bold;font-size:13px");</script>
 
 
 
@@ -6738,10 +6738,10 @@ var TIPOS=[
   {label:'Codo 45°', sub:'Angulo medio', n:2, img:'c45', variants:[
     {code:'C45', label:'Codo 45°',       sub:'Estandar',          n:2, img:'c45'},
     {code:'BH45',label:'Pasamuros 45°',  sub:'Pasa por mampara',  n:2, img:'bh45'}]},
-  {label:'Tee (T)', sub:'Conexion en T', n:2, img:'tee', variants:[
-    {code:'TEE',  label:'Tee (T)',       sub:'Estandar',          n:2, img:'tee'},
-    {code:'BHTEE',label:'Pasamuros Tee', sub:'Pasa por mampara',  n:2, img:'bhtee'}]},
-  {code:'CRX',label:'Cruz (X)',  sub:'Conexion en 4 vias', n:2, img:'crx'},
+  {label:'Tee (T)', sub:'Conexion en T', n:3, img:'tee', variants:[
+    {code:'TEE',  label:'Tee (T)',       sub:'Estandar',          n:3, img:'tee'},
+    {code:'BHTEE',label:'Pasamuros Tee', sub:'Pasa por mampara',  n:3, img:'bhtee'}]},
+  {code:'CRX',label:'Cruz (X)',  sub:'Conexion en 4 vias', n:4, img:'crx'},
   {code:'TAP',label:'Tapón',     sub:'Cierre de puerto',   n:1, img:'tap'}
 ];
 var ESTANDARES=[
@@ -6768,7 +6768,7 @@ var MEDIDAS={'BSPP':['1/8"','1/4"','3/8"','1/2"','5/8"','3/4"','1"','1-1/4"','1-
 var SC={'1/8"':'02','1/4"':'04','3/8"':'06','1/2"':'08','5/8"':'10','3/4"':'12','1"':'16','1-1/4"':'20','1-1/2"':'24','2"':'32','3/16"':'03','5/16"':'05','7/8"':'14','2-1/2"':'40','3"':'48','1/16"':'01','1-1/8"':'18','1-3/8"':'22','1-5/8"':'26','1-11/16"':'27','2-1/16"':'33','2-3/8"':'38','2-5/8"':'42','1-7/8"':'30','M10x1.0':'M10','M12x1.5':'M12','M14x1.5':'M14','M16x1.5':'M16','M18x1.5':'M18','M20x1.5':'M20','M22x1.5':'M22','M26x1.5':'M26','M30x2.0':'M30','M36x2.0':'M36','M16x2.0':'M16'};
 var MAT={HB:'Laton',ORFS:'Acero SAE',ORB:'Acero SAE',MFF:'Acero SAE',KOM:'Acero SAE',CAT:'Acero SAE',MPT:'Acero carbon',JIC:'Acero carbon',NPT:'Acero zincado',BSPP:'Acero carbon',BSPT:'Acero carbon',JIS:'Acero carbon',DIN:'Acero carbon',NIS:'Acero carbon',TST:'Acero carbon'};
 var PSI={HB:'600 PSI',BSPT:'1,500 PSI',BSPP:'2,000 PSI',NPT:'1,500 PSI',JIC:'3,000 PSI',ORB:'3,000 PSI',ORFS:'4,000 PSI',DIN:'3,500 PSI',MFF:'4,000 PSI',MPT:'2,800 PSI',JIS:'2,500 PSI',KOM:'2,500 PSI',CAT:'3,000 PSI',NIS:'2,000 PSI',TST:'3,000 PSI'};
-var LTR=['A','B','C'];
+var LTR=['A','B','C','D'];
 var ROJO='#C8102E',AZUL='#001F5B';
 
 var tipo=null, exts=[], step=0, material='CS';
@@ -6939,28 +6939,18 @@ function renderStep(){
       +'<div style="margin-top:9px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:'+(parts.length?'15px':'13px')+';font-weight:'+(parts.length?'600':'400')+';color:'+(parts.length?'#001F5B':'#b0b0b8')+';line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+detail+'</div>'
       +'</div>';
   }
-  var _dA=_extDone(0), _dB=(tipo.n>=2)?_extDone(1):true;
-  var _lnA=_dA?'#1d7d34':'#e2e2e7', _lnB=_dB?'#1d7d34':'#e2e2e7';
   var svgW=document.createElement('div');
   svgW.style.cssText='margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid #f0f0f2;';
-  var _h='<div style="display:flex;align-items:stretch;">'+_extCard(0);
-  if(tipo.n>=2){
-    _h+='<div style="flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:66px;padding:0 4px;">'
-      +'<div style="display:flex;align-items:center;width:100%;">'
-      +'<span style="flex:1;height:2px;background:'+_lnA+';border-radius:2px;transition:background .25s;"></span>'
-      +'<span style="flex:none;margin:0 4px;padding:5px 11px;border-radius:999px;background:#001F5B;color:#fff;font-size:10px;font-weight:600;letter-spacing:.2px;white-space:nowrap;box-shadow:0 3px 10px rgba(0,31,91,.20);">'+tipo.label+'</span>'
-      +'<span style="flex:1;height:2px;background:'+_lnB+';border-radius:2px;transition:background .25s;"></span>'
-      +'</div>'
-      +'<div style="margin-top:7px;font-size:9px;font-weight:700;letter-spacing:1.5px;color:#c7c7cc;">AT</div>'
-      +'</div>'+_extCard(1);
-  } else {
-    _h+='<div style="flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:54px;padding:0 6px;">'
-      +'<div style="display:flex;align-items:center;width:100%;">'
-      +'<span style="flex:1;height:2px;background:'+_lnA+';border-radius:2px;"></span>'
-      +'<span style="flex:none;margin-left:4px;width:13px;height:24px;border-radius:0 8px 8px 0;background:#001F5B;"></span>'
-      +'</div>'
-      +'<div style="margin-top:7px;font-size:9px;font-weight:700;letter-spacing:1.5px;color:#c7c7cc;">CIERRE</div>'
-      +'</div>';
+  var _h='<div style="display:flex;align-items:stretch;flex-wrap:wrap;gap:8px;">';
+  for(var _pi=0;_pi<tipo.n;_pi++){
+    if(_pi>0){
+      var _ln=(_extDone(_pi-1)&&_extDone(_pi))?'#1d7d34':'#e2e2e7';
+      _h+='<div style="flex:none;display:flex;align-items:center;justify-content:center;min-width:22px;"><span style="width:14px;height:2px;background:'+_ln+';border-radius:2px;"></span></div>';
+    }
+    _h+=_extCard(_pi);
+  }
+  if(tipo.n===1){
+    _h+='<div style="flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:54px;padding:0 6px;"><div style="display:flex;align-items:center;width:100%;"><span style="flex:1;height:2px;background:#e2e2e7;border-radius:2px;"></span><span style="flex:none;margin-left:4px;width:13px;height:24px;border-radius:0 8px 8px 0;background:#001F5B;"></span></div><div style="margin-top:7px;font-size:9px;font-weight:700;letter-spacing:1.5px;color:#c7c7cc;">CIERRE</div></div>';
   }
   _h+='</div>';
   svgW.innerHTML=_h;
@@ -6987,7 +6977,9 @@ function renderStep(){
     if(ext.std){
       var sv=document.createElement('div');
       sv.style.cssText='display:flex;align-items:center;justify-content:space-between;background:#f4f7fc;border:1.5px solid #001F5B;border-radius:11px;padding:11px 15px;';
-      sv.innerHTML='<span style="font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:16px;font-weight:600;color:#001F5B;">'+ext.std.label+'</span>';
+      var _siu=(ext.std.img&&typeof CONNECTOR_IMGS!=='undefined'&&CONNECTOR_IMGS[ext.std.img])?CONNECTOR_IMGS[ext.std.img]:'';
+      var _simg=_siu?('<img src="'+_siu+'" onerror="this.style.display=\'none\'" style="width:42px;height:42px;object-fit:contain;border-radius:9px;background:#fff;border:1px solid #e6ebf3;flex:none;margin-right:12px;"/>'):'';
+      sv.innerHTML='<span style="display:flex;align-items:center;min-width:0;">'+_simg+'<span style="font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:17px;font-weight:600;color:#001F5B;">'+ext.std.label+'</span></span>';
       var cb=document.createElement('button');cb.innerHTML='&#10005;';
       cb.style.cssText='background:#fff;border:1px solid #dfe4ee;width:26px;height:26px;border-radius:8px;color:#8b93a0;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none;';
       cb.onclick=(function(i){return function(){exts[i].std=null;exts[i].gen=null;exts[i].med=null;renderStep();};})(ei);
@@ -7031,7 +7023,9 @@ function renderStep(){
       if(ext.gen){
         var gv=document.createElement('div');
         gv.style.cssText='display:flex;align-items:center;justify-content:space-between;background:#f4f7fc;border:1.5px solid #001F5B;border-radius:11px;padding:11px 15px;';
-        gv.innerHTML='<span style="font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:16px;font-weight:600;color:#001F5B;">'+ext.gen.label+'</span>';
+        var _giu=(typeof GEN_IMGS!=='undefined'&&GEN_IMGS[ext.gen.code])?GEN_IMGS[ext.gen.code]:'';
+        var _gimg=_giu?('<img src="'+_giu+'" onerror="this.style.display=\'none\'" style="width:42px;height:42px;object-fit:contain;border-radius:9px;background:#fff;border:1px solid #e6ebf3;flex:none;margin-right:12px;"/>'):'';
+        gv.innerHTML='<span style="display:flex;align-items:center;min-width:0;">'+_gimg+'<span style="font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:17px;font-weight:600;color:#001F5B;">'+ext.gen.label+'</span></span>';
         var gcb=document.createElement('button');gcb.innerHTML='&#10005;';
         gcb.style.cssText='background:#fff;border:1px solid #dfe4ee;width:26px;height:26px;border-radius:8px;color:#8b93a0;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none;';
         gcb.onclick=(function(i){return function(){exts[i].gen=null;exts[i].med=null;renderStep();};})(ei);
@@ -7080,8 +7074,7 @@ function renderStep(){
     col.appendChild(bd);return col;
   }
 
-  grid.appendChild(buildCol(0));
-  if(tipo&&tipo.n>=2) grid.appendChild(buildCol(1));
+  for(var _ci=0;_ci<tipo.n;_ci++){ grid.appendChild(buildCol(_ci)); }
   p.appendChild(grid);
 
   var allDone=exts.every(function(e){return e.std&&e.gen&&e.med;});
@@ -7147,6 +7140,14 @@ function renderResult(){
     std_a: stdA, gen_a: gA, med_a: mA,
     std_b: stdB, gen_b: gB, med_b: mB
   };
+  // Extremos C y D (tees=3, cruz=4): se agregan dinámicamente
+  var _LE=['a','b','c','d'];
+  for(var _xi=0;_xi<(tipo?tipo.n:2);_xi++){
+    var _ex=exts[_xi]||{};
+    searchParams['std_'+_LE[_xi]]=_ex.std?(_ex.std.cat||_ex.std.code):'';
+    searchParams['gen_'+_LE[_xi]]=_ex.gen?_ex.gen.code:'';
+    searchParams['med_'+_LE[_xi]]=_ex.med?sc(_ex.med):'';
+  }
 
   fetch('/.netlify/functions/odoo', {
     method:'POST',
@@ -7161,6 +7162,15 @@ function renderResult(){
       var p2=mkdiv('config-panel active');
       renderResultPanel(p2, data, searchParams);
       body.appendChild(p2);
+      return;
+    }
+    // Tees/cruces (3-4 extremos): el motor de armado es de 2 puntas; mostramos cotización directa.
+    if((tipo?tipo.n:2)>2){
+      data._chains=[];
+      body.innerHTML='';
+      var _p2x=mkdiv('config-panel active');
+      renderResultPanel(_p2x, data, searchParams);
+      body.appendChild(_p2x);
       return;
     }
     // No hay directo: pedimos al MOTOR de armado las cadenas de piezas
@@ -7315,8 +7325,7 @@ function renderResultPanel(p, data, params){
     R.appendChild(_adkFrag('<div class="adk-specs2">'
       +cell('Tipo', tipo?tipo.label:'\u2014')
       +cell('Material', material==='SS'?'Inoxidable 316':'Acero al carb\u00f3n')
-      +cell('Extremo A', fmtExt(extA))
-      +cell('Extremo B', fmtExt(extB))
+      +exts.slice(0,(tipo?tipo.n:2)).map(function(e,i){return cell('Extremo '+(LTR[i]||(i+1)), fmtExt(e));}).join('')
       +'</div>'));
 
     var cartBtn=document.createElement('button');
@@ -7336,7 +7345,7 @@ function renderResultPanel(p, data, params){
   }
 
   // Cotizar con un agente (estándar WhatsApp: verde, sin logo)
-  var waMsg=encodeURIComponent('Hola, necesito cotizaci\u00f3n para el conector '+atCode+'. Extremo A: '+fmtExt(extA)+' | Extremo B: '+fmtExt(extB));
+  var waMsg=encodeURIComponent('Hola, necesito cotizaci\u00f3n para el conector '+atCode+'. '+exts.slice(0,(tipo?tipo.n:2)).map(function(e,i){return 'Extremo '+(LTR[i]||(i+1))+': '+fmtExt(e);}).join(' | '));
   var waBtn=document.createElement('a');
   waBtn.href='https://wa.me/525555550000?text='+waMsg;
   waBtn.target='_blank';
