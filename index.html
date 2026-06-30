@@ -268,6 +268,9 @@
     }
     .page-header-back:hover{background:#e8e8ed;}
     .page-header-title{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:28px;font-weight:700;letter-spacing:-.4px;color:#001F5B;line-height:1.15;}
+/* Estilo ESTÁNDAR para los encabezados de retroceso (mismo tamaño/fuente en todo el sitio) */
+.nav-ttl{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif!important;font-size:28px!important;font-weight:700!important;letter-spacing:-.4px!important;color:#001F5B!important;line-height:1.15!important;}
+@media(max-width:600px){.nav-ttl{font-size:22px!important;}}
     .page-header-sub{font-size:15px;opacity:1;color:#86868b;margin-top:4px;}
 
     /* ── SECTION HEADER ── */
@@ -851,7 +854,7 @@
   <script src="mcfg.js"></script>
 </head>
 <body>
-<script>console.log("%cADAPTEKK build: IA-FIX-8 (catalogo+login back + diag)","color:#1f9d55;font-weight:bold;font-size:13px");</script>
+<script>console.log("%cADAPTEKK build: IA-FIX-10 (encabezados estandarizados)","color:#1f9d55;font-weight:bold;font-size:13px");</script>
 
 
 
@@ -1247,7 +1250,7 @@
   <div class="page-header">
     <button class="page-header-back" id="cfg-back-btn" onclick="cfgHeaderBack()" title="Regresar" aria-label="Regresar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
     <div>
-      <div class="page-header-title" id="cfg-title" onclick="cfgHeaderBack()" style="cursor:pointer;">Página principal</div>
+      <div class="page-header-title nav-ttl" id="cfg-title" onclick="cfgHeaderBack()" style="cursor:pointer;">Página principal</div>
       <div class="page-header-sub" id="cfg-sub" style="display:none;"></div>
     </div>
   </div>
@@ -1267,7 +1270,7 @@
   <div class="page-header">
     <button class="page-header-back" onclick="showPage('home')" title="Regresar" aria-label="Regresar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
     <div>
-      <div class="page-header-title" onclick="showPage('home')" style="cursor:pointer;">Página principal</div>
+      <div class="page-header-title nav-ttl" onclick="showPage('home')" style="cursor:pointer;">Página principal</div>
       
     </div>
   </div>
@@ -1422,7 +1425,7 @@
 <div class="shop-head">
   <button class="back" onclick="showPage('home')" aria-label="Volver al inicio"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
   <div>
-    <h1 onclick="showPage('home')" style="cursor:pointer;">Página principal</h1>
+    <h1 class="nav-ttl" onclick="showPage('home')" style="cursor:pointer;">Página principal</h1>
     <div class="sub" id="cart-subtitle" style="display:none;">0 productos</div>
   </div>
 </div>
@@ -2077,7 +2080,7 @@ cartUpdateBadge();
 <div class="shop-head">
   <button class="back" onclick="showPage('cart')" aria-label="Volver al carrito"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
   <div>
-    <h1 onclick="showPage('cart')" style="cursor:pointer;">Carrito</h1>
+    <h1 class="nav-ttl" onclick="showPage('cart')" style="cursor:pointer;">Carrito</h1>
     <div class="sub" id="co-header-sub" style="display:none;">Completa tu pedido</div>
   </div>
 </div>
@@ -3051,7 +3054,7 @@ window.coConfirmar = function(){
 <div class="shop-head">
   <button class="back" onclick="showPage('checkout');coGoStep(4);" aria-label="Volver al resumen"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
   <div>
-    <h1 onclick="showPage('checkout');coGoStep(4);" style="cursor:pointer;">Resumen</h1>
+    <h1 class="nav-ttl" onclick="showPage('checkout');coGoStep(4);" style="cursor:pointer;">Resumen</h1>
     <div class="sub">Elige c&#243;mo quieres pagar &#183; Paso 5 de 5</div>
   </div>
 </div>
@@ -3802,7 +3805,7 @@ function payConfirmado(metodo){
 ═══════════════════════ -->
 <div id="page-login" style="display:none;">
   <div class="auth-wrap">
-    <div onclick="showPage('home')" style="display:flex;align-items:center;gap:8px;cursor:pointer;max-width:420px;margin:0 auto 14px;color:#001F5B;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#001F5B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg><span style="font-size:18px;font-weight:700;letter-spacing:-.2px;">Página principal</span></div>
+    <div onclick="showPage('home')" style="display:flex;align-items:center;gap:8px;cursor:pointer;max-width:420px;margin:0 auto 14px;color:#001F5B;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#001F5B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg><span class="nav-ttl">Página principal</span></div>
     <div class="auth-card">
       <div class="auth-header">
         <div class="auth-logo" style="display:flex;align-items:baseline;justify-content:center;">Adaptekk<span style="color:#C8102E;">.</span></div>
@@ -6158,7 +6161,7 @@ async function pclLoadOrders(){
   <div class="page-header">
     <button class="page-header-back" onclick="showPage('home')" title="Regresar" aria-label="Regresar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
     <div>
-      <div class="page-header-title" onclick="showPage('home')" style="cursor:pointer;">Página principal</div>
+      <div class="page-header-title nav-ttl" onclick="showPage('home')" style="cursor:pointer;">Página principal</div>
       
     </div>
   </div>
@@ -6838,6 +6841,9 @@ function cfgSetBack(label, fn){
   if (t) t.textContent = label || 'Página principal';
   window._cfgOnBack = fn || null;
 }
+// Exponer en window: el encabezado usa onclick="cfgHeaderBack()" en el HTML,
+// que sólo resuelve funciones globales. (cfgHeaderBack estaba anidada y no era global.)
+try { window.cfgHeaderBack = cfgHeaderBack; window.cfgSetBack = cfgSetBack; } catch(e){}
 
 function renderProgress(){
   var pg=eid('cfg-progress');
@@ -9242,7 +9248,7 @@ updateFAB();
     c.innerHTML='';
     var wrap = el('div','max-width:1200px;margin:0 auto;padding:28px 20px 60px;');
     var catBack = el('div','display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:16px;');
-    catBack.innerHTML='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#001F5B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg><span style="font-size:22px;font-weight:700;color:#001F5B;letter-spacing:-.3px;">Página principal</span>';
+    catBack.innerHTML='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#001F5B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg><span class="nav-ttl">Página principal</span>';
     catBack.onclick=function(){ showPage('home'); };
     wrap.appendChild(catBack);
     wrap.appendChild(el('div','font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#C8102E;margin-bottom:6px;','Catálogo'));
