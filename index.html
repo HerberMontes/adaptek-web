@@ -854,7 +854,7 @@
   <script src="mcfg.js"></script>
 </head>
 <body>
-<script>console.log("%cADAPTEKK build: IA-FIX-10 (encabezados estandarizados)","color:#1f9d55;font-weight:bold;font-size:13px");</script>
+<script>console.log("%cADAPTEKK build: IA-FIX-12 (pasamuros como variante)","color:#1f9d55;font-weight:bold;font-size:13px");</script>
 
 
 
@@ -6680,7 +6680,7 @@ function crossAddToCart(){
 // están subidos y generaban errores 404 en consola. Para reactivarlas cuando subas las imágenes,
 // reemplaza {} por el mapa de abajo.
 var _ci=function(inner){return 'data:image/svg+xml;utf8,'+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 64' fill='none' stroke='#0a1f44' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'>"+inner+"</svg>");};
-var CONNECTOR_IMGS={
+var CONNECTOR_SVG={
   nr:_ci("<rect x='5' y='27' width='22' height='10' rx='3'/><rect x='29' y='22' width='22' height='20' rx='4'/><rect x='53' y='27' width='22' height='10' rx='3'/>"),
   c90:_ci("<rect x='5' y='34' width='25' height='10' rx='3'/><rect x='30' y='30' width='18' height='18' rx='4'/><rect x='34' y='6' width='10' height='24' rx='3'/>"),
   c45:_ci("<rect x='5' y='42' width='20' height='10' rx='3'/><rect x='26' y='36' width='16' height='16' rx='4'/><rect x='44' y='18' width='22' height='10' rx='3' transform='rotate(-45 55 23)'/>"),
@@ -6691,6 +6691,14 @@ var CONNECTOR_IMGS={
   bh45:_ci("<rect x='3' y='42' width='16' height='10' rx='3'/><rect x='20' y='35' width='6' height='24' rx='2'/><rect x='29' y='35' width='15' height='15' rx='4'/><rect x='45' y='19' width='20' height='10' rx='3' transform='rotate(-45 55 24)'/>"),
   bhtee:_ci("<rect x='3' y='27' width='15' height='10' rx='3'/><rect x='19' y='20' width='6' height='24' rx='2'/><rect x='28' y='22' width='20' height='20' rx='4'/><rect x='50' y='27' width='20' height='10' rx='3'/><rect x='33' y='42' width='10' height='16' rx='3'/>"),
   tap:_ci("<rect x='8' y='27' width='18' height='10' rx='3'/><rect x='26' y='22' width='20' height='20' rx='4'/><path d='M46 23 q13 9 0 18'/>")
+};
+// Respaldo SVG accesible desde onerror (scope global)
+window.CONNECTOR_SVG = CONNECTOR_SVG;
+// IMÁGENES REALES de cada conector. Sube los archivos a /assets con estos nombres (PNG, fondo transparente).
+// Si una imagen no existe, el <img> cae automáticamente al icono SVG de respaldo (no se rompe).
+var CONNECTOR_IMGS={
+  "nr":"assets/conn-nr.png","c90":"assets/conn-c90.png","c45":"assets/conn-c45.png","tee":"assets/conn-tee.png","crx":"assets/conn-crx.png","bh":"assets/conn-bh.png","bh90":"assets/conn-bh90.png","bh45":"assets/conn-bh45.png","bhtee":"assets/conn-bhtee.png","tap":"assets/conn-tap.png",
+  "jic":"assets/conn-jic.png","jico":"assets/conn-jico.png","npt":"assets/conn-npt.png","orb":"assets/conn-orb.png","orfs":"assets/conn-orfs.png","bspp":"assets/conn-bspp.png","bspt":"assets/conn-bspt.png","bite":"assets/conn-bite.png","jis":"assets/conn-jis.png","komatsu":"assets/conn-komatsu.png"
 };
 /* MAPA ORIGINAL (restaurar al subir las imágenes a /assets):
 var CONNECTOR_IMGS={"bspt":"assets/conn-bspt.png","bspp":"assets/conn-bspp.png","orfs":"assets/conn-orfs.png","npt":"assets/conn-npt.png","jic":"assets/conn-jic.png","orb":"assets/conn-orb.png","tee":"assets/conn-tee.jpg","c45":"assets/conn-c45.jpg","c90":"assets/conn-c90.jpg","tap":"assets/conn-tap.jpg","nr":"assets/conn-nr.png","jico":"assets/conn-jico.png","bite":"assets/conn-bite.png","jis":"assets/conn-jis.png","komatsu":"assets/conn-komatsu.png","crx":"assets/conn-crx.png","bh":"assets/conn-bh.png","bh90":"assets/conn-bh90.png","bh45":"assets/conn-bh45.png","bhtee":"assets/conn-bhtee.png"};
@@ -6721,16 +6729,20 @@ function medToCode(med) { return window.medToCode(med); }
 
 (function(){
 var TIPOS=[
-  {code:'NR', label:'Conector Recto',  sub:'Conexion en linea',   n:2, img:'nr'},
-  {code:'C90',label:'Codo 90°',        sub:'Cambio de direccion', n:2, img:'c90'},
-  {code:'C45',label:'Codo 45°',        sub:'Angulo medio',        n:2, img:'c45'},
-  {code:'TEE',label:'Tee (T)',         sub:'Conexion en T',       n:2, img:'tee'},
-  {code:'CRX',label:'Cruz (X)',        sub:'Conexion en 4 vias',  n:2, img:'crx'},
-  {code:'BH', label:'Pasamuros recto', sub:'Bulkhead recto',      n:2, img:'bh'},
-  {code:'BH90',label:'Pasamuros 90°',  sub:'Bulkhead codo 90°',   n:2, img:'bh90'},
-  {code:'BH45',label:'Pasamuros 45°',  sub:'Bulkhead codo 45°',   n:2, img:'bh45'},
-  {code:'BHTEE',label:'Pasamuros Tee', sub:'Bulkhead en T',       n:2, img:'bhtee'},
-  {code:'TAP',label:'Tapón',           sub:'Cierre de puerto',    n:1, img:'tap'}
+  {label:'Conector Recto', sub:'Conexion en linea', n:2, img:'nr', variants:[
+    {code:'NR', label:'Conector Recto',  sub:'En linea',          n:2, img:'nr'},
+    {code:'BH', label:'Pasamuros recto', sub:'Pasa por mampara',  n:2, img:'bh'}]},
+  {label:'Codo 90°', sub:'Cambio de direccion', n:2, img:'c90', variants:[
+    {code:'C90', label:'Codo 90°',       sub:'Estandar',          n:2, img:'c90'},
+    {code:'BH90',label:'Pasamuros 90°',  sub:'Pasa por mampara',  n:2, img:'bh90'}]},
+  {label:'Codo 45°', sub:'Angulo medio', n:2, img:'c45', variants:[
+    {code:'C45', label:'Codo 45°',       sub:'Estandar',          n:2, img:'c45'},
+    {code:'BH45',label:'Pasamuros 45°',  sub:'Pasa por mampara',  n:2, img:'bh45'}]},
+  {label:'Tee (T)', sub:'Conexion en T', n:2, img:'tee', variants:[
+    {code:'TEE',  label:'Tee (T)',       sub:'Estandar',          n:2, img:'tee'},
+    {code:'BHTEE',label:'Pasamuros Tee', sub:'Pasa por mampara',  n:2, img:'bhtee'}]},
+  {code:'CRX',label:'Cruz (X)',  sub:'Conexion en 4 vias', n:2, img:'crx'},
+  {code:'TAP',label:'Tapón',     sub:'Cierre de puerto',   n:1, img:'tap'}
 ];
 var ESTANDARES=[
   {code:'JIC', cat:'JIC',  label:'JIC',            sub:'Americano SAE J514',  g:'AMERICANO', img:'jic'},
@@ -6758,6 +6770,27 @@ var LTR=['A','B','C'];
 var ROJO='#C8102E',AZUL='#001F5B';
 
 var tipo=null, exts=[], step=0, material='CS';
+var _lastVariantShape=null; // forma elegida que tiene variante Estandar/Pasamuros
+
+// Paso intermedio: elegir Estandar o Pasamuros (con imagenes) para las formas que lo tienen.
+function renderVariant(shape){
+  var body=eid('cfg-body'); if(!body) return;
+  body.innerHTML='';
+  cfgSetBack('Tipo de adaptador', function(){ step=0; tipo=null; exts=[]; material='CS'; renderStep(); });
+  var p=mkdiv('config-panel active');
+  p.appendChild(mkdiv('config-panel-q', shape.label+': &#191;est&#225;ndar o pasamuros?'));
+  var g=mkdiv('config-options');
+  g.style.gridTemplateColumns='repeat(auto-fill,minmax(180px,1fr))';
+  shape.variants.forEach(function(v){
+    g.appendChild(mkOptCard(v.label, v.sub, (function(vv){ return function(){
+      tipo={code:vv.code,label:vv.label,sub:vv.sub,n:vv.n,img:vv.img};
+      exts=[]; for(var i=0;i<vv.n;i++) exts.push({std:null,gen:null,med:null});
+      step=1; renderStep();
+    }; })(v), v.img||null));
+  });
+  p.appendChild(g);
+  body.appendChild(p);
+}
 
 function sc(m){return SC[m]||m.replace(/[^A-Za-z0-9]/g,'');}
 function eid(id){return document.getElementById(id);}
@@ -6805,7 +6838,7 @@ function mkOptCard(label,sub,onClick,imgKey){
   var d=mkdiv('config-opt');
   var hasImg = imgKey && typeof CONNECTOR_IMGS!=='undefined' && CONNECTOR_IMGS[imgKey];
   if(hasImg){
-    var ih='<img src="'+CONNECTOR_IMGS[imgKey]+'" style="width:100%;max-width:110px;height:100px;object-fit:contain;display:block;margin:0 auto 10px;" alt="'+label+'"/>';
+    var ih='<img src="'+CONNECTOR_IMGS[imgKey]+'" onerror="this.onerror=null;if(window.CONNECTOR_SVG&&window.CONNECTOR_SVG[\''+imgKey+'\']){this.src=window.CONNECTOR_SVG[\''+imgKey+'\'];}else{this.style.display=\'none\';}" style="width:100%;max-width:110px;height:100px;object-fit:contain;display:block;margin:0 auto 10px;" alt="'+label+'"/>';
     d.innerHTML=ih+'<div class="config-opt-label" style="font-size:13px;">'+label+'</div>';
   } else {
     d.innerHTML='<div class="config-opt-label">'+label+'</div>'+(sub?'<div class="config-opt-sub">'+sub+'</div>':'');
@@ -6864,6 +6897,8 @@ function renderStep(){
     g.style.gridTemplateColumns='repeat(auto-fill,minmax(180px,1fr))';
     TIPOS.forEach(function(t){
       g.appendChild(mkOptCard(t.label,t.sub,function(){
+        if(t.variants){ _lastVariantShape=t; renderVariant(t); return; }
+        _lastVariantShape=null;
         tipo=t; exts=[];
         for(var i=0;i<t.n;i++) exts.push({std:null,gen:null,med:null});
         step=1; renderStep();
@@ -7048,7 +7083,8 @@ function renderStep(){
 
   var allDone=exts.every(function(e){return e.std&&e.gen&&e.med;});
   var resetFn=function(){step=0;tipo=null;exts=[];material='CS';renderStep();};
-  cfgSetBack('Tipo de adaptador', resetFn);
+  if(_lastVariantShape){ cfgSetBack(_lastVariantShape.label, (function(sh){ return function(){ renderVariant(sh); }; })(_lastVariantShape)); }
+  else { cfgSetBack('Tipo de adaptador', resetFn); }
   var foot=document.createElement('div');
   foot.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px;';
   var rb=document.createElement('button');
