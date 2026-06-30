@@ -851,7 +851,7 @@
   <script src="mcfg.js"></script>
 </head>
 <body>
-<script>console.log("%cADAPTEKK build: IA-FIX-6 (Design + flechas con texto)","color:#1f9d55;font-weight:bold;font-size:13px");</script>
+<script>console.log("%cADAPTEKK build: IA-FIX-7 (encabezados limpios)","color:#1f9d55;font-weight:bold;font-size:13px");</script>
 
 
 
@@ -934,7 +934,7 @@
 <div id="page-ia" style="display:none;">
   <div class="ia-wrap">
     <div class="ia-topbar">
-      <button class="ia-back" onclick="navBack()" aria-label="Volver" style="width:auto;border-radius:999px;padding:0 14px 0 10px;gap:6px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg><span style="font-size:13px;font-weight:600;">Inicio</span></button>
+      <button class="ia-back" onclick="navBack()" aria-label="Volver"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
       <div><div class="ia-title">Asistente IA</div><div class="ia-sub">Identifica tu conector en segundos</div></div>
     </div>
     <div class="ia-cols">
@@ -1245,10 +1245,10 @@
 ═══════════════════════ -->
 <div id="page-cfg" style="display:none;">
   <div class="page-header">
-    <button class="page-header-back" id="cfg-back-btn" onclick="cfgHeaderBack()" title="Regresar" style="width:auto;min-width:0;padding:0 15px 0 12px;border-radius:999px;display:inline-flex;align-items:center;gap:7px;white-space:nowrap;">&#8592;<span id="cfg-back-label" style="font-size:13.5px;font-weight:600;">Página principal</span></button>
+    <button class="page-header-back" id="cfg-back-btn" onclick="cfgHeaderBack()" title="Regresar" aria-label="Regresar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
     <div>
-      <div class="page-header-title" id="cfg-title">Seleccionar Conector</div>
-      <div class="page-header-sub" id="cfg-sub">Configura tu adaptador paso a paso</div>
+      <div class="page-header-title" id="cfg-title" onclick="cfgHeaderBack()" style="cursor:pointer;">Página principal</div>
+      <div class="page-header-sub" id="cfg-sub" style="display:none;"></div>
     </div>
   </div>
   <div class="config-section">
@@ -1265,10 +1265,10 @@
 
 <div id="page-cross" style="display:none;">
   <div class="page-header">
-    <button class="page-header-back" onclick="showPage('home')" title="Regresar" style="width:auto;min-width:0;padding:0 15px 0 12px;border-radius:999px;display:inline-flex;align-items:center;gap:7px;white-space:nowrap;">&#8592;<span style="font-size:13.5px;font-weight:600;">Página principal</span></button>
+    <button class="page-header-back" onclick="showPage('home')" title="Regresar" aria-label="Regresar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
     <div>
-      <div class="page-header-title">Cross Reference</div>
-      <div class="page-header-sub">Encuentra el equivalente Adaptekk de cualquier marca</div>
+      <div class="page-header-title" onclick="showPage('home')" style="cursor:pointer;">Página principal</div>
+      
     </div>
   </div>
   <div class="cross-page">
@@ -1420,10 +1420,10 @@
 
 <!-- Header -->
 <div class="shop-head">
-  <button class="back" onclick="showPage('home')" aria-label="Volver al inicio" style="width:auto;min-width:0;padding:0 15px 0 12px;border-radius:999px;display:inline-flex;align-items:center;gap:7px;white-space:nowrap;">&#8592;<span style="font-size:13.5px;font-weight:600;">Página principal</span></button>
+  <button class="back" onclick="showPage('home')" aria-label="Volver al inicio"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
   <div>
-    <h1>Carrito</h1>
-    <div class="sub" id="cart-subtitle">0 productos</div>
+    <h1 onclick="showPage('home')" style="cursor:pointer;">Página principal</h1>
+    <div class="sub" id="cart-subtitle" style="display:none;">0 productos</div>
   </div>
 </div>
 
@@ -2075,10 +2075,10 @@ cartUpdateBadge();
 
 <!-- Header -->
 <div class="shop-head">
-  <button class="back" onclick="showPage('cart')" aria-label="Volver al carrito" style="width:auto;min-width:0;padding:0 15px 0 12px;border-radius:999px;display:inline-flex;align-items:center;gap:7px;white-space:nowrap;">&#8592;<span style="font-size:13.5px;font-weight:600;">Carrito</span></button>
+  <button class="back" onclick="showPage('cart')" aria-label="Volver al carrito"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
   <div>
-    <h1>Checkout</h1>
-    <div class="sub" id="co-header-sub">Completa tu pedido</div>
+    <h1 onclick="showPage('cart')" style="cursor:pointer;">Carrito</h1>
+    <div class="sub" id="co-header-sub" style="display:none;">Completa tu pedido</div>
   </div>
 </div>
 
@@ -2236,7 +2236,7 @@ cartUpdateBadge();
 
       <div class="co-err" id="co-err-2">&#9888; Completa los datos fiscales obligatorios.</div>
       <div class="co-nav">
-        <button class="co-btn ghost" onclick="coBack(2)">&#8592; Datos</button>
+        <button class="co-btn ghost" onclick="coBack(2)" aria-label="Atrás"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
         <button class="co-btn primary" onclick="coNext(2)">Continuar &#8594;</button>
       </div>
     </div>
@@ -2307,7 +2307,7 @@ cartUpdateBadge();
       <div id="co-ship-list"></div>
       <div class="co-err" id="co-err-3">&#9888; Completa la direcci&#243;n y elige una paqueter&#237;a.</div>
       <div class="co-nav">
-        <button class="co-btn ghost" onclick="coBack(3)">&#8592; Factura</button>
+        <button class="co-btn ghost" onclick="coBack(3)" aria-label="Atrás"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
         <button class="co-btn primary" onclick="coNext(3)">Ver resumen &#8594;</button>
       </div>
     </div>
@@ -2332,7 +2332,7 @@ cartUpdateBadge();
         &#9888; Precios de productos sujetos a verificaci&#243;n de cuenta. Un ejecutivo confirmar&#225; el total antes del pago.
       </div>
       <div class="co-nav" style="margin-top:16px;">
-        <button class="co-btn ghost" onclick="coBack(4)">&#8592; Envío</button>
+        <button class="co-btn ghost" onclick="coBack(4)" aria-label="Atrás"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
         <button class="co-btn primary" onclick="coConfirmar()">Continuar al pago &#8594;</button>
       </div>
       <div style="text-align:center;margin-top:14px;font-size:11px;color:#aaa;">Tus datos están protegidos &nbsp;|&nbsp; Aún no se realiza ningún cargo</div>
@@ -3049,9 +3049,9 @@ window.coConfirmar = function(){
 
 <!-- Header -->
 <div class="shop-head">
-  <button class="back" onclick="showPage('checkout');coGoStep(4);" aria-label="Volver al resumen" style="width:auto;min-width:0;padding:0 15px 0 12px;border-radius:999px;display:inline-flex;align-items:center;gap:7px;white-space:nowrap;">&#8592;<span style="font-size:13.5px;font-weight:600;">Resumen</span></button>
+  <button class="back" onclick="showPage('checkout');coGoStep(4);" aria-label="Volver al resumen"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
   <div>
-    <h1>Pago</h1>
+    <h1 onclick="showPage('checkout');coGoStep(4);" style="cursor:pointer;">Resumen</h1>
     <div class="sub">Elige c&#243;mo quieres pagar &#183; Paso 5 de 5</div>
   </div>
 </div>
@@ -6155,10 +6155,10 @@ async function pclLoadOrders(){
 ═══════════════════════ -->
 <div id="page-tutorials" style="display:none;">
   <div class="page-header">
-    <button class="page-header-back" onclick="showPage('home')" title="Regresar" style="width:auto;min-width:0;padding:0 15px 0 12px;border-radius:999px;display:inline-flex;align-items:center;gap:7px;white-space:nowrap;">&#8592;<span style="font-size:13.5px;font-weight:600;">Página principal</span></button>
+    <button class="page-header-back" onclick="showPage('home')" title="Regresar" aria-label="Regresar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
     <div>
-      <div class="page-header-title">Catálogos y Tutoriales</div>
-      <div class="page-header-sub">Recursos técnicos y documentación</div>
+      <div class="page-header-title" onclick="showPage('home')" style="cursor:pointer;">Página principal</div>
+      
     </div>
   </div>
   <div class="tut-page">
@@ -6830,10 +6830,10 @@ function cfgHeaderBack(){
     showPage('home');
   }
 }
-// Pone el texto del destino en la flecha de retroceso del configurador y a dónde va.
+// Pone el nombre de la página anterior como título grande del encabezado y a dónde regresa la flecha.
 function cfgSetBack(label, fn){
-  var l = document.getElementById('cfg-back-label');
-  if (l) l.textContent = label || 'Página principal';
+  var t = document.getElementById('cfg-title');
+  if (t) t.textContent = label || 'Página principal';
   window._cfgOnBack = fn || null;
 }
 
@@ -6850,8 +6850,6 @@ function renderStep(){
   // ── STEP 0: Seleccionar tipo ──
   if(step===0){
     cfgSetBack('Página principal', null); // en el primer paso, la flecha del encabezado va a inicio
-    var ct=eid('cfg-title'); if(ct)ct.textContent='Seleccionar Conector';
-    var cs=eid('cfg-sub'); if(cs)cs.textContent='Configura tu adaptador paso a paso';
     var p=mkdiv('config-panel active');
     p.appendChild(mkdiv('config-panel-q','&#191;Qu&#233; tipo de adaptador necesitas?'));
     var g=mkdiv('config-options');
