@@ -851,7 +851,7 @@
   <script src="mcfg.js"></script>
 </head>
 <body>
-<script>console.log("%cADAPTEKK build: IA-FIX-7 (encabezados limpios)","color:#1f9d55;font-weight:bold;font-size:13px");</script>
+<script>console.log("%cADAPTEKK build: IA-FIX-8 (catalogo+login back + diag)","color:#1f9d55;font-weight:bold;font-size:13px");</script>
 
 
 
@@ -3802,6 +3802,7 @@ function payConfirmado(metodo){
 ═══════════════════════ -->
 <div id="page-login" style="display:none;">
   <div class="auth-wrap">
+    <div onclick="showPage('home')" style="display:flex;align-items:center;gap:8px;cursor:pointer;max-width:420px;margin:0 auto 14px;color:#001F5B;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#001F5B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg><span style="font-size:18px;font-weight:700;letter-spacing:-.2px;">Página principal</span></div>
     <div class="auth-card">
       <div class="auth-header">
         <div class="auth-logo" style="display:flex;align-items:baseline;justify-content:center;">Adaptekk<span style="color:#C8102E;">.</span></div>
@@ -6824,6 +6825,7 @@ function mkNav(onBack){
 // La flecha ← del encabezado del configurador: si hay un paso anterior, retrocede;
 // si ya está en el primer paso, regresa al inicio.
 function cfgHeaderBack(){
+  console.log('[ADAPTEKK back] cfgHeaderBack ->', (typeof window._cfgOnBack === 'function') ? 'paso anterior' : 'inicio');
   if (typeof window._cfgOnBack === 'function') {
     window._cfgOnBack();
   } else {
@@ -9239,6 +9241,10 @@ updateFAB();
   function buildShell(c){
     c.innerHTML='';
     var wrap = el('div','max-width:1200px;margin:0 auto;padding:28px 20px 60px;');
+    var catBack = el('div','display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:16px;');
+    catBack.innerHTML='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#001F5B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg><span style="font-size:22px;font-weight:700;color:#001F5B;letter-spacing:-.3px;">Página principal</span>';
+    catBack.onclick=function(){ showPage('home'); };
+    wrap.appendChild(catBack);
     wrap.appendChild(el('div','font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#C8102E;margin-bottom:6px;','Catálogo'));
     wrap.appendChild(el('h1','font-size:30px;font-weight:700;color:#001F5B;margin:0 0 4px;letter-spacing:-.5px;','Conectores y adaptadores'));
     wrap.appendChild(el('p','font-size:14px;color:#86868b;margin:0 0 22px;','Filtra por tipo, estándar y medida. Los resultados se acotan conforme eliges.'));
