@@ -854,7 +854,7 @@
   <script src="mcfg.js"></script>
 </head>
 <body>
-<script>console.log("%cADAPTEKK build: IA-FIX-15 (tees 3 y cruz 4 extremos)","color:#1f9d55;font-weight:bold;font-size:13px");</script>
+<script>console.log("%cADAPTEKK build: IA-FIX-16 (dos botones + fabricacion resaltada)","color:#1f9d55;font-weight:bold;font-size:13px");</script>
 
 
 
@@ -7660,9 +7660,11 @@ function aiOffersHTML(armar){
     var idx = window._aiOffers.push(items)-1;
     var inStock = items.length>0 && items.every(function(p){ return (p.qty||0)>0; });
     var lines = items.map(function(p){ return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #f5f6f8;">'+codeChip(p.code)+dispoTxt(p.qty)+'</div>'; }).join('');
-    var action = inStock
-      ? '<button onclick="aiAddOffer('+idx+')" style="background:#C8102E;color:#fff;border:none;padding:8px 15px;border-radius:980px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:600;">Agregar al carrito</button>'
-      : '<a href="https://wa.me/525555550000?text='+encodeURIComponent('Hola, quiero consultar este conector: '+items.map(function(p){return p.code;}).join(' + '))+'" target="_blank" style="background:#25D366;color:#fff;text-decoration:none;padding:8px 15px;border-radius:980px;font-family:inherit;font-size:12px;font-weight:700;display:inline-block;">Contactar a un ejecutivo</a>';
+    var _waHref = 'https://wa.me/525555550000?text='+encodeURIComponent('Hola, quiero consultar este conector: '+items.map(function(p){return p.code;}).join(' + '));
+    var action = '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">'
+      + '<a href="'+_waHref+'" target="_blank" style="background:#25D366;color:#fff;text-decoration:none;padding:8px 15px;border-radius:980px;font-family:inherit;font-size:12px;font-weight:700;display:inline-block;">Contactar a un ejecutivo</a>'
+      + '<button onclick="aiAddOffer('+idx+')" style="background:#001F5B;color:#fff;border:none;padding:8px 15px;border-radius:980px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:700;">Agregar a mi lista</button>'
+      + '</div>';
     return '<div style="border:1px solid #E3E9F3;border-radius:12px;padding:13px 14px;background:#fff;font-family:'+FONT+';">'
       + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;gap:8px;"><span style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#C8102E;">'+label+'</span>'+(badge||'')+'</div>'
       + lines
@@ -7678,10 +7680,11 @@ function aiOffersHTML(armar){
     var badge = ch.en_stock ? '<span style="font-size:10px;font-weight:700;background:#E6F4EA;color:#1d7d34;padding:3px 9px;border-radius:980px;white-space:nowrap;">En stock</span>' : '';
     html += offerCard('Opción '+(i+1)+' · cadena de '+ch.piezas+' piezas', (ch.items||[]), badge);
   });
-  html += '<div style="border:1px dashed #cfd8e6;border-radius:12px;padding:13px 14px;background:#F8FAFD;font-family:'+FONT+';">'
-    + '<div style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#001F5B;margin-bottom:4px;">Fabricación a la medida</div>'
-    + '<div style="font-size:13px;line-height:1.5;color:#5b6577;margin-bottom:10px;">También se puede fabricar como una sola pieza especial, a tu medida exacta.</div>'
-    + '<a href="https://wa.me/525555550000?text='+encodeURIComponent('Hola, quiero cotizar una pieza especial fabricada a la medida.')+'" target="_blank" style="display:inline-block;background:#25D366;color:#fff;text-decoration:none;padding:8px 15px;border-radius:980px;font-size:12px;font-weight:700;">Cotizar fabricación por WhatsApp</a>'
+  html += '<div style="border:1px solid #E3E9F3;border-radius:12px;padding:13px 14px;background:#fff;font-family:'+FONT+';">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;gap:8px;"><span style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#C8102E;">Fabricación a la medida</span></div>'
+    + '<div style="font-size:14px;line-height:1.55;color:#001F5B;font-weight:500;">También se puede fabricar una sola pieza especial, con la rosca y la medida exacta que necesites. Contacta a un ejecutivo para el procedimiento de fabricación, la cotización y el tiempo de entrega.</div>'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:11px;gap:8px;flex-wrap:wrap;"><span style="font-size:12px;color:#86868b;">Pieza especial · bajo cotización</span>'
+    + '<a href="https://wa.me/525555550000?text='+encodeURIComponent('Hola, quiero cotizar una pieza especial fabricada a la medida.')+'" target="_blank" style="background:#25D366;color:#fff;text-decoration:none;padding:8px 15px;border-radius:980px;font-family:inherit;font-size:12px;font-weight:700;display:inline-block;">Contactar a un ejecutivo</a></div>'
     + '</div>';
   html += '</div>';
   return html;
