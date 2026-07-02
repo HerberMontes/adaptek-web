@@ -854,7 +854,7 @@
   <script src="mcfg.js"></script>
 </head>
 <body>
-<script>console.log("%cADAPTEKK build: IA-FIX-16 (dos botones + fabricacion resaltada)","color:#1f9d55;font-weight:bold;font-size:13px");</script>
+<script>console.log("%cADAPTEKK build: IA-FIX-17 (login centrado)","color:#1f9d55;font-weight:bold;font-size:13px");</script>
 
 
 
@@ -3805,7 +3805,8 @@ function payConfirmado(metodo){
 ═══════════════════════ -->
 <div id="page-login" style="display:none;">
   <div class="auth-wrap">
-    <div onclick="showPage('home')" style="display:flex;align-items:center;gap:8px;cursor:pointer;max-width:420px;margin:0 auto 14px;color:#001F5B;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#001F5B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg><span class="nav-ttl">Página principal</span></div>
+   <div style="display:flex;flex-direction:column;width:100%;max-width:420px;margin:0 auto;">
+    <div onclick="showPage('home')" style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0 0 14px;color:#001F5B;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#001F5B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg><span class="nav-ttl">Página principal</span></div>
     <div class="auth-card">
       <div class="auth-header">
         <div class="auth-logo" style="display:flex;align-items:baseline;justify-content:center;">Adaptekk<span style="color:#C8102E;">.</span></div>
@@ -3861,6 +3862,7 @@ function payConfirmado(metodo){
         Al iniciar sesión aceptas nuestros <span class="auth-link">Términos de Servicio</span> y <span class="auth-link">Política de Privacidad</span>.
       </div>
     </div>
+   </div>
   </div>
 </div><!-- /page-login -->
 
