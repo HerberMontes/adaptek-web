@@ -256,13 +256,13 @@
 
     /* ── PAGE HEADER (for sub-pages) ── */
     .page-header{
-      background:#fff;color:#001F5B;padding:32px 32px 8px;
-      display:flex;align-items:center;gap:16px;
+      background:#fff;color:#001F5B;padding:24px 24px 8px;
+      display:flex;align-items:center;gap:14px;
     }
     .page-header>div:last-child{flex:1;min-width:0;}
     .page-header-back{
       background:#f5f5f7;border:none;color:#001F5B;
-      width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:18px;
+      width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:18px;
       display:flex;align-items:center;justify-content:center;flex-shrink:0;
       transition:background .2s;
     }
@@ -854,7 +854,7 @@
   <script src="mcfg.js"></script>
 </head>
 <body>
-<script>console.log("%cADAPTEKK build: IA-FIX-18 (modal reglas IA destrabado)","color:#1f9d55;font-weight:bold;font-size:13px");</script>
+<script>console.log("%cADAPTEKK build: IA-FIX-19 (retrocesos unificados)","color:#1f9d55;font-weight:bold;font-size:13px");</script>
 
 
 
@@ -3804,8 +3804,9 @@ function payConfirmado(metodo){
      PAGE: LOGIN
 ═══════════════════════ -->
 <div id="page-login" style="display:none;">
-  <div style="max-width:1200px;margin:0 auto;padding:18px 24px 0;">
-    <div onclick="showPage('home')" style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;color:#001F5B;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#001F5B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg><span class="nav-ttl">Página principal</span></div>
+  <div class="page-header" style="background:transparent;">
+    <button class="page-header-back" onclick="showPage('home')" title="Regresar" aria-label="Regresar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <div><div class="page-header-title nav-ttl" onclick="showPage('home')" style="cursor:pointer;">Página principal</div></div>
   </div>
   <div class="auth-wrap" style="min-height:auto;padding-top:12px;">
     <div class="auth-card">
@@ -9302,9 +9303,9 @@ updateFAB();
 
   function buildShell(c){
     c.innerHTML='';
-    var wrap = el('div','max-width:1200px;margin:0 auto;padding:28px 20px 60px;');
-    var catBack = el('div','display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:16px;');
-    catBack.innerHTML='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#001F5B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg><span class="nav-ttl">Página principal</span>';
+    var wrap = el('div','max-width:1200px;margin:0 auto;padding:24px 24px 60px;');
+    var catBack = el('div','display:flex;align-items:center;gap:14px;cursor:pointer;margin-bottom:16px;');
+    catBack.innerHTML='<button class="page-header-back" title="Regresar" aria-label="Regresar" style="pointer-events:none;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button><span class="nav-ttl">Página principal</span>';
     catBack.onclick=function(){ showPage('home'); };
     wrap.appendChild(catBack);
     wrap.appendChild(el('div','font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#C8102E;margin-bottom:6px;','Catálogo'));
