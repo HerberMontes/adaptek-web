@@ -854,7 +854,7 @@
   <script src="mcfg.js"></script>
 </head>
 <body>
-<script>console.log("%cADAPTEKK build: IA-FIX-17 (login centrado)","color:#1f9d55;font-weight:bold;font-size:13px");</script>
+<script>console.log("%cADAPTEKK build: IA-FIX-18 (modal reglas IA destrabado)","color:#1f9d55;font-weight:bold;font-size:13px");</script>
 
 
 
@@ -3804,9 +3804,10 @@ function payConfirmado(metodo){
      PAGE: LOGIN
 ═══════════════════════ -->
 <div id="page-login" style="display:none;">
-  <div class="auth-wrap">
-   <div style="display:flex;flex-direction:column;width:100%;max-width:420px;margin:0 auto;">
-    <div onclick="showPage('home')" style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0 0 14px;color:#001F5B;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#001F5B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg><span class="nav-ttl">Página principal</span></div>
+  <div style="max-width:1200px;margin:0 auto;padding:18px 24px 0;">
+    <div onclick="showPage('home')" style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;color:#001F5B;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#001F5B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg><span class="nav-ttl">Página principal</span></div>
+  </div>
+  <div class="auth-wrap" style="min-height:auto;padding-top:12px;">
     <div class="auth-card">
       <div class="auth-header">
         <div class="auth-logo" style="display:flex;align-items:baseline;justify-content:center;">Adaptekk<span style="color:#C8102E;">.</span></div>
@@ -3862,7 +3863,6 @@ function payConfirmado(metodo){
         Al iniciar sesión aceptas nuestros <span class="auth-link">Términos de Servicio</span> y <span class="auth-link">Política de Privacidad</span>.
       </div>
     </div>
-   </div>
   </div>
 </div><!-- /page-login -->
 
@@ -4253,6 +4253,9 @@ body.exec-mode .topbar, body.exec-mode > nav, body.exec-mode body > nav{display:
         <div style="background:#FFF8E1;border-left:4px solid #FFA000;border-radius:4px;padding:12px 16px;margin-bottom:20px;font-size:13px;color:#795548;">
           Los cambios de contrasena son inmediatos. Avisa al ejecutivo su nueva contrasena.
         </div>
+        <div id="admin-users-list"></div>
+      </div>
+    </div>
   </div>
 
   <!-- Reglas / Correcciones de la IA Modal (solo gerencia) -->
