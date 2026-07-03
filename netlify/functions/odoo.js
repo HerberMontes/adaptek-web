@@ -3209,6 +3209,143 @@ exports.handler = async function(event, context) {
 
     // ── CREAR GUÍA de envío (Skydropx) tras surtir: recotiza, crea el envío, guarda y avisa al cliente ──
     // body: { picking_id } o { folio }.  Idempotente: si ya hay guía, la devuelve sin recobrar.
+    /* ═══ DEVOLUCIONES (página oculta) ═══ */
+    async function _devFindSO(pedido, correo){
+      const uid = await odooAuth();
+      if (!uid) return {err:'odoo auth'};
+      const ped = String(pedido||'').trim();
+      let so=null, raw='';
+      for (const field of ['name','client_order_ref']){
+        const dom = `<value><array><data>${xmlStr(field)}<value><string>=</string></value>${xmlStr(ped)}</data></array></value>`;
+        raw = await odooSearchRead(uid, 'sale.order', dom, ['id','name','note','date_order','partner_id','state'], 1);
+        if (/<name>id<\/name>/.test(raw)) { so=raw; break; }
+      }
+      if (!so) return {err:'No encontramos ese pedido.'};
+      const gid = so.match(/<name>id<\/name>\s*<value><int>(\d+)<\/int>/);
+      const gnm = so.match(/<name>name<\/name>\s*<value>\s*<string>([^<]*)<\/string>/);
+      const gdt = so.match(/<name>date_order<\/name>\s*<value>\s*<string>([^<]*)<\/string>/);
+      const gpt = so.match(/<name>partner_id<\/name>[\s\S]*?<int>(\d+)<\/int>/);
+      const gnote = so.match(/<name>note<\/name>\s*<value>\s*<string>([\s\S]*?)<\/string>/);
+      const saleId = gid?parseInt(gid[1]):null;
+      if (!saleId) return {err:'No encontramos ese pedido.'};
+      // correo del partner
+      let email='';
+      if (gpt){
+        const pr = await odooSearchRead(uid, 'res.partner', `<value><array><data>${xmlStr('id')}<value><string>=</string></value><value><int>${parseInt(gpt[1])}</int></value></data></array></value>`, ['email'], 1);
+        const em = pr.match(/<name>email<\/name>\s*<value>\s*<string>([^<]*)<\/string>/);
+        email = em?em[1].trim():'';
+      }
+      if (!email || email.toLowerCase() !== String(correo||'').trim().toLowerCase())
+        return {err:'El correo no coincide con el del pedido.'};
+      // fecha de entrega: picking done si existe
+      let fecha = gdt?gdt[1]:''; 
+      try {
+        const pk = await odooSearchRead(uid, 'stock.picking', `<value><array><data>${xmlStr('origin')}<value><string>=</string></value>${xmlStr(gnm?gnm[1]:'')}</data></array></value>`, ['date_done','state'], 5);
+        const dm = pk.match(/<name>date_done<\/name>\s*<value>\s*<string>([^<]*)<\/string>/);
+        if (dm && dm[1]) fecha = dm[1];
+      } catch(_){}
+      const dias = Math.floor((Date.now() - new Date(String(fecha).replace(' ','T')+'Z').getTime())/86400000);
+      // líneas
+      const lr = await odooSearchRead(uid, 'sale.order.line', `<value><array><data>${xmlStr('order_id')}<value><string>=</string></value><value><int>${saleId}</int></value></data></array></value>`, ['id','name','product_uom_qty'], 60);
+      const lineas=[];
+      const lre=/<name>id<\/name>\s*<value><int>(\d+)<\/int>[\s\S]*?<name>name<\/name>\s*<value>\s*<string>([\s\S]*?)<\/string>[\s\S]*?<name>product_uom_qty<\/name>\s*<value><double>([\d.]+)<\/double>/g;
+      let mm;
+      while((mm=lre.exec(lr))){
+        const nm=mm[2].replace(/\n[\s\S]*$/,'').trim();
+        const cd=(nm.match(/\[([^\]]+)\]/)||[])[1]||'';
+        const qty=Math.round(parseFloat(mm[3]));
+        if (qty<=0) continue;
+        const esF = /-F\b|-F-|FABRICACI/i.test(cd) || /fabricaci/i.test(nm);
+        const esEnvio = /env[ií]o|shipping|flete/i.test(nm);
+        if (esEnvio) continue;
+        lineas.push({ id:parseInt(mm[1]), code:cd, name:nm.replace(/^\[[^\]]+\]\s*/,''), qty:qty,
+          elegible: !esF && dias<=10,
+          motivo_inelegible: esF ? 'Fabricaci\u00f3n especial: sin devoluci\u00f3n' : (dias>10 ? 'Fuera del plazo de 10 d\u00edas' : '') });
+      }
+      const note = gnote?gnote[1]:'';
+      let dev=null;
+      const dm2 = note.match(/\[DEVOLUCION\]([A-Za-z0-9+/=]+)\[\/DEVOLUCION\]/);
+      if (dm2){ try{ dev=JSON.parse(Buffer.from(dm2[1],'base64').toString('utf8')); }catch(_){ } }
+      return { uid, saleId, pedido:(gnm?gnm[1]:ped), note, dias, lineas, dev,
+        elegible: dias<=10 && lineas.some(l=>l.elegible),
+        motivo_inelegible: dias>10 ? ('Han pasado '+dias+' d\u00edas desde la entrega (m\u00e1x. 10).') : (lineas.some(l=>l.elegible)?'':'Ninguna pieza del pedido es elegible.') };
+    }
+    async function _devWriteNote(uid, saleId, note, dev){
+      const tag='[DEVOLUCION]'+Buffer.from(JSON.stringify(dev)).toString('base64')+'[/DEVOLUCION]';
+      let newNote;
+      if (/\[DEVOLUCION\][A-Za-z0-9+/=]+\[\/DEVOLUCION\]/.test(note)) newNote = note.replace(/\[DEVOLUCION\][A-Za-z0-9+/=]+\[\/DEVOLUCION\]/, tag);
+      else newNote = (note + '\n' + tag).trim();
+      await xmlrpc(uid, 'sale.order', 'write', `<value><array><data><value><int>${saleId}</int></value></data></array></value><value><struct><member><name>note</name>${xmlStr(newNote)}</member></struct></value>`);
+      return newNote;
+    }
+
+    if (action === 'devolucion_buscar') {
+      const r = await _devFindSO(body.pedido, body.correo);
+      if (r.err) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:r.err})};
+      return {statusCode:200, headers, body: JSON.stringify({ok:true, pedido:r.pedido, dias:r.dias, elegible:r.elegible, motivo_inelegible:r.motivo_inelegible, lineas:r.lineas, dev:r.dev})};
+    }
+
+    if (action === 'devolucion_solicitar') {
+      const r = await _devFindSO(body.pedido, body.correo);
+      if (r.err) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:r.err})};
+      if (r.dev) return {statusCode:200, headers, body: JSON.stringify({ok:true, dev:r.dev})};
+      if (!r.elegible) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:r.motivo_inelegible||'Pedido no elegible'})};
+      const pedidas = Array.isArray(body.lineas)?body.lineas:[];
+      if (!pedidas.length) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'Selecciona al menos una pieza'})};
+      const okIds = new Set(r.lineas.filter(l=>l.elegible).map(l=>l.id));
+      const lineas = pedidas.filter(l=>okIds.has(parseInt(l.id))).map(l=>({id:parseInt(l.id), code:String(l.code||''), name:String(l.name||'').slice(0,120), qty:Math.max(1,parseInt(l.qty)||1)}));
+      if (!lineas.length) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'Las piezas seleccionadas no son elegibles'})};
+      const dev = { folio:'DEV-'+r.saleId+'-'+String(Date.now()).slice(-5), estado:'solicitada',
+        fecha:new Date().toISOString(), correo:String(body.correo||'').trim(), motivo:String(body.motivo||'').slice(0,120), lineas };
+      await _devWriteNote(r.uid, r.saleId, r.note, dev);
+      return {statusCode:200, headers, body: JSON.stringify({ok:true, dev})};
+    }
+
+    if (action === 'devolucion_listar') {
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'odoo auth'})};
+      const dom = `<value><array><data>${xmlStr('note')}<value><string>like</string></value>${xmlStr('[DEVOLUCION]')}</data></array></value>`;
+      const raw = await odooSearchRead(uid, 'sale.order', dom, ['id','name','note'], 40);
+      const items=[];
+      const re=/<name>id<\/name>\s*<value><int>(\d+)<\/int>[\s\S]*?<name>name<\/name>\s*<value>\s*<string>([^<]*)<\/string>[\s\S]*?<name>note<\/name>\s*<value>\s*<string>([\s\S]*?)<\/string>/g;
+      let m;
+      while((m=re.exec(raw))){
+        const dm = m[3].match(/\[DEVOLUCION\]([A-Za-z0-9+/=]+)\[\/DEVOLUCION\]/);
+        if (!dm) continue;
+        try { items.push({ id:parseInt(m[1]), pedido:m[2], dev:JSON.parse(Buffer.from(dm[1],'base64').toString('utf8')) }); } catch(_){}
+      }
+      items.sort((a,b)=> (a.dev.estado==='solicitada'?-1:1)-(b.dev.estado==='solicitada'?-1:1));
+      return {statusCode:200, headers, body: JSON.stringify({ok:true, items})};
+    }
+
+    if (action === 'devolucion_aprobar') {
+      const uid = await odooAuth();
+      if (!uid) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'odoo auth'})};
+      const ped = String(body.pedido||'').trim();
+      const dom = `<value><array><data>${xmlStr('name')}<value><string>=</string></value>${xmlStr(ped)}</data></array></value>`;
+      const raw = await odooSearchRead(uid, 'sale.order', dom, ['id','name','note'], 1);
+      const gid = raw.match(/<name>id<\/name>\s*<value><int>(\d+)<\/int>/);
+      const gnote = raw.match(/<name>note<\/name>\s*<value>\s*<string>([\s\S]*?)<\/string>/);
+      if (!gid) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'Pedido no encontrado'})};
+      const note = gnote?gnote[1]:'';
+      const dm = note.match(/\[DEVOLUCION\]([A-Za-z0-9+/=]+)\[\/DEVOLUCION\]/);
+      if (!dm) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'El pedido no tiene devoluci\u00f3n registrada'})};
+      let dev; try{ dev=JSON.parse(Buffer.from(dm[1],'base64').toString('utf8')); }catch(e){ return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'Registro corrupto'})}; }
+      if (body.aprobar === false || body.aprobar === 'false') {
+        dev.estado='rechazada'; dev.rechazo=String(body.rechazo||'').slice(0,200);
+      } else {
+        dev.estado='aprobada';
+        const demo = /^(1|true|si|s\u00ed)$/i.test(String(process.env.SKYDROPX_GUIA_DEMO||'').trim());
+        if (String(body.tracking||'').trim() || String(body.label_url||'').trim()) {
+          dev.guia={ tracking:String(body.tracking||'').trim(), label_url:String(body.label_url||'').trim(), carrier:'Skydropx', retorno:true };
+        } else if (demo) {
+          dev.guia={ tracking:'DEMO-RET-'+String(Date.now()).slice(-9), carrier:'Demo Express', label_url:'', retorno:true, demo:true };
+        }
+      }
+      await _devWriteNote(uid, parseInt(gid[1]), note, dev);
+      return {statusCode:200, headers, body: JSON.stringify({ok:true, dev})};
+    }
+
     if (action === 'crear_guia') {
       const uid = await odooAuth();
       if (!uid) return {statusCode:200, headers, body: JSON.stringify({ok:false, error:'odoo auth'})};
