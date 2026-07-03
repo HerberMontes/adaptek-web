@@ -854,7 +854,7 @@
   <script src="mcfg.js"></script>
 </head>
 <body>
-<script>console.log("%cADAPTEKK build: IA-FIX-19 (retrocesos unificados)","color:#1f9d55;font-weight:bold;font-size:13px");</script>
+<script>console.log("%cADAPTEKK build: IA-FIX-20 (devoluciones ocultas)","color:#1f9d55;font-weight:bold;font-size:13px");</script>
 
 
 
@@ -3127,6 +3127,19 @@ window.coConfirmar = function(){
 <!-- ═══════════════════════
      PAGE: CONFIRMACIÓN POST-PAGO (¡Gracias por tu compra!)
 ═══════════════════════ -->
+<!-- PAGE: DEVOLUCIONES (oculta; acceso por liga #devoluciones o Asistencia con tu pedido) -->
+<div id="page-devoluciones" style="display:none;">
+  <div class="page-header">
+    <button class="page-header-back" onclick="showPage('home')" title="Regresar" aria-label="Regresar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <div><div class="page-header-title nav-ttl" onclick="showPage('home')" style="cursor:pointer;">Página principal</div></div>
+  </div>
+  <div style="max-width:760px;margin:0 auto;padding:8px 24px 70px;">
+    <div style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#C8102E;margin-bottom:6px;">Asistencia con tu pedido</div>
+    <div style="font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;font-size:24px;font-weight:700;color:#001F5B;margin-bottom:18px;">Devolución de producto</div>
+    <div id="dev-body"></div>
+  </div>
+</div>
+
 <div id="page-gracias" style="display:none;">
   <div style="max-width:640px;margin:0 auto;padding:40px 16px 60px;">
     <div style="background:#fff;border:1px solid #e8e8ed;border-radius:18px;padding:48px 36px;text-align:center;box-shadow:none;">
@@ -4188,7 +4201,7 @@ body.exec-mode .topbar, body.exec-mode > nav, body.exec-mode body > nav{display:
       <span style="width:1px;height:18px;background:rgba(255,255,255,.18);margin:0 4px;"></span>
       <span onclick="execRefrescar()" style="background:rgba(255,255,255,.1);color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;cursor:pointer;font-weight:600;">Actualizar</span>
       <span id="btn-admin-users" onclick="abrirAdminUsuarios()" style="display:none;background:#C8102E;color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;cursor:pointer;font-weight:700;">Usuarios</span>
-      <span id="btn-ia-reglas" onclick="abrirReglasIA()" style="display:none;background:#001F5B;border:1px solid rgba(255,255,255,.25);color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;cursor:pointer;font-weight:700;">Reglas IA</span>
+      <span id="btn-devoluciones-exec" onclick="abrirDevolucionesExec()" style="background:#001F5B;border:1px solid rgba(255,255,255,.25);color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;cursor:pointer;font-weight:700;margin-right:8px;">Devoluciones</span><span id="btn-ia-reglas" onclick="abrirReglasIA()" style="display:none;background:#001F5B;border:1px solid rgba(255,255,255,.25);color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;cursor:pointer;font-weight:700;">Reglas IA</span>
       <span onclick="execLogout()" style="color:rgba(255,255,255,.5);font-size:12px;cursor:pointer;">Salir</span>
     </div>
   </div>
@@ -4256,6 +4269,17 @@ body.exec-mode .topbar, body.exec-mode > nav, body.exec-mode body > nav{display:
         </div>
         <div id="admin-users-list"></div>
       </div>
+    </div>
+  </div>
+
+  <!-- Devoluciones (exec) Modal -->
+  <div id="dev-exec-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:2000;overflow-y:auto;" onclick="if(event.target===this)cerrarDevolucionesExec()">
+    <div style="background:#fff;max-width:820px;margin:40px auto;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4);">
+      <div style="background:#001F5B;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-size:15px;font-weight:700;color:#fff;">Devoluciones solicitadas</div>
+        <div onclick="cerrarDevolucionesExec()" style="color:rgba(255,255,255,.7);cursor:pointer;font-size:22px;">&#215;</div>
+      </div>
+      <div id="dev-exec-body" style="padding:20px 24px;max-height:70vh;overflow-y:auto;">Cargando…</div>
     </div>
   </div>
 
@@ -6109,7 +6133,7 @@ async function pclLoadOrders(){
       +'<td class="pcl-oprods">'+(o.items||0)+' artículo'+(o.items===1?'':'s')+'</td>'
       +'<td class="pcl-ototal">'+_pclMoney(o.total)+'</td>'
       +'<td><span class="pcl-st '+st[0]+'"><span class="dot"></span>'+st[1]+'</span></td>'
-      +'<td><div class="pcl-act"><button class="pcl-mini" onclick="window.pclVerDetalle(\''+folio+'\')">Detalle</button>'+fb+gb+'</div></td></tr>';
+      +'<td><div class="pcl-act"><button class="pcl-mini" onclick="window.pclVerDetalle(\''+folio+'\')">Detalle</button>'+fb+gb+'<button class="pcl-mini" style="opacity:.5;" title="Asistencia con tu pedido" onclick="window.devStart(\''+folio+'\')">Asistencia</button></div></td></tr>';
   }
   if(body){
     if(pedidos.length) body.innerHTML=pedidos.map(rowPedido).join('');
@@ -9560,6 +9584,160 @@ updateFAB();
   .ia-sgrid{grid-template-columns:1fr;}
 }
 </style>
+
+<script>
+/* DEVOLUCIONES: pagina oculta + portal exec */
+(function(){
+  var API='/.netlify/functions/odoo';
+  var D={pedido:'',correo:'',data:null,sel:{},motivo:''};
+  function eidd(x){return document.getElementById(x);}
+  function post(b){return fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(function(r){return r.json();});}
+  function sess(){try{return JSON.parse(localStorage.getItem('adk_client_session')||'{}');}catch(e){return {};}}
+  function card(inner){return '<div style="background:#fff;border:1px solid #E3E9F3;border-radius:14px;padding:20px;margin-bottom:14px;">'+inner+'</div>';}
+  var FONT="-apple-system,BlinkMacSystemFont,'Inter',sans-serif";
+  var inputS='width:100%;padding:12px 14px;border:1.5px solid #dfe4ee;border-radius:10px;font-size:15px;font-family:'+FONT+';color:#001F5B;box-sizing:border-box;';
+  var btnS='background:#001F5B;color:#fff;border:none;padding:12px 22px;border-radius:980px;font-size:14px;font-weight:700;cursor:pointer;font-family:'+FONT+';';
+  var ghostS='background:none;color:#5b6577;border:1px solid #dfe4ee;padding:12px 22px;border-radius:980px;font-size:14px;font-weight:600;cursor:pointer;font-family:'+FONT+';';
+
+  window.devStart=function(prefill){
+    D={pedido:prefill||'',correo:(sess().email||''),data:null,sel:{},motivo:''};
+    showPage('devoluciones'); devStep1();
+    if(D.pedido&&D.correo){ devBuscar(); }
+  };
+
+  function devStep1(msg){
+    var b=eidd('dev-body'); if(!b) return;
+    b.innerHTML=card(
+      '<div style="font-size:14px;color:#5b6577;line-height:1.5;margin-bottom:16px;">Ingresa tu n\u00famero de pedido y el correo con el que compraste. Validaremos si tu pedido es elegible seg\u00fan nuestra pol\u00edtica de devoluciones (10 d\u00edas naturales; las piezas de fabricaci\u00f3n especial no aplican).</div>'
+      +(msg?'<div style="background:#FDECEA;border-left:4px solid #C8102E;padding:10px 14px;border-radius:6px;font-size:13px;color:#8a1300;margin-bottom:14px;">'+msg+'</div>':'')
+      +'<div style="font-size:12px;font-weight:600;color:#86868b;margin-bottom:6px;">N\u00famero de pedido</div>'
+      +'<input id="dev-pedido" style="'+inputS+'" placeholder="S00123 o tu folio" value="'+(D.pedido||'')+'"/>'
+      +'<div style="font-size:12px;font-weight:600;color:#86868b;margin:14px 0 6px;">Correo de la compra</div>'
+      +'<input id="dev-correo" type="email" style="'+inputS+'" placeholder="correo@empresa.com" value="'+(D.correo||'')+'"/>'
+      +'<div style="margin-top:18px;"><button style="'+btnS+'" onclick="window._devBuscar()">Continuar</button></div>'
+    );
+  }
+  window._devBuscar=function(){
+    D.pedido=(eidd('dev-pedido')?eidd('dev-pedido').value:D.pedido||'').trim();
+    D.correo=(eidd('dev-correo')?eidd('dev-correo').value:D.correo||'').trim();
+    if(!D.pedido||!D.correo){ devStep1('Escribe el n\u00famero de pedido y el correo.'); return; }
+    devBuscar();
+  };
+  function devBuscar(){
+    var b=eidd('dev-body'); b.innerHTML=card('Validando tu pedido\u2026');
+    post({action:'devolucion_buscar',pedido:D.pedido,correo:D.correo}).then(function(d){
+      if(!d||!d.ok){ devStep1((d&&d.error)||'No encontramos ese pedido con ese correo.'); return; }
+      D.data=d;
+      if(d.dev){ devEstado(d.dev); return; }
+      if(!d.elegible){ eidd('dev-body').innerHTML=card('<div style="font-size:15px;font-weight:700;color:#001F5B;margin-bottom:8px;">Este pedido ya no es elegible</div><div style="font-size:14px;color:#5b6577;line-height:1.5;">'+(d.motivo_inelegible||'Han pasado m\u00e1s de 10 d\u00edas naturales desde la entrega.')+' Si se trata de un defecto de fabricaci\u00f3n, cont\u00e1ctanos por WhatsApp y lo revisamos.</div>'); return; }
+      devStep2();
+    }).catch(function(){ devStep1('Error de conexi\u00f3n. Intenta de nuevo.'); });
+  }
+  function devStep2(){
+    var d=D.data, b=eidd('dev-body');
+    var rows=d.lineas.map(function(l,i){
+      if(!l.elegible){
+        return '<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f0f2f7;opacity:.45;"><div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:600;color:#001F5B;">'+l.name+'</div><div style="font-size:12px;color:#C8102E;">'+(l.motivo_inelegible||'No elegible')+'</div></div></div>';
+      }
+      return '<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f0f2f7;">'
+        +'<input type="checkbox" id="dev-ck-'+i+'" onchange="window._devTgl('+i+')" style="width:18px;height:18px;accent-color:#001F5B;"/>'
+        +'<div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:600;color:#001F5B;">'+l.name+'</div><div style="font-size:12px;color:#86868b;">Compraste '+l.qty+'</div></div>'
+        +'<div id="dev-qty-'+i+'" style="display:none;align-items:center;gap:8px;"><button style="width:28px;height:28px;border-radius:8px;border:1px solid #dfe4ee;background:#fff;cursor:pointer;" onclick="window._devQty('+i+',-1)">\u2212</button><span id="dev-qv-'+i+'" style="min-width:20px;text-align:center;font-weight:700;color:#001F5B;">1</span><button style="width:28px;height:28px;border-radius:8px;border:1px solid #dfe4ee;background:#fff;cursor:pointer;" onclick="window._devQty('+i+',1)">+</button></div>'
+        +'</div>';
+    }).join('');
+    b.innerHTML=card(
+      '<div style="font-size:13px;color:#86868b;margin-bottom:4px;">Pedido <b style="color:#001F5B;">'+d.pedido+'</b> \u00b7 entregado hace '+d.dias+' d\u00eda'+(d.dias===1?'':'s')+'</div>'
+      +'<div style="font-size:15px;font-weight:700;color:#001F5B;margin-bottom:10px;">\u00bfQu\u00e9 piezas deseas devolver?</div>'+rows
+      +'<div style="font-size:12px;font-weight:600;color:#86868b;margin:16px 0 6px;">Motivo</div>'
+      +'<select id="dev-motivo" style="'+inputS+'"><option value="">Selecciona un motivo\u2026</option><option>Ya no lo necesito</option><option>Ped\u00ed la pieza equivocada</option><option>Lleg\u00f3 da\u00f1ado o con defecto</option><option>Me enviaron una pieza distinta</option></select>'
+      +'<div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;"><button style="'+btnS+'" onclick="window._devSolicitar()">Solicitar devoluci\u00f3n</button><button style="'+ghostS+'" onclick="window.devStart()">Empezar de nuevo</button></div>'
+    );
+  }
+  window._devTgl=function(i){
+    var ck=eidd('dev-ck-'+i), q=eidd('dev-qty-'+i);
+    if(ck.checked){ D.sel[i]=1; q.style.display='flex'; eidd('dev-qv-'+i).textContent='1'; }
+    else { delete D.sel[i]; q.style.display='none'; }
+  };
+  window._devQty=function(i,dd){
+    var max=D.data.lineas[i].qty, v=(D.sel[i]||1)+dd;
+    if(v<1)v=1; if(v>max)v=max; D.sel[i]=v; eidd('dev-qv-'+i).textContent=String(v);
+  };
+  window._devSolicitar=function(){
+    var mot=eidd('dev-motivo')?eidd('dev-motivo').value:'';
+    var ks=Object.keys(D.sel);
+    if(!ks.length){ alert('Selecciona al menos una pieza.'); return; }
+    if(!mot){ alert('Selecciona el motivo.'); return; }
+    var lineas=ks.map(function(k){var l=D.data.lineas[+k];return {id:l.id,code:l.code,name:l.name,qty:D.sel[k]};});
+    var b=eidd('dev-body'); b.innerHTML=card('Registrando tu solicitud\u2026');
+    post({action:'devolucion_solicitar',pedido:D.pedido,correo:D.correo,lineas:lineas,motivo:mot}).then(function(d){
+      if(!d||!d.ok){ devStep1((d&&d.error)||'No se pudo registrar. Intenta de nuevo.'); return; }
+      devEstado(d.dev);
+    }).catch(function(){ devStep1('Error de conexi\u00f3n.'); });
+  };
+  function devEstado(dev){
+    var b=eidd('dev-body');
+    var pasos=[['solicitada','Solicitud recibida'],['aprobada','Aprobada \u00b7 etiqueta de retorno'],['recibida','Recibida en almac\u00e9n'],['reembolsada','Reembolso realizado']];
+    var idx={solicitada:0,aprobada:1,recibida:2,reembolsada:3,rechazada:0}[dev.estado]||0;
+    var tl=pasos.map(function(p,i){
+      var on=i<=idx&&dev.estado!=='rechazada';
+      return '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;"><span style="width:22px;height:22px;border-radius:50%;flex:none;display:inline-flex;align-items:center;justify-content:center;font-size:12px;color:#fff;background:'+(on?'#1d7d34':'#d4dae6')+';">'+(on?'\u2713':(i+1))+'</span><span style="font-size:14px;color:'+(on?'#001F5B':'#9aa3b2')+';font-weight:'+(on?'600':'400')+';">'+p[1]+'</span></div>';
+    }).join('');
+    var extra='';
+    if(dev.estado==='rechazada'){ extra='<div style="background:#FDECEA;border-left:4px solid #C8102E;padding:10px 14px;border-radius:6px;font-size:13px;color:#8a1300;margin-top:12px;">Solicitud no procedente: '+(dev.rechazo||'consulta con un ejecutivo')+'</div>'; }
+    if(dev.guia&&(dev.guia.tracking||dev.guia.label_url)){
+      extra+='<div style="background:#F0FAF2;border:1px solid #c4eccf;border-radius:10px;padding:14px;margin-top:12px;">'
+        +'<div style="font-size:13px;font-weight:700;color:#1d7d34;margin-bottom:4px;">Etiqueta de retorno lista</div>'
+        +'<div style="font-size:13px;color:#33415C;">Gu\u00eda: <b>'+(dev.guia.tracking||'')+'</b>'+(dev.guia.carrier?' \u00b7 '+dev.guia.carrier:'')+'</div>'
+        +(dev.guia.label_url?'<a href="'+dev.guia.label_url+'" target="_blank" style="display:inline-block;margin-top:10px;'+btnS+'text-decoration:none;">Imprimir etiqueta</a>':'<div style="font-size:12px;color:#86868b;margin-top:8px;">Te enviamos la etiqueta a tu correo. Impr\u00edmela, p\u00e9gala en el paquete y entr\u00e9galo en la paqueter\u00eda indicada.</div>')
+        +'</div>';
+    }
+    b.innerHTML=card(
+      '<div style="font-size:13px;color:#86868b;">Folio de devoluci\u00f3n</div><div style="font-size:18px;font-weight:800;color:#001F5B;margin-bottom:12px;">'+dev.folio+'</div>'
+      +tl+extra
+      +'<div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;"><button style="'+ghostS+'" onclick="window._devRefresh()">Actualizar estado</button></div>'
+    );
+  }
+  window._devRefresh=function(){ devBuscar(); };
+
+  function checkHash(){ if((location.hash||'').toLowerCase().indexOf('devolucion')>=0){ window.devStart(); } }
+  window.addEventListener('hashchange',checkHash);
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',checkHash); else checkHash();
+
+  window.abrirDevolucionesExec=function(){
+    var m=eidd('dev-exec-modal'); if(!m) return; m.style.display='block';
+    var b=eidd('dev-exec-body'); b.innerHTML='Cargando\u2026';
+    post({action:'devolucion_listar'}).then(function(d){
+      if(!d||!d.ok){ b.innerHTML='Error al cargar.'; return; }
+      if(!d.items.length){ b.innerHTML='<div style="color:#86868b;padding:20px;text-align:center;">No hay devoluciones registradas.</div>'; return; }
+      b.innerHTML=d.items.map(function(it){
+        var dv=it.dev, piezas=(dv.lineas||[]).map(function(l){return l.qty+'\u00d7 '+(l.code||l.name);}).join(' \u00b7 ');
+        var acc='';
+        if(dv.estado==='solicitada'){
+          acc='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center;">'
+            +'<input id="devx-trk-'+it.id+'" placeholder="Tracking (opcional en demo)" style="flex:1;min-width:150px;padding:8px 10px;border:1px solid #dfe4ee;border-radius:8px;font-size:12px;"/>'
+            +'<input id="devx-lbl-'+it.id+'" placeholder="URL de etiqueta (opcional)" style="flex:1;min-width:150px;padding:8px 10px;border:1px solid #dfe4ee;border-radius:8px;font-size:12px;"/>'
+            +'<button onclick="window._devxAprobar('+it.id+',\''+it.pedido+'\',true)" style="background:#1d7d34;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Aprobar</button>'
+            +'<button onclick="window._devxAprobar('+it.id+',\''+it.pedido+'\',false)" style="background:#fff;color:#C8102E;border:1px solid #C8102E;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Rechazar</button></div>';
+        } else if(dv.guia&&dv.guia.tracking){ acc='<div style="font-size:12px;color:#1d7d34;margin-top:6px;">Gu\u00eda retorno: '+dv.guia.tracking+'</div>'; }
+        return '<div style="border:1px solid #E3E9F3;border-radius:10px;padding:14px;margin-bottom:10px;">'
+          +'<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;"><b style="color:#001F5B;">'+dv.folio+'</b><span style="font-size:12px;font-weight:700;color:'+(dv.estado==='rechazada'?'#C8102E':'#1d7d34')+';text-transform:uppercase;">'+dv.estado+'</span></div>'
+          +'<div style="font-size:13px;color:#33415C;margin-top:4px;">Pedido '+it.pedido+' \u00b7 '+(dv.correo||'')+'</div>'
+          +'<div style="font-size:12px;color:#5b6577;margin-top:4px;">'+piezas+'</div>'
+          +'<div style="font-size:12px;color:#86868b;margin-top:2px;">Motivo: '+(dv.motivo||'\u2014')+'</div>'+acc+'</div>';
+      }).join('');
+    });
+  };
+  window.cerrarDevolucionesExec=function(){ var m=eidd('dev-exec-modal'); if(m) m.style.display='none'; };
+  window._devxAprobar=function(id,pedido,ok){
+    var trk=eidd('devx-trk-'+id), lbl=eidd('devx-lbl-'+id);
+    var motivo=''; if(!ok){ motivo=prompt('Motivo del rechazo (se muestra al cliente):')||''; if(motivo==='') return; }
+    post({action:'devolucion_aprobar',pedido:pedido,aprobar:!!ok,tracking:(trk?trk.value:''),label_url:(lbl?lbl.value:''),rechazo:motivo}).then(function(d){
+      if(!d||!d.ok){ alert((d&&d.error)||'Error'); return; }
+      window.abrirDevolucionesExec();
+    });
+  };
+})();
+</script>
 
 </body>
 </html>
