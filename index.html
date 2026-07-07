@@ -1015,6 +1015,13 @@
   @media (prefers-reduced-motion: reduce){
     #atk-root *,#atk-root *::before,#atk-root *::after{animation-duration:.01ms!important;transition-duration:.01ms!important;}
   }
+  /* ── Ajustes móviles ── */
+  @media (max-width:560px){
+    #atk-root .atk-showcase-grid{grid-template-columns:repeat(2,1fr)!important;max-width:420px!important;}
+  }
+  @media (max-width:420px){
+    #atk-root .atk-demo-card{height:340px!important;}
+  }
 </style>
 <div id="atk-root">
 <!-- HERO OSCURO -->
@@ -1067,7 +1074,7 @@
 
       <!-- PANE IA -->
       <div data-pane="ia" data-card="ia" style="display:block;max-width:640px;margin:26px auto 0;">
-        <div style="position:relative;background:#fff;border-radius:24px;height:300px;overflow:hidden;box-shadow:0 18px 50px rgba(0,31,91,.1);text-align:left;">
+        <div class="atk-demo-card" style="position:relative;background:#fff;border-radius:24px;height:300px;overflow:hidden;box-shadow:0 18px 50px rgba(0,31,91,.1);text-align:left;">
           <div data-s="0" style="position:absolute;inset:0;padding:18px;opacity:0;transform:translateY(8px);transition:opacity .4s,transform .4s;pointer-events:none;">
             <div style="text-align:right;margin-bottom:10px;"><span style="display:inline-block;border-radius:12px;border-bottom-right-radius:4px;padding:9px 12px;font-size:13.5px;line-height:1.45;max-width:95%;background:#001F5B;color:#fff;">Tengo esta pieza, necesito otra igual
               <span style="display:block;margin-top:7px;"><img src="img/home/codo-45.png" alt="Foto del cliente" style="width:130px;height:76px;object-fit:contain;background:#fff;border-radius:8px;border:1px solid rgba(255,255,255,.4);display:block;"><span style="font-size:10px;opacity:.75;font-family:'IBM Plex Mono',monospace;">IMG_2481.jpg</span></span></span></div>
@@ -1138,7 +1145,7 @@
 
       <!-- PANE CFG -->
       <div data-pane="cfg" data-card="cfg" style="display:none;max-width:640px;margin:26px auto 0;">
-        <div style="position:relative;background:#fff;border-radius:24px;height:300px;overflow:hidden;box-shadow:0 18px 50px rgba(0,31,91,.1);text-align:left;">
+        <div class="atk-demo-card" style="position:relative;background:#fff;border-radius:24px;height:300px;overflow:hidden;box-shadow:0 18px 50px rgba(0,31,91,.1);text-align:left;">
           <div style="padding:16px 18px 0;position:relative;z-index:2;">
             <div style="display:flex;gap:4px;">
               <div data-sb="0" style="flex:1;text-align:center;font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#8a93a3;padding-bottom:7px;border-bottom:3px solid #e3e8f0;transition:color .25s,border-color .25s;">1·Tipo</div>
@@ -1249,7 +1256,7 @@
 
       <!-- PANE WA -->
       <div data-pane="wa" data-card="wa" style="display:none;max-width:640px;margin:26px auto 0;">
-        <div style="position:relative;background:#fff;border-radius:24px;height:300px;overflow:hidden;box-shadow:0 18px 50px rgba(0,31,91,.1);text-align:left;">
+        <div class="atk-demo-card" style="position:relative;background:#fff;border-radius:24px;height:300px;overflow:hidden;box-shadow:0 18px 50px rgba(0,31,91,.1);text-align:left;">
           <div style="padding:16px 18px 0;position:relative;z-index:2;">
             <div style="display:flex;align-items:center;gap:9px;background:#f5f7fa;border-radius:11px;padding:8px 11px;">
               <img src="img/home/avatar-adaptekk.png" alt="Adaptekk" style="width:30px;height:30px;border-radius:50%;display:block;object-fit:cover;">
@@ -1323,7 +1330,7 @@
   <section data-screen-label="Banda" style="position:relative;background:radial-gradient(1200px 500px at 50% 0%, #16346f, #001F5B 60%, #001240);color:#fff;padding:clamp(56px,9vh,90px) clamp(16px,4vw,40px);overflow:hidden;">
     <div data-rv="1" style="max-width:1000px;margin:0 auto;text-align:center;opacity:0;transform:translateY(28px);transition:opacity .8s cubic-bezier(.2,.6,.2,1),transform .8s cubic-bezier(.2,.6,.2,1);">
       <h2 style="color:#fff;font-size:clamp(30px,4.4vw,52px);font-weight:800;letter-spacing:-1.8px;line-height:1.05;">+4,200 SKUs. Stock real.<br><br>Sale hoy.</h2>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(12px,2.4vw,24px);max-width:860px;margin:clamp(30px,5vh,48px) auto 8px;">
+      <div class="atk-showcase-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(12px,2.4vw,24px);max-width:860px;margin:clamp(30px,5vh,48px) auto 8px;">
         <div style="text-align:center;"><div style="background:#fff;border-radius:20px;padding:18px;box-shadow:0 20px 40px rgba(0,0,0,.28);aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;"><img src="img/home/rosca-jic.png" alt="JIC" style="width:100%;height:100%;object-fit:contain;display:block;"></div><div style="width:26px;height:2px;background:#C8102E;margin:16px auto 8px;border-radius:2px;"></div><div style="font-family:'Inter',sans-serif;font-size:15px;font-weight:700;letter-spacing:-.2px;color:#fff;">JIC 37°</div></div>
         <div style="text-align:center;"><div style="background:#fff;border-radius:20px;padding:18px;box-shadow:0 20px 40px rgba(0,0,0,.28);aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;"><img src="img/home/codo-90.png" alt="Codo 90" style="width:100%;height:100%;object-fit:contain;display:block;"></div><div style="width:26px;height:2px;background:#C8102E;margin:16px auto 8px;border-radius:2px;"></div><div style="font-family:'Inter',sans-serif;font-size:15px;font-weight:700;letter-spacing:-.2px;color:#fff;">Codo 90°</div></div>
         <div style="text-align:center;"><div style="background:#fff;border-radius:20px;padding:18px;box-shadow:0 20px 40px rgba(0,0,0,.28);aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;"><img src="img/home/rosca-orfs.png" alt="ORFS" style="width:100%;height:100%;object-fit:contain;display:block;"></div><div style="width:26px;height:2px;background:#C8102E;margin:16px auto 8px;border-radius:2px;"></div><div style="font-family:'Inter',sans-serif;font-size:15px;font-weight:700;letter-spacing:-.2px;color:#fff;">ORFS</div></div>
