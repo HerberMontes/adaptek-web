@@ -5,7 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Adaptekk — Conectores Hidráulicos y Adaptadores</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB4PSIzIiB5PSIzIiB3aWR0aD0iOTQiIGhlaWdodD0iOTQiIHJ4PSIyMiIgZmlsbD0iI2ZmZiIgc3Ryb2tlPSIjZTJlNmVlIiBzdHJva2Utd2lkdGg9IjMiLz48dGV4dCB4PSI0NCIgeT0iNzIiIGZvbnQtZmFtaWx5PSItYXBwbGUtc3lzdGVtLEhlbHZldGljYSxBcmlhbCxzYW5zLXNlcmlmIiBmb250LXNpemU9IjY2IiBmb250LXdlaWdodD0iNzAwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjMDAxRjVCIiBsZXR0ZXItc3BhY2luZz0iLTIiPkE8L3RleHQ+PGNpcmNsZSBjeD0iNzgiIGN5PSI2NiIgcj0iOCIgZmlsbD0iI0M4MTAyRSIvPjwvc3ZnPg=="/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;600;700&family=Montserrat:wght@700;900&display=swap" rel="stylesheet"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link rel="preconnect" href="https://sdk.mercadopago.com"/>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <style>
     :root{
       --rojo:#C8102E; --rojo-oscuro:#a00c24; --azul:#001F5B; --azul-claro:#2557A7;
@@ -842,16 +846,16 @@
     }
   </style>
   <!-- SDK de Mercado Pago para el checkout modal (no redirige, abre ventana superpuesta) -->
-  <script src="https://sdk.mercadopago.com/js/v2"></script>
+  <script defer src="https://sdk.mercadopago.com/js/v2"></script>
   <!-- jsPDF para generar el comprobante de pedido en PDF (descargable en el navegador) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <!-- Imagen de conector por código AT (pantalla + PDF). Resuelve /img/series/xxxx.png -->
-  <script src="adaptekk_imagenes.js"></script>
+  <script defer src="adaptekk_imagenes.js"></script>
   <!-- Configurador de mangueras: dataset AT (1116 productos) + motor de cotizacion. Expone window.DATA y window.ATConfigurador -->
-  <script src="data_at.js"></script>
-  <script src="configurador_motor.js"></script>
-  <script src="fichas_mangueras.js"></script>
-  <script src="mcfg.js"></script>
+  <script defer src="data_at.js"></script>
+  <script defer src="configurador_motor.js"></script>
+  <script defer src="fichas_mangueras.js"></script>
+  <script defer src="mcfg.js"></script>
 </head>
 <body>
 <script>console.log("%cADAPTEKK build: IA-FIX-20 (devoluciones ocultas)","color:#1f9d55;font-weight:bold;font-size:13px");</script>
@@ -1204,7 +1208,7 @@
         <div style="display:flex;flex-direction:column;gap:10px;">
           <div style="display:flex;align-items:flex-start;gap:9px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C8102E" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px;"><path d="M12 21s-6.5-5.3-6.5-10.2A6.5 6.5 0 0 1 12 4.3a6.5 6.5 0 0 1 6.5 6.5C18.5 15.7 12 21 12 21z"/><circle cx="12" cy="10.5" r="2.3"/></svg><span style="font-size:12px;color:rgba(255,255,255,.6);line-height:1.5;">Ciudad de Mexico, Mexico</span></div>
           <div style="display:flex;align-items:center;gap:9px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C8102E" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M5 4h3.5l1.6 4-2 1.3a11 11 0 0 0 5 5l1.3-2 4 1.6V19a1.5 1.5 0 0 1-1.6 1.5A15.5 15.5 0 0 1 3.5 6.6 1.5 1.5 0 0 1 5 4z"/></svg><a href="tel:+525555550000" style="font-size:12px;color:rgba(255,255,255,.6);text-decoration:none;">+52 (55) 5555-0000</a></div>
-          <div style="display:flex;align-items:center;gap:9px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C8102E" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M4 7l8 6 8-6"/></svg><a href="/cdn-cgi/l/email-protection#57213239233624173633362723323c3c7934383a" style="font-size:12px;color:rgba(255,255,255,.6);text-decoration:none;"><span class="__cf_email__" data-cfemail="bccad9d2c8ddcffcddd8ddccc8d9d7d792dfd3d1">[email&#160;protected]</span></a></div>
+          <div style="display:flex;align-items:center;gap:9px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C8102E" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M4 7l8 6 8-6"/></svg><a href="mailto:ventas@adaptekk.com" style="font-size:12px;color:rgba(255,255,255,.6);text-decoration:none;">ventas@adaptekk.com</a></div>
           <div style="display:flex;align-items:center;gap:9px;"><svg width="16" height="16" viewBox="0 0 32 32" fill="#25D366" style="flex:none;"><path d="M16.04 3.2c-7.06 0-12.8 5.74-12.8 12.8 0 2.26.6 4.46 1.73 6.4L3.2 28.8l6.56-1.72a12.74 12.74 0 0 0 6.28 1.64h.01c7.05 0 12.8-5.74 12.8-12.8 0-3.42-1.33-6.63-3.75-9.05a12.7 12.7 0 0 0-9.06-3.67z"/><path fill="#fff" d="M23.1 19.3c-.38-.19-2.26-1.11-2.61-1.24-.35-.13-.6-.19-.86.19-.25.38-.98 1.24-1.2 1.49-.22.25-.44.28-.82.09-.38-.19-1.61-.59-3.07-1.89-1.13-1.01-1.9-2.26-2.12-2.64-.22-.38-.02-.59.17-.78.17-.17.38-.44.57-.66.19-.22.25-.38.38-.63.13-.25.06-.47-.03-.66-.09-.19-.86-2.07-1.18-2.83-.31-.74-.62-.64-.86-.65l-.73-.01c-.25 0-.66.09-1.01.47-.35.38-1.32 1.29-1.32 3.16 0 1.86 1.36 3.66 1.55 3.91.19.25 2.67 4.08 6.46 5.72.9.39 1.61.62 2.16.8.91.29 1.73.25 2.39.15.73-.11 2.26-.92 2.58-1.81.32-.89.32-1.66.22-1.81-.09-.16-.34-.25-.72-.44z"/></svg><a href="https://wa.me/525555550000" style="font-size:12px;color:rgba(255,255,255,.6);text-decoration:none;">WhatsApp Ventas</a></div>
         </div>
       </div>
@@ -1504,7 +1508,7 @@
   </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 // ── CART SYSTEM ──
 window.CART = window.CART || [];
 
@@ -1843,7 +1847,7 @@ window.descargarCotizacion = function() {
     return '<tr style="border-bottom:1px solid #eee;">'
       + '<td style="padding:9px 8px;font-size:12px;">' + (i+1) + '</td>'
       + '<td style="padding:9px 8px;font-family:monospace;font-size:12px;font-weight:700;color:#001F5B;">' + esc(item.at_code) + '</td>'
-      + '<td style="padding:9px 8px;font-size:12px;"><div style="display:flex;align-items:center;gap:9px;"><img src="' + ((typeof window.imgConectorURL==='function')?window.imgConectorURL(item.at_code):'/img/series/_placeholder.png') + '" onerror="this.style.display=\'none\'" style="width:42px;height:auto;border:1px solid #eee;border-radius:4px;flex:none;"/><span>' + esc(item.name||'') + '</span></div></td>'
+      + '<td style="padding:9px 8px;font-size:12px;"><div style="display:flex;align-items:center;gap:9px;"><img loading="lazy" decoding="async" src="' + ((typeof window.imgConectorURL==='function')?window.imgConectorURL(item.at_code):'/img/series/_placeholder.png') + '" onerror="this.style.display=\'none\'" style="width:42px;height:auto;border:1px solid #eee;border-radius:4px;flex:none;"/><span>' + esc(item.name||'') + '</span></div></td>'
       + '<td style="padding:9px 8px;text-align:center;">' + qty + '</td>'
       + '<td style="padding:9px 8px;text-align:right;font-size:12px;">' + precio + '</td>'
       + '<td style="padding:9px 8px;text-align:right;font-weight:700;font-size:12px;">' + subtotal + '</td>'
@@ -4535,7 +4539,7 @@ function almGenerarGuiaSurtido(id){
       showToast(d.ya_existe?'Esa guía ya existía':('Guía generada'+(d.emailed?' y correo enviado':'')));
     } else {
       var msg=(d&&d.error)?d.error:'No se pudo generar la guía';
-      if(res){ res.innerHTML='<div style="background:#fff6f7;border:1px solid #f3d3d8;border-radius:12px;padding:13px 15px;"><div style="font-size:12.5px;font-weight:800;color:#C8102E;margin-bottom:4px;">No se pudo generar la guía</div><div style="font-size:12px;color:#5b6577;line-height:1.45;margin-bottom:10px;">'+msg+'</div><button id="alm-det-guia-btn" onclick="almGenerarGuiaSurtido('+id+')" style="width:100%;background:#C8102E;color:#fff;border:none;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">Reintentar guía</button></div>'; }
+      if(res){ res.innerHTML='<div style="background:#fff6f7;border:1px solid #f3d3d8;border-radius:12px;padding:13px 15px;"><div style="font-size:12.5px;font-weight:800;color:#C8102E;margin-bottom:4px;">No se pudo generar la guía</div><div style="font-size:12px;color:#5b6577;line-height:1.45;margin-bottom:10px;">'+msg+'</div><button id="alm-det-guia-btn-retry" onclick="almGenerarGuiaSurtido('+id+')" style="width:100%;background:#C8102E;color:#fff;border:none;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">Reintentar guía</button></div>'; }
     }
   }).catch(function(){
     if(res){ res.innerHTML='<div style="color:#C8102E;font-size:12.5px;">Error de conexión al generar la guía.</div>'; }
@@ -6731,7 +6735,7 @@ var CONNECTOR_IMGS={
   "jic":"assets/conn-jic.png","jico":"assets/conn-jico.png","npt":"assets/conn-npt.png","orb":"assets/conn-orb.png","orfs":"assets/conn-orfs.png","bspp":"assets/conn-bspp.png","bspt":"assets/conn-bspt.png","bite":"assets/conn-bite.png","jis":"assets/conn-jis.png","komatsu":"assets/conn-komatsu.png"
 };
 /* MAPA ORIGINAL (restaurar al subir las imágenes a /assets):
-var CONNECTOR_IMGS={"bspt":"assets/conn-bspt.png","bspp":"assets/conn-bspp.png","orfs":"assets/conn-orfs.png","npt":"assets/conn-npt.png","jic":"assets/conn-jic.png","orb":"assets/conn-orb.png","tee":"assets/conn-tee.jpg","c45":"assets/conn-c45.jpg","c90":"assets/conn-c90.jpg","tap":"assets/conn-tap.jpg","nr":"assets/conn-nr.png","jico":"assets/conn-jico.png","bite":"assets/conn-bite.png","jis":"assets/conn-jis.png","komatsu":"assets/conn-komatsu.png","crx":"assets/conn-crx.png","bh":"assets/conn-bh.png","bh90":"assets/conn-bh90.png","bh45":"assets/conn-bh45.png","bhtee":"assets/conn-bhtee.png"};
+var CONNECTOR_IMGS={"bspt":"assets/conn-bspt.png","bspp":"assets/conn-bspp.png","orfs":"assets/conn-orfs.png","npt":"assets/conn-npt.png","jic":"assets/conn-jic.png","orb":"assets/conn-orb.png","tee":"assets/conn-tee.png","c45":"assets/conn-c45.png","c90":"assets/conn-c90.png","tap":"assets/conn-tap.png","nr":"assets/conn-nr.png","jico":"assets/conn-jico.png","bite":"assets/conn-bite.png","jis":"assets/conn-jis.png","komatsu":"assets/conn-komatsu.png","crx":"assets/conn-crx.png","bh":"assets/conn-bh.png","bh90":"assets/conn-bh90.png","bh45":"assets/conn-bh45.png","bhtee":"assets/conn-bhtee.png"};
 */
 
 /* ODOO CONFIG: las credenciales viven en la función Netlify (variables de entorno), no en el frontend */
@@ -6870,7 +6874,7 @@ function mkOptCard(label,sub,onClick,imgKey){
   var d=mkdiv('config-opt');
   var hasImg = imgKey && typeof CONNECTOR_IMGS!=='undefined' && CONNECTOR_IMGS[imgKey];
   if(hasImg){
-    var ih='<img src="'+CONNECTOR_IMGS[imgKey]+'" onerror="this.onerror=null;if(window.CONNECTOR_SVG&&window.CONNECTOR_SVG[\''+imgKey+'\']){this.src=window.CONNECTOR_SVG[\''+imgKey+'\'];}else{this.style.display=\'none\';}" style="width:100%;max-width:110px;height:100px;object-fit:contain;display:block;margin:0 auto 10px;" alt="'+label+'"/>';
+    var ih='<img loading="lazy" decoding="async" src="'+CONNECTOR_IMGS[imgKey]+'" onerror="this.onerror=null;if(window.CONNECTOR_SVG&&window.CONNECTOR_SVG[\''+imgKey+'\']){this.src=window.CONNECTOR_SVG[\''+imgKey+'\'];}else{this.style.display=\'none\';}" style="width:100%;max-width:110px;height:100px;object-fit:contain;display:block;margin:0 auto 10px;" alt="'+label+'"/>';
     d.innerHTML=ih+'<div class="config-opt-label" style="font-size:13px;">'+label+'</div>';
   } else {
     d.innerHTML='<div class="config-opt-label">'+label+'</div>'+(sub?'<div class="config-opt-sub">'+sub+'</div>':'');
@@ -7008,7 +7012,7 @@ function renderStep(){
       var sv=document.createElement('div');
       sv.style.cssText='display:flex;align-items:center;justify-content:space-between;background:#f4f7fc;border:1.5px solid #001F5B;border-radius:11px;padding:11px 15px;';
       var _siu=(ext.std.img&&typeof CONNECTOR_IMGS!=='undefined'&&CONNECTOR_IMGS[ext.std.img])?CONNECTOR_IMGS[ext.std.img]:'';
-      var _simg=_siu?('<img src="'+_siu+'" onerror="this.style.display=\'none\'" style="width:42px;height:42px;object-fit:contain;border-radius:9px;background:#fff;border:1px solid #e6ebf3;flex:none;margin-right:12px;"/>'):'';
+      var _simg=_siu?('<img loading="lazy" decoding="async" src="'+_siu+'" onerror="this.style.display=\'none\'" style="width:42px;height:42px;object-fit:contain;border-radius:9px;background:#fff;border:1px solid #e6ebf3;flex:none;margin-right:12px;"/>'):'';
       sv.innerHTML='<span style="display:flex;align-items:center;min-width:0;">'+_simg+'<span style="font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:17px;font-weight:600;color:#001F5B;">'+ext.std.label+'</span></span>';
       var cb=document.createElement('button');cb.innerHTML='&#10005;';
       cb.style.cssText='background:#fff;border:1px solid #dfe4ee;width:26px;height:26px;border-radius:8px;color:#8b93a0;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none;';
@@ -7030,7 +7034,7 @@ function renderStep(){
           if(_iu){
             _cell='<span style="position:relative;width:46px;height:46px;display:inline-flex;align-items:center;justify-content:center;">'
               +'<span style="position:absolute;inset:0;border-radius:10px;background:#f3f4f8;display:flex;align-items:center;justify-content:center;">'+_ph+'</span>'
-              +'<img src="'+_iu+'" alt="'+e.label+'" onerror="this.remove()" style="position:relative;width:46px;height:46px;object-fit:contain;border-radius:10px;background:#fff;"/>'
+              +'<img loading="lazy" decoding="async" src="'+_iu+'" alt="'+e.label+'" onerror="this.remove()" style="position:relative;width:46px;height:46px;object-fit:contain;border-radius:10px;background:#fff;"/>'
               +'</span>';
           } else {
             _cell='<span style="width:46px;height:46px;border-radius:10px;background:#f3f4f8;display:inline-flex;align-items:center;justify-content:center;">'+_ph+'</span>';
@@ -7054,7 +7058,7 @@ function renderStep(){
         var gv=document.createElement('div');
         gv.style.cssText='display:flex;align-items:center;justify-content:space-between;background:#f4f7fc;border:1.5px solid #001F5B;border-radius:11px;padding:11px 15px;';
         var _giu=(typeof GEN_IMGS!=='undefined'&&GEN_IMGS[ext.gen.code])?GEN_IMGS[ext.gen.code]:'';
-        var _gimg=_giu?('<img src="'+_giu+'" onerror="this.style.display=\'none\'" style="width:42px;height:42px;object-fit:contain;border-radius:9px;background:#fff;border:1px solid #e6ebf3;flex:none;margin-right:12px;"/>'):'';
+        var _gimg=_giu?('<img loading="lazy" decoding="async" src="'+_giu+'" onerror="this.style.display=\'none\'" style="width:42px;height:42px;object-fit:contain;border-radius:9px;background:#fff;border:1px solid #e6ebf3;flex:none;margin-right:12px;"/>'):'';
         gv.innerHTML='<span style="display:flex;align-items:center;min-width:0;">'+_gimg+'<span style="font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:17px;font-weight:600;color:#001F5B;">'+ext.gen.label+'</span></span>';
         var gcb=document.createElement('button');gcb.innerHTML='&#10005;';
         gcb.style.cssText='background:#fff;border:1px solid #dfe4ee;width:26px;height:26px;border-radius:8px;color:#8b93a0;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none;';
@@ -7065,7 +7069,7 @@ function renderStep(){
         GENEROS.filter(function(gen){return (GENEROS_POR_ESTANDAR[ext.std.code]||['M','H','HG']).indexOf(gen.code)>=0;}).forEach(function(gen){
           var btn=document.createElement('div');
           btn.style.cssText='border:1px solid #e8e8ed;background:#fff;padding:12px 8px;border-radius:12px;cursor:pointer;text-align:center;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;';
-          var _gi=(typeof GEN_IMGS!=='undefined'&&GEN_IMGS[gen.code])?('<img src="'+GEN_IMGS[gen.code]+'" onerror="this.style.display=\'none\'" style="width:100%;max-width:72px;height:46px;object-fit:contain;display:block;margin:0 auto;" alt="'+gen.label+'"/>'):'';
+          var _gi=(typeof GEN_IMGS!=='undefined'&&GEN_IMGS[gen.code])?('<img loading="lazy" decoding="async" src="'+GEN_IMGS[gen.code]+'" onerror="this.style.display=\'none\'" style="width:100%;max-width:72px;height:46px;object-fit:contain;display:block;margin:0 auto;" alt="'+gen.label+'"/>'):'';
           btn.innerHTML=_gi+'<div style="font-family:-apple-system,BlinkMacSystemFont,\'Inter\',sans-serif;font-size:14px;font-weight:500;color:#001F5B;line-height:1.25;">'+gen.label+'</div>';
           btn.onmouseenter=function(){btn.style.borderColor='#001F5B';btn.style.boxShadow='0 5px 16px rgba(0,18,55,.12)';btn.style.transform='translateY(-1px)';};
           btn.onmouseleave=function(){btn.style.borderColor='#e8e8ed';btn.style.boxShadow='none';btn.style.transform='none';};
@@ -7645,7 +7649,7 @@ function addUserMessage(text, imgSrc) {
   var bubble = document.createElement('div');
   bubble.style.cssText = 'background:#001F5B;color:#fff;border-radius:10px 0 10px 10px;padding:11px 14px;max-width:85%;font-size:14px;line-height:1.6;';
   if (imgSrc) {
-    bubble.innerHTML = '<img src="'+imgSrc+'" style="max-width:180px;border-radius:5px;display:block;margin-bottom:5px;"/>';
+    bubble.innerHTML = '<img loading="lazy" decoding="async" src="'+imgSrc+'" style="max-width:180px;border-radius:5px;display:block;margin-bottom:5px;"/>';
     if (text) bubble.innerHTML += '<span>'+text+'</span>';
   } else { bubble.textContent = text; }
   d.appendChild(bubble);

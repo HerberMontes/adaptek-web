@@ -12,10 +12,12 @@
   function cargar(){
     if (MAP) return Promise.resolve(MAP);
     if (!loading){
-      loading = fetch('/at_imagenes.json')
-        .then(function(r){ return r.json(); })
-        .then(function(m){ MAP = m || {}; return MAP; })
-        .catch(function(){ MAP = {}; return MAP; });
+      try{
+        loading = fetch('at_imagenes.json')
+          .then(function(r){ return r.json(); })
+          .then(function(m){ MAP = m || {}; return MAP; })
+          .catch(function(){ MAP = {}; return MAP; });
+      }catch(e){ MAP = {}; loading = Promise.resolve(MAP); }
     }
     return loading;
   }
