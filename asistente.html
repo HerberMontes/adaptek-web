@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Adaptekk · Asistente</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#16233F; --navy-dark:#0F1830; --red:#E11D2A; --red-dark:#C4141F;
+    --bg:#F4F6FA; --card:#FFFFFF; --line:#E6EAF0; --line-soft:#EEF1F6;
+    --line-input:#E1E6EF; --ink-2:#2A3550; --muted:#64748B; --muted-2:#94A3B8;
+    --ghost:#B3BECE; --blue-bg:#EEF2FB; --blue-line:#E1E8F6; --blue:#2A4CA8;
+    --green-bg:#E7F8F0; --green:#0E9E63; --green-dot:#12B76A; --wa:#25D366;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--navy);-webkit-font-smoothing:antialiased}
+  a{color:var(--navy);text-decoration:none}
+  a:hover{color:var(--red)}
+  button{font-family:'IBM Plex Sans',system-ui,sans-serif}
+  ::-webkit-scrollbar{width:10px}
+  ::-webkit-scrollbar-thumb{background:#DCE2EC;border-radius:8px;border:3px solid var(--bg)}
+  ::-webkit-scrollbar-thumb:hover{background:#C6CEDB}
+  textarea::placeholder{color:#9AA6B8}
+  .ak-scroll::-webkit-scrollbar{width:0;height:0}
+  @keyframes akPulse{0%,100%{opacity:1}50%{opacity:.35}}
+  @keyframes akSheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  @keyframes akFade{from{opacity:0}to{opacity:1}}
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.01ms !important;transition-duration:.01ms !important}
+  }
+
+  /* ---------- HEADER ---------- */
+  .hdr{position:sticky;top:0;z-index:40;background:var(--card);border-bottom:3px solid var(--red);box-shadow:0 1px 0 rgba(16,24,48,.04)}
+  .hdr-in{max-width:1360px;margin:0 auto;padding:0 32px;height:72px;display:flex;align-items:center;justify-content:space-between}
+  .hdr-left{display:flex;align-items:center;gap:44px}
+  .logo{font-family:'Archivo',sans-serif;font-weight:800;font-size:26px;letter-spacing:-.02em;color:var(--navy);display:inline-flex;align-items:baseline}
+  .logo span{color:var(--red)}
+  .nav{display:flex;align-items:center;gap:34px}
+  .nav a{position:relative;font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:6px 0}
+  .nav a.active{color:var(--navy)}
+  .nav a.active::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:2px;background:var(--red);border-radius:2px}
+  .btn-login{display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--navy);color:var(--navy);font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:11px 20px;border-radius:10px;background:transparent;cursor:pointer;transition:all .15s}
+  .btn-login:hover{background:var(--navy);color:#fff}
+  .icon-btn{cursor:pointer;position:relative;width:38px;height:38px;border-radius:10px;background:var(--bg);border:1px solid #EBEFF5;display:none;align-items:center;justify-content:center;color:var(--navy)}
+  .icon-btn .badge{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:var(--red);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #fff}
+
+  /* ---------- LAYOUT ---------- */
+  .main{max-width:1360px;margin:0 auto;padding:24px 32px;display:grid;grid-template-columns:1fr 380px;gap:24px;align-items:start}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 8px 30px rgba(16,24,48,.05);display:flex;flex-direction:column;height:calc(100vh - 120px);overflow:hidden}
+
+  /* ---------- CHAT ---------- */
+  .as-head{flex:0 0 auto;padding:20px 24px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--line-soft)}
+  .as-avatar{width:48px;height:48px;border-radius:13px;background:var(--blue-bg);border:1px solid var(--blue-line);display:flex;align-items:center;justify-content:center;color:var(--blue);flex:0 0 auto}
+  .as-title{font-family:'Archivo',sans-serif;font-weight:700;font-size:18px;color:var(--navy)}
+  .pill-online{display:inline-flex;align-items:center;gap:6px;background:var(--green-bg);color:var(--green);font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px}
+  .pill-online i{width:7px;height:7px;border-radius:50%;background:var(--green-dot);animation:akPulse 1.8s ease-in-out infinite}
+  .as-sub{font-size:13.5px;color:var(--muted);margin-top:2px}
+  .chat-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;padding:24px}
+
+  .bot-row{display:flex;align-items:flex-start;gap:12px}
+  .bot-ico{flex:0 0 auto;width:32px;height:32px;border-radius:9px;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;color:var(--blue)}
+  .bot-bubble{background:var(--bg);border:1px solid #EBEFF5;border-radius:4px 16px 16px 16px;padding:15px 18px;font-size:16px;line-height:1.55;color:var(--ink-2);max-width:560px}
+  .bot-bubble strong{color:var(--navy)}
+  .ex-label{font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-2);margin:28px 0 14px 44px}
+  .ex-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-left:44px}
+  .ex-card{text-align:left;cursor:pointer;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:18px;display:flex;align-items:flex-start;gap:14px;transition:all .16s}
+  .ex-card:hover{border-color:var(--navy);background:#FBFCFE;transform:translateY(-2px);box-shadow:0 8px 20px rgba(16,24,48,.07)}
+  .ex-ico{flex:0 0 auto;width:44px;height:44px;border-radius:11px;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;color:var(--blue)}
+  .ex-t{display:block;font-weight:700;font-size:15.5px;color:var(--navy)}
+  .ex-d{display:block;font-size:13.5px;color:var(--muted);margin-top:3px}
+  .ex-d.mono{font-family:'IBM Plex Mono',monospace}
+  .ex-chev{display:none}
+
+  .conv{display:flex;flex-direction:column;gap:18px}
+  .msg-user{align-self:flex-end;max-width:70%;background:var(--navy);color:#fff;padding:12px 16px;border-radius:16px 16px 4px 16px;font-size:15px;line-height:1.5}
+  .msg-bot{display:flex;align-items:flex-start;gap:12px;max-width:82%}
+  .msg-bot-ico{flex:0 0 auto;width:32px;height:32px;border-radius:9px;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;color:var(--blue)}
+  .msg-bot-bubble{background:var(--bg);border:1px solid #EBEFF5;border-radius:4px 16px 16px 16px;padding:13px 16px;font-size:15px;line-height:1.5;color:var(--ink-2)}
+
+  .part-card{margin-top:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 4px 14px rgba(16,24,48,.05)}
+  .part-top{display:flex;gap:14px;align-items:flex-start}
+  .part-img{flex:0 0 auto;width:60px;height:60px;border-radius:10px;background:repeating-linear-gradient(135deg,var(--blue-bg),var(--blue-bg) 6px,#E4EAF6 6px,#E4EAF6 12px);border:1px solid var(--blue-line);display:flex;align-items:center;justify-content:center;color:#8FA1C4}
+  .part-match{display:inline-flex;align-items:center;gap:6px;background:var(--green-bg);color:var(--green);font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;margin-bottom:6px}
+  .part-name{font-weight:700;font-size:15.5px;color:var(--navy);line-height:1.3}
+  .part-code{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--muted);margin-top:3px}
+  .part-price-row{display:flex;align-items:center;gap:10px;margin-top:8px}
+  .part-price{font-family:'Archivo',sans-serif;font-weight:700;font-size:17px;color:var(--navy)}
+  .part-cur{font-size:12px;color:var(--muted-2)}
+  .part-stock{font-size:12px;color:var(--muted)}
+  .btn-add{margin-top:12px;width:100%;cursor:pointer;background:var(--navy);color:#fff;border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:background .15s}
+  .btn-add:hover{background:var(--navy-dark)}
+  .added-tag{margin-top:12px;width:100%;background:var(--green-bg);color:var(--green);border-radius:10px;padding:11px;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px}
+
+  /* ---------- COMPOSER ---------- */
+  .composer{flex:0 0 auto;padding:16px 24px 20px;border-top:1px solid var(--line-soft);background:var(--card)}
+  .composer-box{border:1.5px solid var(--line-input);background:#FBFCFE;border-radius:16px;padding:14px 16px 12px}
+  .composer textarea{width:100%;border:none;background:transparent;resize:none;outline:none;font-family:'IBM Plex Sans',sans-serif;font-size:15.5px;line-height:1.5;color:var(--navy)}
+  .composer-row{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
+  .chips{display:flex;gap:8px}
+  .chip{cursor:pointer;display:inline-flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--line-input);border-radius:9px;padding:7px 12px;font-size:13px;font-weight:600;color:#475569;transition:all .15s}
+  .chip:hover{border-color:var(--navy);color:var(--navy)}
+  .btn-send{cursor:pointer;width:46px;height:46px;border-radius:12px;background:var(--navy);border:none;color:#fff;display:flex;align-items:center;justify-content:center;transition:all .15s;flex:0 0 auto}
+  .btn-send:hover{background:var(--navy-dark);transform:translateX(1px)}
+  .composer-foot{text-align:center;font-size:13.5px;color:var(--muted);margin-top:12px}
+  .composer-foot a{color:var(--green);font-weight:700}
+
+  /* ---------- MI LISTA (aside escritorio) ---------- */
+  .aside{position:sticky;top:96px}
+  .list-head{flex:0 0 auto;padding:20px 22px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line-soft)}
+  .list-title{display:flex;align-items:center;gap:10px;font-family:'Archivo',sans-serif;font-weight:700;font-size:18px;color:var(--navy)}
+  .count-pill{min-width:26px;height:26px;padding:0 8px;border-radius:999px;background:var(--navy);color:#fff;font-size:13px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+  .list-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;padding:18px}
+  .list-empty{height:100%;min-height:320px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px}
+  .list-empty-ico{width:64px;height:64px;border-radius:16px;background:var(--bg);border:1px solid #EBEFF5;display:flex;align-items:center;justify-content:center;color:var(--ghost);margin-bottom:16px}
+  .list-empty-t{font-weight:700;font-size:15.5px;color:var(--navy)}
+  .list-empty-d{font-size:13.5px;color:var(--muted);line-height:1.5;margin-top:6px;max-width:230px}
+  .list-empty-d strong{color:var(--navy)}
+  .list-items{display:flex;flex-direction:column;gap:12px}
+  .li-card{border:1px solid var(--line);border-radius:12px;padding:12px}
+  .li-top{display:flex;gap:11px;align-items:flex-start}
+  .li-img{flex:0 0 auto;width:44px;height:44px;border-radius:9px;background:repeating-linear-gradient(135deg,var(--blue-bg),var(--blue-bg) 5px,#E4EAF6 5px,#E4EAF6 10px);border:1px solid var(--blue-line);display:flex;align-items:center;justify-content:center;color:#8FA1C4}
+  .li-name{font-weight:700;font-size:14px;color:var(--navy);line-height:1.3}
+  .li-code{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);margin-top:2px}
+  .li-remove{cursor:pointer;flex:0 0 auto;width:26px;height:26px;border-radius:7px;background:transparent;border:none;color:var(--ghost);display:flex;align-items:center;justify-content:center;transition:all .15s}
+  .li-remove:hover{background:#FDECEC;color:var(--red)}
+  .li-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:10px}
+  .qty{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--line-input);border-radius:8px;overflow:hidden}
+  .qty button{cursor:pointer;width:28px;height:28px;background:#FBFCFE;border:none;color:#475569;font-size:16px;display:flex;align-items:center;justify-content:center}
+  .qty button:hover{background:var(--blue-bg)}
+  .qty span{min-width:30px;text-align:center;font-size:14px;font-weight:600;color:var(--navy)}
+  .li-line{font-family:'Archivo',sans-serif;font-weight:700;font-size:15px;color:var(--navy)}
+  .list-foot{flex:0 0 auto;padding:16px 20px 20px;border-top:1px solid var(--line-soft)}
+  .subtotal-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .subtotal-l{font-size:13.5px;color:var(--muted)}
+  .subtotal-v{font-family:'Archivo',sans-serif;font-weight:800;font-size:20px;color:var(--navy)}
+  .subtotal-v small{font-size:12px;color:var(--muted-2);font-weight:600}
+  .btn-quote{width:100%;cursor:pointer;background:var(--red);color:#fff;border:none;border-radius:11px;padding:13px;font-size:14.5px;font-weight:700;letter-spacing:.02em;transition:background .15s}
+  .btn-quote:hover{background:var(--red-dark)}
+  .quote-note{text-align:center;font-size:12px;color:var(--muted-2);margin-top:9px}
+
+  /* ---------- WHATSAPP FAB ---------- */
+  .fab-wa{position:fixed;right:26px;bottom:26px;z-index:50;width:56px;height:56px;border-radius:50%;background:var(--wa);box-shadow:0 8px 24px rgba(37,211,102,.4);display:flex;align-items:center;justify-content:center;color:#fff;transition:transform .15s}
+  .fab-wa:hover{transform:scale(1.06);color:#fff}
+
+  /* ---------- BOTTOM SHEET (móvil) ---------- */
+  .sheet-wrap{position:fixed;inset:0;z-index:60;display:none}
+  .sheet-wrap.open{display:block}
+  .sheet-overlay{position:absolute;inset:0;background:rgba(16,24,48,.4);animation:akFade .2s ease}
+  .sheet{position:absolute;left:0;right:0;bottom:0;max-height:78%;background:var(--card);border-radius:24px 24px 0 0;display:flex;flex-direction:column;animation:akSheetUp .28s cubic-bezier(.22,1,.36,1);overflow:hidden}
+  .sheet-head{flex:0 0 auto;padding:14px 20px 12px;border-bottom:1px solid var(--line-soft)}
+  .sheet-grab{width:40px;height:4px;border-radius:2px;background:var(--line-input);margin:0 auto 12px}
+  .sheet-title-row{display:flex;align-items:center;justify-content:space-between}
+  .sheet-title{display:flex;align-items:center;gap:9px;font-family:'Archivo',sans-serif;font-weight:700;font-size:17px}
+  .sheet-close{cursor:pointer;width:30px;height:30px;border-radius:8px;background:var(--bg);border:none;color:var(--muted);display:flex;align-items:center;justify-content:center}
+  .sheet-body{flex:1 1 auto;min-height:0;overflow-y:auto;padding:16px 18px}
+  .sheet-foot{flex:0 0 auto;padding:14px 18px 22px;border-top:1px solid var(--line-soft)}
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width: 1023px){
+    .hdr-in{padding:0 16px;height:62px}
+    .hdr-left{gap:0}
+    .logo{font-size:22px}
+    .nav{display:none}
+    .btn-login{display:none}
+    .icon-btn{display:flex}
+    .main{display:block;padding:0}
+    .panel{border:none;border-radius:0;box-shadow:none;height:calc(100dvh - 62px)}
+    .aside{display:none}
+    .as-head{padding:12px 18px;gap:11px;background:#FBFCFE}
+    .as-avatar{width:38px;height:38px;border-radius:11px}
+    .as-title{font-size:15.5px}
+    .as-sub{font-size:11.5px;margin-top:1px}
+    .chat-scroll{padding:18px}
+    .bot-bubble{font-size:14.5px;padding:13px 15px}
+    .ex-label{margin:22px 0 12px 4px;font-size:11px}
+    .ex-grid{grid-template-columns:1fr;gap:10px;margin-left:0}
+    .ex-card{padding:14px;border-radius:13px;align-items:center}
+    .ex-card:hover{transform:none;box-shadow:none}
+    .ex-ico{width:40px;height:40px}
+    .ex-t{font-size:14.5px}
+    .ex-d{font-size:12.5px}
+    .ex-chev{display:block;flex:0 0 auto;margin-left:auto}
+    .msg-user{max-width:82%;font-size:14.5px;padding:11px 14px}
+    .msg-bot{max-width:92%}
+    .msg-bot-bubble{font-size:14.5px}
+    .composer{padding:12px 16px 22px}
+    .composer-box{padding:10px 12px}
+    .chips{width:100%}
+    .chip{flex:1;justify-content:center;padding:8px;font-size:12.5px}
+    .composer-row{flex-wrap:wrap;gap:9px}
+    .btn-send{width:40px;height:40px;border-radius:11px;order:-1;margin-left:auto}
+    .composer-foot{display:none}
+    .fab-wa{right:18px;bottom:150px;width:50px;height:50px}
+  }
+  @media (min-width: 1024px){
+    .sheet-wrap{display:none !important}
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="hdr-in">
+    <div class="hdr-left">
+      <a href="index.html" class="logo">Adaptekk<span>.</span></a>
+      <nav class="nav">
+        <a href="index.html" class="active">Inicio</a>
+        <a href="index.html#cfg">Configurador</a>
+        <a href="index.html#catalogo">Catálogo</a>
+        <a href="index.html#cross">Cross Reference</a>
+      </nav>
+    </div>
+    <button class="btn-login">Iniciar sesión</button>
+    <button class="icon-btn" id="btnOpenSheet" aria-label="Mi lista">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M6 6l1.5 13h9L18 6"/><path d="M9 10v6M15 10v6"/></svg>
+      <span class="badge" id="badgeCount" style="display:none">0</span>
+    </button>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- CHAT -->
+  <section class="panel">
+    <div class="as-head">
+      <div class="as-avatar">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.6 4.6L18 9l-4.4 1.4L12 15l-1.6-4.6L6 9l4.4-1.4z"/><path d="M18 15l.8 2.2L21 18l-2.2.8L18 21l-.8-2.2L15 18l2.2-.8z"/></svg>
+      </div>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span class="as-title">Asistente Adaptekk</span>
+          <span class="pill-online"><i></i>En línea</span>
+        </div>
+        <div class="as-sub">Responde en segundos · entiende foto, código, texto y voz</div>
+      </div>
+    </div>
+
+    <div class="chat-scroll" id="chatScroll">
+
+      <!-- ONBOARDING -->
+      <div id="emptyState">
+        <div class="bot-row">
+          <div class="bot-ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.6 4.6L18 9l-4.4 1.4L12 15l-1.6-4.6L6 9l4.4-1.4z"/></svg></div>
+          <div class="bot-bubble">¡Hola! Dime qué conector necesitas. Puedes <strong>subir una foto</strong>, <strong>pegar un código</strong>, <strong>describirlo</strong> o mandar un <strong>audio</strong>.</div>
+        </div>
+
+        <div class="ex-label">Empieza con un ejemplo</div>
+
+        <div class="ex-grid">
+          <button class="ex-card" data-ex="1">
+            <span class="ex-ico"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-4.5-4.5L5 21"/></svg></span>
+            <span><span class="ex-t">Subir una foto</span><span class="ex-d">La IA reconoce la pieza</span></span>
+            <svg class="ex-chev" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#B3BECE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <button class="ex-card" data-ex="2">
+            <span class="ex-ico"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+            <span><span class="ex-t">Pegar código AT</span><span class="ex-d">o de otra marca</span></span>
+            <svg class="ex-chev" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#B3BECE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <button class="ex-card" data-ex="3">
+            <span class="ex-ico"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="15" y2="12"/><line x1="4" y1="17" x2="18" y2="17"/></svg></span>
+            <span><span class="ex-t">Describir conector</span><span class="ex-d mono">"codo 45° JIC 1/2""</span></span>
+            <svg class="ex-chev" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#B3BECE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <button class="ex-card" data-ex="4">
+            <span class="ex-ico"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="21"/></svg></span>
+            <span><span class="ex-t">Mensaje de voz</span><span class="ex-d">Descríbelo hablando</span></span>
+            <svg class="ex-chev" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#B3BECE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- CONVERSACIÓN -->
+      <div class="conv" id="conv" style="display:none"></div>
+    </div>
+
+    <!-- COMPOSER -->
+    <div class="composer">
+      <div class="composer-box">
+        <textarea id="input" rows="2" placeholder="Describe tu conector, pega un código o sube una foto…"></textarea>
+        <div class="composer-row">
+          <div class="chips">
+            <button class="chip" data-ex="1"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-4.5-4.5L5 21"/></svg>Foto</button>
+            <button class="chip" data-ex="2"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>Código</button>
+            <button class="chip" data-ex="4"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="21"/></svg>Audio</button>
+          </div>
+          <button class="btn-send" id="btnSend" aria-label="Enviar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></button>
+        </div>
+      </div>
+      <div class="composer-foot">¿Prefieres atención personal? <a href="https://wa.me/5215555550000" target="_blank" rel="noopener">Habla con un ejecutivo por WhatsApp</a></div>
+    </div>
+  </section>
+
+  <!-- MI LISTA (escritorio) -->
+  <aside class="panel aside">
+    <div class="list-head">
+      <div class="list-title">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#16233F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M6 6l1.5 13h9L18 6"/><path d="M9 10v6M15 10v6"/></svg>
+        Mi lista
+      </div>
+      <span class="count-pill" id="asideCount">0</span>
+    </div>
+    <div class="list-scroll" id="asideBody"></div>
+    <div class="list-foot" id="asideFoot" style="display:none">
+      <div class="subtotal-row">
+        <span class="subtotal-l">Subtotal estimado</span>
+        <span class="subtotal-v"><span id="asideSubtotal">$0.00</span> <small>MXN</small></span>
+      </div>
+      <button class="btn-quote">Solicitar cotización</button>
+      <div class="quote-note">Precios sujetos a confirmación · sin compromiso</div>
+    </div>
+  </aside>
+
+</main>
+
+<!-- WHATSAPP FAB -->
+<a href="https://wa.me/5215555550000" target="_blank" rel="noopener" class="fab-wa" aria-label="WhatsApp">
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2zm0 18.15h-.01a8.2 8.2 0 0 1-4.18-1.15l-.3-.18-3.11.82.83-3.04-.2-.31a8.22 8.22 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24a8.2 8.2 0 0 1 8.23 8.24c0 4.54-3.69 8.24-8.24 8.24zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.47-1.38-1.72-.15-.25-.02-.39.11-.51.11-.11.25-.29.37-.43.13-.15.17-.25.25-.42.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.4-.42-.56-.42-.14 0-.31-.02-.47-.02-.17 0-.43.06-.66.31-.23.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.11-.22-.17-.47-.29z"/></svg>
+</a>
+
+<!-- BOTTOM SHEET MI LISTA (móvil) -->
+<div class="sheet-wrap" id="sheetWrap">
+  <div class="sheet-overlay" id="sheetOverlay"></div>
+  <div class="sheet" role="dialog" aria-label="Mi lista">
+    <div class="sheet-head">
+      <div class="sheet-grab"></div>
+      <div class="sheet-title-row">
+        <div class="sheet-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16233F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M6 6l1.5 13h9L18 6"/><path d="M9 10v6M15 10v6"/></svg>
+          Mi lista
+          <span class="count-pill" id="sheetCount">0</span>
+        </div>
+        <button class="sheet-close" id="btnCloseSheet" aria-label="Cerrar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+    </div>
+    <div class="sheet-body ak-scroll" id="sheetBody"></div>
+    <div class="sheet-foot" id="sheetFoot" style="display:none">
+      <div class="subtotal-row">
+        <span class="subtotal-l">Subtotal estimado</span>
+        <span class="subtotal-v"><span id="sheetSubtotal">$0.00</span> <small>MXN</small></span>
+      </div>
+      <button class="btn-quote">Solicitar cotización</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ---------- Estado ----------
+  var state = {
+    started: false,
+    messages: [],   // { role:'user'|'assistant', text, part? }
+    list: [],       // { name, code, size, price, match, stock, qty }
+    replyIdx: 0
+  };
+
+  // Catálogo demo (respuestas del asistente)
+  var catalog = [
+    { name: 'Codo 45° JIC macho',     code: 'AT-6801-08-08', size: '1/2" JIC × 1/2" NPT',   price: 84.5,  match: 98, stock: 'En stock' },
+    { name: 'Adaptador recto ORFS',   code: 'AT-4302-06-06', size: '9/16" ORFS × 3/8" NPT', price: 62,    match: 95, stock: 'En stock' },
+    { name: 'Tee giratoria JIC',      code: 'AT-5510-08',    size: '3/4"-16 JIC',           price: 129.9, match: 92, stock: 'Bajo pedido' }
+  ];
+
+  var EXAMPLES = {
+    '1': 'Subí una foto de la pieza',
+    '2': 'AT-6801-08-08',
+    '3': 'Necesito un codo 45° JIC 1/2"',
+    '4': '[Mensaje de voz · 0:08]'
+  };
+
+  // ---------- Utilidades ----------
+  function $(id) { return document.getElementById(id); }
+  function fmt(n) {
+    return '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  var SVG = {
+    star: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.6 4.6L18 9l-4.4 1.4L12 15l-1.6-4.6L6 9l4.4-1.4z"/></svg>',
+    img: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-4.5-4.5L5 21"/></svg>',
+    imgSm: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-4.5-4.5L5 21"/></svg>',
+    check: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+    checkBig: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+    plus: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+    x: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+    trash: '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M6 6l1.5 13h9L18 6"/><path d="M9 10v6M15 10v6"/></svg>'
+  };
+
+  // ---------- Render: chat ----------
+  function renderChat() {
+    $('emptyState').style.display = state.started ? 'none' : '';
+    var conv = $('conv');
+    conv.style.display = state.started ? '' : 'none';
+    var html = '';
+
+    state.messages.forEach(function (m, idx) {
+      if (m.role === 'user') {
+        html += '<div class="msg-user">' + esc(m.text) + '</div>';
+        return;
+      }
+      html += '<div class="msg-bot"><div class="msg-bot-ico">' + SVG.star + '</div><div style="flex:1">';
+      html += '<div class="msg-bot-bubble">' + esc(m.text) + '</div>';
+      if (m.part) {
+        var added = state.list.some(function (i) { return i.code === m.part.code; });
+        html += '<div class="part-card">';
+        html += '<div class="part-top"><div class="part-img">' + SVG.img + '</div><div style="flex:1;min-width:0">';
+        html += '<div class="part-match">' + SVG.check + esc(m.part.match) + '% coincidencia</div>';
+        html += '<div class="part-name">' + esc(m.part.name) + '</div>';
+        html += '<div class="part-code">' + esc(m.part.code) + ' · ' + esc(m.part.size) + '</div>';
+        html += '<div class="part-price-row"><span class="part-price">' + fmt(m.part.price) + '</span><span class="part-cur">MXN</span><span class="part-stock">· ' + esc(m.part.stock) + '</span></div>';
+        html += '</div></div>';
+        if (added) {
+          html += '<div class="added-tag">' + SVG.checkBig + 'Agregado a tu lista</div>';
+        } else {
+          html += '<button class="btn-add" data-add="' + idx + '">' + SVG.plus + 'Agregar a mi lista</button>';
+        }
+        html += '</div>';
+      }
+      html += '</div></div>';
+    });
+
+    conv.innerHTML = html;
+    var scroll = $('chatScroll');
+    scroll.scrollTop = scroll.scrollHeight;
+  }
+
+  // ---------- Render: lista (aside + sheet) ----------
+  function listItemsHTML() {
+    var html = '<div class="list-items">';
+    state.list.forEach(function (i) {
+      html += '<div class="li-card">';
+      html += '<div class="li-top"><div class="li-img">' + SVG.imgSm + '</div>';
+      html += '<div style="flex:1;min-width:0"><div class="li-name">' + esc(i.name) + '</div><div class="li-code">' + esc(i.code) + '</div></div>';
+      html += '<button class="li-remove" data-remove="' + esc(i.code) + '" aria-label="Quitar">' + SVG.x + '</button></div>';
+      html += '<div class="li-bottom"><div class="qty">';
+      html += '<button data-dec="' + esc(i.code) + '">−</button><span>' + i.qty + '</span><button data-inc="' + esc(i.code) + '">+</button>';
+      html += '</div><span class="li-line">' + fmt(i.price * i.qty) + '</span></div>';
+      html += '</div>';
+    });
+    html += '</div>';
+    return html;
+  }
+
+  function emptyHTML(compact) {
+    return '<div class="list-empty"' + (compact ? ' style="min-height:220px"' : '') + '>' +
+      '<div class="list-empty-ico">' + SVG.trash + '</div>' +
+      '<div class="list-empty-t">Aún no agregas piezas</div>' +
+      '<div class="list-empty-d">Identifícalas en el chat y toca <strong>Agregar a mi lista</strong> para cotizarlas juntas.</div>' +
+      '</div>';
+  }
+
+  function renderList() {
+    var hasItems = state.list.length > 0;
+    var count = state.list.reduce(function (a, i) { return a + i.qty; }, 0);
+    var subtotal = state.list.reduce(function (a, i) { return a + i.price * i.qty; }, 0);
+
+    // Aside (escritorio)
+    $('asideBody').innerHTML = hasItems ? listItemsHTML() : emptyHTML(false);
+    $('asideFoot').style.display = hasItems ? '' : 'none';
+    $('asideCount').textContent = count;
+    $('asideSubtotal').textContent = fmt(subtotal);
+
+    // Sheet (móvil)
+    $('sheetBody').innerHTML = hasItems ? listItemsHTML() : emptyHTML(true);
+    $('sheetFoot').style.display = hasItems ? '' : 'none';
+    $('sheetCount').textContent = count;
+    $('sheetSubtotal').textContent = fmt(subtotal);
+
+    // Badge en el header (móvil)
+    var badge = $('badgeCount');
+    badge.style.display = hasItems ? '' : 'none';
+    badge.textContent = count;
+  }
+
+  function renderAll() { renderChat(); renderList(); }
+
+  // ---------- Acciones ----------
+  function push(text) {
+    var part = catalog[state.replyIdx % catalog.length];
+    state.replyIdx++;
+    state.started = true;
+    state.messages.push({ role: 'user', text: text });
+    renderAll();
+    setTimeout(function () {
+      state.messages.push({ role: 'assistant', text: 'Identifiqué esta pieza. ¿Es la que buscas?', part: part });
+      renderAll();
+    }, 600);
+  }
+
+  function send() {
+    var el = $('input');
+    var text = (el.value || '').trim();
+    if (!text) return;
+    el.value = '';
+    push(text);
+  }
+
+  function addToList(part) {
+    var ex = state.list.find(function (i) { return i.code === part.code; });
+    if (ex) { ex.qty++; } else { state.list.push(Object.assign({}, part, { qty: 1 })); }
+    renderAll();
+  }
+  function inc(code) {
+    state.list.forEach(function (i) { if (i.code === code) i.qty++; });
+    renderAll();
+  }
+  function dec(code) {
+    state.list.forEach(function (i) { if (i.code === code) i.qty = Math.max(1, i.qty - 1); });
+    renderAll();
+  }
+  function removeItem(code) {
+    state.list = state.list.filter(function (i) { return i.code !== code; });
+    renderAll();
+  }
+
+  function openSheet() { $('sheetWrap').classList.add('open'); }
+  function closeSheet() { $('sheetWrap').classList.remove('open'); }
+
+  // ---------- Eventos ----------
+  $('btnSend').addEventListener('click', send);
+  $('input').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+  });
+  $('btnOpenSheet').addEventListener('click', openSheet);
+  $('btnCloseSheet').addEventListener('click', closeSheet);
+  $('sheetOverlay').addEventListener('click', closeSheet);
+
+  // Delegación: ejemplos, agregar, qty, quitar
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-ex],[data-add],[data-inc],[data-dec],[data-remove]');
+    if (!t) return;
+    if (t.dataset.ex) { push(EXAMPLES[t.dataset.ex]); return; }
+    if (t.dataset.add !== undefined) {
+      var m = state.messages[Number(t.dataset.add)];
+      if (m && m.part) addToList(m.part);
+      return;
+    }
+    if (t.dataset.inc) { inc(t.dataset.inc); return; }
+    if (t.dataset.dec) { dec(t.dataset.dec); return; }
+    if (t.dataset.remove) { removeItem(t.dataset.remove); return; }
+  });
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
